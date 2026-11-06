@@ -4,7 +4,7 @@
   "doc": "TechDoc_Arcanist.md",
   "title": "Arcanist",
   "tagline": "패링으로 카드 게이지를 얻고, 카드를 사용해 전투를 이어가는 2D 카드 액션 게임",
-  "cover": null,
+  "cover": "images/arcanist-logo.png",
   "team": {
     "type": "solo",
     "size": "1인",
@@ -16,8 +16,12 @@
       "value": "2D 카드 액션 게임"
     },
     {
+      "label": "기간",
+      "value": "2025.06 - 2025.07"
+    },
+    {
       "label": "인원",
-      "value": "개인 게임 개발"
+      "value": "1인"
     },
     {
       "label": "환경",
@@ -49,7 +53,12 @@
       "how": "대상 검증 → `TryRegister` → `Resolve` 순서로 처리하고, 패링은 피해 전달 전에 반환하며 `SuccessParry`가 패링 창을 닫고 카드 게이지를 추가합니다.",
       "why": "패링을 카드 수급과 연결한 핵심 플레이 흐름이기 때문에, 피해 전달 전에 패링을 해결하고 성공 보상으로 게이지를 줍니다.",
       "section": "2.3 핵심 구현 — 패링을 피해 전달 전에 해결",
-      "image": null
+      "image": {
+        "src": "images/parry-combat.png",
+        "w": 1904,
+        "h": 1066,
+        "caption": "패링 성공 순간의 이펙트와 Q/W/E 카드 슬롯"
+      }
     },
     {
       "title": "카드 사용 승인과 실제 실행의 분리",
@@ -57,7 +66,12 @@
       "how": "`CardUseValidator`가 회복 가능 여부·필수 타겟을 검증하면 `CardSkillExecutor`가 대기 카드를 저장하고 애니메이션을 시작하며, 이벤트에서 `ExecutePending()`이 `CardEffectContext`로 효과를 실행합니다.",
       "why": "실행 시점에 타겟을 다시 찾아 입력 시점과 애니메이션 발동 시점 사이에 적이 죽은 경우를 구분하고, 카드 사용자는 효과 종류를 분기하지 않고 같은 실행 진입점을 호출할 수 있습니다.",
       "section": "3.3 핵심 기능 — 사용 승인과 실제 실행의 분리",
-      "image": null
+      "image": {
+        "src": "images/card-combat.png",
+        "w": 1912,
+        "h": 1074,
+        "caption": "화염구 카드를 사용해 적을 공격하는 장면"
+      }
     },
     {
       "title": "골렘 보스의 컴포넌트 상태 전이",
@@ -65,7 +79,12 @@
       "how": "`BossController.Awake()`에서 자식 `BossBaseState`를 `Type` 키로 등록하고, 상태를 바꿀 때 이전 상태 GameObject를 끄고 다음 상태를 켜 `OnEnable/OnDisable`을 진입·종료로 사용합니다.",
       "why": "상태가 컴포넌트이므로 Collider·프리팹·지속시간을 Inspector에서 직접 연결하기 쉽습니다. 대신 상태별 GameObject가 필요합니다.",
       "section": "5.2 핵심 기능 — 골렘 상태 전이",
-      "image": null
+      "image": {
+        "src": "images/boss-combat.png",
+        "w": 1904,
+        "h": 1066,
+        "caption": "고대 수호 골렘의 레이저 패턴"
+      }
     },
     {
       "title": "ID 기반 체크포인트 복원",
@@ -105,7 +124,38 @@
       "section": "7.4 연관된 실제 버그 보완 — 클리어 상태를 다시 저장하기"
     }
   ],
-  "screenshots": [],
+  "screenshots": [
+    {
+      "src": "images/parry-combat.png",
+      "w": 1904,
+      "h": 1066,
+      "caption": "패링 성공 순간의 이펙트와 Q/W/E 카드 슬롯"
+    },
+    {
+      "src": "images/card-combat.png",
+      "w": 1912,
+      "h": 1074,
+      "caption": "화염구 카드를 사용해 적을 공격하는 장면"
+    },
+    {
+      "src": "images/deck-inventory.png",
+      "w": 1904,
+      "h": 1066,
+      "caption": "전체 카드와 플레이어 카드 덱 편성 화면(장수·마력 조건 표시)"
+    },
+    {
+      "src": "images/reward-selection.png",
+      "w": 1904,
+      "h": 1066,
+      "caption": "방 클리어 후 등급이 다른 카드 3장 중 하나를 고르는 보상 선택 화면"
+    },
+    {
+      "src": "images/boss-combat.png",
+      "w": 1904,
+      "h": 1066,
+      "caption": "고대 수호 골렘의 레이저 패턴"
+    }
+  ],
   "retro": {
     "achieved": [
       "여러 시스템을 직접 구현하고 하나의 게임으로 연결하면서 Unity의 오브젝트 생명주기와 시스템 간 연결 구조를 이해하게 된 점",
@@ -236,15 +286,24 @@
         "layout": "full",
         "tab": "개요",
         "title": {
-          "text": "1.2 기술적으로 다루는 문제",
+          "text": "1.2 Why — 다루는 문제와 구현 방향",
           "verbatim": true
         },
-        "lead": null,
+        "lead": {
+          "text": "처음에는 카드 덱 빌딩과 2D 액션을 결합한 로그라이트 게임을 만들고자 했습니다.",
+          "verbatim": true
+        },
         "sectionPath": [
           "1. 프로젝트 개요",
-          "1.2 기술적으로 다루는 문제"
+          "1.2 Why — 다루는 문제와 구현 방향"
         ],
-        "points": [],
+        "points": [
+          {
+            "label": "",
+            "text": "카드 조합에 따라 전투 방식이 달라지고, 매번 다른 덱을 구성하며 플레이하는 재미를 주는 것이 목표였습니다.",
+            "verbatim": true
+          }
+        ],
         "visuals": [
           {
             "kind": "table",
@@ -276,29 +335,6 @@
             "kind": "mermaid",
             "n": 1,
             "fp": "flowchart LR"
-          }
-        ]
-      },
-      {
-        "key": "hit-structure",
-        "chapter": "combat",
-        "layout": "full",
-        "tab": "구조",
-        "title": {
-          "text": "2.1 시스템 구조 — 충돌·중복 기록·결과 적용 분리",
-          "verbatim": true
-        },
-        "lead": null,
-        "sectionPath": [
-          "2. 기능 A — 충돌 기반 전투와 패링",
-          "2.1 시스템 구조 — 충돌·중복 기록·결과 적용 분리"
-        ],
-        "points": [],
-        "visuals": [
-          {
-            "kind": "table",
-            "n": 1,
-            "fp": "클래스|책임"
           }
         ]
       },
@@ -388,6 +424,16 @@
             "kind": "code",
             "n": 1,
             "fp": "PlayerController playerController = receiver.GetComponent<Pl"
+          },
+          {
+            "kind": "image",
+            "src": "images/parry-combat.png",
+            "w": 1904,
+            "h": 1066,
+            "caption": {
+              "text": "패링 성공 순간의 이펙트와 Q/W/E 카드 슬롯",
+              "verbatim": true
+            }
           }
         ]
       },
@@ -456,7 +502,7 @@
       {
         "key": "card-exec",
         "chapter": "card",
-        "layout": "code",
+        "layout": "visual",
         "tab": "구현",
         "title": {
           "text": "3.3 핵심 기능 — 사용 승인과 실제 실행의 분리",
@@ -485,18 +531,18 @@
             "label": "이유",
             "text": "실행 시점에 타겟을 다시 찾기 때문에, 입력 시점과 애니메이션 발동 시점 사이에 적이 죽은 경우를 구분합니다.",
             "verbatim": true
-          },
-          {
-            "label": "",
-            "text": "타겟 소멸 시 소비 정책은 현재 환불 없는 방식입니다.",
-            "verbatim": true
           }
         ],
         "visuals": [
           {
-            "kind": "code",
-            "n": 1,
-            "fp": "CardEffectContext context = new("
+            "kind": "image",
+            "src": "images/card-combat.png",
+            "w": 1912,
+            "h": 1074,
+            "caption": {
+              "text": "화염구 카드를 사용해 적을 공격하는 장면",
+              "verbatim": true
+            }
           }
         ]
       },
@@ -523,6 +569,55 @@
             "kind": "table",
             "n": 1,
             "fp": "접근|장점|현재 구현에서 고려할 점"
+          }
+        ]
+      },
+      {
+        "key": "deck-rules",
+        "chapter": "inventory",
+        "layout": "visual",
+        "tab": "구현",
+        "title": {
+          "text": "4.2 핵심 기능 — 편성 규칙",
+          "verbatim": true
+        },
+        "lead": null,
+        "sectionPath": [
+          "4. 기능 C — 인벤토리·덱 편성과 카드 보상",
+          "4.2 핵심 기능 — 편성 규칙"
+        ],
+        "points": [
+          {
+            "label": "",
+            "text": "소스 기본값은 최소 6장, 덱 비용 8~14, 최대 20장입니다.",
+            "verbatim": true
+          },
+          {
+            "label": "",
+            "text": "실제 값은 Inspector 직렬화 설정이 우선하므로 이 수치를 모든 씬의 확정 규칙으로 취급하지 않습니다.",
+            "verbatim": true
+          },
+          {
+            "label": "구현",
+            "text": "`CardData.Cost`는 Common/Rare/Epic/Legendary에 각각 1/2/4/6을 반환합니다.",
+            "verbatim": true
+          },
+          {
+            "label": "구현",
+            "text": "`CanCompleteDeckEdit`에서 최소 장수와 비용 범위를 함께 판단합니다.",
+            "verbatim": true
+          }
+        ],
+        "visuals": [
+          {
+            "kind": "image",
+            "src": "images/deck-inventory.png",
+            "w": 1904,
+            "h": 1066,
+            "caption": {
+              "text": "전체 카드와 플레이어 카드 덱 편성 화면(장수·마력 조건 표시)",
+              "verbatim": true
+            }
           }
         ]
       },
@@ -570,6 +665,16 @@
             "kind": "code",
             "n": 1,
             "fp": "int randomWeight = Random.Range(0, totalWeight);"
+          },
+          {
+            "kind": "image",
+            "src": "images/reward-selection.png",
+            "w": 1904,
+            "h": 1066,
+            "caption": {
+              "text": "방 클리어 후 등급이 다른 카드 3장 중 하나를 고르는 보상 선택 화면",
+              "verbatim": true
+            }
           }
         ]
       },
@@ -614,6 +719,16 @@
             "kind": "mermaid",
             "n": 1,
             "fp": "stateDiagram-v2"
+          },
+          {
+            "kind": "image",
+            "src": "images/boss-combat.png",
+            "w": 1904,
+            "h": 1066,
+            "caption": {
+              "text": "고대 수호 골렘의 레이저 패턴",
+              "verbatim": true
+            }
           }
         ]
       },

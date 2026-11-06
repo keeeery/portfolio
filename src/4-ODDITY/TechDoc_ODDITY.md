@@ -50,6 +50,8 @@
 | 비동기·연출 | UniTask, DOTween |
 | 에디터 도구 | Odin Inspector |
 | 데이터 | 증강 칩·보상·임무 TSV, 로컬 JSON 저장 |
+| 기간 | 2026.10 - 2026.11 |
+| 인원 | 4인 팀 |
 | GitHub | [https://github.com/KooHoo-Dev/3rd_3D_1-3D-Project-team_odd](https://github.com/KooHoo-Dev/3rd_3D_1-3D-Project-team_odd) |
 
 ### 1.4 담당 범위와 팀 구현의 연결

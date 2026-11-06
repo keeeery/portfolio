@@ -41,6 +41,8 @@ Nutrifit은 신체 정보와 식사 기록을 바탕으로 영양소 섭취 현�
 | 로컬 저장 | SQLite 사용자·음식 데이터, 내부 저장소 JSON 기록 |
 | 추천 API | Python, Flask, pandas, NumPy, scikit-learn |
 | 별도 실험 | TensorFlow/Keras Autoencoder 코드; 현재 API 추천 경로에는 미연결 |
+| 기간 | 2023.09 - 2024.06 |
+| 인원 | 4인 팀 |
 
 소스: [앱 Gradle 설정](https://github.com/keeeery/Nutrifit/blob/main/app/build.gradle.kts), [추천 서버](https://github.com/keeeery/Nutrifit_Recommendation/blob/main/server.py).
 Python 의존성의 실행 버전은 저장소에서 고정되어 있지 않습니다.

@@ -50,6 +50,7 @@
 | Transport | `ClientWebSocket` / ASP.NET Core WebSocket, JSON 메시지 |
 | Data | 클라이언트 StreamingAssets TSV, 서버 Data TSV 및 설정 |
 | Team | 채경희·박수하·주현진 |
+| 기간 | 2026.08 - 2026.09 |
 | GitHub | 클라이언트 [https://github.com/KooHoo-Dev/3rd-TeamProject-KH](https://github.com/KooHoo-Dev/3rd-TeamProject-KH), 서버 [https://github.com/KooHoo-Dev/3rd-TeamProject-KH-Server](https://github.com/KooHoo-Dev/3rd-TeamProject-KH-Server) |
 
 ### 1.4 담당 범위

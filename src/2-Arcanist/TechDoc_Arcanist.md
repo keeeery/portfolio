@@ -1,5 +1,7 @@
 # Arcanist — 2D 카드 액션 게임 기술 문서
 
+![Arcanist 로고](images/arcanist-logo.png)
+
 | 시스템 | 핵심 역할 | 구현 방식 |
 |---|---|---|
 | A. 전투와 패링 | 충돌 판정, 중복 타격 방지, 피해 전달, 패링 보상 | HitBox/HurtBox, 중재자, Observer |
@@ -34,7 +36,10 @@
 카드는 투사체 공격뿐 아니라 피해 증가·받는 피해 조절·회복·일회 부활 등에도 사용됩니다.
 방의 전투와 보상을 진행하고, 체크포인트를 통해 저장된 위치와 체력으로 복귀합니다.
 
-### 1.2 기술적으로 다루는 문제
+### 1.2 Why — 다루는 문제와 구현 방향
+
+처음에는 **카드 덱 빌딩과 2D 액션을 결합한 로그라이트 게임**을 만들고자 했습니다.
+카드 조합에 따라 전투 방식이 달라지고, 매번 다른 덱을 구성하며 플레이하는 재미를 주는 것이 목표였습니다.
 
 | 구현에서 다루는 문제 | 현재 구조 |
 |---|---|
@@ -52,6 +57,8 @@
 | Rendering | Universal RP `17.3.0` |
 | Input | Input System `1.19.0`, 프로젝트 입력 래퍼 `SimpleInput` |
 | 기타 패키지 | Cinemachine `3.1.7`, LDtkUnity `6.12.3`, 2D Animation `13.0.4` |
+| 기간 | 2025.06 - 2025.07 |
+| 인원 | 1인 |
 | GitHub | [https://github.com/KooHoo-Dev/3rd-2D-Project-keeeery](https://github.com/KooHoo-Dev/3rd-2D-Project-keeeery) |
 
 환경 설정: `ProjectVersion.txt`, `manifest.json`.
@@ -149,6 +156,8 @@ if (playerController != null && playerController.IsParryWindowOpen)
 `HitResolutionStatus`는 Ignored/Parried/Applied를 구분합니다.
 Applied가 아니면 일반 피격 FX·히트스톱·카메라 흔들림·적중 폭발 경로로 진행하지 않습니다.
 넉백·스턴은 수신자의 `CanReceiveKnockback/CanReceiveStun`을 확인하며, 스턴은 `IStunnable.ApplyStun`으로 호출합니다.
+
+![패링 성공 순간의 이펙트와 Q/W/E 카드 슬롯](images/parry-combat.png)
 
 ### 2.4 핵심 기능 — 피해 전달과 결과 구독
 
@@ -278,6 +287,8 @@ return new CardSkillExecutionResult(CardSkillExecutionStatus.Executed, card);
 다만 이미 슬롯·손패에서 소비된 뒤 실행이 취소될 수 있으며, 해당 경로에는 카드 환불 처리가 없습니다.
 타겟 소멸 시 소비 정책은 현재 환불 없는 방식입니다.
 
+![화염구 카드를 사용해 적을 공격하는 장면](images/card-combat.png)
+
 ### 3.4 투사체를 프리팹 설정으로 확장
 
 `ProjectileCardEffect`는 생성 위치(`CastPoint`, `TargetPosition`)와 조준 방식(`Forward`, `Target`, `None`)을 조합합니다.
@@ -401,6 +412,8 @@ InventoryWindow는 선택(`InventorySelection`), 정렬(`InventoryCardSorter`), 
 | `CanCompleteDeckEdit()` | 최소 장수와 비용 범위 충족 여부 반환 |
 | `AddCard(CardData cardData, bool addToDeck = true)` | 보유 목록 추가 및 선택적 덱 편성 |
 
+![전체 카드와 플레이어 카드 덱 편성 화면(장수·마력 조건 표시)](images/deck-inventory.png)
+
 ### 4.3 핵심 기능 — 보상 추첨
 
 보유 카드와 같은 보상 화면에서 이미 뽑힌 카드는 제외합니다.
@@ -423,6 +436,8 @@ foreach (CardData card in candidates)
 이 값은 **등급 자체의 고정 확률**이 아니라 **카드 한 장당 가중치**입니다.
 예를 들어 일반 2장과 희귀 1장만 남으면 희귀 확률은 `22 / (70 + 70 + 22)`입니다.
 이미 획득한 카드 수와 각 등급의 남은 카드 수에 따라 실제 등급 분포가 달라집니다.
+
+![방 클리어 후 등급이 다른 카드 3장 중 하나를 고르는 보상 선택 화면](images/reward-selection.png)
 
 ### 4.4 고민과 선택
 
@@ -515,6 +530,8 @@ stateDiagram-v2
 다이어그램은 주요 전이를 요약한 것입니다. 사망 진입은 Idle에만 제한되지 않고 `BossController.Dead()`에서 처리합니다.
 Idle 기본 대기시간은 1.2초, 근접 X축 거리 기준은 3입니다.
 근접 범위 밖에서는 레이저와 팔 발사를 `Random.Range(0, 2)`로 선택합니다.
+
+![고대 수호 골렘의 레이저 패턴](images/boss-combat.png)
 
 ### 5.3 핵심 구현 — 애니메이션 이벤트와 종료 정리
 

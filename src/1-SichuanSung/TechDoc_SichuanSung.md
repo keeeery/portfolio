@@ -45,6 +45,7 @@
 | 연출 | Coroutine, 스케일·색상·위치 보간 |
 | 저장 | PlayerPrefs의 최고 클리어 시간 |
 | 형태 | 단일 게임 씬의 개인 퍼즐 프로젝트 |
+| 기간 | 2025.05 (며칠간 제작) |
 | 저장소 | [Unity_2D_SichuanSung](https://github.com/keeeery/Unity_2D_SichuanSung) |
 
 게임 전용 코드는 `Assets/SichuanSung/Scripts`의 5개 클래스로 구성합니다.

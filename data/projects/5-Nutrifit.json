@@ -7,10 +7,18 @@
   "cover": null,
   "team": {
     "type": "team",
-    "size": "",
+    "size": "4인",
     "role": "데이터 정제, 영양소 목표 계산, 코사인 유사도 기반 추천 알고리즘, Flask API를 통한 앱·서버 연동"
   },
   "meta": [
+    {
+      "label": "기간",
+      "value": "2023.09 - 2024.06"
+    },
+    {
+      "label": "인원",
+      "value": "4인 팀"
+    },
     {
       "label": "Android",
       "value": "Java, XML Layout, Activity·Fragment"
