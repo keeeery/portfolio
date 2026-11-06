@@ -20,10 +20,12 @@ page.project-no	포트폴리오 문서 · 프로젝트 절 위 작은 글 · 20�
 page.features	포트폴리오 문서 · 기능 절 위 작은 글(프로젝트 번호 뒤) · 8자	기능 소개	
 page.see-in-deck	포트폴리오 문서 · 기능마다 버튼 · 12자	{name.deck}에서 보기	
 page.deck-all	포트폴리오 문서 · 기능 절 아래 버튼 · 10자	{name.deck} 전체	
+page.others	포트폴리오 문서 · 기타 프로젝트 절 제목 · 12자	기타 프로젝트	
 page.glance	포트폴리오 문서 · 한눈에 보기 절 제목 · 12자	프로젝트 요약	
 page.nav-intro	포트폴리오 문서 · 맨 위 메뉴 · 6자	소개	
 page.nav-stack	포트폴리오 문서 · 맨 위 메뉴 · 6자	{page.stack}	
 page.nav-projects	포트폴리오 문서 · 맨 위 메뉴 · 6자	프로젝트	
+page.nav-others	포트폴리오 문서 · 맨 위 메뉴 · 6자	기타	
 page.nav-glance	포트폴리오 문서 · 맨 위 메뉴 · 6자	한눈에 보기	
 page.nav-contact	포트폴리오 문서 · 맨 위 메뉴 · 6자	연락처	
 page.print-email	포트폴리오 문서 · 인쇄(PDF) 연락처 이름 · 6자	이메일	
@@ -33,6 +35,7 @@ en.about	포트폴리오 문서 · 자기소개 절 위 · 영문 칸 · 14자	A
 en.skills	포트폴리오 문서 · 기술 스택 절 위 · 영문 칸 · 14자	SKILLS	
 en.project	포트폴리오 문서 프로젝트 절 위 · 발표 덱 표지 · 영문 칸 · 10자	PROJECT	
 en.feature	포트폴리오 문서 기능 목록 · 발표 덱 화면 카드(뒤에 번호) · 영문 칸 · 10자	FEATURE	
+en.others	포트폴리오 문서 · 기타 프로젝트 절 위 · 영문 칸 · 14자	OTHER WORK	
 en.glance	포트폴리오 문서 · 한눈에 보기 절 위 · 영문 칸 · 14자	AT A GLANCE	
 en.contact	포트폴리오 문서 · 맨 아래 연락처 · 영문 칸 · 14자	CONTACT	
 en.chapter	발표 덱 · 장 표지(뒤에 번호) · 영문 칸 · 10자	CHAPTER	

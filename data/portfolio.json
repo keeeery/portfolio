@@ -7,7 +7,12 @@
     "intro": "설계 의도를 문서로 설명하는 습관을 가진 유니티 개발자입니다.\n기능을 \"만드는 것\"보다 \"왜 이렇게 만들었는지 설명할 수 있는 것\"을 목표로 공부하고 있습니다.",
     "email": "khinigs@naver.com",
     "github": "https://github.com/keeeery",
-    "links": [{ "label": "블로그", "url": "https://your-blog.example.com" }]
+    "links": [
+      {
+        "label": "블로그",
+        "url": "https://your-blog.example.com"
+      }
+    ]
   },
   "settings": {
     "layout": "project",
@@ -17,28 +22,66 @@
     {
       "name": "Unity",
       "evidence": [
-        { "text": "`Physics2D.Raycast` 카드 선택과 Sprite 선분 연결선 구현", "project": "1-SichuanSung" },
-        { "text": "`DontDestroyOnLoad` 체크포인트 관리자로 씬 전환 뒤 복귀 처리", "project": "2-Arcanist" },
-        { "text": "지형을 32×32 셀 Chunk Mesh로 표현해 셀마다 GameObject를 만들지 않음", "project": "3-Folk-Sack" },
-        { "text": "Rigidbody 가속도 추종으로 물체를 잡아 휘두르는 물리 기반 염동력", "project": "4-ODDITY" }
+        {
+          "text": "`Physics2D.Raycast` 카드 선택과 Sprite 선분 연결선 구현",
+          "project": "1-SichuanSung"
+        },
+        {
+          "text": "`DontDestroyOnLoad` 체크포인트 관리자로 씬 전환 뒤 복귀 처리",
+          "project": "2-Arcanist"
+        },
+        {
+          "text": "지형을 32×32 셀 Chunk Mesh로 표현해 셀마다 GameObject를 만들지 않음",
+          "project": "3-Folk-Sack"
+        },
+        {
+          "text": "Rigidbody 가속도 추종으로 물체를 잡아 휘두르는 물리 기반 염동력",
+          "project": "4-ODDITY"
+        }
       ]
     },
     {
       "name": "C#",
       "evidence": [
-        { "text": "4차원 `visited` 배열과 `Queue`로 두 번 꺾임 연결 탐색", "project": "1-SichuanSung" },
-        { "text": "`SortedDictionary`로 먼저 도착한 Revision Batch를 보관해 순서대로 적용", "project": "3-Folk-Sack" },
-        { "text": "`TimeFreezable`로 객체별 시간 정지와 Animator·Rigidbody 상태 복원", "project": "4-ODDITY" }
+        {
+          "text": "4차원 `visited` 배열과 `Queue`로 두 번 꺾임 연결 탐색",
+          "project": "1-SichuanSung"
+        },
+        {
+          "text": "`SortedDictionary`로 먼저 도착한 Revision Batch를 보관해 순서대로 적용",
+          "project": "3-Folk-Sack"
+        },
+        {
+          "text": "`TimeFreezable`로 객체별 시간 정지와 Animator·Rigidbody 상태 복원",
+          "project": "4-ODDITY"
+        }
       ]
     },
     {
       "name": "디자인 패턴",
       "evidence": [
-        { "text": "Observer(`ICombatObserver`)로 피해 결과를 데미지 팝업에 통지", "project": "2-Arcanist" },
-        { "text": "골렘 보스를 `BossBaseState` 컴포넌트 상태로 나눠 전이", "project": "2-Arcanist" },
-        { "text": "오브젝트 풀(`Dictionary<string, ObjectPool>`·`Stack`)로 파편 재사용", "project": "4-ODDITY" }
+        {
+          "text": "Observer(`ICombatObserver`)로 피해 결과를 데미지 팝업에 통지",
+          "project": "2-Arcanist"
+        },
+        {
+          "text": "골렘 보스를 `BossBaseState` 컴포넌트 상태로 나눠 전이",
+          "project": "2-Arcanist"
+        },
+        {
+          "text": "오브젝트 풀(`Dictionary<string, ObjectPool>`·`Stack`)로 파편 재사용",
+          "project": "4-ODDITY"
+        }
       ]
     }
   ],
-  "projects": ["1-SichuanSung", "2-Arcanist", "3-Folk-Sack", "4-ODDITY", "5-Nutrifit"]
+  "projects": [
+    "1-SichuanSung",
+    "2-Arcanist",
+    "3-Folk-Sack",
+    "4-ODDITY"
+  ],
+  "others": [
+    "5-Nutrifit"
+  ]
 }

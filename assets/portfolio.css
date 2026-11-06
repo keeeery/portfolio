@@ -161,6 +161,15 @@ code { font-family: var(--mono); font-size: .88em; background: var(--accent-soft
 .pill:hover, li.on .pill { border-color: var(--accent-ink); background: var(--accent-soft); color: var(--accent-ink); }
 .fe-r .btns { margin-top: 20px; }
 
+/* ④-2 기타 프로젝트: 카드 하나씩(소개만) */
+.others { border-top: 1px solid var(--line); }
+.oc { display: grid; gap: 18px; padding: 28px 0; border-bottom: 1px solid var(--line); scroll-margin-top: var(--top-h); }
+.oc-h { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 14px; }
+.oc-h h3 { font-size: 21px; font-weight: 800; }
+.oc-team { font-size: 13px; font-weight: 600; color: var(--muted); }
+.oc .tagline { margin: 0; }
+.oc .tags { margin-top: 0; }
+
 /* ⑤ 한눈에 보기 */
 .glance { border-top: 1px solid var(--line); }
 .glance > li { display: grid; grid-template-columns: minmax(0, 1fr); gap: 10px; padding: 24px 0; border-bottom: 1px solid var(--line); }
@@ -205,6 +214,7 @@ code { font-family: var(--mono); font-size: .88em; background: var(--accent-soft
   .fe[style*="--shots:3"] .shot-m img, .fe[style*="--shots:4"] .shot-m img { max-height: 200px; }
   .flist li { grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 24px; }
   .glance > li { grid-template-columns: 220px minmax(0, 1fr) 200px; gap: 32px; }
+  .oc .meta { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .g-l { justify-content: flex-end; }
   .ct { grid-template-columns: minmax(0, 4fr) minmax(0, 7fr); gap: 56px; }
 }
@@ -285,6 +295,11 @@ code { font-family: var(--mono); font-size: .88em; background: var(--accent-soft
   .pill { font-size: 8pt; padding: 3pt 8pt; }
   .shot.on, .flist li.on { box-shadow: none; background: none; border-color: var(--line); }
   .glance > li { grid-template-columns: 38mm minmax(0, 1fr) 34mm; gap: 10pt; padding: 8pt 0; }
+  .oc { gap: 7pt; padding: 10pt 0; break-inside: avoid; }
+  .oc-h h3 { font-size: 13pt; }
+  .oc-team { font-size: 8.5pt; }
+  .oc .meta { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .oc .purls { margin-top: 2pt; }
   .g-t a { font-size: 11pt; }
   .g-b p { font-size: 9.5pt; }
   .g-b .g-tags, .g-b .g-role, .g-t p { font-size: 8.5pt; }

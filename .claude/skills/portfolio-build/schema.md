@@ -29,7 +29,8 @@
       ]
     }
   ],
-  "projects": ["00-example-crafting", "0-Tidy-Mommy"]
+  "projects": ["00-example-crafting", "0-Tidy-Mommy"],
+  "others": []
 }
 ```
 
@@ -42,7 +43,8 @@
 | `skills[].name` | 원문에 나온 기술명, 또는 원문의 **구체 항목을 묶는 상위 범주** (싱글톤·Strategy → "디자인 패턴", `csharp` 코드 → "C#") |
 | `skills[].evidence[].text` | "무엇을 만들었는지" 한 줄(40자 내외). 기술 문서에 있는 사실만. 상위 범주로 묶었다면 **원문의 구체 용어**를 문장에 넣음 |
 | `skills[].evidence[].project` | 근거 프로젝트의 **폴더 이름** |
-| `projects` | 표시 순서대로 폴더 이름 배열. profile.md `프로젝트 순서`가 있으면 그 순서 |
+| `projects` | 표시 순서대로 폴더 이름 배열. profile.md `프로젝트 순서`가 있으면 그 순서. `others`에 든 폴더는 넣지 않음 |
+| `others` | profile.md `기타 프로젝트`의 폴더 이름 배열(적힌 순서). 포트폴리오 문서의 "기타 프로젝트" 절에 카드 하나로 짧게(소개만, 기능 소개 쪽 없음) 그립니다. 프로젝트 JSON(`data/projects/<id>.json`)·발표 덱·상세 문서는 주력 프로젝트와 똑같이 만듭니다. 없으면 `[]` |
 
 ## `data/projects/<폴더 이름>.json`
 

@@ -1,8 +1,8 @@
 // 포트폴리오 문서(index.html) — 아래로 읽는 한 페이지 + A4 인쇄(제출 PDF)
-//   순서: 머리(이름·정체성·연락처) → 자기소개 → 기술 스택 → 프로젝트마다 소개 + 기능 소개 → 한눈에 보기 → 연락처
+//   순서: 머리(이름·정체성·연락처) → 자기소개 → 기술 스택 → 프로젝트마다 소개 + 기능 소개 → 기타 프로젝트(others, 카드만) → 한눈에 보기 → 연락처
 //   기능 소개: 화면(그 기능 절의 이미지 highlights[].image만)은 왼쪽에 모으고, 기능 설명과 [발표 덱에서 보기]는 오른쪽 목록에 한 열로 맞춤
 //   모든 글은 data/portfolio.json·data/projects/*.json 값 그대로입니다. 절 이름·버튼 같은 UI 문구는 문구 표(PF.t, assets/strings.js + theme/strings.tsv)에서 옵니다.
-//   주소: #<절 id>(cover · intro · stack · p-<폴더> · p-<폴더>-core · glance · contact). 예전 포트폴리오 덱 주소(#s=<장면 id> · #<번호>)는 같은 절로 넘깁니다.
+//   주소: #<절 id>(cover · intro · stack · p-<폴더> · p-<폴더>-core · others(카드 id p-<폴더>) · glance · contact). 예전 포트폴리오 덱 주소(#s=<장면 id> · #<번호>)는 같은 절로 넘깁니다.
 //   점검: PFPage.whenReady() → PFPage.report() · ?pf-audit=1이면 #pf-audit에 report()의 base64 JSON(headless용, 발표 덱과 같은 형식)
 (() => {
   const root = document.getElementById('app');
@@ -34,10 +34,11 @@
     try { pf = await PF.loadJSON('data/portfolio.json'); }
     catch (err) { info.errors.push(`data/portfolio.json: ${err && err.message || err}`); PF.noData(root, err); return; }
     PF.applyTheme(pf.settings?.accent);
-    const projects = (await Promise.all((pf.projects || []).map((id) => PF.loadJSON(`data/projects/${encodeURIComponent(id)}.json`)
-      .catch((err) => { console.warn('[portfolio] 프로젝트 데이터 없음:', err.message); return null; })))).filter(Boolean);
+    const load = (ids) => Promise.all((ids || []).map((id) => PF.loadJSON(`data/projects/${encodeURIComponent(id)}.json`)
+      .catch((err) => { console.warn('[portfolio] 프로젝트 데이터 없음:', err.message); return null; }))).then((a) => a.filter(Boolean));
+    const [projects, others] = await Promise.all([load(pf.projects), load(pf.others)]);
     await strings;
-    render(pf, projects);
+    render(pf, projects, others);
     bind();
     arrived = go(projects);                                            // 내용을 그린 뒤라 브라우저가 처음 주소의 절로 스스로 가지 못함
     if (!arrived && performance.getEntriesByType?.('navigation')[0]?.type === 'reload') {
@@ -71,9 +72,9 @@
     return { skills: 'stack', projects: projects[0] ? `p-${projects[0].id}` : '', summary: 'glance' }[h] ?? h;
   }
 
-  function render(pf, projects) {
+  function render(pf, projects, others) {
     const prof = pf.profile || {};
-    const byId = Object.fromEntries(projects.map((p) => [p.id, p]));
+    const byId = Object.fromEntries([...projects, ...others].map((p) => [p.id, p]));
     const nameT = prof.name || t('name.portfolio');
     document.title = `${prof.name ? prof.name + ' · ' : ''}${t('name.portfolio')}`;
     document.querySelector('.skip-link')?.replaceChildren(t('ui.skip'));
@@ -113,6 +114,10 @@
       if (fe) out.push(fe);
     });
 
+    // ④-2 기타 프로젝트(portfolio.json others): 주력과 따로, 프로젝트마다 소개 카드 하나(기능 소개 쪽 없음). 카드 id는 p-<폴더>라 기술 스택 칩·예전 주소가 그대로 옴
+    if (others.length) out.push(sec('others', t('en.others'), t('page.others'), '',
+      `<div class="others">${others.map((p) => otherCard(p, btn, printUrls)).join('')}</div>`, 'others-sec'));
+
     // ⑤ 한눈에 보기(format/01 §1 프로젝트 요약 표) — 좁은 화면에서도 가로 스크롤이 없도록 표 대신 행 목록
     if (projects.length) out.push(sec('glance', t('en.glance'), t('page.glance'), '',`<ul class="glance">${projects.map((p) => `<li>
       <div class="g-t">${link({ href: `#p-${p.id}`, label: esc(p.title), kind: 'anchor' })}<p>${esc(PF.teamLabel(p.team))}</p></div>
@@ -129,12 +134,12 @@
           ${isUrl(prof.github) ? `<p>${link({ href: prof.github, label: `<span class="url">${esc(shortUrl(prof.github))}</span>` })}</p>` : ''}
           ${profLinks.map((l) => `<p><span class="k">${esc(l.label)}</span> ${link({ href: l.url, label: `<span class="url">${esc(shortUrl(l.url))}</span>` })}</p>`).join('')}
           <p class="print-only"><span class="url">${esc(PF.visibleUrl(''))}</span></p></div>
-        <div class="ct-lk">${projects.map((p) => `<div><b>${esc(p.title)}</b><span class="row">${projLinks(p)}</span>${(p.links?.extra || []).filter((l) => isUrl(l.url))
+        <div class="ct-lk">${[...projects, ...others].map((p) => `<div><b>${esc(p.title)}</b><span class="row">${projLinks(p)}</span>${(p.links?.extra || []).filter((l) => isUrl(l.url))
           .map((l) => `<span class="ex">${esc(l.label)} ${link({ href: l.url, label: `<span class="url">${esc(shortUrl(l.url))}</span>` })}</span>`).join('')}</div>`).join('')}</div>
       </div></div></footer>`);
 
     const nav = [['intro', t('page.nav-intro'), prof.intro], ['stack', t('page.nav-stack'), (pf.skills || []).length], [projects[0] ? `p-${projects[0].id}` : '', t('page.nav-projects'), projects.length],
-      ['glance', t('page.nav-glance'), projects.length], ['contact', t('page.nav-contact'), true]].filter((x) => x[0] && x[2]);
+      ['others', t('page.nav-others'), others.length], ['glance', t('page.nav-glance'), projects.length], ['contact', t('page.nav-contact'), true]].filter((x) => x[0] && x[2]);
     root.innerHTML = `<header class="top no-print"><div class="wrap top-in">
         <a class="top-name" href="#cover">${esc(nameT)}</a>
         <nav aria-label="절 이동"><ul>${nav.map(([id, label]) => `<li><a href="#${esc(id)}">${esc(label)}</a></li>`).join('')}</ul></nav>
@@ -143,6 +148,7 @@
     root.querySelectorAll('img').forEach((i) => { if (!i.hasAttribute('loading')) i.loading = 'lazy'; i.decoding = 'async'; });
     info.sections = [...root.querySelectorAll('main > section[id], main > footer[id]')].map((s) => s.id);
     info.projects = projects.length;
+    info.others = others.length;
   }
 
   // 프로젝트 소개: 대표 이미지 · 메타(장르·기간·인원·환경) · 내 역할 · 개발 의도 · 태그 · 링크
@@ -164,6 +170,25 @@
         ${(p.tags || []).length ? `<ul class="tags">${p.tags.map((t) => `<li>${esc(t)}</li>`).join('')}</ul>` : ''}
         <div class="btns no-print">${btns.join('')}</div>${printUrls(urls)}</div></div>`;
     return sec(`p-${p.id}`, no, p.title, PF.teamLabel(p.team), body, 'proj');
+  }
+
+  // 기타 프로젝트 카드: 제목·팀 표시 · 한 줄 소개 · 메타(기간·인원 등) · 역할 · 태그 · 버튼(인쇄에서는 주소). 대표 이미지·개발 의도·기능은 싣지 않음(짧게 소개)
+  function otherCard(p, btn, printUrls) {
+    const meta = (p.meta || []).map((m) => `<div><dt>${esc(m.label)}</dt><dd>${inline(m.value)}</dd></div>`);
+    if (p.team?.role) meta.push(`<div class="wide"><dt>${T('name.role')}</dt><dd>${inline(p.team.role)}</dd></div>`);
+    const extra = (p.links?.extra || []).filter((l) => isUrl(l.url));
+    const btns = [btn(PF.projectUrl(p.id), T('name.deck'), 'page'), btn(PF.docUrl(p.id), T('name.doc'), 'page'),
+      isUrl(p.links?.github) && btn(p.links.github, 'GitHub', 'external'), isUrl(p.links?.video) && btn(p.links.video, T('name.video'), 'external'),
+      ...extra.map((l) => btn(l.url, esc(l.label), 'external'))].filter(Boolean);
+    const urls = [[t('name.deck'), PF.visibleUrl(PF.projectUrl(p.id)), PF.projectUrl(p.id), 'page'], [t('name.doc'), PF.visibleUrl(PF.docUrl(p.id)), PF.docUrl(p.id), 'page'],
+      isUrl(p.links?.github) && ['GitHub', shortUrl(p.links.github), p.links.github, 'external'], isUrl(p.links?.video) && [t('name.video'), shortUrl(p.links.video), p.links.video, 'external'],
+      ...extra.map((l) => [l.label, shortUrl(l.url), l.url, 'external'])].filter(Boolean);
+    return `<article id="p-${esc(p.id)}" class="oc">
+      <div class="oc-h"><h3>${esc(p.title)}</h3><p class="oc-team">${esc(PF.teamLabel(p.team))}</p></div>
+      ${p.tagline ? `<p class="tagline">${inline(p.tagline)}</p>` : ''}
+      ${meta.length ? `<dl class="meta">${meta.join('')}</dl>` : ''}
+      ${(p.tags || []).length ? `<ul class="tags">${p.tags.map((x) => `<li>${esc(x)}</li>`).join('')}</ul>` : ''}
+      <div class="btns no-print">${btns.join('')}</div>${printUrls(urls)}</article>`;
   }
 
   // 기능 소개: 화면은 왼쪽(기능 번호와 함께), 기능 설명과 [발표 덱에서 보기]는 오른쪽 목록. 화면이 하나도 없으면 목록이 폭 전체
@@ -240,7 +265,7 @@
   function report() {
     const imgs = [...document.images];
     return {
-      page: 'portfolio', ready: html.dataset.pfReady, sections: info.sections, projects: info.projects,
+      page: 'portfolio', ready: html.dataset.pfReady, sections: info.sections, projects: info.projects, others: info.others,
       images: { total: imgs.length, broken: imgs.filter((i) => i.complete && i.naturalWidth === 0).map((i) => i.getAttribute('src')),
                 pending: imgs.filter((i) => !i.complete).map((i) => i.getAttribute('src')) },
       deckLinks: [...document.querySelectorAll('.flist a.pill')].map((a) => a.getAttribute('href')),
