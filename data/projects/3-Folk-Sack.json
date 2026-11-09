@@ -322,7 +322,7 @@
           },
           {
             "label": "이유",
-            "text": "생성 순서는 단순 호출 순서가 아니라 결과를 결정하는 규칙입니다.",
+            "text": "생성 순서 자체가 결과를 결정하는 규칙입니다.",
             "verbatim": true
           },
           {
@@ -349,7 +349,7 @@
           "verbatim": true
         },
         "lead": {
-          "text": "현재 클라이언트는 `map_session`에서 받은 프로필·시드와 테이블 버전을 확인하고 초기 맵을 재생성합니다.",
+          "text": "클라이언트는 `map_session`에서 받은 프로필·시드와 테이블 버전을 확인하고 초기 맵을 재생성합니다.",
           "verbatim": true
         },
         "sectionPath": [
@@ -374,7 +374,7 @@
           },
           {
             "label": "이유",
-            "text": "`ReadNormalizedTsvBytes()`는 BOM과 줄바꿈 차이를 정규화합니다.",
+            "text": "클라이언트와 서버가 같은 규칙으로 정규화하므로, Windows와 macOS에서 내용이 같은 TSV가 다른 버전으로 판단되지 않습니다.",
             "verbatim": true
           }
         ],
@@ -432,7 +432,7 @@
           },
           {
             "label": "원인",
-            "text": "문제의 핵심은 Batch의 부재가 아니라 전체 복구 비용과 네트워크 대기를 포함한 임계 구간이었습니다.",
+            "text": "문제의 핵심은 전체 복구 비용과 네트워크 대기까지 포함한 임계 구간이었습니다.",
             "verbatim": true
           },
           {
@@ -490,12 +490,12 @@
           },
           {
             "label": "결과",
-            "text": "변경의 효과는 모든 처리 비용을 없앤 것이 아니라 소켓 대기가 지형 상태 변경 구간을 점유하던 결합을 해소한 것입니다.",
+            "text": "핵심 효과는 소켓 대기가 지형 상태 변경 구간을 붙잡던 결합을 끊은 것입니다.",
             "verbatim": true
           },
           {
             "label": "",
-            "text": "방송 큐도 한 메시지의 전체 멤버 송신 완료를 기다린다는 비용은 남습니다.",
+            "text": "Snapshot 생성의 상태 복사는 여전히 잠금이 필요하고, 방송 큐도 한 메시지를 모든 멤버에게 보낼 때까지 기다리는 비용은 남습니다.",
             "verbatim": true
           }
         ],
@@ -569,7 +569,7 @@
         "points": [
           {
             "label": "구현",
-            "text": "현재 `pendingCollapsePlacementIds`는 `RequestId → CollapseID`를 저장합니다.",
+            "text": "그래서 `pendingCollapsePlacementIds`에 `RequestId → CollapseID`를 저장해,",
             "verbatim": true
           },
           {
@@ -683,7 +683,7 @@
           },
           {
             "label": "해결",
-            "text": "현재 코드는 프레임 종료까지 기다린 뒤 물리 Transform을 동기화하여 후속 매몰 판정을 진행합니다.",
+            "text": "그래서 프레임 종료까지 기다린 뒤 물리 Transform을 동기화하고 매몰 판정을 이어 갑니다.",
             "verbatim": true
           }
         ],
@@ -799,7 +799,7 @@
         "points": [
           {
             "label": "",
-            "text": "서버 timestamp의 여러 스냅샷을 재생하는 보간 버퍼나 이동 예측 보정은 아닙니다.",
+            "text": "서버 timestamp 기반 보간 버퍼나 이동 예측 없이, 최신 목표 위치로 다가가는 단순한 표시 방식입니다.",
             "verbatim": true
           },
           {

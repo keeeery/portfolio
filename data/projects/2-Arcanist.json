@@ -245,7 +245,7 @@
           "verbatim": true
         },
         "lead": {
-          "text": "핵심은 패링 성공으로 카드 게이지를 얻고, 카드를 사용해 전투를 이어가는 흐름입니다.",
+          "text": "2D 액션에 실시간 카드 사용을 결합한 게임입니다.",
           "verbatim": true
         },
         "sectionPath": [
@@ -255,17 +255,17 @@
         "points": [
           {
             "label": "기능",
-            "text": "플레이어는 이동·점프·공격·패링을 수행하며, 충전된 게이지로 카드를 뽑아 Q/W/E 슬롯에서 사용합니다.",
+            "text": "플레이어는 이동·점프·공격·패링을 하며, 충전된 게이지로 카드를 뽑아 Q/W/E 슬롯에서 사용합니다.",
             "verbatim": true
           },
           {
             "label": "기능",
-            "text": "카드는 투사체 공격뿐 아니라 피해 증가·받는 피해 조절·회복·일회 부활 등에도 사용됩니다.",
+            "text": "카드는 투사체 공격뿐 아니라 피해 증가·받는 피해 조절·회복·일회 부활에도 쓰입니다.",
             "verbatim": true
           },
           {
             "label": "",
-            "text": "방의 전투와 보상을 진행하고, 체크포인트를 통해 저장된 위치와 체력으로 복귀합니다.",
+            "text": "방마다 전투와 보상을 진행하고, 체크포인트에 저장된 위치와 체력으로 복귀합니다.",
             "verbatim": true
           }
         ],
@@ -349,7 +349,7 @@
           "verbatim": true
         },
         "lead": {
-          "text": "현재 `HitTargetTracker.TryRegister`는 허용 여부 판단과 기록을 한 번에 수행합니다.",
+          "text": "`HitTargetTracker.TryRegister`는 허용 여부 판단과 기록을 한 번에 수행합니다.",
           "verbatim": true
         },
         "sectionPath": [
@@ -391,7 +391,7 @@
           "verbatim": true
         },
         "lead": {
-          "text": "현재 순서는 대상 검증 → TryRegister → Resolve → Applied일 때 타격 연출입니다.",
+          "text": "처리 순서는 대상 검증 → TryRegister → Resolve → Applied일 때 타격 연출입니다.",
           "verbatim": true
         },
         "sectionPath": [
@@ -457,7 +457,7 @@
           {
             "kind": "table",
             "n": 1,
-            "fp": "선택|현재 구현의 이점|비용·제약"
+            "fp": "선택|이점|비용·제약"
           }
         ]
       },
@@ -483,7 +483,7 @@
           },
           {
             "label": "",
-            "text": "현재는 드로우 시도 직전에 `BeginNextGaugeCycle()`을 호출해 다음 게이지 주기를 시작합니다.",
+            "text": "드로우 시도 직전에 `BeginNextGaugeCycle()`을 호출해 다음 게이지 주기를 시작합니다.",
             "verbatim": true
           },
           {
@@ -557,7 +557,7 @@
           "verbatim": true
         },
         "lead": {
-          "text": "객체 재사용 경로는 구현되어 있으며, GC와 프레임 시간 개선량은 미측정입니다.",
+          "text": "재사용 경로는 구현했지만, GC와 프레임 시간 개선량은 아직 측정하지 않았습니다.",
           "verbatim": true
         },
         "sectionPath": [
@@ -569,7 +569,7 @@
           {
             "kind": "table",
             "n": 1,
-            "fp": "접근|장점|현재 구현에서 고려할 점"
+            "fp": "접근|장점|고려할 점"
           }
         ]
       },
@@ -595,7 +595,7 @@
           },
           {
             "label": "",
-            "text": "실제 값은 Inspector 직렬화 설정이 우선하므로 이 수치를 모든 씬의 확정 규칙으로 취급하지 않습니다.",
+            "text": "씬의 실제 값은 Inspector에 저장된 설정을 따릅니다.",
             "verbatim": true
           },
           {
