@@ -15,6 +15,16 @@ if (window.marked) {
         if (m) return { type: 'del', raw: m[0], text: m[1], tokens: this.lexer.inlineTokens(m[1]) };
         return undefined;
       },
+      // 직접 수정: **굵게**가 문장부호 옆에서 풀리지 않게 — CommonMark 규칙은 닫는 **가 문장부호 뒤·한글 앞이면(설계"**하는, 함수)**를) 닫힘으로 보지 않음.
+      // 여는 ** 뒤와 닫는 ** 앞이 공백·별표가 아니면 굵게. 코드·링크는 maskedSrc로 가려 그 안의 **는 짝으로 쓰지 않음. 그 밖(*기울임*·***)은 원래 규칙(false → 기본 처리)
+      emStrong(src, maskedSrc) {
+        if (!src.startsWith('**')) return false;
+        // maskedSrc는 남은 글이 아니라 글 전체 → 지금 위치에 맞춰 자름(marked 기본 emStrong과 같은 방식)
+        const m = /^\*\*(?=[^\s*])([\s\S]*?[^\s*])\*\*(?!\*)/.exec(maskedSrc.slice(-src.length));
+        if (!m) return false;
+        const raw = src.slice(0, m[0].length), text = raw.slice(2, -2);
+        return { type: 'strong', raw, text, tokens: this.lexer.inlineTokens(text) };
+      },
     },
   });
 }
