@@ -5,6 +5,7 @@
   "title": "ODDITY",
   "tagline": "주변 물체를 들어 휘두르거나 던지고, 시간 정지와 초능력 스킬을 조합해 보스와 싸우는 Unity 3D 액션 게임",
   "cover": null,
+  "coverLogo": "images/Logo_ODDITY_SmoochExtraBold.png",
   "team": {
     "type": "team",
     "size": "4인",
