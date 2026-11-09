@@ -187,7 +187,10 @@ table.kv td.role { color: var(--accent-ink); font-weight: 800; }
 .pi-cover img { width: 100%; height: 100%; object-fit: contain; }
 .pi-meta { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); column-gap: 20px; border-top: 2px solid var(--accent); border-image: linear-gradient(90deg, var(--accent), var(--accent-2)) 1; }
 .pi-meta .mi { padding: 9px 0 10px; border-bottom: 1px solid var(--line); min-width: 0; }
-.pi-meta .mi.wide { grid-column: 1 / -1; }
+/* 직접 고친 기능(/portfolio-update 때 덮어써짐): 프로젝트 정보 3줄 — 장르·기간·인원 한 줄 / 환경 한 줄 / 구현 범위. 넷째 칸부터 한 줄 전체 */
+.pi-meta { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.pi-meta .mi.wide, .pi-meta .mi:nth-child(n+4) { grid-column: 1 / -1; }
+.pi-meta .meta-k { white-space: nowrap; }
 .meta-k { font-size: 11px; font-weight: 800; letter-spacing: .08em; color: var(--muted); }
 .pi-meta dd { margin-top: 2px !important; font-size: 15px; font-weight: 700; line-height: 1.45; color: var(--ink); overflow-wrap: anywhere; }
 .pi-meta .role dd { color: var(--accent-ink); }

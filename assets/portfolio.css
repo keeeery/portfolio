@@ -130,6 +130,7 @@ code { font-family: var(--mono); font-size: .88em; background: var(--accent-soft
          background: var(--paper); border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; }
 .cover img { max-height: 100%; width: auto; height: auto; border-radius: 8px; }
 .meta { display: grid; grid-template-columns: 1fr; gap: 14px 28px; }
+.meta dt { white-space: nowrap; }
 .meta dt, .intent .k, .purls dt { font-size: 12px; font-weight: 700; letter-spacing: .06em; color: var(--muted); }
 .meta dd { margin-top: 2px; font-size: 15px; font-weight: 600; }
 .intent { margin-top: 28px; padding-left: 16px; border-left: 3px solid var(--accent); border-image: linear-gradient(180deg, var(--accent), var(--accent-2)) 1; }
@@ -203,8 +204,9 @@ code { font-family: var(--mono); font-size: .88em; background: var(--accent-soft
   .skill { grid-template-columns: 200px 1fr; gap: 32px; }
   .pi { grid-template-columns: minmax(0, 5fr) minmax(0, 6fr); gap: 48px; }
   .pi.nocover { grid-template-columns: 1fr; }
-  .meta { grid-template-columns: 1fr 1fr; }
-  .meta .wide { grid-column: 1 / -1; }
+  /* 직접 고친 기능(/portfolio-update 때 덮어써짐): 프로젝트 정보 3줄 — 장르·기간·인원 한 줄 / 환경 한 줄 / 구현 범위. 넷째 칸부터 한 줄 전체 */
+  .meta { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .meta .wide, .meta > div:nth-child(n+4) { grid-column: 1 / -1; }
   .fe { grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: 40px; }
   .fe.noshot { grid-template-columns: 1fr; }
   .shots { position: sticky; top: calc(var(--top-h) + 20px); }
@@ -269,8 +271,8 @@ code { font-family: var(--mono); font-size: .88em; background: var(--accent-soft
   .pi { grid-template-columns: minmax(0, 5fr) minmax(0, 6fr); gap: 16pt; padding: 0; background: none; border: 0; border-radius: 0; }
   .pi.nocover { grid-template-columns: 1fr; }
   .cover { height: 78mm; background: none; padding: 4pt; }
-  .meta { grid-template-columns: 1fr 1fr; gap: 6pt 14pt; }
-  .meta .wide { grid-column: 1 / -1; }
+  .meta { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6pt 14pt; }   /* 직접 고친 기능: 프로젝트 정보 3줄 */
+  .meta .wide, .meta > div:nth-child(n+4) { grid-column: 1 / -1; }
   .meta dt, .intent .k, .purls dt { font-size: 7.5pt; }
   .meta dd { font-size: 10pt; }
   .intent { margin-top: 12pt; }
