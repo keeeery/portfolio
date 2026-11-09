@@ -149,7 +149,7 @@ if (playerController != null && playerController.IsParryWindowOpen)
 Applied가 아니면 일반 피격 FX·히트스톱·카메라 흔들림·적중 폭발 경로로 진행하지 않습니다.
 넉백·스턴은 수신자의 `CanReceiveKnockback/CanReceiveStun`을 확인하며, 스턴은 `IStunnable.ApplyStun`으로 호출합니다.
 
-![패링 성공 순간의 이펙트와 Q/W/E 카드 슬롯](images/parry-combat-crop.png)
+![패링 성공 순간의 이펙트](images/parry-combat-zoom.png)
 
 ### 2.4 핵심 기능 — 피해 전달과 결과 구독
 
@@ -185,6 +185,8 @@ private void HandleDamageEvent(CombatEntity sender, CombatEntity receiver, Comba
 회복 시에는 지연 바를 현재 체력에 맞추고 녹색에서 기본색으로 돌아오는 효과를 실행합니다.
 비활성화·초기화에서 트윈을 정리하므로 리스폰 시 이전 감소 연출을 이어가지 않습니다.
 
+![피격 직후의 체력바 — 즉시 줄어든 본체(흰색)와 뒤따라 줄어드는 지연 바(회색)](images/hp-bar-delay.png)
+
 UI·체력바·피격·패링의 수동 시간 보간을 DOTween으로 옮기는 과정에서,
 ‘새 효과가 오면 이전 효과를 끝내고 다시 시작하는가’와 ‘비활성화할 때 정리하는가’를 각 컴포넌트 생명주기에 연결했습니다.
 DOTween으로 코드 반복은 줄었지만, 트윈 대상의 상태 초기화는 여전히 각 컴포넌트가 맡습니다.
@@ -193,6 +195,58 @@ DOTween으로 코드 반복은 줄었지만, 트윈 대상의 상태 초기화�
 직전 배율을 저장하지 않으므로, 메뉴 일시정지와 겹칠 때 어느 쪽이 배율을 되돌릴지는 정해 두어야 합니다.
 
 소스: `HealthBarUI.cs`, `FloatingTextPool.cs`, `HitStopController.cs`.
+
+#### 패링 성공 연출 — 한 번의 호출로 묶기
+
+패링이 성공하면 `PlayerController.SuccessParry`가 패링 창을 닫고 카드 게이지 칸을 더한 뒤 `PlayParrySuccessEffects`를 호출합니다.
+이 함수가 부르는 것은 `ParryLightEffect.Play`와 `ScreenEffectController.PlayParryGlow` 두 가지뿐입니다. 파티클·히트스톱·카메라 흔들림·조명은 `ParryLightEffect` 안에서 함께 시작합니다.
+
+| 구성 | 동작 | 소스 기본값 |
+|---|---|---|
+| 파티클 | 패링 파티클을 재생하고, 게이지 방향으로 회전시킨 게이지 FX를 생성한 뒤 지연 후 제거 | FX 제거 0.6초 |
+| 히트스톱 | `HitStopController.Play` | 0.05초 |
+| 카메라 흔들림 | Cinemachine Impulse를 지연 호출(`DOVirtual.DelayedCall`, 시간 배율 무시) | 0.07초 지연 |
+| 조명 | `Light2D`의 세기·반경을 DOTween으로 키웠다가 되돌림(`SetUpdate(true)`) | 세기 1.8·반경 7로 0.04초, 원래 값으로 0.18초 |
+| 화면 가장자리 | 비네트 이미지를 보라색으로 번쩍임(`PlayParryGlow`) | 최대 알파 0.35, 0.05초 / 0.25초 |
+
+히트스톱은 `timeScale`을 0으로 만들지만, 조명 트윈과 카메라 흔들림 예약은 시간 배율과 무관하게 진행되므로 정지 중에도 이어집니다.
+소스 기본값에서는 흔들림 지연(0.07초)이 히트스톱(0.05초)보다 길어 정지가 풀린 직후에 흔들림이 시작됩니다. 실제 값은 Inspector에 저장된 설정을 따릅니다.
+같은 `ScreenEffectController`가 피격에는 `PlayDamageGlow`(빨강, 최대 알파 0.5), 일회 부활 발동에는 `PlayReviveGlow`(흰색, 최대 알파 0.6)를 제공합니다.
+
+![패링 성공 순간 — 보라색 화면 가장자리와 파티클·조명 이펙트](images/parry-effect-crop.png)
+
+#### 죽음 선고 — 시간 배율을 저장하고 되돌리는 화면 반전
+
+전설 등급 카드 ‘죽음 선고’의 이펙트 프리팹에는 `DeathSentenceEffectController`가 있고, 활성화될 때 `ScreenEffectController.PlayDeathSentenceFlash`를 호출합니다.
+이 함수는 Shader Graph로 만든 화면 반전 머티리얼(`SG_ScreenInvert`)의 `_Blend`를 켜는 동안 `Time.timeScale`을 낮춥니다.
+
+```csharp
+float previousTimeScale = Time.timeScale;
+float previousFixedDeltaTime = Time.fixedDeltaTime;
+
+Time.timeScale = deathSentenceSlowScale;
+Time.fixedDeltaTime = previousFixedDeltaTime * deathSentenceSlowScale;
+screenInvertMaterial.SetFloat("_Blend", 1.0f);
+
+yield return new WaitForSecondsRealtime(deathSentenceFlashDuration);
+
+screenInvertMaterial.SetFloat("_Blend", 0.0f);
+
+float remainingSlowDuration = Mathf.Max(0.0f, deathSentenceSlowDuration - deathSentenceFlashDuration);
+if (remainingSlowDuration > 0.0f)
+    yield return new WaitForSecondsRealtime(remainingSlowDuration);
+
+Time.timeScale = previousTimeScale;
+Time.fixedDeltaTime = previousFixedDeltaTime;
+deathSentenceFlashRoutine = null;
+```
+
+반전은 소스 기본값 기준 0.05초, 느려진 시간은 0.08초(배율 0.25) 유지합니다. 대기는 `WaitForSecondsRealtime`이라 낮춘 시간 배율의 영향을 받지 않습니다.
+`HitStopController`가 복구 값을 1로 고정하는 것과 달리, 이 연출은 직전 `timeScale`·`fixedDeltaTime`을 저장했다가 되돌립니다. 히트스톱이나 일시정지와 겹칠 때의 동작은 이 문서에서 확인하지 않았습니다.
+
+![죽음 선고를 사용한 순간의 화면 반전](images/strong-attack-grayscale.png)
+
+소스: `PlayerController.cs`, `ParryLightEffect.cs`, `ScreenEffectController.cs`, `CameraImpulseController.cs`, `DeathSentenceEffectController.cs`.
 
 ### 2.6 고민과 선택
 
@@ -214,6 +268,17 @@ DOTween으로 코드 반복은 줄었지만, 트윈 대상의 상태 초기화�
 `CardData`는 ID·이름·아이콘·분류·등급·모션 트리거·효과 참조를 보유합니다.
 `CardEffect`는 `Execute(CardEffectContext)` 계약을 제공하는 ScriptableObject이며, 투사체와 버프 효과가 이를 상속합니다.
 카드 사용자는 실제 효과 종류를 분기하지 않고 같은 실행 진입점을 호출할 수 있습니다.
+
+카드 에셋은 30개이고, 그중 효과가 연결된 카드는 22장입니다. 효과 클래스는 두 종류뿐이며 카드마다 에셋 값과 연결한 이펙트 프리팹이 다릅니다.
+
+| 효과 클래스 | 카드 수 | 등급 분포 | 카드 |
+|---|---|---|---|
+| `ProjectileCardEffect` | 9장 | Common 2 · Rare 4 · Epic 2 · Legendary 1 | 화염구, 낙뢰, 라이트닝 볼트, 얼음 기둥, 폭발, 구속, 블랙홀, 인페르노, 죽음 선고 |
+| `BuffCardEffect` | 13장 | Common 2 · Rare 4 · Epic 5 · Legendary 2 | 주문 강화, 철벽, 마력 순환, 주문 각성, 중갑 착용, 회복, 금단의 계약, 비전 공명, 비전 폭주, 생명의 서, 차원 이동, 불사의 축복, 아르카니스트의 계승 |
+| 효과 참조가 비어 있음 | 8장 | — | 얼음 감옥, 영혼 약탈, 유성우, 주문 가속, 소용돌이, 수면, 주문 회고, 타짜의 손놀림 |
+
+`BuffCardEffect`는 `BuffEffectType` 여섯 가지(주는 피해 증가, 받는 피해 감소, 받는 피해 증가, 카드 충전 속도 증가, 회복 비율, 일회 부활)를 조합합니다.
+위 수치는 `CardData` 에셋을 직접 센 결과입니다.
 
 소스: `CardData.cs`, `CardEffect.cs`, `CardSystem.cs`.
 
@@ -274,7 +339,7 @@ return new CardSkillExecutionResult(CardSkillExecutionStatus.Executed, card);
 실행 시점에 타겟을 다시 찾기 때문에, 입력 시점과 애니메이션 발동 시점 사이에 적이 죽은 경우를 구분합니다.
 다만 카드는 이미 슬롯·손패에서 빠진 뒤이므로, 이때 실행이 취소되면 카드는 돌려받지 못합니다(환불 처리 없음).
 
-![화염구 카드를 사용해 적을 공격하는 장면](images/card-combat-crop.png)
+![화염구 카드를 사용해 적을 공격하는 장면](images/card-combat-zoom.png)
 
 ### 3.4 투사체를 프리팹 설정으로 확장
 
@@ -311,6 +376,11 @@ return new CardSkillExecutionResult(CardSkillExecutionStatus.Executed, card);
 동일 버프 갱신은 남은 시간에 더하는 방식이 아니라 `현재 시각 + 새 지속시간`으로 종료 시점을 대체합니다.
 만료 항목은 피해·충전 계산 또는 버프 추가 시 역순으로 제거합니다. 매 프레임 제거 루프는 없습니다.
 일회 부활 대기는 별도 플래그로 관리하고, 소모 후 `ActiveBuffType.Invincibility`를 등록합니다.
+
+![활성 버프 아이콘(좌상단)과 최근 사용 카드 목록(좌측)](images/buff-icons-crop.png)
+
+![불사의 축복 발동 — 화면 가장자리의 흰색 글로우와 버프 아이콘(좌상단)](images/undead-bless-glow-crop.png)
+
 소스: `BuffController.cs`, `ActiveBuff.cs`.
 
 ### 3.7 세부 구현 — 게이지 초과분과 손패의 작업 상태
@@ -335,6 +405,8 @@ currentCell = Mathf.Min(totalCells, gaugeCells.Length);
 드로우·사용·사용 FX 보간은 각 Motion 클래스가 나눠 담당합니다.
 `ClearAllSlots`는 코루틴과 슬롯 상태를 함께 정리하는 리스폰 진입점입니다.
 
+![카드를 뽑은 뒤의 손패 — Q·W 슬롯에 카드가 들어 있음](images/card-draw-crop.png)
+
 ### 3.8 세부 구현 — 투사체의 생성·이동·폭발·반납
 
 `ProjectileController.OnEnable`은 수명·폭발 상태를 초기화하고 충돌체를 켭니다.
@@ -344,6 +416,8 @@ currentCell = Mathf.Min(totalCells, gaugeCells.Length);
 적중 후 동작은 설정에 따라 즉시 비활성화하거나, 이동·충돌을 멈추고 Explode 트리거를 실행합니다.
 수명 초과와 폭발 종료는 `DestroySelf`를 경유하지만 실제 처리는 `CardEffectSpawner.Despawn`의 비활성화입니다.
 이름과 달리 객체를 파괴하지 않으므로, 다시 켤 때 상태를 초기화해야 재사용할 수 있습니다.
+
+![화염구 적중 이펙트](images/fireball-hit-crop.png)
 
 소스: `CardGaugeController.cs`, `CardHandState.cs`, `ProjectileController.cs`.
 
@@ -419,7 +493,7 @@ foreach (CardData card in candidates)
 예를 들어 일반 2장과 희귀 1장만 남으면 희귀 확률은 `22 / (70 + 70 + 22)`입니다.
 이미 획득한 카드 수와 각 등급의 남은 카드 수에 따라 실제 등급 분포가 달라집니다.
 
-![방 클리어 후 등급이 다른 카드 3장 중 하나를 고르는 보상 선택 화면](images/reward-selection.png)
+![방 클리어 후 등급이 다른 카드 3장 중 하나를 고르는 보상 선택 화면](images/reward-selection-zoom.png)
 
 ### 4.4 세부 구현 — 편집 입력과 데이터 변경 경로
 
@@ -446,6 +520,8 @@ foreach (CardData card in candidates)
 툴팁은 카드 정보와 미획득 상태를 전달받고, 커서의 남은 화면 여유에 따라 pivot을 바꾼 뒤 Canvas 경계 안으로 보정합니다.
 Tooltip CanvasGroup은 raycast를 막지 않으며, 슬롯이 비활성화되거나 마우스가 나가면 숨깁니다.
 새 카드 표시는 내부 HashSet으로 관리하며, 키는 CardData.CardId가 아니라 asset 이름입니다.
+
+![미획득 카드의 툴팁 — 카드 정보와 ‘미획득’ 표시](images/card-tooltip-locked.png)
 
 보상 선택은 `isSelectingReward`로 중복 입력을 막고 비선택 카드를 페이드한 뒤 중앙 이동·퇴장 연출 후 지급합니다.
 한 라운드의 선택이 끝나야 남은 라운드를 줄이고 다음 후보를 추첨합니다.
@@ -508,7 +584,7 @@ stateDiagram-v2
 Idle 기본 대기시간은 1.2초, 근접 X축 거리 기준은 3입니다.
 근접 범위 밖에서는 레이저와 팔 발사를 `Random.Range(0, 2)`로 선택합니다.
 
-![고대 수호 골렘의 레이저 패턴](images/boss-combat-crop.png)
+![고대 수호 골렘의 레이저 패턴](images/boss-combat-zoom.png)
 
 ### 5.3 핵심 기능 — 애니메이션 이벤트와 종료 정리
 
@@ -529,6 +605,10 @@ protected override void OnDisable()
 }
 ```
 
+![골렘의 팔 발사](images/golem-arm-shoot-crop.png)
+
+![골렘의 근접 공격](images/golem-melee-crop.png)
+
 ### 5.4 세부 구현 — 입력 명령과 2D 충돌 이동
 
 `CharacterController2D`는 Rigidbody2D를 Kinematic으로 설정하고 자체 중력·점프 횟수·대시 타이머를 관리합니다.
@@ -542,6 +622,10 @@ protected override void OnDisable()
 방향·대시 쿨타임은 이동 런타임이, 달리기 자원·회복 지연은 SprintRuntime이 맡습니다.
 이처럼 플레이어 조율 컴포넌트에서 계산과 연출을 분리하면 입력 차단·사망·리스폰에서 같은 초기화 진입점을 사용할 수 있습니다.
 다만 콜라이더 크기·collisionLayer·skinWidth 설정과 경사·모서리 통과 동작은 실제 맵에서 확인해야 합니다.
+
+![대시 중 이동 이펙트](images/dash-fx-crop.png)
+
+![달리기 중 이동 이펙트](images/sprint-fx-crop.png)
 
 소스: `CharacterController2D.cs`.
 
@@ -560,6 +644,8 @@ Idle은 대기 후 Patrol로 이동하고, 감지된 대상이 있으면 Attack�
 Patrol은 출발 지점 A와 순찰 지점 B를 번갈아 목표로 사용하며, 목적지에 도착하면 잠시 Idle로 돌아갑니다.
 Attack 상태는 ‘공격 애니메이션 재생 중’만을 뜻하지 않고 추적까지 포함합니다.
 추적 범위 안에서 공격 거리에 들어오면 정지·방향 전환 후 EnemyCombat.TryAttack을 호출하고, 멀면 대상에게 이동합니다.
+
+![일반 적(해골 병사)이 공격을 시작하는 장면](images/monster-start-attack-crop.png)
 
 EnemyCombat은 공격 쿨타임과 2종 공격 인덱스를 선택하고 Animator 트리거를 설정합니다.
 원거리 발사는 애니메이션 이벤트에서 전달되며, 대상의 x 위치에 따라 좌우 방향으로 풀 투사체를 초기화합니다.
@@ -642,6 +728,8 @@ Animator를 재바인딩하고 체력을 복원하며 `ResetRuntimeCardsForRespa
 카드 시스템은 대기 스킬과 손패·드로우·버림 목록을 지우고 편성 덱으로 재구성합니다.
 따라서 위치만 옮기는 복귀가 아니라 플레이어의 전투 상태도 함께 정리합니다.
 
+![사망 창 — 위 방향키로 체크포인트에서 부활](images/death-panel.png)
+
 ### 6.4 세부 구현 — 전투 완료와 보상 완료의 방 상태
 
 RoomController는 Ready/Combat/Reward/Cleared를 구분합니다.
@@ -655,7 +743,22 @@ RoomController는 Ready/Combat/Reward/Cleared를 구분합니다.
 오벨리스크는 플레이어 Collider를 HashSet으로 관리합니다.
 플레이어의 여러 충돌체 중 하나만 나가도 ‘영역 밖’으로 판단하지 않고 남은 Collider 수를 사용합니다.
 활성 상태를 다시 적용할 때는 진행 중 파괴 코루틴을 정지하고 Break 트리거를 초기화합니다.
-씬 복귀 때 방 클리어와 오벨리스크 활성 상태를 함께 보완한 것도 이 때문입니다.
+클리어한 방으로 복귀할 때 이 활성 상태가 복원되지 않는 문제를 찾아, `RoomFactory`가 적 컨트롤러 GameObject 대신 컴포넌트만 끄도록 고쳤습니다. 수정 뒤의 실행 확인은 §8.2에 남은 과제로 두었습니다.
+
+#### 일반 적 생성과 전멸 판정
+
+`EnemyRoomController`는 일반 적 프리팹 목록에서 무작위로 고르고, 스폰 지점은 한 번 쓴 곳을 목록에서 빼 서로 겹치지 않게 선택합니다. 생성 수는 `normalEnemyCount`(소스 기본값 3)와 스폰 지점 수 중 작은 값입니다.
+생성한 적에는 `SendMessage("SetTarget")`으로 플레이어 Transform을 전달하고, Rigidbody2D를 Dynamic으로 켜며 Collider를 활성화합니다.
+`Update`는 생성한 적이 모두 `isDead`인지 검사하고, 전멸하면 `RoomController.OnAllEnemiesDefeated`를 호출한 뒤 더 검사하지 않습니다.
+보스 방은 `RoomController.Update`가 `BossController`의 사망을 검사해 같은 `OnAllEnemiesDefeated`로 연결합니다.
+
+#### 출구 안내와 입력 처리
+
+`RoomExitController`는 잠금 상태에서는 상호작용을 받지 않고, 플레이어 Collider를 HashSet으로 세어 영역 안 여부를 판단합니다(오벨리스크와 같은 방식).
+위 방향키를 누르면 상호작용을 한 번 소비하고 안내를 숨깁니다. Reward 상태에서는 보상 창을 열고, Cleared 상태에서는 오벨리스크의 Break 애니메이션이 끝난 뒤 다음 방 전환을 요청합니다.
+`InputPromptController`는 상태에 따라 위 화살표 안내를 ‘보상 선택’ 또는 ‘다음으로 이동’으로 바꿔 보여 주며(페이드 0.15초, 소스 기본값), 오버레이가 열려 있거나 상호작용을 소비한 동안에는 숨깁니다.
+
+소스: `EnemyRoomController.cs`, `RoomExitController.cs`, `InputPromptController.cs`, `RoomController.cs`, `RoomFactory.cs`.
 
 ### 6.5 세부 구현 — 메뉴·옵션·인트로와 시간 기준
 
@@ -663,10 +766,18 @@ Pause·Inventory·Reward는 timeScale을 0으로 하고 키보드 입력을 차�
 OverlayMotion과 보상 선택은 unscaled time으로 진행하여 정지된 게임 안에서도 UI 연출을 완료합니다.
 Overlay 종료와 체크포인트 복귀는 입력·timeScale 복원을 함께 처리합니다.
 
+![일시정지 메뉴](images/pause-menu.png)
+
 옵션은 전체화면 여부·창모드 해상도 인덱스와 마스터 볼륨을 PlayerPrefs에 저장합니다.
 전체화면은 현재 디스플레이 해상도의 FullScreenWindow, 창모드는 설정 목록의 해상도를 사용합니다.
 AudioManager는 AudioListener.volume으로 마스터 음량을 적용하고, BGM 교체 시 기존 곡을 내린 뒤 새 곡을 올립니다.
 BGM 보간은 scaled time을 쓰므로 게임이 일시정지되면 페이드도 멈춥니다.
+
+![옵션 — 화면(해상도·전체화면)](images/option-screen.png)
+
+![옵션 — 소리(마스터 볼륨)](images/option-sound.png)
+
+![타이틀 화면](images/title-menu.png)
 
 인트로는 그림·자막 배열을 차례대로 재생하고 마지막 장면에서 진행 입력을 기다립니다.
 스킵은 즉시 전투 씬으로 이동하지 않고 마지막 장면과 진행 안내로 보내는 방식입니다.
@@ -813,6 +924,18 @@ Save(player);
 저장 시점의 상태 갱신과 복구 시점의 생성 조건을 연결한 수정입니다.
 소스: `CheckPoint.cs`.
 
+### 7.5 전투 대상 정리 — 죽은 적이 카드 타겟으로 지정되던 문제
+
+카드 효과의 타겟을 고르는 `EnemyManager`가 이미 사망한 적을 후보로 지정하던 문제를 고쳤습니다. 당시 증상의 재현 기록은 남아 있지 않아, 아래 표는 커밋의 코드 변경 내용을 기준으로 정리했습니다.
+
+| 변경 전 | 변경 후 | 의미 |
+|---|---|---|
+| 후보 조건이 객체가 없는지와 활성 여부만 확인 | 후보 조건에 `IsDead`를 추가 | 사망했어도 오브젝트가 활성이면 후보에 남을 수 있던 구조를 막음 |
+| 사망 처리에 등록 해제가 없음 | 사망 처리에서 `EnemyManager.Unregister`를 호출 | 사망한 적을 목록에서 직접 제거 |
+
+이 검사는 현재 §3.5의 `IsTargetable`·`IsDead` 확인으로 이어집니다.
+소스: `EnemyManager.cs`, `EnemyController.cs`.
+
 ---
 
 ## 8. 결과와 배운 점
@@ -825,19 +948,22 @@ Save(player);
 | 카드 사용과 효과 실행 시점 분리 | CardSkillExecutor, 애니메이션 콜백 | 실행 실패 시 환불 없음 |
 | 수집·편성·전투 중 카드 상태 분리 | PlayerInventory와 CardSystem의 목록 | 중복 장수 정책 추가 확인 필요 |
 | 골렘 패턴별 컴포넌트 분리 | BossBaseState 상속, Type Dictionary | 타겟·프리팹 연결 전제 |
-| 체크포인트에서 복합 상태 복원 | 방 로드, 체력·Animator·카드 리셋 | 손상 파일 복구·통합 동작 확인 필요 |
+| 체크포인트에서 복합 상태 복원 | 방 로드, 체력·Animator·카드 리셋 | 손상 파일 복구 없음, 클리어한 방 복귀 수정의 실행 확인 필요 |
 
 ### 8.2 한계와 개선 과제
 
 - 인벤토리 저장: `SaveInventory` API는 있지만 아직 호출·복원 경로에 연결하지 않았습니다.
 - 저장 파일: 손상 파일 복구와 저장 형식 변경 대응이 없습니다.
+- 체크포인트 복원 확인: 클리어한 방으로 복귀할 때 오벨리스크가 켜지지 않는 문제를 로그로 추적했습니다. `RoomFactory`가 적 컨트롤러 GameObject를 끄면서, 같은 오브젝트에 있는 `RoomController`까지 `Start` 전에 꺼져 `StartRoom`이 실행되지 않은 것으로 판단해 컴포넌트만 끄도록 고쳤습니다. 수정 뒤의 실행 확인(오벨리스크 활성, 보상·출구 흐름)은 남은 과제입니다.
+- 체크포인트 저장 빈도: 클리어된 방의 체크포인트 영역 안에 있는 동안 `OnTriggerStay2D`가 보상 획득 전까지 저장을 반복하고, 저장은 매번 파일에 씁니다. 호출 빈도를 줄이는 방안은 아직 적용하지 않았습니다.
+- 카드 데이터: 카드 에셋 30개 중 8개는 효과 참조가 비어 있습니다(§3.1).
 
 다음 통합 동작은 Editor에서 더 확인해야 합니다.
 
 - 카드 발동 중 타겟 사망, 동시 입력, 단발·다단 패링 성공 뒤 같은 공격의 재접촉.
 - 풀 재사용 시 HitBox 기록·투사체 수명·이펙트 상태가 초기화되는지.
 - 보스 애니메이션 이벤트와 Collider·레이저 참조 연결.
-- 서로 다른 씬 및 클리어/미클리어 방에서 체크포인트 복귀와 적 생성 여부.
+- 서로 다른 씬 복귀: 씬 로드·플레이어 이동·클리어한 방의 적 미생성은 Editor 로그로 확인했습니다. 방 상태(오벨리스크·보상·출구)의 복원은 위 수정 뒤에 다시 확인해야 합니다.
 - 실제 Inspector 값에 따른 덱 편성 조건과 보상 후보 고갈 시 UI 동작.
 
 ### 8.3 배운 점과 회고
