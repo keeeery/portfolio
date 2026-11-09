@@ -19,6 +19,8 @@
 
 ![Arcanist 로고](images/arcanist-logo.png)
 
+![Arcanist 플레이 화면 — 화염구 카드로 해골 병사를 공격하는 장면](images/cover-play.png)
+
 2D 액션에 실시간 카드 사용을 결합한 게임입니다.
 플레이어는 이동·점프·공격·패링을 하며, 충전된 게이지로 카드를 뽑아 Q/W/E 슬롯에서 사용합니다.
 카드는 투사체 공격뿐 아니라 피해 증가·받는 피해 조절·회복·일회 부활에도 쓰입니다.
@@ -146,7 +148,7 @@ if (playerController != null && playerController.IsParryWindowOpen)
 Applied가 아니면 일반 피격 FX·히트스톱·카메라 흔들림·적중 폭발 경로로 진행하지 않습니다.
 넉백·스턴은 수신자의 `CanReceiveKnockback/CanReceiveStun`을 확인하며, 스턴은 `IStunnable.ApplyStun`으로 호출합니다.
 
-![패링 성공 순간의 이펙트와 Q/W/E 카드 슬롯](images/parry-combat.png)
+![패링 성공 순간의 이펙트와 Q/W/E 카드 슬롯](images/parry-combat-crop.png)
 
 ### 2.4 핵심 기능 — 피해 전달과 결과 구독
 
@@ -271,7 +273,7 @@ return new CardSkillExecutionResult(CardSkillExecutionStatus.Executed, card);
 실행 시점에 타겟을 다시 찾기 때문에, 입력 시점과 애니메이션 발동 시점 사이에 적이 죽은 경우를 구분합니다.
 다만 카드는 이미 슬롯·손패에서 빠진 뒤이므로, 이때 실행이 취소되면 카드는 돌려받지 못합니다(환불 처리 없음).
 
-![화염구 카드를 사용해 적을 공격하는 장면](images/card-combat.png)
+![화염구 카드를 사용해 적을 공격하는 장면](images/card-combat-crop.png)
 
 ### 3.4 투사체를 프리팹 설정으로 확장
 
@@ -505,7 +507,7 @@ stateDiagram-v2
 Idle 기본 대기시간은 1.2초, 근접 X축 거리 기준은 3입니다.
 근접 범위 밖에서는 레이저와 팔 발사를 `Random.Range(0, 2)`로 선택합니다.
 
-![고대 수호 골렘의 레이저 패턴](images/boss-combat.png)
+![고대 수호 골렘의 레이저 패턴](images/boss-combat-crop.png)
 
 ### 5.3 핵심 기능 — 애니메이션 이벤트와 종료 정리
 

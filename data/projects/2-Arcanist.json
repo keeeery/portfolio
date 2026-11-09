@@ -4,7 +4,8 @@
   "doc": "TechDoc_Arcanist.md",
   "title": "Arcanist",
   "tagline": "패링으로 카드 게이지를 얻고, 카드를 사용해 전투를 이어 가는 2D 카드 액션 게임",
-  "cover": "images/arcanist-logo.png",
+  "cover": "images/cover-play.png",
+  "coverLogo": "images/arcanist-logo.png",
   "team": {
     "type": "solo",
     "size": "1인",
@@ -54,9 +55,9 @@
       "why": "패링을 카드 수급과 연결한 핵심 플레이 흐름이기 때문에, 피해 전달 전에 패링을 해결하고 성공 보상으로 게이지를 줍니다.",
       "section": "2.3 핵심 기능 — 패링을 피해 전달 전에 해결",
       "image": {
-        "src": "images/parry-combat.png",
-        "w": 1904,
-        "h": 1066,
+        "src": "images/parry-combat-crop.png",
+        "w": 1163,
+        "h": 872,
         "caption": "패링 성공 순간의 이펙트와 Q/W/E 카드 슬롯"
       }
     },
@@ -67,9 +68,9 @@
       "why": "실행 시점에 타겟을 다시 찾아 입력 시점과 애니메이션 발동 시점 사이에 적이 죽은 경우를 구분하고, 카드 사용자는 효과 종류를 분기하지 않고 같은 실행 진입점을 호출할 수 있습니다.",
       "section": "3.3 핵심 기능 — 사용 승인과 실제 실행의 분리",
       "image": {
-        "src": "images/card-combat.png",
-        "w": 1912,
-        "h": 1074,
+        "src": "images/card-combat-crop.png",
+        "w": 1200,
+        "h": 900,
         "caption": "화염구 카드를 사용해 적을 공격하는 장면"
       }
     },
@@ -80,9 +81,9 @@
       "why": "상태가 컴포넌트이므로 Collider·프리팹·지속시간을 Inspector에서 직접 연결하기 쉽습니다. 대신 상태별 GameObject가 필요합니다.",
       "section": "5.2 핵심 기능 — 골렘 상태 전이",
       "image": {
-        "src": "images/boss-combat.png",
-        "w": 1904,
-        "h": 1066,
+        "src": "images/boss-combat-crop.png",
+        "w": 1373,
+        "h": 1030,
         "caption": "고대 수호 골렘의 레이저 패턴"
       }
     },
@@ -126,15 +127,15 @@
   ],
   "screenshots": [
     {
-      "src": "images/parry-combat.png",
-      "w": 1904,
-      "h": 1066,
+      "src": "images/parry-combat-crop.png",
+      "w": 1163,
+      "h": 872,
       "caption": "패링 성공 순간의 이펙트와 Q/W/E 카드 슬롯"
     },
     {
-      "src": "images/card-combat.png",
-      "w": 1912,
-      "h": 1074,
+      "src": "images/card-combat-crop.png",
+      "w": 1200,
+      "h": 900,
       "caption": "화염구 카드를 사용해 적을 공격하는 장면"
     },
     {
@@ -150,9 +151,9 @@
       "caption": "방 클리어 후 등급이 다른 카드 3장 중 하나를 고르는 보상 선택 화면"
     },
     {
-      "src": "images/boss-combat.png",
-      "w": 1904,
-      "h": 1066,
+      "src": "images/boss-combat-crop.png",
+      "w": 1373,
+      "h": 1030,
       "caption": "고대 수호 골렘의 레이저 패턴"
     }
   ],
@@ -428,9 +429,9 @@
           },
           {
             "kind": "image",
-            "src": "images/parry-combat.png",
-            "w": 1904,
-            "h": 1066,
+            "src": "images/parry-combat-crop.png",
+            "w": 1163,
+            "h": 872,
             "caption": {
               "text": "패링 성공 순간의 이펙트와 Q/W/E 카드 슬롯",
               "verbatim": true
@@ -537,9 +538,9 @@
         "visuals": [
           {
             "kind": "image",
-            "src": "images/card-combat.png",
-            "w": 1912,
-            "h": 1074,
+            "src": "images/card-combat-crop.png",
+            "w": 1200,
+            "h": 900,
             "caption": {
               "text": "화염구 카드를 사용해 적을 공격하는 장면",
               "verbatim": true
@@ -723,9 +724,9 @@
           },
           {
             "kind": "image",
-            "src": "images/boss-combat.png",
-            "w": 1904,
-            "h": 1066,
+            "src": "images/boss-combat-crop.png",
+            "w": 1373,
+            "h": 1030,
             "caption": {
               "text": "고대 수호 골렘의 레이저 패턴",
               "verbatim": true
