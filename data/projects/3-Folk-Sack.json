@@ -3,7 +3,7 @@
   "doc": "TechDoc_FolkSack.md",
   "schemaVersion": 2,
   "title": "Folk Sack",
-  "tagline": "지하 지형을 채굴하고 광물을 수집하는 Unity 2D 멀티플레이 채굴 게임",
+  "tagline": "지하를 채굴해 자원을 모으고, 지형 붕괴·매몰 위험 속에서 경쟁하는 Unity 2D 멀티플레이 채굴 게임",
   "cover": null,
   "team": {
     "type": "team",
@@ -13,7 +13,7 @@
   "meta": [
     {
       "label": "장르",
-      "value": "2D 멀티플레이 채굴 게임"
+      "value": "2D 멀티플레이 채굴"
     },
     {
       "label": "기간",
@@ -25,7 +25,7 @@
     },
     {
       "label": "환경",
-      "value": "Unity 6000.3.15f1 (URP 17.3.0), C# / 서버 ASP.NET Core (net10.0)"
+      "value": "Unity 6000.3.15f1, URP 17.3.0, C# (클라이언트·서버)"
     }
   ],
   "tags": [
@@ -241,7 +241,7 @@
             "fp": "항목|내용",
             "sectionPath": [
               "1. 프로젝트 개요",
-              "1.3 개발 환경과 범위"
+              "1.3 개발 환경"
             ]
           }
         ]
@@ -252,20 +252,20 @@
         "layout": "full",
         "tab": "개요",
         "title": {
-          "text": "1.2 Why — 해결하려던 문제",
+          "text": "1.2 Why — 왜 만들었나",
           "verbatim": true
         },
         "lead": null,
         "sectionPath": [
           "1. 프로젝트 개요",
-          "1.2 Why — 해결하려던 문제"
+          "1.2 Why — 왜 만들었나"
         ],
         "points": [],
         "visuals": [
           {
             "kind": "table",
             "n": 1,
-            "fp": "문제 상황|필요한 기준|현재 구현의 대응"
+            "fp": "문제|구현 방향"
           }
         ]
       },

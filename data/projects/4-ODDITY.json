@@ -3,7 +3,7 @@
   "id": "4-ODDITY",
   "doc": "TechDoc_ODDITY.md",
   "title": "ODDITY",
-  "tagline": "초능력 보스 액션 게임",
+  "tagline": "주변 물체를 들어 휘두르거나 던지고, 시간 정지와 초능력 스킬을 조합해 보스와 싸우는 Unity 3D 액션 게임",
   "cover": null,
   "team": {
     "type": "team",
@@ -13,7 +13,7 @@
   "meta": [
     {
       "label": "장르",
-      "value": "Unity 3D 액션"
+      "value": "3D 보스 액션"
     },
     {
       "label": "기간",
@@ -25,7 +25,7 @@
     },
     {
       "label": "환경",
-      "value": "Unity 6000.3.15f1, C#, URP·Shader Graph 17.3.0, Input System 1.19.0"
+      "value": "Unity 6000.3.15f1, URP·Shader Graph 17.3.0 (ScriptableRendererFeature·RenderGraph), C#"
     }
   ],
   "tags": [
@@ -213,7 +213,7 @@
         "layout": "overview",
         "tab": "개요",
         "title": {
-          "text": "1.1 What — 무엇을 구현했나",
+          "text": "1.1 What — 무엇을 만들었나",
           "verbatim": true
         },
         "lead": {
@@ -222,7 +222,7 @@
         },
         "sectionPath": [
           "1. 프로젝트 개요",
-          "1.1 What — 무엇을 구현했나"
+          "1.1 What — 무엇을 만들었나"
         ],
         "points": [
           {
@@ -248,7 +248,7 @@
             "fp": "문제|구현 방향",
             "sectionPath": [
               "1. 프로젝트 개요",
-              "1.2 Why — 다루는 문제와 구현 방향"
+              "1.2 Why — 왜 만들었나"
             ]
           }
         ]
@@ -259,7 +259,7 @@
         "layout": "full",
         "tab": "개요",
         "title": {
-          "text": "1.4 담당 범위와 팀 구현의 연결",
+          "text": "1.4 담당 범위",
           "verbatim": true
         },
         "lead": {
@@ -268,7 +268,7 @@
         },
         "sectionPath": [
           "1. 프로젝트 개요",
-          "1.4 담당 범위와 팀 구현의 연결"
+          "1.4 담당 범위"
         ],
         "points": [],
         "visuals": [

@@ -1,23 +1,24 @@
 # Nutrifit — 영양소 기반 음식 추천과 앱·서버 연동 기술 문서
 
-> **담당 범위**: 데이터 정제, 영양소 목표 계산, 코사인 유사도 기반 추천 알고리즘, Flask API를 통한 앱·서버 연동을 직접 구현했습니다.
+> **한 줄 소개**: 신체 정보와 식사 기록으로 남은 영양소를 계산해 다음 식사 후보를 추천하는 Android 앱
+> **담당**: 추천 서버(데이터 정제·영양소 목표 계산·코사인 유사도 추천·Flask API)와 Android 통계·추천 화면
 
-| 시스템 | 역할 | 구현 방식 |
-|---|---|---|
-| A. 영양소 기반 추천 | 사용자 정보·섭취 기록으로 다음 음식 후보 계산 | pandas 정제, 잔여 영양소 벡터, cosine similarity |
-| B. 앱·서버 연동 | Android 기록을 전송하고 Flask 결과를 수신 | JSON, OkHttp 비동기 요청, Flask API |
+| 구분 | 시스템 | 핵심 내용 | 절 |
+|---|---|---|---|
+| 핵심 A | 영양소 기반 추천 | 사용자 정보·섭취 기록으로 다음 음식 후보 계산 — pandas 정제, 잔여 영양소 벡터, cosine similarity | §2 |
+| 핵심 B | 앱·서버 연동 | Android 기록을 전송하고 Flask 결과를 수신 — JSON, OkHttp 비동기 요청, Flask API | §3 |
 
 ---
 
 ## 1. 프로젝트 개요
 
-### 1.1 What — 무엇을 구현했나
+### 1.1 What — 무엇을 만들었나
 
 Nutrifit은 신체 정보와 식사 기록을 바탕으로 영양소 섭취 현황과 다음 식사의 후보를 제공하는 Android 프로젝트입니다.
 앱은 FoodLens SDK를 이용한 음식 사진 분석과 수동 입력을 제공하며, 기록을 JSON 파일로 저장합니다.
 별도 Python 서버는 식품 영양성분 CSV와 앱에서 받은 사용자·식사 정보를 이용해 추천을 계산합니다.
 
-### 1.2 Why — 다루는 문제와 구현 방향
+### 1.2 Why — 왜 만들었나
 
 바쁜 현대인이 건강을 위해 균형 잡힌 식단을 찾고 **챙겨 먹는 데 드는 시간을 줄이고자** 했습니다.
 음식 사진을 찍으면 FoodLens SDK로 **음식의 종류와 양을 자동으로 인식**해 기록의 번거로움을 덜고, 신체 정보와 식사 기록으로 목표 대비 남은 영양소를 계산해 다음 식사로 먹을 음식 후보를 추천하는 데 집중했습니다.
@@ -28,23 +29,27 @@ Nutrifit은 신체 정보와 식사 기록을 바탕으로 영양소 섭취 현�
 | 식품 데이터의 중복·결측과 분류 처리 필요 | 필요한 열 선택, 결측 제거, 대표식품명·대분류별 평균 |
 | 앱과 추천 계산의 책임 분리 필요 | JSON 요청을 받는 Flask API |
 
-### 1.3 개발 환경과 담당
+### 1.3 개발 환경
 
 | 항목 | 내용 |
 |---|---|
-| Android | Java, XML Layout, Activity·Fragment, OkHttp `4.10.0`, Gson `2.10` |
-| 음식 인식 | FoodLens SDK |
-| 추천 API | Python, Flask, pandas, NumPy, scikit-learn |
+| 장르 | 영양 관리 Android 앱 + 추천 서버 |
 | 기간 | 2023.09 - 2024.06 |
 | 인원 | 5인 팀 |
+| 플랫폼 | Android (XML Layout, Activity·Fragment) |
+| Language | Java (앱), Python (서버) |
+| 주요 패키지 | OkHttp `4.10.0`, Gson `2.10`, FoodLens SDK |
+| 서버 | Flask, pandas, NumPy, scikit-learn |
 | GitHub | [앱](https://github.com/keeeery/Nutrifit), [추천 서버](https://github.com/keeeery/Nutrifit_Recommendation) |
+
+### 1.4 담당 범위
 
 | 직접 구현한 부분 | 내용 |
 |---|---|
 | 추천 서버 | 식품 데이터 정제, 영양소 목표 계산, 코사인 유사도 추천, Flask `server.py`와 JSON 응답 |
 | Android 화면·연동 | 홈의 식사 기록 표시, 주간 통계 페이지(`CustomLineChart`·`CustomBarChart`), 두 식단 추천 UI와 서버 요청 |
 
-### 1.4 전체 구조
+### 1.5 전체 구조
 
 ```mermaid
 flowchart LR

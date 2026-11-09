@@ -3,7 +3,7 @@
   "doc": "TechDoc_SichuanSung.md",
   "schemaVersion": 2,
   "title": "사천성",
-  "tagline": "같은 그림의 카드 두 장을 연결해 제거하는 Unity 2D 퍼즐 개인 프로젝트",
+  "tagline": "같은 그림의 카드 두 장을 연결해 제거하는 Unity 2D 퍼즐 게임",
   "cover": null,
   "team": {
     "type": "solo",
@@ -13,7 +13,7 @@
   "meta": [
     {
       "label": "장르",
-      "value": "2D 퍼즐 게임"
+      "value": "2D 퍼즐"
     },
     {
       "label": "기간",
@@ -25,7 +25,7 @@
     },
     {
       "label": "환경",
-      "value": "Unity 6000.3.15f1, URP 17.3.0, C#, Input System 1.19.0, uGUI, TextMesh Pro"
+      "value": "Unity 6000.3.15f1, URP 17.3.0 (2D SpriteRenderer), C#"
     }
   ],
   "tags": [
@@ -153,7 +153,7 @@
         "layout": "overview",
         "tab": "개요",
         "title": {
-          "text": "1.1 What — 무엇을 구현했나",
+          "text": "1.1 What — 무엇을 만들었나",
           "verbatim": true
         },
         "lead": {
@@ -162,7 +162,7 @@
         },
         "sectionPath": [
           "1. 프로젝트 개요",
-          "1.1 What — 무엇을 구현했나"
+          "1.1 What — 무엇을 만들었나"
         ],
         "points": [
           {
@@ -194,13 +194,13 @@
         "layout": "full",
         "tab": "개요",
         "title": {
-          "text": "1.2 Why — 다루는 문제와 구현 방향",
+          "text": "1.2 Why — 왜 만들었나",
           "verbatim": true
         },
         "lead": null,
         "sectionPath": [
           "1. 프로젝트 개요",
-          "1.2 Why — 다루는 문제와 구현 방향"
+          "1.2 Why — 왜 만들었나"
         ],
         "points": [],
         "visuals": [
