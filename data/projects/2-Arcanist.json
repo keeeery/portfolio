@@ -58,7 +58,7 @@
         "src": "images/parry-combat-zoom.png",
         "w": 620,
         "h": 465,
-        "caption": "패링 성공 순간의 이펙트"
+        "caption": "패링 성공 이펙트"
       }
     },
     {
@@ -71,7 +71,7 @@
         "src": "images/card-combat-zoom.png",
         "w": 640,
         "h": 480,
-        "caption": "화염구 카드를 사용해 적을 공격하는 장면"
+        "caption": "화염구 사용 장면"
       }
     },
     {
@@ -84,7 +84,7 @@
         "src": "images/reward-selection-zoom.png",
         "w": 1032,
         "h": 774,
-        "caption": "방 클리어 후 등급이 다른 카드 3장 중 하나를 고르는 보상 선택 화면"
+        "caption": "보상 카드 선택 화면"
       }
     },
     {
@@ -97,7 +97,7 @@
         "src": "images/boss-combat-zoom.png",
         "w": 900,
         "h": 675,
-        "caption": "고대 수호 골렘의 레이저 패턴"
+        "caption": "골렘 레이저 패턴"
       }
     }
   ],

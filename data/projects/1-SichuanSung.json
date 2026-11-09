@@ -57,7 +57,7 @@
         "src": "images/path-border.png",
         "w": 367,
         "h": 275,
-        "caption": "보드 위쪽 빈 테두리를 지나 두 번 꺾여 연결된 두 카드"
+        "caption": "보드 외곽으로 연결된 경로"
       }
     },
     {
@@ -70,7 +70,7 @@
         "src": "images/reshuffle.png",
         "w": 720,
         "h": 540,
-        "caption": "연결 가능한 쌍이 없어 Reshuffling 안내와 함께 남은 카드를 재배치하는 화면"
+        "caption": "연결 가능한 쌍이 없어 재배치 중인 화면"
       }
     },
     {
@@ -83,7 +83,7 @@
         "src": "images/match-line.png",
         "w": 673,
         "h": 505,
-        "caption": "선택 외곽선이 표시된 두 카드 사이에 연결선이 그려진 순간"
+        "caption": "연결선이 그려진 순간"
       }
     },
     {
@@ -94,9 +94,9 @@
       "section": "5. 기능 D — 한 판의 진행·시간 평가와 최고 기록",
       "image": {
         "src": "images/result-clear.png",
-        "w": 900,
-        "h": 675,
-        "caption": "클리어 결과 화면 — 별 평가와 이번 기록·최고 기록"
+        "w": 920,
+        "h": 690,
+        "caption": "클리어 결과 화면"
       }
     }
   ],
@@ -128,8 +128,8 @@
     },
     {
       "src": "images/result-clear.png",
-      "w": 900,
-      "h": 675,
+      "w": 920,
+      "h": 690,
       "caption": "클리어 결과 화면 — 별 평가와 이번 기록·최고 기록"
     }
   ],
@@ -620,8 +620,8 @@
           {
             "kind": "image",
             "src": "images/result-clear.png",
-            "w": 900,
-            "h": 675,
+            "w": 920,
+            "h": 690,
             "caption": {
               "text": "클리어 결과 화면 — 별 평가와 이번 기록·최고 기록",
               "verbatim": true
