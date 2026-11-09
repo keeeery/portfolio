@@ -130,7 +130,7 @@ argument-hint: "[프로젝트 폴더 이름 (생략하면 전체)]"
 
 ## 4. 검증 (쓰기 전에 반드시)
 
-- [ ] 모든 `cover`·`screenshots[].src`·`highlights[].image.src`·`deck` 안 이미지 `src`가 Glob 결과와 **대소문자까지 일치**하는 실제 파일이다
+- [ ] 모든 `cover`·`coverLogo`·`screenshots[].src`·`highlights[].image.src`·`deck` 안 이미지 `src`가 Glob 결과와 **대소문자까지 일치**하는 실제 파일이다
 - [ ] 모든 `section`·`retro.section`·`sectionPath`의 각 칸 텍스트가 원문에 제목으로 존재한다 (Grep으로 확인 — **코드 블록 밖의** `#` 줄만 제목)
 - [ ] `sectionPath` 마지막 제목이 원문에 2번 이상 나오면 구분되는 위 제목이 앞에 붙어 있다 (Grep 개수로 확인)
 - [ ] `visuals[]`마다 `n`이 그 절 범위의 같은 `kind` 블록 수를 넘지 않고, `fp`가 원문 블록의 첫 줄(표는 머리 칸)과 같다 — 원문을 다시 열어 비교.

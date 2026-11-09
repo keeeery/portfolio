@@ -367,6 +367,7 @@
                     '환경': 'en.meta-env', '개발 환경': 'en.meta-env', '엔진': 'en.meta-engine', '플랫폼': 'en.meta-platform' };
   const metaEn = (label) => { const k = META_EN[String(label || '').replace(/\s+/g, ' ').trim()]; return k ? PF.t(k) : ''; };
   async function projectIntro(p, { id, titleTag = 'h2', eyebrow = PF.t('en.project'), links = [], foot = '', sec = '', group = '', stats, tpl = 'P1' }) {
+    if (!p.cover && p.coverLogo) p = { ...p, cover: p.coverLogo };     // 직접 고친 기능: 플레이 화면 없이 로고만 있으면 발표 덱 표지에 로고
     const d = p.cover ? (p.coverSize?.w ? p.coverSize : await imageSize(PF.srcPath(p.id, p.cover))) : null;
     const ar = d ? d.w / d.h : null;
     const variant = !p.cover || !ar ? 'nocover' : ar < 0.9 ? 'portrait' : 'landscape';

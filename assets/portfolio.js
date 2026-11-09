@@ -146,6 +146,14 @@
         <button type="button" class="btn primary pdf" data-pdf>${T('ui.pdf')}</button></div></header>
       <main id="main">${out.join('')}</main>`;
     root.querySelectorAll('img').forEach((i) => { if (!i.hasAttribute('loading')) i.loading = 'lazy'; i.decoding = 'async'; });
+    // 그림 칸 4:3 고정(직접 고친 기능): 그림 비율이 4:3과 15% 넘게 다르면(로고 등) 칸에 .fit — 잘라 내지 않고 전체를 보여 줌
+    const off = (w, h) => w > 0 && h > 0 && Math.abs(w / h / (4 / 3) - 1) > 0.15;
+    root.querySelectorAll('.cover:not(.has-logo) img, .shot-m img').forEach((i) => {
+      const mark = () => { if (off(i.naturalWidth, i.naturalHeight)) i.parentElement.classList.add('fit'); };
+      const w = +i.getAttribute('width'), h = +i.getAttribute('height');
+      if (w && h) { if (off(w, h)) i.parentElement.classList.add('fit'); }
+      else if (i.complete) mark(); else i.addEventListener('load', mark, { once: true });
+    });
     info.sections = [...root.querySelectorAll('main > section[id], main > footer[id]')].map((s) => s.id);
     info.projects = projects.length;
     info.others = others.length;
@@ -162,7 +170,11 @@
     const urls = [[t('name.deck'), PF.visibleUrl(PF.projectUrl(p.id)), PF.projectUrl(p.id), 'page'], [t('name.doc'), PF.visibleUrl(PF.docUrl(p.id)), PF.docUrl(p.id), 'page'],
       isUrl(p.links?.github) && ['GitHub', shortUrl(p.links.github), p.links.github, 'external'], isUrl(p.links?.video) && [t('name.video'), shortUrl(p.links.video), p.links.video, 'external'],
       ...extra.map((l) => [l.label, shortUrl(l.url), l.url, 'external'])].filter(Boolean);
-    const cover = p.cover ? `<figure class="cover"><img src="${esc(PF.srcPath(p.id, p.cover))}" alt="${esc(p.title)} 대표 화면"></figure>` : '';
+    // 대표 이미지(직접 고친 기능): coverLogo가 있으면 플레이 화면(cover) 위에 로고를 겹침. 플레이 화면이 아직 없으면 어두운 바탕 위 같은 자리에 로고
+    const bgImg = p.cover ? `<img class="cover-bg" src="${esc(PF.srcPath(p.id, p.cover))}" alt="${esc(p.title)} 대표 화면">` : '';
+    const logoImg = p.coverLogo ? `<img class="cover-logo" src="${esc(PF.srcPath(p.id, p.coverLogo))}" alt="${esc(p.title)} 로고">` : '';
+    const cover = logoImg ? `<figure class="cover has-logo${bgImg ? '' : ' no-bg'}">${bgImg}${logoImg}</figure>`
+      : bgImg ? `<figure class="cover">${bgImg}</figure>` : '';
     const body = `${p.tagline ? `<p class="tagline">${inline(p.tagline)}</p>` : ''}
       <div class="pi${cover ? '' : ' nocover'}">${cover}<div class="pi-r">
         ${meta.length ? `<dl class="meta">${meta.join('')}</dl>` : ''}
@@ -268,6 +280,7 @@
       page: 'portfolio', ready: html.dataset.pfReady, sections: info.sections, projects: info.projects, others: info.others,
       images: { total: imgs.length, broken: imgs.filter((i) => i.complete && i.naturalWidth === 0).map((i) => i.getAttribute('src')),
                 pending: imgs.filter((i) => !i.complete).map((i) => i.getAttribute('src')) },
+      fit: [...document.querySelectorAll('.cover.fit img, .shot-m.fit img')].map((i) => i.getAttribute('src')),
       deckLinks: [...document.querySelectorAll('.flist a.pill')].map((a) => a.getAttribute('href')),
       overflowX: Math.max(0, document.documentElement.scrollWidth - document.documentElement.clientWidth),
       errors: info.errors, strings: PF.stringsReport(),
