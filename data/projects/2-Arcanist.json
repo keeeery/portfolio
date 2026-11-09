@@ -18,7 +18,7 @@
     },
     {
       "label": "기간",
-      "value": "2025.06 - 2025.07"
+      "value": "2025.06 — 2025.07"
     },
     {
       "label": "인원",
@@ -40,7 +40,7 @@
   ],
   "links": {
     "github": "https://github.com/KooHoo-Dev/3rd-2D-Project-keeeery",
-    "video": "",
+    "video": "https://youtu.be/xyBh7i-7-Eg",
     "extra": []
   },
   "intent": {

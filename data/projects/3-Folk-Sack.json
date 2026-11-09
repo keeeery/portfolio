@@ -17,7 +17,7 @@
     },
     {
       "label": "기간",
-      "value": "2026.08 - 2026.09"
+      "value": "2026.08 — 2026.09"
     },
     {
       "label": "인원",
@@ -38,7 +38,7 @@
   ],
   "links": {
     "github": "https://github.com/KooHoo-Dev/3rd-TeamProject-KH",
-    "video": "",
+    "video": "https://youtu.be/6BlW58UlKig",
     "extra": [
       {
         "label": "서버 GitHub",

@@ -45,12 +45,13 @@
 | 항목 | 내용 |
 |---|---|
 | 장르 | 2D 카드 액션 |
-| 기간 | 2025.06 - 2025.07 |
+| 기간 | 2025.06 — 2025.07 |
 | 인원 | 1인 |
 | Engine | Unity `6000.3.15f1`, Universal RP `17.3.0` |
 | Language | C# |
 | 주요 패키지 | Input System `1.19.0`(프로젝트 입력 래퍼 `SimpleInput`), Cinemachine `3.1.7`, LDtkUnity `6.12.3`, 2D Animation `13.0.4` |
 | GitHub | [https://github.com/KooHoo-Dev/3rd-2D-Project-keeeery](https://github.com/KooHoo-Dev/3rd-2D-Project-keeeery) |
+| 시연 영상 | [YouTube](https://youtu.be/xyBh7i-7-Eg) |
 
 환경 설정: `ProjectVersion.txt`, `manifest.json`.
 

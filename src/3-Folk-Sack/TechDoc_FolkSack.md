@@ -47,7 +47,7 @@
 | 항목 | 내용 |
 |---|---|
 | 장르 | 2D 멀티플레이 채굴 |
-| 기간 | 2026.08 - 2026.09 |
+| 기간 | 2026.08 — 2026.09 |
 | 인원 | 3인 |
 | Engine | Unity `6000.3.15f1`, URP `17.3.0` |
 | Language | C# (클라이언트·서버) |
@@ -56,6 +56,7 @@
 | 통신 | `ClientWebSocket` / ASP.NET Core WebSocket, JSON 메시지 |
 | 데이터 | 클라이언트 StreamingAssets TSV, 서버 Data TSV 및 설정 |
 | GitHub | 클라이언트 [https://github.com/KooHoo-Dev/3rd-TeamProject-KH](https://github.com/KooHoo-Dev/3rd-TeamProject-KH), 서버 [https://github.com/KooHoo-Dev/3rd-TeamProject-KH-Server](https://github.com/KooHoo-Dev/3rd-TeamProject-KH-Server) |
+| 시연 영상 | [YouTube](https://youtu.be/6BlW58UlKig) |
 
 ### 1.4 담당 범위
 
