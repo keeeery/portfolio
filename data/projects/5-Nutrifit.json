@@ -3,7 +3,7 @@
   "id": "5-Nutrifit",
   "doc": "TechDoc_Nutrifit.md",
   "title": "Nutrifit",
-  "tagline": "영양소 기반 추천과 앱·서버 연동",
+  "tagline": "영양소 기반 음식 추천과 앱·서버 연동",
   "cover": null,
   "team": {
     "type": "team",
@@ -21,19 +21,11 @@
     },
     {
       "label": "Android",
-      "value": "Java, XML Layout, Activity·Fragment"
-    },
-    {
-      "label": "SDK",
-      "value": "compileSdk 34, targetSdk 34, minSdk 23"
+      "value": "Java, XML Layout, Activity·Fragment, OkHttp 4.10.0, Gson 2.10"
     },
     {
       "label": "추천 API",
       "value": "Python, Flask, pandas, NumPy, scikit-learn"
-    },
-    {
-      "label": "통신·직렬화",
-      "value": "OkHttp 4.10.0, Gson 2.10"
     }
   ],
   "tags": [
@@ -46,12 +38,12 @@
     "FoodLens SDK"
   ],
   "links": {
-    "github": "https://github.com/keeeery/Nutrifit_Recommendation/tree/main",
+    "github": "https://github.com/keeeery/Nutrifit_Recommendation",
     "video": "",
     "extra": [
       {
-        "label": "앱 Gradle 설정",
-        "url": "https://github.com/keeeery/Nutrifit/blob/main/app/build.gradle.kts"
+        "label": "앱 GitHub",
+        "url": "https://github.com/keeeery/Nutrifit"
       }
     ]
   },
@@ -63,56 +55,55 @@
     {
       "title": "영양소 벡터 기반 추천",
       "what": "사용자 정보로 11개 영양소 목표를 계산하고, 섭취량을 차감한 잔여 영양소로 다음 음식 후보의 순위를 매깁니다.",
-      "how": "섭취 영양소에 `eatAmount`를 곱해 차감하고 음수는 0으로 제한한 뒤, 성분별 가중치를 적용한 잔여 벡터와 음식 벡터의 cosine similarity로 점수를 매겨 음식군별로 1개씩 최대 5개를 고릅니다.",
-      "why": "음식 영양소 기반 유사도는 사용자 평점 이력이 없어도 계산할 수 있고, 음식군별 후보 선택으로 밥·국·반찬 형태를 구성합니다.",
+      "how": "섭취 영양소에 `eatAmount`를 곱해 차감하고 음수 잔여량은 0으로 제한한 뒤, 성분별 가중치를 곱한 잔여 벡터와 음식 벡터의 cosine similarity로 점수를 매겨 음식군별로 1개씩 최대 5개를 고릅니다.",
+      "why": "사용자 평점 이력 기반 협업 필터링 대신 음식 영양소 벡터의 유사도를 써서 평점 이력이 없어도 계산할 수 있고, 음식군별 1개 선택으로 밥·국·반찬 형태를 구성합니다.",
       "section": "2.2 핵심 기능 및 사용법",
       "image": null
     },
     {
       "title": "식품 데이터 정제와 후보 테이블",
       "what": "식품 영양성분 CSV에서 대표식품명·식품대분류명과 11개 영양소 열을 골라 추천 후보 테이블을 만듭니다.",
-      "how": "선택 열에 `dropna()`로 결측 행을 제거하고 대표식품명·식품대분류명으로 묶어 영양소 평균을 냅니다. 이 준비는 `server.py` 모듈이 로드될 때 한 번 수행합니다.",
-      "why": "공통 식품 테이블을 서버 시작 시 준비해 요청마다 CSV 파싱을 반복하지 않습니다.",
-      "section": "5.1 시작 시 정제하는 데이터와 요청마다 계산하는 데이터",
+      "how": "서버가 시작할 때 CSV를 한 번 읽어 선택 열의 결측 행을 `dropna()`로 제거하고, 대표식품명·식품대분류명으로 묶어 영양소 평균을 냅니다.",
+      "why": "",
+      "section": "2.1 개요와 시스템 구조",
       "image": null
     },
     {
       "title": "Android–Flask 추천 요청 연동",
       "what": "앱이 사용자 정보와 식사 기록을 JSON으로 묶어 Flask `POST /recommend`에 보내고, 추천 후보 응답을 받아 파싱합니다.",
       "how": "`user_data.json`과 식사 파일을 `{ \"user\": [...], \"foods\": [...] }`로 합쳐 OkHttp로 `application/json; charset=utf-8` POST 요청을 만들고, `enqueue`로 비동기 요청한 뒤 응답 문자열을 UI 스레드로 넘겨 파싱합니다.",
-      "why": "계산을 Flask API로 분리해 Android 화면과 추천 계산을 별도로 변경할 수 있게 했습니다.",
-      "section": "3.2 핵심 기능 및 사용법",
+      "why": "앱과 추천 계산의 책임을 나누기 위해 JSON 요청을 받는 Flask API로 분리했습니다. 화면과 계산을 따로 바꿀 수 있지만 계약을 양쪽에서 함께 관리해야 합니다.",
+      "section": "3.1 요청과 응답",
       "image": null
     },
     {
       "title": "주간 통계 Canvas 차트",
-      "what": "오늘부터 6일 전까지 7일 동안의 kcal과 탄수화물·단백질·지방 기록을 주간 차트로 보여 줍니다.",
-      "how": "`StatisticsFragment`가 날짜별 파일을 집계해(파일이 없으면 0) 목록만 차트 View에 넘기고, `CustomLineChart`는 Canvas·Path로 선·점·평균선과 터치 위치의 kcal 말풍선을, `CustomBarChart`는 탄수화물·단백질·지방 합으로 나눈 누적 막대를 그립니다.",
-      "why": "Canvas 차트를 직접 구현해 필요한 평균선·터치 표시를 구성했습니다.",
-      "section": "6.4 홈과 통계에서 기록을 해석하는 방식",
+      "what": "6일 전부터 오늘까지 7일 동안의 kcal과 탄수화물·단백질·지방 기록을 주간 차트로 보여 줍니다.",
+      "how": "`StatisticsFragment`가 날짜별 기록을 집계해 목록만 차트 View에 넘기고, `CustomLineChart`는 Canvas·Path로 선·점·평균선과 터치 위치의 kcal 말풍선을, `CustomBarChart`는 탄수화물·단백질·지방의 g 구성비를 누적 막대로 그립니다.",
+      "why": "",
+      "section": "3.2 주간 통계 차트",
       "image": null
     }
   ],
   "troubleshooting": [],
   "screenshots": [],
   "retro": {
-    "section": "4. 결과 및 배운 점",
+    "section": "4. 결과와 배운 점",
     "achieved": [
       "음식 데이터를 추천 후보로 정제 — 결측 제거·분류별 평균",
       "섭취 기록을 반영하는 추천 계산 — 잔여 영양소·가중치·코사인 유사도",
-      "앱과 서버의 HTTP 연결 코드 — OkHttp 비동기 요청·Flask API"
+      "앱과 서버의 HTTP 연결 — OkHttp 비동기 요청·Flask API",
+      "주간 섭취 통계 — Canvas 기반 꺾은선·누적 막대 차트"
     ],
     "regrets": [
-      "조리법·표본별 차이가 대표식품명·대분류 평균에 흡수됨",
-      "kcal·g·mg의 원본 단위 스케일이 유사도에 영향을 줌",
-      "성분별 가중치의 효과·추천 품질은 미측정이고, 선호도 `boost=1.1`은 현재 후보를 바꾸지 않음",
-      "응답 MIME·개수·영양소 키의 불일치가 앱과 서버 사이에 남아 있음"
+      "응답 MIME·결과 개수·영양소 키의 계약이 앱과 서버 사이에서 맞지 않음",
+      "선호 가중치(`boost=1.1`)가 실제 순위를 바꾸지 못함",
+      "단위 표준화와 가중치 효과, 추천 품질을 측정하지 않음"
     ],
     "plans": [
-      "데이터 품질·표본 평가",
-      "단위 표준화",
-      "선호도 효과·추천 품질 개선",
-      "MIME·개수·키 계약 통일 및 실행 확인"
+      "MIME·개수·키 계약을 통일하고 실행으로 확인",
+      "선호도 효과 개선",
+      "단위 표준화와 데이터 품질·표본 평가"
     ]
   },
   "deck": {
@@ -139,31 +130,10 @@
         ]
       },
       {
-        "key": "rules",
-        "title": "추천 계산의 세부 규칙과 데이터 경계",
+        "key": "result",
+        "title": "결과와 배운 점",
         "sectionPath": [
-          "5. 추천 계산의 세부 규칙과 데이터 경계"
-        ]
-      },
-      {
-        "key": "android",
-        "title": "추천 입력을 만드는 Android 기록 흐름",
-        "sectionPath": [
-          "6. 추천 입력을 만드는 Android 기록 흐름"
-        ]
-      },
-      {
-        "key": "contract",
-        "title": "요청·응답 계약과 화면 표시의 상세 경계",
-        "sectionPath": [
-          "7. 요청·응답 계약과 화면 표시의 상세 경계"
-        ]
-      },
-      {
-        "key": "choices",
-        "title": "구현 선택과 화면·API 연결",
-        "sectionPath": [
-          "8. 구현 선택과 화면·API 연결"
+          "4. 결과와 배운 점"
         ]
       }
     ],
@@ -187,28 +157,19 @@
         ],
         "points": [
           {
-            "label": "",
+            "label": "기능",
             "text": "앱은 FoodLens SDK를 이용한 음식 사진 분석과 수동 입력을 제공하며, 기록을 JSON 파일로 저장합니다.",
-            "verbatim": true
-          },
-          {
-            "label": "",
-            "text": "별도 Python 서버는 식품 영양성분 CSV와 앱에서 받은 사용자·식사 정보를 이용해 추천을 계산합니다.",
-            "verbatim": true
-          },
-          {
-            "label": "",
-            "text": "현재 공개 소스에는 응답 MIME·개수·영양소 키의 불일치가 남아 있습니다.",
             "verbatim": true
           }
         ],
         "visuals": [
           {
             "kind": "table",
-            "n": 1,
-            "fp": "시스템|역할|구현 방식",
+            "n": 2,
+            "fp": "직접 구현한 부분|내용",
             "sectionPath": [
-              "Nutrifit — 영양소 기반 추천과 앱·서버 연동 기술문서 소스"
+              "1. 프로젝트 개요",
+              "1.3 개발 환경과 담당"
             ]
           }
         ]
@@ -232,7 +193,7 @@
           {
             "kind": "table",
             "n": 1,
-            "fp": "문제|구현 방향|범위"
+            "fp": "문제|구현 방향"
           }
         ]
       },
@@ -268,28 +229,15 @@
           "text": "2.1 개요와 시스템 구조",
           "verbatim": true
         },
-        "lead": null,
+        "lead": {
+          "text": "요청이 오면 사용자 정보로 목표 영양소를 계산하고, 섭취량을 차감한 남은 영양소와 각 음식의 코사인 유사도를 비교합니다.",
+          "verbatim": true
+        },
         "sectionPath": [
           "2. 기능 A — 영양소 벡터 기반 추천",
           "2.1 개요와 시스템 구조"
         ],
-        "points": [
-          {
-            "label": "",
-            "text": "서버는 CP949 CSV에서 음식명·대분류와 11개 영양소를 선택합니다.",
-            "verbatim": true
-          },
-          {
-            "label": "",
-            "text": "결측 행을 제거하고 같은 대표식품명·대분류의 영양소 평균을 계산해 후보 테이블을 만듭니다.",
-            "verbatim": true
-          },
-          {
-            "label": "",
-            "text": "사용자 정보로 목표 영양소를 계산한 뒤 섭취량을 차감하고, 남은 영양소와 각 음식의 코사인 유사도를 비교합니다.",
-            "verbatim": true
-          }
-        ],
+        "points": [],
         "visuals": [
           {
             "kind": "mermaid",
@@ -307,28 +255,15 @@
           "text": "2.2 핵심 기능 및 사용법",
           "verbatim": true
         },
-        "lead": null,
+        "lead": {
+          "text": "밥류 1개, 조건부 국·찌개 1개, 반찬 세 군에서 각각 1개를 골라 최대 5개 음식을 반환합니다.",
+          "verbatim": true
+        },
         "sectionPath": [
           "2. 기능 A — 영양소 벡터 기반 추천",
           "2.2 핵심 기능 및 사용법"
         ],
-        "points": [
-          {
-            "label": "",
-            "text": "섭취 영양소에 `eatAmount`를 곱해 차감하고, 음수 잔여량은 0으로 제한합니다.",
-            "verbatim": true
-          },
-          {
-            "label": "",
-            "text": "가중치를 적용한 잔여 벡터와 음식 벡터의 유사도를 점수로 사용합니다.",
-            "verbatim": true
-          },
-          {
-            "label": "",
-            "text": "밥류 1개, 조건부 국·찌개 1개, 반찬 세 군에서 각각 1개를 선택해 최대 5개 음식을 반환합니다.",
-            "verbatim": true
-          }
-        ],
+        "points": [],
         "visuals": [
           {
             "kind": "table",
@@ -337,7 +272,7 @@
           },
           {
             "kind": "code",
-            "n": 3,
+            "n": 2,
             "fp": "# server.py: recommend_foods 내부 select_top에서 발췌"
           }
         ]
@@ -356,58 +291,14 @@
           "2. 기능 A — 영양소 벡터 기반 추천",
           "2.3 고민과 선택"
         ],
-        "points": [
-          {
-            "label": "",
-            "text": "선호도 `boost=1.1`은 같은 분류 내 모든 점수에 곱해지며, 분류 간 비교 없이 `break`합니다.",
-            "verbatim": true
-          },
-          {
-            "label": "",
-            "text": "실제 서비스 경로는 영양소 벡터의 유사도 계산입니다.",
-            "verbatim": true
-          }
-        ],
+        "points": [],
         "visuals": [
           {
             "kind": "table",
             "n": 1,
-            "fp": "선택|이점|현재 한계"
+            "fp": "고민|대안|선택과 이유|남은 한계"
           }
         ]
-      },
-      {
-        "key": "link-structure",
-        "chapter": "link",
-        "layout": "overview",
-        "tab": "구조",
-        "title": {
-          "text": "3.1 개요와 시스템 구조",
-          "verbatim": true
-        },
-        "lead": null,
-        "sectionPath": [
-          "3. 기능 B — Android와 Flask의 연동",
-          "3.1 개요와 시스템 구조"
-        ],
-        "points": [
-          {
-            "label": "",
-            "text": "앱은 `user_data.json`과 식사 파일을 읽어 `{ \"user\": [...], \"foods\": [...] }`로 전송합니다.",
-            "verbatim": true
-          },
-          {
-            "label": "",
-            "text": "Flask의 `POST /recommend`는 `user[0]`과 식사 배열로 계산하며, 정상 결과는 음식 객체 배열입니다.",
-            "verbatim": true
-          },
-          {
-            "label": "",
-            "text": "`GET /recommend`는 안내 HTML, 예외는 HTML 본문과 HTTP 500을 반환합니다.",
-            "verbatim": true
-          }
-        ],
-        "visuals": []
       },
       {
         "key": "link-request",
@@ -415,23 +306,21 @@
         "layout": "code",
         "tab": "구현",
         "title": {
-          "text": "3.2 핵심 기능 및 사용법",
+          "text": "3.1 요청과 응답",
           "verbatim": true
         },
-        "lead": null,
+        "lead": {
+          "text": "앱은 `user_data.json`과 식사 파일을 읽어 `{ \"user\": [...], \"foods\": [...] }`로 전송합니다.",
+          "verbatim": true
+        },
         "sectionPath": [
           "3. 기능 B — Android와 Flask의 연동",
-          "3.2 핵심 기능 및 사용법"
+          "3.1 요청과 응답"
         ],
         "points": [
           {
-            "label": "",
-            "text": "`enqueue`로 비동기 요청하고 `RecommendFragment`는 응답 문자열을 UI 스레드로 전달해 파싱합니다.",
-            "verbatim": true
-          },
-          {
-            "label": "",
-            "text": "`CameraResultActivity`는 당일 파일 전체를 모으지만 추천 Fragment는 정렬하지 않은 `files[0]` 하나를 사용합니다.",
+            "label": "구현",
+            "text": "enqueue로 비동기 요청하고, 응답 문자열은 UI 스레드로 넘겨 파싱한 뒤 두 식단 UI에 나누어 표시합니다.",
             "verbatim": true
           }
         ],
@@ -444,227 +333,26 @@
         ]
       },
       {
-        "key": "data-clean",
-        "chapter": "rules",
-        "layout": "code",
-        "tab": "구현",
-        "title": {
-          "text": "5.1 시작 시 정제하는 데이터와 요청마다 계산하는 데이터",
-          "verbatim": true
-        },
-        "lead": {
-          "text": "`server.py`는 모듈이 로드될 때 CSV를 한 번 읽고 후보 테이블을 준비합니다.",
-          "verbatim": true
-        },
-        "sectionPath": [
-          "5. 추천 계산의 세부 규칙과 데이터 경계",
-          "5.1 시작 시 정제하는 데이터와 요청마다 계산하는 데이터"
-        ],
-        "points": [
-          {
-            "label": "",
-            "text": "요청마다 전체 CSV를 다시 읽는 구조는 아닙니다.",
-            "verbatim": true
-          },
-          {
-            "label": "",
-            "text": "`dropna()`는 선택된 열 중 결측이 있는 행을 제거합니다. 결측치를 추정해서 채우는 처리는 없습니다.",
-            "verbatim": true
-          },
-          {
-            "label": "",
-            "text": "평균을 구할 때도 음식명만으로 합치지 않고 대분류를 함께 사용합니다.",
-            "verbatim": true
-          }
-        ],
-        "visuals": [
-          {
-            "kind": "code",
-            "n": 1,
-            "fp": "nutrition_data = data[selected_columns].dropna()"
-          }
-        ]
-      },
-      {
-        "key": "weights",
-        "chapter": "rules",
-        "layout": "full",
-        "tab": "구현",
-        "title": {
-          "text": "5.2 목표·잔여량·가중치의 의미",
-          "verbatim": true
-        },
-        "lead": {
-          "text": "이 표는 코드의 계산 규칙이며 개인에게 적용할 영양 처방이나 검증된 목표값을 제시하는 표가 아닙니다.",
-          "verbatim": true
-        },
-        "sectionPath": [
-          "5. 추천 계산의 세부 규칙과 데이터 경계",
-          "5.2 목표·잔여량·가중치의 의미"
-        ],
-        "points": [
-          {
-            "label": "",
-            "text": "코사인 유사도는 벡터의 방향을 비교하므로, 추천된 음식 한 개가 잔여량을 정확히 채운다는 의미는 아닙니다.",
-            "verbatim": true
-          }
-        ],
-        "visuals": [
-          {
-            "kind": "table",
-            "n": 1,
-            "fp": "성분|코드의 목표 규칙|유사도 가중치"
-          }
-        ]
-      },
-      {
-        "key": "food-groups",
-        "chapter": "rules",
-        "layout": "full",
-        "tab": "흐름",
-        "title": {
-          "text": "5.3 음식군 선택 순서와 선호도 처리",
-          "verbatim": true
-        },
-        "lead": null,
-        "sectionPath": [
-          "5. 추천 계산의 세부 규칙과 데이터 경계",
-          "5.3 음식군 선택 순서와 선호도 처리"
-        ],
-        "points": [
-          {
-            "label": "",
-            "text": "분류 목록을 순서대로 돌고 데이터가 있으면 그 안에서 하나를 골라 종료합니다.",
-            "verbatim": true
-          },
-          {
-            "label": "",
-            "text": "`boost=1.1`도 해당 분류의 모든 점수에 동일하게 곱해지므로 순위를 바꾸지 않습니다.",
-            "verbatim": true
-          }
-        ],
-        "visuals": [
-          {
-            "kind": "table",
-            "n": 1,
-            "fp": "단계|후보 분류|선택 조건"
-          }
-        ]
-      },
-      {
-        "key": "photo-meal",
-        "chapter": "android",
-        "layout": "code",
-        "tab": "구현",
-        "title": {
-          "text": "6.2 사진 분석에서 식사 파일까지",
-          "verbatim": true
-        },
-        "lead": {
-          "text": "선택 이미지는 Bitmap을 거쳐 JPEG 바이트로 변환하고 FoodLens에 전달합니다.",
-          "verbatim": true
-        },
-        "sectionPath": [
-          "6. 추천 입력을 만드는 Android 기록 흐름",
-          "6.2 사진 분석에서 식사 파일까지"
-        ],
-        "points": [
-          {
-            "label": "",
-            "text": "촬영은 `ActivityResultContracts.TakePicture`, 갤러리 선택은 `GetContent`로 결과를 받습니다.",
-            "verbatim": true
-          },
-          {
-            "label": "",
-            "text": "저장 경로는 `foodPositionList → foodCandidates → nutrition`입니다.",
-            "verbatim": true
-          },
-          {
-            "label": "",
-            "text": "영양 정보가 없는 후보는 제외하고, 처리한 `foodId`는 `HashSet`으로 중복을 제거합니다.",
-            "verbatim": true
-          }
-        ],
-        "visuals": [
-          {
-            "kind": "code",
-            "n": 1,
-            "fp": "NetworkService networkService = FoodLens.createNetworkServic"
-          }
-        ]
-      },
-      {
-        "key": "manual-input",
-        "chapter": "android",
-        "layout": "code",
-        "tab": "구현",
-        "title": {
-          "text": "6.3 수동 입력과 중량 환산",
-          "verbatim": true
-        },
-        "lead": null,
-        "sectionPath": [
-          "6. 추천 입력을 만드는 Android 기록 흐름",
-          "6.3 수동 입력과 중량 환산"
-        ],
-        "points": [
-          {
-            "label": "",
-            "text": "`UserFoodSelectActivity`는 음식명·중량을 목록에 넣고 `FoodListAdapter`로 표시·삭제합니다.",
-            "verbatim": true
-          },
-          {
-            "label": "",
-            "text": "기준 DB의 100g당 값을 `servingSize / 100f`로 환산하고, 환산된 영양소와 `eatAmount=1`을 저장합니다.",
-            "verbatim": true
-          },
-          {
-            "label": "",
-            "text": "수동 기록은 `carbohydrate`, `fiber`, `vitaminA`, `vitaminC`를 쓰지만 서버는 `carbonhydrate`, `dietrayfiber`, `vitamina`, `vitaminc`를 요구합니다.",
-            "verbatim": true
-          }
-        ],
-        "visuals": [
-          {
-            "kind": "code",
-            "n": 1,
-            "fp": "Cursor cursor = foodDb.rawQuery("
-          }
-        ]
-      },
-      {
         "key": "stats-chart",
-        "chapter": "android",
+        "chapter": "link",
         "layout": "code",
         "tab": "구현",
         "title": {
-          "text": "6.4 홈과 통계에서 기록을 해석하는 방식",
+          "text": "3.2 주간 통계 차트",
           "verbatim": true
         },
-        "lead": null,
+        "lead": {
+          "text": "`StatisticsFragment`는 6일 전부터 오늘까지 7일을 순회해 날짜별 기록을 집계하고, 차트 View에는 목록만 전달합니다.",
+          "verbatim": true
+        },
         "sectionPath": [
-          "6. 추천 입력을 만드는 Android 기록 흐름",
-          "6.4 홈과 통계에서 기록을 해석하는 방식"
+          "3. 기능 B — Android와 Flask의 연동",
+          "3.2 주간 통계 차트"
         ],
         "points": [
           {
-            "label": "",
-            "text": "`StatisticsFragment`는 오늘부터 6일 전을 시작일로 설정하고 7일을 순회합니다.",
-            "verbatim": true
-          },
-          {
-            "label": "",
-            "text": "주간 집계는 Fragment가 담당하고 차트 View에는 목록만 전달합니다.",
-            "verbatim": true
-          },
-          {
-            "label": "",
-            "text": "`CustomLineChart`는 Canvas·Path로 선과 점, 평균선을 그립니다.",
-            "verbatim": true
-          },
-          {
-            "label": "",
-            "text": "`CustomBarChart`는 하루 탄수화물·단백질·지방의 합으로 각 성분을 나누어 누적 막대 높이를 계산합니다.",
+            "label": "구현",
+            "text": "CustomLineChart는 Canvas·Path로 선과 점, 평균선을 그리고, 터치한 위치와 가까운 날의 kcal 말풍선을 화면 안쪽으로 보정해 띄웁니다.",
             "verbatim": true
           }
         ],
@@ -677,145 +365,27 @@
         ]
       },
       {
-        "key": "request-paths",
-        "chapter": "contract",
-        "layout": "overview",
-        "tab": "흐름",
-        "title": {
-          "text": "7.1 두 요청 경로를 구분한 흐름",
-          "verbatim": true
-        },
-        "lead": null,
-        "sectionPath": [
-          "7. 요청·응답 계약과 화면 표시의 상세 경계",
-          "7.1 두 요청 경로를 구분한 흐름"
-        ],
-        "points": [
-          {
-            "label": "",
-            "text": "`CameraResultActivity`는 수정 시각 기준 최근 식사 파일을 표시합니다.",
-            "verbatim": true
-          },
-          {
-            "label": "",
-            "text": "저장 버튼에서는 당일 파일 전체를 합쳐 추천을 요청하고 응답을 MainActivity의 `result_json` extra에 넣습니다.",
-            "verbatim": true
-          },
-          {
-            "label": "",
-            "text": "반면 `RecommendFragment`는 생성될 때 다시 요청합니다.",
-            "verbatim": true
-          },
-          {
-            "label": "",
-            "text": "메인 화면은 결과 extra를 소비하지 않아 앞의 응답이 추천 탭에 그대로 이어지지 않습니다.",
-            "verbatim": true
-          }
-        ],
-        "visuals": []
-      },
-      {
-        "key": "mime-count",
-        "chapter": "contract",
-        "layout": "code",
-        "tab": "구현",
-        "title": {
-          "text": "7.2 JSON MIME과 결과 개수",
-          "verbatim": true
-        },
-        "lead": {
-          "text": "서버의 응답 분기는 MIME 해석 함수가 아니라 헤더 문자열의 완전 일치 비교입니다.",
-          "verbatim": true
-        },
-        "sectionPath": [
-          "7. 요청·응답 계약과 화면 표시의 상세 경계",
-          "7.2 JSON MIME과 결과 개수"
-        ],
-        "points": [
-          {
-            "label": "",
-            "text": "앱은 `application/json; charset=utf-8`을 지정합니다.",
-            "verbatim": true
-          },
-          {
-            "label": "",
-            "text": "JSON 본문을 읽고 계산하더라도 위 조건은 맞지 않아 HTML 테이블 응답으로 진행합니다.",
-            "verbatim": true
-          },
-          {
-            "label": "",
-            "text": "MIME 조건을 맞춰 JSON으로 연결해도 앱의 `resultArray.size() < 10` 검사와 서버 최대 5개 결과가 맞지 않습니다.",
-            "verbatim": true
-          }
-        ],
-        "visuals": [
-          {
-            "kind": "code",
-            "n": 1,
-            "fp": "if request.headers.get('Content-Type') == 'application/json'"
-          }
-        ]
-      },
-      {
-        "key": "responsibility",
-        "chapter": "choices",
+        "key": "result-table",
+        "chapter": "result",
         "layout": "full",
-        "tab": "선택",
+        "tab": "결과",
         "title": {
-          "text": "8.1 데이터와 화면 책임을 나눈 선택",
+          "text": "4.1 구현 결과",
           "verbatim": true
         },
         "lead": null,
         "sectionPath": [
-          "8. 구현 선택과 화면·API 연결",
-          "8.1 데이터와 화면 책임을 나눈 선택"
+          "4. 결과와 배운 점",
+          "4.1 구현 결과"
         ],
         "points": [],
         "visuals": [
           {
             "kind": "table",
             "n": 1,
-            "fp": "선택|구현상 이점|남는 책임"
+            "fp": "구현 결과|핵심 구현"
           }
         ]
-      },
-      {
-        "key": "my-work",
-        "chapter": "choices",
-        "layout": "overview",
-        "tab": "결과",
-        "title": {
-          "text": "8.2 직접 구현한 화면과 API 연결",
-          "verbatim": true
-        },
-        "lead": null,
-        "sectionPath": [
-          "8. 구현 선택과 화면·API 연결",
-          "8.2 직접 구현한 화면과 API 연결"
-        ],
-        "points": [
-          {
-            "label": "식사 기록 표시 추가",
-            "text": "당일 파일에서 음식명·섭취 kcal을 읽고 홈에 파일별 기록 행을 생성했습니다.",
-            "verbatim": true
-          },
-          {
-            "label": "통계 페이지 추가·개선",
-            "text": "`StatisticsFragment`, `CustomLineChart`, `CustomBarChart`와 주간 UI, 터치 말풍선·표시 위치를 구현했습니다.",
-            "verbatim": true
-          },
-          {
-            "label": "두 식단 추천 UI 변경",
-            "text": "응답 배열을 두 식단으로 나누는 표시 로직과 UI를 변경했습니다.",
-            "verbatim": true
-          },
-          {
-            "label": "추천 서버의 Flask 지원",
-            "text": "파일 실행 계산을 HTTP 요청으로 제공하는 `server.py`를 추가했습니다.",
-            "verbatim": true
-          }
-        ],
-        "visuals": []
       }
     ]
   }
