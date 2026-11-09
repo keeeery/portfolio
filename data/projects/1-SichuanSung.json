@@ -2,7 +2,7 @@
   "id": "1-SichuanSung",
   "doc": "TechDoc_SichuanSung.md",
   "schemaVersion": 2,
-  "title": "SichuanSung",
+  "title": "사천성",
   "tagline": "같은 그림의 카드 두 장을 연결해 제거하는 Unity 2D 퍼즐 개인 프로젝트",
   "cover": null,
   "team": {
@@ -43,8 +43,8 @@
     "extra": []
   },
   "intent": {
-    "text": "방향·회전 수가 다른 경로의 구분, 보드 바깥 우회, 연결 가능한 쌍이 없는 보드, 판정 결과를 플레이어가 이해하게 하는 것을 다루는 문제로 삼았습니다.",
-    "verbatim": false
+    "text": "평소 좋아하던 아케이드 게임인 사천성을 간단한 과제로 만든 프로젝트입니다. 핵심 규칙인 \"두 번 이하로 꺾어 연결\"을 정확하게 판정하기 위해 **규칙에 맞는 탐색 알고리즘(BFS)을 찾아 구현**하는 데 집중했고, 막힌 보드 재배치와 시간 평가·최고 기록 저장까지 한 판의 흐름으로 완성했습니다.",
+    "verbatim": true
   },
   "highlights": [
     {
@@ -169,7 +169,7 @@
           "verbatim": true
         },
         "lead": {
-          "text": "SichuanSung은 같은 그림의 카드 두 장을 연결해 제거하는 Unity 2D 퍼즐 개인 프로젝트입니다.",
+          "text": "사천성은 같은 그림의 카드 두 장을 연결해 제거하는 Unity 2D 퍼즐 개인 프로젝트입니다.",
           "verbatim": true
         },
         "sectionPath": [

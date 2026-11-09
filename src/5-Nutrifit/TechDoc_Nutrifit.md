@@ -23,6 +23,9 @@ Nutrifit은 신체 정보와 식사 기록을 바탕으로 영양소 섭취 현�
 
 ### 1.2 Why — 다루는 문제와 구현 방향
 
+바쁜 현대인이 건강을 위해 균형 잡힌 식단을 찾고 **챙겨 먹는 데 드는 시간을 줄이고자** 했습니다.
+음식 사진을 찍으면 FoodLens SDK로 **음식의 종류와 양을 자동으로 인식**해 기록의 번거로움을 덜고, 신체 정보와 식사 기록으로 목표 대비 남은 영양소를 계산해 다음 식사로 먹을 음식 후보를 추천하는 데 집중했습니다.
+
 | 문제 | 구현 방향 | 범위 |
 |---|---|---|
 | 식사 기록만으로 다음 메뉴를 선택하기 어려움 | 목표에서 섭취량을 뺀 영양소 벡터로 후보 비교 | 음식 후보의 순위 계산 |
@@ -42,7 +45,7 @@ Nutrifit은 신체 정보와 식사 기록을 바탕으로 영양소 섭취 현�
 | 추천 API | Python, Flask, pandas, NumPy, scikit-learn |
 | 별도 실험 | TensorFlow/Keras Autoencoder 코드; 현재 API 추천 경로에는 미연결 |
 | 기간 | 2023.09 - 2024.06 |
-| 인원 | 4인 팀 |
+| 인원 | 5인 팀 |
 
 소스: [앱 Gradle 설정](https://github.com/keeeery/Nutrifit/blob/main/app/build.gradle.kts), [추천 서버](https://github.com/keeeery/Nutrifit_Recommendation/blob/main/server.py).
 Python 의존성의 실행 버전은 저장소에서 고정되어 있지 않습니다.

@@ -2,10 +2,29 @@
 // 데이터: data/portfolio.json, data/projects/<폴더 이름>.json(/portfolio-build가 생성), src/<폴더>/<기술 문서>.md
 // 이 파일은 글을 만들지 않습니다. 화면에 나오는 내용은 모두 위 데이터에서 오고, UI 문구(절 이름·버튼·라벨)는 assets/strings.js의 문구 표(PF.t)에서 옵니다.
 // 주석의 설계 근거(docs/design/…의 portfolio-structure·deck-vs-scroll·01 §, R0, 결정 F·Q·# 번호)와 원본 시안(spikes/…)은 템플릿 유지관리용 maintainer 브랜치에 있습니다. 이 레포에 없어도 정상입니다.
+
+// 취소선은 물결 두 개(~~글~~)일 때만. marked의 GFM 규칙은 물결 하나(~글~)도 취소선으로 쳐서, 한국어 문서의 범위 표기
+// ("0~100 정수로 … 0~1로")가 한 문단에 두 번 나오면 그 사이가 지워진 것처럼 보입니다. 물결 하나는 글자 그대로 둡니다.
+// del 토크나이저가 false가 아닌 값(undefined)을 돌려주면 marked 기본 규칙으로 넘어가지 않고, 물결은 일반 글자로 읽힙니다.
+// 상세 문서(doc.html)·발표 덱(project.html)의 원문 해석(md-blocks.js·PF.headingsOf)이 모두 이 설정을 씁니다. marked가 없는 페이지(index.html)는 건너뜀.
+if (window.marked) {
+  marked.use({
+    tokenizer: {
+      del(src) {
+        const m = /^~~(?=[^\s~])([\s\S]*?[^\s~])~~(?=[^~]|$)/.exec(src);
+        if (m) return { type: 'del', raw: m[0], text: m[1], tokens: this.lexer.inlineTokens(m[1]) };
+        return undefined;
+      },
+    },
+  });
+}
+
 const PF = (() => {
   const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-  // 텍스트 필드: HTML 이스케이프 + `백틱` → <code>
-  const inline = (s) => esc(s).replace(/`([^`]+)`/g, '<code>$1</code>');
+  // 텍스트 필드: HTML 이스케이프 + `백틱` → <code> + **굵게** → <strong>(백틱 안의 별표는 그대로 둠)
+  // 굵게는 템플릿 원본에 없는 수정 — 기술 문서에서 옮긴 글 조각(개발 의도 등)의 **강조**가 기호째 보이지 않게 함
+  const inline = (s) => esc(s).replace(/`([^`]+)`|\*\*(?=\S)([^*]+?)(?<=\S)\*\*/g,
+    (m, code, bold) => (code !== undefined ? `<code>${code}</code>` : `<strong>${bold}</strong>`));
   const isUrl = (u) => /^https?:\/\//i.test(u || '');
   const shortUrl = (u) => String(u || '').replace(/^https?:\/\/(www\.)?/i, '').replace(/\/$/, '');
 
