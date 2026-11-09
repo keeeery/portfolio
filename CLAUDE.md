@@ -17,7 +17,8 @@
 │   ├── images/              #    스크린샷·GIF
 │   ├── code/                #    (선택) 핵심 소스코드 .cs
 │   ├── deck-edits.json      #    (/portfolio-edit) 발표 덱 장면 고치기 — 요청을 받아 Claude가 씀, 커밋함, 기술 문서가 아님, build는 읽기만
-│   └── _intake/             #    (/portfolio-intake) 재료집·촬영목록 — 기술 문서가 아님, git 제외, build·check가 읽지 않음
+│   ├── _intake/             #    (/portfolio-intake) 재료집·촬영목록 — 기술 문서가 아님, git 제외, build·check가 읽지 않음
+│   └── _raw/                #    (/portfolio-image-crop) 원본 스크린샷 + crops.json — git 제외, build·check가 읽지 않음, 크롭 결과는 images/로
 ├── format/                  # 📏 가이드 판정 기준 (읽기 전용)
 ├── data/                    # 🤖 /portfolio-build가 생성 (portfolio.json, projects/*.json)
 ├── index.html               # 🖥 고정 렌더러 — 포트폴리오 문서 (아래로 읽는 한 페이지, A4 인쇄 = 제출 PDF)
@@ -67,6 +68,7 @@ flowchart LR
 | `/portfolio-custom [디자인 요청]` | 직접 생성 모드. **사용자가 직접 입력했을 때만** 실행 |
 | `/portfolio-update [되돌리기]` | 템플릿 원본에서 렌더러·스킬·`format/`·`CLAUDE.md`만 받아 반영(`src/`·`profile.md`·`data/`·`custom/`은 안 건드림). **사용자가 직접 입력했을 때만** 실행 |
 | `/portfolio-intake <레포 주소\|폴더>` | GitHub 레포에서 핵심 `.cs`·재료집(사실 + 질문)·촬영 목록을 `src/<NN>/`에 만듦. 기술 문서는 만들지 않음. **사용자가 직접 입력했을 때만** 실행 |
+| `/portfolio-image-crop <폴더>` | (직접 만든 스킬) `src/<폴더>/_raw/`의 원본 스크린샷을 기술 문서의 절에 맞춰 4:3으로 초안 크롭 → 번호별 요청으로 다시 다듬기 → **확인받은 뒤에만** `images/`·기술 문서·data에 반영. 원본은 건드리지 않음 |
 
 ---
 

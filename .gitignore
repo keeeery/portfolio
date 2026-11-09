@@ -5,6 +5,9 @@ report.md
 src/*/_intake/
 report-intake.md
 
+# /portfolio-image-crop 원본 스크린샷 (로컬 전용 — 크롭 결과만 images/로 올라감)
+src/*/_raw/
+
 # OS·에디터
 .DS_Store
 Thumbs.db
