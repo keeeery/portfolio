@@ -4,7 +4,7 @@
   "schemaVersion": 2,
   "title": "사천성",
   "tagline": "같은 그림의 카드 두 장을 연결해 제거하는 Unity 2D 퍼즐 게임",
-  "cover": "images/1-SichuanSung-video-0001.png",
+  "cover": "images/cover.png",
   "team": {
     "type": "solo",
     "size": "1인",
@@ -54,9 +54,9 @@
       "why": "같은 칸이라도 남은 회전 수가 다른 경로를 구분해야 하기 때문입니다. 좌표만 방문 표시하는 방식보다 메모리는 늘지만, 빈 테두리 한 겹으로 바깥 우회도 같은 탐색 규칙으로 처리합니다.",
       "section": "2.2 핵심 기능 — 위치·방향·회전 수를 별도 상태로 관리",
       "image": {
-        "src": "images/1-SichuanSung-video-0005.png",
-        "w": 1920,
-        "h": 1080,
+        "src": "images/path-border.png",
+        "w": 367,
+        "h": 275,
         "caption": "보드 위쪽 빈 테두리를 지나 두 번 꺾여 연결된 두 카드"
       }
     },
@@ -67,9 +67,9 @@
       "why": "카드 오브젝트를 새로 만들어 다시 배치하는 대신 ID만 바꾸면 보드 좌표·남은 개수·빈 칸을 그대로 유지하기 쉽고, ID 전체 구성이 유지되므로 기존 짝도 유지됩니다. 재시도 횟수에는 상한이 없습니다.",
       "section": "3.2 핵심 기능 — 연결 가능한 쌍 검사와 ID 셔플",
       "image": {
-        "src": "images/1-SichuanSung-video-0003.png",
-        "w": 1920,
-        "h": 1080,
+        "src": "images/reshuffle.png",
+        "w": 720,
+        "h": 540,
         "caption": "연결 가능한 쌍이 없어 Reshuffling 안내와 함께 남은 카드를 재배치하는 화면"
       }
     },
@@ -80,9 +80,9 @@
       "why": "판정 결과를 플레이어가 이해할 수 있도록 탐색 경로를 연결선으로 표시한 뒤 제거합니다. 논리 보드를 먼저 비우는 것은 다음 막힘 검사에서 사라질 카드를 장애물로 쓰지 않기 위한 순서입니다.",
       "section": "4.2 핵심 기능 — 연결선을 먼저 보여준 뒤 제거",
       "image": {
-        "src": "images/1-SichuanSung-video-0002.png",
-        "w": 1920,
-        "h": 1080,
+        "src": "images/match-line.png",
+        "w": 673,
+        "h": 505,
         "caption": "선택 외곽선이 표시된 두 카드 사이에 연결선이 그려진 순간"
       }
     },
@@ -93,9 +93,9 @@
       "why": "단일 수치 저장이라 별도 파일 구조 없이 PlayerPrefs를 사용했습니다.",
       "section": "5. 기능 D — 한 판의 진행·시간 평가와 최고 기록",
       "image": {
-        "src": "images/1-SichuanSung-video-0004.png",
-        "w": 1920,
-        "h": 1080,
+        "src": "images/result-clear.png",
+        "w": 900,
+        "h": 675,
         "caption": "클리어 결과 화면 — 별 평가와 이번 기록·최고 기록"
       }
     }
@@ -103,33 +103,33 @@
   "troubleshooting": [],
   "screenshots": [
     {
-      "src": "images/1-SichuanSung-video-0005.png",
-      "w": 1920,
-      "h": 1080,
+      "src": "images/path-border.png",
+      "w": 367,
+      "h": 275,
       "caption": "보드 위쪽 빈 테두리를 지나 두 번 꺾여 연결된 두 카드"
     },
     {
-      "src": "images/1-SichuanSung-video-0003.png",
-      "w": 1920,
-      "h": 1080,
+      "src": "images/reshuffle.png",
+      "w": 720,
+      "h": 540,
       "caption": "연결 가능한 쌍이 없어 Reshuffling 안내와 함께 남은 카드를 재배치하는 화면"
     },
     {
-      "src": "images/1-SichuanSung-video-0002.png",
-      "w": 1920,
-      "h": 1080,
+      "src": "images/match-line.png",
+      "w": 673,
+      "h": 505,
       "caption": "선택 외곽선이 표시된 두 카드 사이에 연결선이 그려진 순간"
     },
     {
-      "src": "images/1-SichuanSung-video-0006.png",
-      "w": 1920,
-      "h": 1080,
+      "src": "images/timer-warning.png",
+      "w": 1072,
+      "h": 804,
       "caption": "남은 시간이 10초 이하가 되어 타이머가 빨간색으로 바뀐 화면"
     },
     {
-      "src": "images/1-SichuanSung-video-0004.png",
-      "w": 1920,
-      "h": 1080,
+      "src": "images/result-clear.png",
+      "w": 900,
+      "h": 675,
       "caption": "클리어 결과 화면 — 별 평가와 이번 기록·최고 기록"
     }
   ],
@@ -230,22 +230,13 @@
         "visuals": [
           {
             "kind": "image",
-            "src": "images/1-SichuanSung-video-0001.png",
-            "w": 1920,
-            "h": 1080,
+            "src": "images/cover.png",
+            "w": 1372,
+            "h": 1029,
             "caption": {
               "text": "사천성 시작 화면 — 제한시간 02:00과 시작 안내",
               "verbatim": true
             }
-          },
-          {
-            "kind": "table",
-            "n": 1,
-            "fp": "항목|내용",
-            "sectionPath": [
-              "1. 프로젝트 개요",
-              "1.3 개발 환경"
-            ]
           }
         ]
       },
@@ -269,6 +260,29 @@
             "kind": "table",
             "n": 1,
             "fp": "문제|구현 방향"
+          }
+        ]
+      },
+      {
+        "key": "env",
+        "chapter": "overview",
+        "layout": "full",
+        "tab": "개요",
+        "title": {
+          "text": "1.3 개발 환경",
+          "verbatim": true
+        },
+        "lead": null,
+        "sectionPath": [
+          "1. 프로젝트 개요",
+          "1.3 개발 환경"
+        ],
+        "points": [],
+        "visuals": [
+          {
+            "kind": "table",
+            "n": 1,
+            "fp": "항목|내용"
           }
         ]
       },
@@ -369,9 +383,9 @@
         "visuals": [
           {
             "kind": "image",
-            "src": "images/1-SichuanSung-video-0005.png",
-            "w": 1920,
-            "h": 1080,
+            "src": "images/path-border.png",
+            "w": 367,
+            "h": 275,
             "caption": {
               "text": "보드 위쪽 빈 테두리를 지나 두 번 꺾여 연결된 두 카드",
               "verbatim": true
@@ -443,9 +457,9 @@
           },
           {
             "kind": "image",
-            "src": "images/1-SichuanSung-video-0003.png",
-            "w": 1920,
-            "h": 1080,
+            "src": "images/reshuffle.png",
+            "w": 720,
+            "h": 540,
             "caption": {
               "text": "연결 가능한 쌍이 없어 Reshuffling 안내와 함께 남은 카드를 재배치하는 화면",
               "verbatim": true
@@ -502,9 +516,9 @@
           },
           {
             "kind": "image",
-            "src": "images/1-SichuanSung-video-0002.png",
-            "w": 1920,
-            "h": 1080,
+            "src": "images/match-line.png",
+            "w": 673,
+            "h": 505,
             "caption": {
               "text": "선택 외곽선이 표시된 두 카드 사이에 연결선이 그려진 순간",
               "verbatim": true
@@ -595,9 +609,9 @@
         "visuals": [
           {
             "kind": "image",
-            "src": "images/1-SichuanSung-video-0006.png",
-            "w": 1920,
-            "h": 1080,
+            "src": "images/timer-warning.png",
+            "w": 1072,
+            "h": 804,
             "caption": {
               "text": "남은 시간이 10초 이하가 되어 타이머가 빨간색으로 바뀐 화면",
               "verbatim": true
@@ -605,9 +619,9 @@
           },
           {
             "kind": "image",
-            "src": "images/1-SichuanSung-video-0004.png",
-            "w": 1920,
-            "h": 1080,
+            "src": "images/result-clear.png",
+            "w": 900,
+            "h": 675,
             "caption": {
               "text": "클리어 결과 화면 — 별 평가와 이번 기록·최고 기록",
               "verbatim": true
