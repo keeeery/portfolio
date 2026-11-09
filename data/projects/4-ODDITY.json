@@ -8,7 +8,7 @@
   "team": {
     "type": "team",
     "size": "4인",
-    "role": "염동력 조작과 물체 상호작용, 파편 생성·풀링, 시간 정지 기반과 연출, 보스 공통 패턴·피격·무력화 보완, 카메라·HUD·렌더링, 보상·저장·씬 전환 연결"
+    "role": "염동력 조작과 물체 상호작용, 파편 생성·풀링, 시간 정지 기반과 연출, 보스 공통 패턴·피격·무력화 보완, 카메라·렌더링, UI/UX(조작 안내·HUD·전투 피드백), 보상·저장·씬 전환 연결"
   },
   "meta": [
     {
@@ -35,7 +35,8 @@
     "물리 기반 염동력",
     "오브젝트 풀",
     "상태 머신",
-    "DOTween"
+    "DOTween",
+    "UI/UX"
   ],
   "links": {
     "github": "https://github.com/KooHoo-Dev/3rd_3D_1-3D-Project-team_odd",
@@ -49,18 +50,10 @@
   "highlights": [
     {
       "title": "물리 기반 염동력",
-      "what": "화면에서 대상을 고르고, 잡은 물체를 Rigidbody를 가진 공격 자원으로 움직여 휘두르기·투척으로 피해를 줍니다.",
+      "what": "화면 중앙 조준점으로 대상을 고르고, 잡은 물체를 Rigidbody를 가진 공격 자원으로 움직여 휘두르기·투척으로 피해를 줍니다.",
       "how": "홀딩 위치와 현재 위치의 차이로 가속도를 만들고 목표 속도와의 차이로 감쇠를 적용해, `FixedUpdate`에서 `AddForce`(Acceleration)로 물체를 추종시킵니다.",
       "why": "Transform 직접 이동 대신 가속도 추종을 택해 Rigidbody를 유지하며 움직임과 공격을 연결하고, 위치 오차만 강하게 줄이면 물체가 목표를 지나치거나 흔들리므로 속도 감쇠와 상한을 함께 둡니다.",
-      "section": "2.3 핵심 기능 — 물리 추종과 휘두르기",
-      "image": null
-    },
-    {
-      "title": "크기별 파편 풀과 형태 교체",
-      "what": "부서진 물체를 다시 염동력으로 쓸 큰·중간 물리 파편과 시각 효과용 작은 파편으로 나누어 생성하고 풀에서 재사용합니다.",
-      "how": "`Dictionary<string, ObjectPool>`로 풀을 찾고 `Stack<IObjectPoolItem>`로 꺼내고 돌려받으며, `ApplyVariant`가 선택된 형태의 Mesh·Material·BoxCollider·질량·스케일을 풀 객체에 적용합니다.",
-      "why": "형태마다 별도 풀을 만드는 대신 크기별 객체를 여러 외형으로 재사용하고, 초기 확보 수량과 고갈 시 확장 수량을 분리해 작은 파편처럼 자주 쓰는 객체를 미리 준비합니다.",
-      "section": "3.2 핵심 기능 — 크기별 공유 풀과 형태 교체",
+      "section": "2.4 핵심 기능 — 물리 추종과 휘두르기",
       "image": null
     },
     {
@@ -72,11 +65,19 @@
       "image": null
     },
     {
-      "title": "보스 공통 공격 패턴",
-      "what": "보스의 상위 상태와 구체 공격 패턴을 나누고, Intent 판단 결과를 실제 공격 행동으로 이어 갑니다.",
-      "how": "`BossMeleePattern`이 사거리·쿨타임·애니메이션 트리거·루트 모션·타격 예고·종료 정리를 공통으로 제공하고, 하위 패턴은 `OnPatternEnter`·`OnPatternExit`·`OnPatternAnimEventOccurs`를 구현해 행동을 확장합니다.",
-      "why": "대형 보스와 휴머노이드는 몸체·이동·패턴이 달라 공통 요소와 전용 처리를 함께 유지하며, 공통 패턴을 재사용하되 예외를 한 상태 안에 모두 넣지 않는 구성으로 했습니다.",
-      "section": "5.2 보스 판단과 직접 확장한 패턴",
+      "title": "상황별 조준점",
+      "what": "화면 중앙의 조준점에 잡을 수 있는 대상(링), 사거리 안의 적(+), 실제 적중(×)을 겹쳐, 시선을 옮기지 않고 지금 할 수 있는 행동을 보여 줍니다.",
+      "how": "`Crosshair`가 염동력 대상의 잡기 가능 여부, 기본 공격과 같은 광선·사거리의 적 판정, `CombatManager` 처리 결과의 실제 피해를 읽어 `VertexHelper` 메시로 표시를 그립니다.",
+      "why": "조준점 하나에 잡기·사거리·적중 표시를 겹쳐 시선을 화면 중앙에 둔 채 행동 가능 여부를 읽게 했습니다. 대신 표시끼리 겹치지 않도록 링·+·×의 반지름과 각도를 나눴습니다.",
+      "section": "조준점이 지금 할 수 있는 행동을 보여 줌",
+      "image": null
+    },
+    {
+      "title": "피해 구간별 보스 피격 피드백",
+      "what": "보스가 받은 피해를 약·중·강 세 구간으로 나누고, 구간이 높을수록 충격 효과·히트스톱·카메라 흔들림·FOV 줌 펀치를 더합니다.",
+      "how": "`BossHitFeedback`이 받은 피해를 공격자의 현재 공격력과 비교해 구간을 정하고(넉다운 반응은 강), 구간마다 연출 크기와 피격음을 다르게 냅니다.",
+      "why": "공격력 칩을 끼우거나 보스가 달라져도 같은 종류의 공격은 같은 구간에 들어가도록 고정 수치 대신 공격력 비율로 판정합니다. 약한 피격은 자주 들어오므로 히트스톱을 걸지 않아 조작 흐름을 끊지 않습니다.",
+      "section": "받은 피해를 공격자 공격력과 비교한 세 구간",
       "image": null
     }
   ],
@@ -88,7 +89,7 @@
       "solution": "자신이 요청한 `DamageEvent`의 결과와 실제 피해량을 확인한 뒤 파편화하고, 같은 프레임의 다른 공격과는 이벤트 인스턴스를 비교해 구분합니다.",
       "result": "",
       "lesson": "",
-      "section": "2.4 핵심 기능 — 실제 피해 성공 뒤 파편화"
+      "section": "2.7 핵심 기능 — 실제 피해 성공 뒤 파편화"
     },
     {
       "title": "이어하기 후 칩 목록과 실제 장착 효과 불일치",
@@ -101,7 +102,7 @@
     },
     {
       "title": "씬 전환 후 배치된 플레이어가 제거되는 문제",
-      "problem": "씬 전환 후 새 씬에 올바르게 배치된 Player가 중복 객체로 제거되는 문제가 있었습니다.",
+      "problem": "1차 시연에서 보스 전투에서 로비로 넘어오면 플레이어가 없어 시점이 씬 카메라의 초기 위치에 고정된다는 버그 제보를 받았습니다. 새 씬에 올바르게 배치된 Player가 중복 객체로 제거되고 있었습니다.",
       "cause": "씬을 내리는 중 플레이어가 먼저 파괴된 뒤 다른 객체의 정리 코드가 `Player.Instance`를 조회하면 빈 GameObject에 Player가 자동으로 붙고, 이 객체가 새 씬의 Player보다 먼저 싱글톤 참조를 차지했습니다. `PersistAcrossScenes`를 false로 두는 것만으로는 이 조회·생성 경로를 막지 못합니다.",
       "solution": "`[SceneOnlySingleton]`으로 Player는 씬 배치 객체만 허용하고(없으면 null), `UIManager.Start`의 null 허용과 `HumanoidClone.OnDestroy`의 `Player.IsInitialized` 검사로 정리 경로가 새 플레이어를 만들지 않게 했습니다.",
       "result": "",
@@ -111,12 +112,13 @@
   ],
   "screenshots": [],
   "retro": {
-    "section": "9. 구현 결과와 문제 해결",
+    "section": "10. 구현 결과와 문제 해결",
     "achieved": [
       "환경 물체를 직접 조작하는 전투: 화면 타겟 → Rigidbody 홀딩 → 휘두르기·투척 → 전투 이벤트",
       "시간 정지 중 염동력 조작: 객체별 시간 상태와 잡기·투척 예외",
       "보스 전투의 판정과 피드백 연결: 공용 패턴, 부위 판정·그로기, 지면 예고·카메라·HUD",
-      "로비에서 보상·이어하기까지 진행: 칩·임무·보상 테이블과 저장·씬 전환 연결"
+      "로비에서 보상·이어하기까지 진행: 칩·임무·보상 테이블과 저장·씬 전환 연결",
+      "행동 가능 여부와 피격 강도를 화면에서 바로 읽는 UI: 상황별 조준점·키 안내·시스템 메시지, 피해 구간별 히트스톱·흔들림·비네트, 차오르는 공격 예고"
     ],
     "regrets": [
       "파편 풀을 사용하더라도 고갈 시 생성·물리 시뮬레이션·배치 검사의 비용은 남습니다.",
@@ -183,17 +185,24 @@
         ]
       },
       {
-        "key": "fx",
-        "title": "연동 기반 — 연출·오디오와 UI",
+        "key": "ui",
+        "title": "기능 G — UI/UX ① 화면 UI와 조작",
         "sectionPath": [
-          "8. 연동 기반 — 연출·오디오와 UI"
+          "8. 기능 G — UI/UX ① 화면 UI와 조작"
+        ]
+      },
+      {
+        "key": "fx",
+        "title": "기능 G — UI/UX ② 전투 피드백과 비주얼 효과",
+        "sectionPath": [
+          "9. 기능 G — UI/UX ② 전투 피드백과 비주얼 효과"
         ]
       },
       {
         "key": "result",
         "title": "구현 결과와 문제 해결",
         "sectionPath": [
-          "9. 구현 결과와 문제 해결"
+          "10. 구현 결과와 문제 해결"
         ]
       }
     ],
@@ -271,25 +280,39 @@
         ]
       },
       {
-        "key": "flow",
-        "chapter": "intro",
-        "layout": "full",
-        "tab": "구조",
+        "key": "psy-control",
+        "chapter": "psy",
+        "layout": "visual",
+        "tab": "흐름",
         "title": {
-          "text": "1.5 전체 흐름",
+          "text": "2.2 사용법 — 조작 입력과 물체 상태",
           "verbatim": true
         },
-        "lead": null,
+        "lead": {
+          "text": "염동력은 마우스 두 버튼으로 잡기·던지기·기본 공격을 모두 처리합니다.",
+          "verbatim": true
+        },
         "sectionPath": [
-          "1. 프로젝트 개요",
-          "1.5 전체 흐름"
+          "2. 기능 A — 물리 기반 염동력",
+          "2.2 사용법 — 조작 입력과 물체 상태"
         ],
-        "points": [],
+        "points": [
+          {
+            "label": "",
+            "text": "같은 좌클릭이라도 물체를 들고 있는지에 따라 기본 공격과 투척 준비로 나뉩니다.",
+            "verbatim": true
+          },
+          {
+            "label": "",
+            "text": "잡기에는 조건이 있습니다. 물체 질량이 플레이어의 최대 염동 질량 이하이고, 스태미나가 최소량 이상이어야 합니다.",
+            "verbatim": true
+          }
+        ],
         "visuals": [
           {
             "kind": "mermaid",
             "n": 1,
-            "fp": "flowchart TB"
+            "fp": "stateDiagram-v2"
           }
         ]
       },
@@ -299,7 +322,7 @@
         "layout": "code",
         "tab": "구현",
         "title": {
-          "text": "2.3 핵심 기능 — 물리 추종과 휘두르기",
+          "text": "2.4 핵심 기능 — 물리 추종과 휘두르기",
           "verbatim": true
         },
         "lead": {
@@ -308,7 +331,7 @@
         },
         "sectionPath": [
           "2. 기능 A — 물리 기반 염동력",
-          "2.3 핵심 기능 — 물리 추종과 휘두르기"
+          "2.4 핵심 기능 — 물리 추종과 휘두르기"
         ],
         "points": [
           {
@@ -336,7 +359,7 @@
         "layout": "code",
         "tab": "구현",
         "title": {
-          "text": "2.4 핵심 기능 — 실제 피해 성공 뒤 파편화",
+          "text": "2.7 핵심 기능 — 실제 피해 성공 뒤 파편화",
           "verbatim": true
         },
         "lead": {
@@ -345,7 +368,7 @@
         },
         "sectionPath": [
           "2. 기능 A — 물리 기반 염동력",
-          "2.4 핵심 기능 — 실제 피해 성공 뒤 파편화"
+          "2.7 핵심 기능 — 실제 피해 성공 뒤 파편화"
         ],
         "points": [
           {
@@ -364,29 +387,6 @@
             "kind": "code",
             "n": 1,
             "fp": "if (ReferenceEquals(damageEvent, pendingDamage) == false) re"
-          }
-        ]
-      },
-      {
-        "key": "psy-choice",
-        "chapter": "psy",
-        "layout": "full",
-        "tab": "선택",
-        "title": {
-          "text": "2.6 고민과 선택",
-          "verbatim": true
-        },
-        "lead": null,
-        "sectionPath": [
-          "2. 기능 A — 물리 기반 염동력",
-          "2.6 고민과 선택"
-        ],
-        "points": [],
-        "visuals": [
-          {
-            "kind": "table",
-            "n": 1,
-            "fp": "선택|이점|비용·제약"
           }
         ]
       },
@@ -433,48 +433,6 @@
         ]
       },
       {
-        "key": "debris-life",
-        "chapter": "debris",
-        "layout": "visual",
-        "tab": "흐름",
-        "title": {
-          "text": "3.3 핵심 기능 — 작은 파편의 수명과 반환",
-          "verbatim": true
-        },
-        "lead": {
-          "text": "작은 파편은 생성 즉시 일정 시간만 기다리는 대신, 바닥 지지 여부와 선형·각속도를 검사합니다.",
-          "verbatim": true
-        },
-        "sectionPath": [
-          "3. 기능 B — 재사용 가능한 물리 파편과 연출 파편",
-          "3.3 핵심 기능 — 작은 파편의 수명과 반환"
-        ],
-        "points": [
-          {
-            "label": "",
-            "text": "안정된 상태가 일정 시간 유지되면 DOTween으로 축소하고 풀로 돌려보냅니다.",
-            "verbatim": true
-          },
-          {
-            "label": "",
-            "text": "시간 정지 상태에서는 안정 시간을 누적하지 않습니다.",
-            "verbatim": true
-          },
-          {
-            "label": "",
-            "text": "활성화 시 속도와 관련 상태를 초기화하며, 파편의 중복 반납은 `WallFragment`의 상태로 방지합니다.",
-            "verbatim": true
-          }
-        ],
-        "visuals": [
-          {
-            "kind": "mermaid",
-            "n": 1,
-            "fp": "stateDiagram-v2"
-          }
-        ]
-      },
-      {
         "key": "local-time",
         "chapter": "time",
         "layout": "code",
@@ -512,31 +470,32 @@
         ]
       },
       {
-        "key": "combat-event",
+        "key": "boss-occlusion",
         "chapter": "boss",
         "layout": "visual",
-        "tab": "흐름",
+        "tab": "구현",
         "title": {
-          "text": "5.1 개요와 전체 구조",
+          "text": "서로 가리는 보스와 플레이어 — 가려진 쪽을 드러내는 두 가지 표현",
           "verbatim": true
         },
         "lead": {
-          "text": "피해를 요청하는 쪽은 이벤트를 큐에 등록하고, 처리 결과는 HUD·피격 연출과 염동 물체가 구독합니다.",
+          "text": "처음에는 보스에 가려진 플레이어의 외곽선만 그렸고, 이후 같은 RendererFeature에 다른 물체에 가려진 보스 부분을 반투명 실루엣으로 채우는 패스를 추가했습니다.",
           "verbatim": true
         },
         "sectionPath": [
           "5. 기능 D — 보스 패턴·전투 판정과 시각 피드백",
-          "5.1 개요와 전체 구조"
+          "5.7 핵심 기능 — 물리 검사로 만드는 미니맵 이동 영역",
+          "서로 가리는 보스와 플레이어 — 가려진 쪽을 드러내는 두 가지 표현"
         ],
         "points": [
           {
-            "label": "",
-            "text": "`Update` 시작 시 큐에 있던 개수만큼 처리하며, 처리 중 새로 들어온 이벤트는 다음 Update로 넘어갑니다.",
+            "label": "문제",
+            "text": "1차 시연에서 강사·동료 수강생·지인 모두에게 \"들고 있는 물체가 시야를 가려 보스의 움직임을 볼 수 없다\"는 피드백을 받았습니다(§10.3).",
             "verbatim": true
           },
           {
-            "label": "",
-            "text": "염동 물체의 파편화는 이 피해 결과값이 0보다 큰지를 기준으로 결정합니다.",
+            "label": "구현",
+            "text": "플레이어가 보스와 겹치지 않는 프레임에는 플레이어 마스크를 그리지 않고 검은 텍스처를 넘겨 패스 하나를 줄입니다.",
             "verbatim": true
           }
         ],
@@ -544,49 +503,7 @@
           {
             "kind": "mermaid",
             "n": 1,
-            "fp": "sequenceDiagram"
-          }
-        ]
-      },
-      {
-        "key": "boss-pattern",
-        "chapter": "boss",
-        "layout": "code",
-        "tab": "구현",
-        "title": {
-          "text": "5.2 보스 판단과 직접 확장한 패턴",
-          "verbatim": true
-        },
-        "lead": {
-          "text": "`BossMeleePattern`은 사거리·쿨타임·애니메이션 트리거·루트 모션·타격 예고·종료 정리를 공통으로 제공합니다.",
-          "verbatim": true
-        },
-        "sectionPath": [
-          "5. 기능 D — 보스 패턴·전투 판정과 시각 피드백",
-          "5.2 보스 판단과 직접 확장한 패턴"
-        ],
-        "points": [
-          {
-            "label": "",
-            "text": "하위 패턴은 `OnPatternEnter`·`OnPatternExit`·`OnPatternAnimEventOccurs`를 구현해 실제 행동을 확장합니다.",
-            "verbatim": true
-          },
-          {
-            "label": "",
-            "text": "`BossIdleState`는 공격 패턴의 사용 가능 조건·최소 거리·긴급 조건과 가중치로 공격 Intent를 선택합니다.",
-            "verbatim": true
-          },
-          {
-            "label": "",
-            "text": "공격의 시작·판정·종료를 애니메이션 신호에 연결하고, 상태 이탈 시 남은 예고와 구독을 정리합니다.",
-            "verbatim": true
-          }
-        ],
-        "visuals": [
-          {
-            "kind": "code",
-            "n": 1,
-            "fp": "root.AnimEventListener.OnOccursAnimStateEvent -= OnOccursAni"
+            "fp": "flowchart TB"
           }
         ]
       },
@@ -624,43 +541,6 @@
             "kind": "mermaid",
             "n": 1,
             "fp": "sequenceDiagram"
-          }
-        ]
-      },
-      {
-        "key": "scene-flow",
-        "chapter": "scene",
-        "layout": "visual",
-        "tab": "흐름",
-        "title": {
-          "text": "7.1 개요와 구조",
-          "verbatim": true
-        },
-        "lead": {
-          "text": "씬 전환은 월드 화면이 꺼지고 새 씬이 켜지는 연출에 UI와 소리까지 맞추는 작업입니다.",
-          "verbatim": true
-        },
-        "sectionPath": [
-          "7. 기능 F — 월드·UI·소리가 함께 전환되는 씬 로딩",
-          "7.1 개요와 구조"
-        ],
-        "points": [
-          {
-            "label": "",
-            "text": "`SceneLoadManager`는 비동기 씬 로드와 `ScreenOffEffect`, 화면 글리치·로딩 표시를 조율합니다.",
-            "verbatim": true
-          },
-          {
-            "label": "",
-            "text": "타이틀의 새 게임·이어하기와 보상·사망 후 로비 복귀가 이 경로를 사용합니다.",
-            "verbatim": true
-          }
-        ],
-        "visuals": [
-          {
-            "kind": "mermaid",
-            "n": 1,
-            "fp": "flowchart TB"
           }
         ]
       },
@@ -752,61 +632,168 @@
         ]
       },
       {
-        "key": "anim-sound",
-        "chapter": "fx",
-        "layout": "overview",
-        "tab": "개요",
+        "key": "crosshair",
+        "chapter": "ui",
+        "layout": "code",
+        "tab": "구현",
         "title": {
-          "text": "8.1 구조와 핵심 기능",
+          "text": "조준점이 지금 할 수 있는 행동을 보여 줌",
           "verbatim": true
         },
         "lead": {
-          "text": "애니메이션·시간 제어·화면 UI와 오디오의 동작을 연결합니다.",
+          "text": "`Crosshair`는 가운데 점에 상황별 표시를 겹쳐, 화면 중앙만 보고도 지금 할 수 있는 행동을 알 수 있게 합니다.",
           "verbatim": true
         },
         "sectionPath": [
-          "8. 연동 기반 — 연출·오디오와 UI",
-          "8.1 구조와 핵심 기능"
+          "8. 기능 G — UI/UX ① 화면 UI와 조작",
+          "8.2 조작 안내 — 조준점·키 안내·시스템 메시지",
+          "조준점이 지금 할 수 있는 행동을 보여 줌"
         ],
         "points": [
           {
             "label": "",
-            "text": "`AnimStateSoundSender`는 애니메이션 진행률에 맞는 효과음과 중복 재생 제한을 담당합니다.",
+            "text": "× 표시는 `CombatManager`의 처리 결과에서 받은 피해가 0보다 크고 보낸 쪽이 플레이어인 이벤트로만 띄웁니다.",
             "verbatim": true
           },
           {
             "label": "",
-            "text": "효과음은 단순히 상태 진입마다 재생하는 대신 `normalizedTime`의 진행을 확인합니다.",
-            "verbatim": true
-          },
-          {
-            "label": "",
-            "text": "UV가 없는 생성 콘크리트 파편에는 `TriplanarRock.shader`가 오브젝트 공간의 세 방향 투영으로 텍스처를 적용합니다.",
+            "text": "그래서 방어·무적으로 막힌 공격에는 ×가 나타나지 않습니다.",
             "verbatim": true
           }
         ],
-        "visuals": []
+        "visuals": [
+          {
+            "kind": "code",
+            "n": 1,
+            "fp": "// Crosshair.Update — 조준점 링·사거리 표시 조건"
+          }
+        ]
       },
       {
-        "key": "issues",
-        "chapter": "result",
-        "layout": "full",
-        "tab": "문제 해결",
+        "key": "chip-search",
+        "chapter": "ui",
+        "layout": "code",
+        "tab": "구현",
         "title": {
-          "text": "9.2 대표 문제와 대응",
+          "text": "증강 칩 창의 이름 검색 — 초성·조합 중 글자 매칭과 단축키 충돌 방지",
           "verbatim": true
         },
-        "lead": null,
+        "lead": {
+          "text": "1차 시연에서도 \"필터가 있어도 원하는 칩을 찾기 어렵다\"는 피드백을 받았습니다(§10.3).",
+          "verbatim": true
+        },
         "sectionPath": [
-          "9. 구현 결과와 문제 해결",
-          "9.2 대표 문제와 대응"
+          "8. 기능 G — UI/UX ① 화면 UI와 조작",
+          "8.5 증강 칩 창의 조작 편의",
+          "증강 칩 창의 이름 검색 — 초성·조합 중 글자 매칭과 단축키 충돌 방지"
+        ],
+        "points": [
+          {
+            "label": "구현",
+            "text": "이 완화 규칙은 검색어의 마지막 글자에만 적용해, 이미 다 친 앞 글자들까지 느슨하게 맞추지 않습니다.",
+            "verbatim": true
+          }
+        ],
+        "visuals": [
+          {
+            "kind": "table",
+            "n": 2,
+            "fp": "검색어|찾는 이름|판정 근거"
+          },
+          {
+            "kind": "code",
+            "n": 1,
+            "fp": "// KoreanSearch.IsTypingToward — 조합 중인 글자 q가 계속 치면 n이 되는지"
+          }
+        ]
+      },
+      {
+        "key": "player-hit",
+        "chapter": "fx",
+        "layout": "full",
+        "tab": "구조",
+        "title": {
+          "text": "9.2 플레이어 전투 피드백 — 피격 강도와 빠른 기상",
+          "verbatim": true
+        },
+        "lead": {
+          "text": "플레이어가 맞았을 때는 피격 강도에 따라 연출의 겹을 늘립니다.",
+          "verbatim": true
+        },
+        "sectionPath": [
+          "9. 기능 G — UI/UX ② 전투 피드백과 비주얼 효과",
+          "9.2 플레이어 전투 피드백 — 피격 강도와 빠른 기상"
         ],
         "points": [],
         "visuals": [
           {
             "kind": "table",
             "n": 1,
-            "fp": "문제|원인·상태 차이|반영한 대응"
+            "fp": "피격|화면 가장자리|체력바|카메라|히트스톱"
+          }
+        ]
+      },
+      {
+        "key": "boss-tier",
+        "chapter": "fx",
+        "layout": "code",
+        "tab": "구현",
+        "title": {
+          "text": "받은 피해를 공격자 공격력과 비교한 세 구간",
+          "verbatim": true
+        },
+        "lead": {
+          "text": "`BossHitFeedback`은 보스가 맞을 때마다 피해 크기를 약·중·강 세 구간으로 나누고, 구간이 높을수록 연출의 겹을 늘립니다.",
+          "verbatim": true
+        },
+        "sectionPath": [
+          "9. 기능 G — UI/UX ② 전투 피드백과 비주얼 효과",
+          "9.3 보스 전투 피드백 — 피해 구간과 몸으로 보여 주는 상태",
+          "받은 피해를 공격자 공격력과 비교한 세 구간"
+        ],
+        "points": [
+          {
+            "label": "이유",
+            "text": "공격력 칩을 끼우거나 보스가 달라져도 같은 종류의 공격은 같은 구간에 들어가도록 하기 위해서입니다.",
+            "verbatim": true
+          },
+          {
+            "label": "",
+            "text": "약한 피격은 기본 공격처럼 자주 들어오므로 히트스톱을 걸지 않아 조작 흐름을 끊지 않습니다.",
+            "verbatim": true
+          }
+        ],
+        "visuals": [
+          {
+            "kind": "code",
+            "n": 1,
+            "fp": "// BossHitFeedback.GetTier"
+          }
+        ]
+      },
+      {
+        "key": "feedback",
+        "chapter": "result",
+        "layout": "full",
+        "tab": "결과",
+        "title": {
+          "text": "10.3 1차 시연 피드백과 반영",
+          "verbatim": true
+        },
+        "lead": {
+          "text": "가장 많이 나온 피드백은 들고 있는 물체가 보스를 가려 움직임을 볼 수 없다는 시야 문제였고, 강사·동료 수강생·지인 모두에게서 나왔습니다.",
+          "verbatim": true
+        },
+        "sectionPath": [
+          "10. 구현 결과와 문제 해결",
+          "10.3 1차 시연 피드백과 반영"
+        ],
+        "points": [],
+        "visuals": [
+          {
+            "kind": "table",
+            "n": 1,
+            "fp": "받은 피드백|준 사람|반영|본문"
           }
         ]
       }
