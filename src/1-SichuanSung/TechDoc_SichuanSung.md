@@ -284,7 +284,7 @@ if (bestRecord == 0f || clearTime < bestRecord)
 
 ---
 
-## 6. 구현 결과와 개선 과제
+## 6. 결과와 배운 점
 
 ### 6.1 구현 결과
 

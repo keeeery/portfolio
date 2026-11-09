@@ -108,7 +108,7 @@ HitResolver는 넉백·스턴을, HitBox는 피격 FX와 타격 연출을 담당
 
 소스: `HitBox.cs`, `HitResolver.cs`, `HitTargetTracker.cs`.
 
-### 2.2 핵심 구현 — 한 공격의 중복 타격 제어
+### 2.2 핵심 기능 — 한 공격의 중복 타격 제어
 
 ```csharp
 if (allowMultiHit == false)
@@ -127,7 +127,7 @@ return true;
 `HitBox.OnEnable/Initialize`에서 기록을 비워 풀 재사용 시 이전 공격의 기록이 남지 않게 합니다.
 기준은 개체가 아닌 HurtBox이므로 한 개체의 여러 HurtBox는 별도 기록됩니다.
 
-### 2.3 핵심 구현 — 패링을 피해 전달 전에 해결
+### 2.3 핵심 기능 — 패링을 피해 전달 전에 해결
 
 ```csharp
 PlayerController playerController = receiver.GetComponent<PlayerController>();
@@ -173,17 +173,7 @@ private void HandleDamageEvent(CombatEntity sender, CombatEntity receiver, Comba
 피해는 수신자에게 먼저 적용되고 Observer에 통지됩니다.
 `HandleHealEvent`는 Observer 통지만 수행합니다. 회복 적용은 `Player.TakeHeal` 등 별도 호출 경로에 있습니다.
 
-### 2.5 고민과 선택
-
-| 선택 | 현재 구현의 이점 | 비용·제약 |
-|---|---|---|
-| 직접 호출 대신 `CombatSystem.To` 경유 | 피해 전달과 알림 지점을 모음 | FX는 HitBox, 넉백·스턴은 HitResolver에 연결 |
-| 콜라이더 Dictionary 등록 | 등록된 충돌체는 바로 조회 | 누락 시 `GetComponentInParent/Children` 검색 발생 |
-| 단발·다단 판정을 같은 HitBox에 제공 | 공격 프리팹 설정으로 구분 | HurtBox 단위 중복 정책을 이해해야 함 |
-
----
-
-### 2.6 보충 — 피격 수치와 UI 피드백의 분리
+### 2.5 세부 구현 — 피격 수치와 UI 피드백의 분리
 
 `BaseStat`의 수치 변경과 Player·Enemy의 피격 반응은 엔티티가 처리하고,
 `DamagePopupFeedback`·`HealPopupFeedback`은 `ICombatObserver`로 전투 결과를 받아 숫자를 표시합니다.
@@ -204,9 +194,15 @@ UI·체력바·피격·패링의 수동 시간 보간을 DOTween으로 옮기는
 
 소스: `HealthBarUI.cs`, `FloatingTextPool.cs`, `HitStopController.cs`.
 
+### 2.6 고민과 선택
+
+| 선택 | 현재 구현의 이점 | 비용·제약 |
+|---|---|---|
+| 직접 호출 대신 `CombatSystem.To` 경유 | 피해 전달과 알림 지점을 모음 | FX는 HitBox, 넉백·스턴은 HitResolver에 연결 |
+| 콜라이더 Dictionary 등록 | 등록된 충돌체는 바로 조회 | 누락 시 `GetComponentInParent/Children` 검색 발생 |
+| 단발·다단 판정을 같은 HitBox에 제공 | 공격 프리팹 설정으로 구분 | HurtBox 단위 중복 정책을 이해해야 함 |
+
 ---
-
-
 
 ## 3. 기능 B — 카드 순환과 모션 연계 스킬
 
@@ -318,24 +314,7 @@ return new CardSkillExecutionResult(CardSkillExecutionStatus.Executed, card);
 일회 부활 대기는 별도 플래그로 관리하고, 소모 후 `ActiveBuffType.Invincibility`를 등록합니다.
 소스: `BuffController.cs`, `ActiveBuff.cs`.
 
-### 3.7 고민과 선택 — 효과 재사용
-
-`CardEffectSpawner`는 프리팹별 `ComponentPool<Transform>`을 Dictionary로 보유합니다.
-반환은 비활성화, 획득은 비활성 객체의 재활성화로 수행합니다.
-현재 `ComponentPool.Get()`은 List를 순회하고, 여유 객체가 없으면 `Instantiate`합니다.
-획득 비용은 생성된 객체 수에 비례하며, 풀 고갈 시 런타임 생성이 발생합니다.
-
-| 접근 | 장점 | 현재 구현에서 고려할 점 |
-|---|---|---|
-| 효과마다 생성·파괴 | 생명주기가 단순 | 반복 생성 비용 발생 |
-| 현재의 비활성 객체 재사용 | 생성된 효과를 다음 사용에 재활용 | 검색 O(n), 고갈 시 생성, 초기 상태 복구 필요 |
-| 효과를 ScriptableObject로 분리 | 데이터 조합과 공통 실행 계약 | 씬의 플레이어·타겟 정보는 실행 컨텍스트로 전달 필요 |
-
-객체 재사용 경로는 구현되어 있으며, GC와 프레임 시간 개선량은 미측정입니다.
-
----
-
-### 3.8 보충 — 게이지 초과분과 손패의 작업 상태
+### 3.7 세부 구현 — 게이지 초과분과 손패의 작업 상태
 
 패링 보상 `AddCells`는 현재 게이지에 더한 칸이 최대치를 넘으면 `overflowCells`로 남깁니다.
 다음 드로우 주기의 `BeginNextGaugeCycle`은 이 초과분을 가져와 게이지를 채운 상태로 재충전합니다.
@@ -357,7 +336,7 @@ currentCell = Mathf.Min(totalCells, gaugeCells.Length);
 드로우·사용·사용 FX 보간은 각 Motion 클래스가 나눠 담당합니다.
 `ClearAllSlots`는 코루틴과 슬롯 상태를 함께 정리하는 리스폰 진입점입니다.
 
-### 3.9 보충 — 투사체의 생성·이동·폭발·반납
+### 3.8 세부 구현 — 투사체의 생성·이동·폭발·반납
 
 `ProjectileController.OnEnable`은 수명·폭발 상태를 초기화하고 충돌체를 켭니다.
 `Initialize`에서 방향과 공격 소유자를 전달하며, 생성 애니메이션 뒤 `StartMove` 이벤트로 이동을 시작할 수 있습니다.
@@ -369,9 +348,22 @@ currentCell = Mathf.Min(totalCells, gaugeCells.Length);
 
 소스: `CardGaugeController.cs`, `CardHandState.cs`, `ProjectileController.cs`.
 
+### 3.9 고민과 선택 — 효과 재사용
+
+`CardEffectSpawner`는 프리팹별 `ComponentPool<Transform>`을 Dictionary로 보유합니다.
+반환은 비활성화, 획득은 비활성 객체의 재활성화로 수행합니다.
+현재 `ComponentPool.Get()`은 List를 순회하고, 여유 객체가 없으면 `Instantiate`합니다.
+획득 비용은 생성된 객체 수에 비례하며, 풀 고갈 시 런타임 생성이 발생합니다.
+
+| 접근 | 장점 | 현재 구현에서 고려할 점 |
+|---|---|---|
+| 효과마다 생성·파괴 | 생명주기가 단순 | 반복 생성 비용 발생 |
+| 현재의 비활성 객체 재사용 | 생성된 효과를 다음 사용에 재활용 | 검색 O(n), 고갈 시 생성, 초기 상태 복구 필요 |
+| 효과를 ScriptableObject로 분리 | 데이터 조합과 공통 실행 계약 | 씬의 플레이어·타겟 정보는 실행 컨텍스트로 전달 필요 |
+
+객체 재사용 경로는 구현되어 있으며, GC와 프레임 시간 개선량은 미측정입니다.
+
 ---
-
-
 
 ## 4. 기능 C — 인벤토리·덱 편성과 카드 보상
 
@@ -431,15 +423,7 @@ foreach (CardData card in candidates)
 
 ![방 클리어 후 등급이 다른 카드 3장 중 하나를 고르는 보상 선택 화면](images/reward-selection.png)
 
-### 4.4 고민과 선택
-
-보유 목록과 덱을 분리하면 수집과 전투 편성을 독립적으로 다룰 수 있습니다.
-이벤트 동기화는 UI나 보상 코드가 CardSystem 내부 목록을 직접 수정하는 경로를 줄입니다.
-다만 런타임 덱 동기화는 `Contains` 기반으로 카드 존재 여부를 판단하므로 동일 CardData의 중복 장수를 별도로 추적하지 않습니다.
-
----
-
-### 4.5 보충 — 편집 입력과 데이터 변경 경로
+### 4.4 세부 구현 — 편집 입력과 데이터 변경 경로
 
 전체 카드 목록은 보유하되 덱에 없는 카드 → 덱에 있는 카드 → 미보유 카드 순으로 나눠 표시합니다.
 미보유 카드도 도감처럼 확인할 수 있으나, 드래그 시작과 편성은 보유 여부를 검사합니다.
@@ -454,7 +438,7 @@ foreach (CardData card in candidates)
 정적 데이터 접근을 명시적인 `CardDatabase.AllCards`로 노출하는 선택은 데이터 추가 기능보다 조회 경로를 단순화하는 변화입니다.
 덱 최대 슬롯 수도 UI의 별도 수치 대신 PlayerInventory 설정에 맞추도록 연결했습니다.
 
-### 4.6 보충 — 편집 위치 제한과 종료 조건
+### 4.5 세부 구현 — 편집 위치 제한과 종료 조건
 
 일반 인벤토리 열기에서는 출구 영역에 있는지에 따라 `SetDeckEditMode`를 설정합니다.
 오벨리스크 안에서는 아래 방향키로 편집 모드를 열 수 있습니다.
@@ -472,9 +456,13 @@ Tooltip CanvasGroup은 raycast를 막지 않으며, 슬롯이 비활성화되거
 
 소스: `InventorySlotList.cs`, `CardDragHandler.cs`, `TooltipController.cs`, `OverlayInputHandler.cs`.
 
+### 4.6 고민과 선택
+
+보유 목록과 덱을 분리하면 수집과 전투 편성을 독립적으로 다룰 수 있습니다.
+이벤트 동기화는 UI나 보상 코드가 CardSystem 내부 목록을 직접 수정하는 경로를 줄입니다.
+다만 런타임 덱 동기화는 `Contains` 기반으로 카드 존재 여부를 판단하므로 동일 CardData의 중복 장수를 별도로 추적하지 않습니다.
+
 ---
-
-
 
 ## 5. 기능 D — 이동·일반 적·보스의 행동 책임
 
@@ -525,7 +513,7 @@ Idle 기본 대기시간은 1.2초, 근접 X축 거리 기준은 3입니다.
 
 ![고대 수호 골렘의 레이저 패턴](images/boss-combat.png)
 
-### 5.3 핵심 구현 — 애니메이션 이벤트와 종료 정리
+### 5.3 핵심 기능 — 애니메이션 이벤트와 종료 정리
 
 `BossAnimationEventReceiver`는 근접 HitBox 활성/비활성, 레이저 발사, 팔 발사를 호출하는 진입점입니다.
 근접 상태는 진입 때 판정을 끄고 애니메이션을 시작하며, 종료 때 코루틴 정지와 판정 비활성화를 수행합니다.
@@ -544,24 +532,7 @@ protected override void OnDisable()
 }
 ```
 
-### 5.4 고민과 선택
-
-| 구조 | 이점 | 비용·제약 |
-|---|---|---|
-| 이동 규칙·자원·연출 분리 | 스태미나 규칙과 FX의 수정 지점을 구분 | 조합과 의존성 전달 필요 |
-| 일반 적 감지 결과 캐시 | 매 프레임 감지 계산을 반복하지 않음 | 감지 간격만큼 판단 지연 가능 |
-| 컴포넌트 기반 보스 상태 | 상태별 Collider·연출 참조를 Inspector에서 설정 | 프리팹 구성과 상태 타입 등록 규칙 필요 |
-
-상태가 컴포넌트이므로 Collider·프리팹·지속시간을 Inspector에서 직접 연결하기 쉽습니다.
-대신 상태별 GameObject가 필요하며 동일 타입 상태를 여러 개 등록하면 Dictionary 키가 중복됩니다.
-또한 대기 상태의 `SelectPattern`은 플레이어 참조를 직접 역참조하므로 타겟 연결이 전제됩니다.
-패턴 종료는 일부 시간 기반이고 공격 발동은 애니메이션 이벤트 기반입니다. 모든 전이가 이벤트로만 이루어지는 FSM은 아닙니다.
-
-소스: `BossController.cs`, `GolemMeleeState.cs`.
-
----
-
-### 5.5 보충 — 입력 명령과 2D 충돌 이동
+### 5.4 세부 구현 — 입력 명령과 2D 충돌 이동
 
 `CharacterController2D`는 Rigidbody2D를 Kinematic으로 설정하고 자체 중력·점프 횟수·대시 타이머를 관리합니다.
 외부 입력은 `SetMoveInput`, `RequestJump`, `RequestDash`, `AddExternalMovement`로 받고 실제 이동은 FixedUpdate에 모읍니다.
@@ -577,11 +548,7 @@ protected override void OnDisable()
 
 소스: `CharacterController2D.cs`.
 
----
-
-
-
-### 5.6 보충 — 콤보 입력 창과 패링 판정 창
+### 5.5 세부 구현 — 콤보 입력 창과 패링 판정 창
 
 플레이어 공격 상태는 Animator의 normalizedTime을 읽어 입력 창을 구분합니다.
 시작 0.35 미만에서는 이전 공격 예약을 지우고, 0.35 초과~0.75 미만에서 다음 D 입력을 받습니다.
@@ -592,7 +559,7 @@ protected override void OnDisable()
 normalizedTime 0.8 이상에서 판정 창을 닫으며, Exit에서도 다시 닫아 다른 상태로 빠져나갈 때 열려 있는 판정을 정리합니다.
 이 0.8은 초가 아니라 진행률 기준입니다.
 
-### 5.7 보충 — 일반 적의 순찰·추적·공격
+### 5.6 세부 구현 — 일반 적의 순찰·추적·공격
 
 Idle은 대기 후 Patrol로 이동하고, 감지된 대상이 있으면 Attack으로 전환합니다.
 Patrol은 출발 지점 A와 순찰 지점 B를 번갈아 목표로 사용하며, 목적지에 도착하면 잠시 Idle로 돌아갑니다.
@@ -609,6 +576,21 @@ EnemyCombat은 공격 쿨타임과 2종 공격 인덱스를 선택하고 Animato
 이는 매 프레임 같은 애니메이션 값을 반복 설정하는 경로를 줄이는 구성입니다.
 
 소스: `AttackState.cs`, `ParryState.cs`, `EnemyStateMachine.cs`, `EnemyCombat.cs`.
+
+### 5.7 고민과 선택
+
+| 구조 | 이점 | 비용·제약 |
+|---|---|---|
+| 이동 규칙·자원·연출 분리 | 스태미나 규칙과 FX의 수정 지점을 구분 | 조합과 의존성 전달 필요 |
+| 일반 적 감지 결과 캐시 | 매 프레임 감지 계산을 반복하지 않음 | 감지 간격만큼 판단 지연 가능 |
+| 컴포넌트 기반 보스 상태 | 상태별 Collider·연출 참조를 Inspector에서 설정 | 프리팹 구성과 상태 타입 등록 규칙 필요 |
+
+상태가 컴포넌트이므로 Collider·프리팹·지속시간을 Inspector에서 직접 연결하기 쉽습니다.
+대신 상태별 GameObject가 필요하며 동일 타입 상태를 여러 개 등록하면 Dictionary 키가 중복됩니다.
+또한 대기 상태의 `SelectPattern`은 플레이어 참조를 직접 역참조하므로 타겟 연결이 전제됩니다.
+패턴 종료는 일부 시간 기반이고 공격 발동은 애니메이션 이벤트 기반입니다. 모든 전이가 이벤트로만 이루어지는 FSM은 아닙니다.
+
+소스: `BossController.cs`, `GolemMeleeState.cs`.
 
 ---
 
@@ -640,7 +622,7 @@ sequenceDiagram
     Check->>Fade: 페이드 인, 입력 복원
 ```
 
-### 6.2 핵심 구현 — 방 클리어 상태에 따른 적 복구
+### 6.2 핵심 기능 — 방 클리어 상태에 따른 적 복구
 
 ```csharp
 bool skipEnemySpawn = data.respawnPlayerOnly && data.roomCleared;
@@ -665,18 +647,7 @@ Animator를 재바인딩하고 체력을 복원하며 `ResetRuntimeCardsForRespa
 카드 시스템은 대기 스킬과 손패·드로우·버림 목록을 지우고 편성 덱으로 재구성합니다.
 따라서 위치만 옮기는 복귀가 아니라 플레이어의 전투 상태도 함께 정리합니다.
 
-### 6.4 고민과 선택
-
-ID 기반 복원은 실행 중 GameObject 참조를 파일에 직접 저장하지 않는 장점이 있습니다.
-대신 방·체크포인트 ID와 씬 이름이 실제 콘텐츠와 일치해야 합니다.
-현재 파일 입출력에는 예외 처리나 세이브 버전 마이그레이션이 없으므로 손상 파일 대응을 보장하지 않습니다.
-파일 읽기·쓰기는 단순 JSON 방식이며 손상 파일 복구와 저장 버전 변경 대응은 남은 과제입니다.
-
-소스: `SaveManager.cs`, `CheckPointManager.cs`.
-
----
-
-### 6.5 보충 — 전투 완료와 보상 완료의 방 상태
+### 6.4 세부 구현 — 전투 완료와 보상 완료의 방 상태
 
 RoomController는 Ready/Combat/Reward/Cleared를 구분합니다.
 `IsRoomCleared`는 Reward와 Cleared 모두 true지만, `IsRewardObtained`와 `CanExit`는 Cleared에서만 true입니다.
@@ -691,7 +662,7 @@ RoomController는 Ready/Combat/Reward/Cleared를 구분합니다.
 활성 상태를 다시 적용할 때는 진행 중 파괴 코루틴을 정지하고 Break 트리거를 초기화합니다.
 씬 복귀에서 방 클리어와 오벨리스크 활성 상태를 함께 보완한 이유가 이 상태 연결에 있습니다.
 
-### 6.6 보충 — 메뉴·옵션·인트로와 시간 기준
+### 6.5 세부 구현 — 메뉴·옵션·인트로와 시간 기준
 
 Pause·Inventory·Reward는 timeScale을 0으로 하고 키보드 입력을 차단합니다.
 OverlayMotion과 보상 선택은 unscaled time으로 진행하여 정지된 게임 안에서도 UI 연출을 완료합니다.
@@ -708,11 +679,7 @@ BGM 보간은 scaled time이므로 게임 일시정지 중에도 계속 페이�
 
 소스: `RoomController.cs`, `Obelisk.cs`, `OptionWindowController.cs`, `IntroSceneController.cs`.
 
----
-
-
-
-### 6.7 보충 — 입력 차단 플래그의 적용 범위
+### 6.6 세부 구현 — 입력 차단 플래그의 적용 범위
 
 메뉴와 복귀 경로는 `SimpleInput.IsKeyBoardInputBlocked`를 설정하지만,
 현재 래퍼에서 이 값을 검사하는 함수는 수평·수직 축 입력입니다.
@@ -727,6 +694,15 @@ ParallaxLayer는 카메라 이동 차이에 비율을 적용하고 자식 배경
 이들은 게임 판정용 충돌 이동과 다른 표시 책임이며, 순간이동·일시정지·카메라 타겟 변경 시 동작을 함께 확인해야 합니다.
 
 소스: `SimpleInput.cs`, `PlayerShadowProjector.cs`, `PlayerCameraController.cs`, `ParallaxLayer.cs`.
+
+### 6.7 고민과 선택
+
+ID 기반 복원은 실행 중 GameObject 참조를 파일에 직접 저장하지 않는 장점이 있습니다.
+대신 방·체크포인트 ID와 씬 이름이 실제 콘텐츠와 일치해야 합니다.
+현재 파일 입출력에는 예외 처리나 세이브 버전 마이그레이션이 없으므로 손상 파일 대응을 보장하지 않습니다.
+파일 읽기·쓰기는 단순 JSON 방식이며 손상 파일 복구와 저장 버전 변경 대응은 남은 과제입니다.
+
+소스: `SaveManager.cs`, `CheckPointManager.cs`.
 
 ---
 
@@ -847,7 +823,7 @@ Save(player);
 
 ## 8. 결과와 배운 점
 
-### 8.1 구현 결과와 한계
+### 8.1 구현 결과
 
 | 결과 | 핵심 구현 | 한계 |
 |---|---|---|
@@ -857,7 +833,17 @@ Save(player);
 | 골렘 패턴별 컴포넌트 분리 | BossBaseState 상속, Type Dictionary | 타겟·프리팹 연결 전제 |
 | 체크포인트에서 복합 상태 복원 | 방 로드, 체력·Animator·카드 리셋 | 손상 파일 복구·통합 동작 확인 필요 |
 
-### 8.2 첫 개인 게임 개발의 회고
+### 8.2 한계와 개선 과제
+
+다음 통합 동작은 Editor에서 추가 확인이 필요합니다.
+
+- 카드 발동 중 타겟 사망, 동시 입력, 단발·다단 패링 성공 뒤 같은 공격의 재접촉.
+- 풀 재사용 시 HitBox 기록·투사체 수명·이펙트 상태가 초기화되는지.
+- 보스 애니메이션 이벤트와 Collider·레이저 참조 연결.
+- 서로 다른 씬 및 클리어/미클리어 방에서 체크포인트 복귀와 적 생성 여부.
+- 실제 Inspector 값에 따른 덱 편성 조건과 보상 후보 고갈 시 UI 동작.
+
+### 8.3 배운 점과 회고
 
 처음에는 **카드 덱 빌딩과 2D 액션을 결합한 로그라이트 게임**을 만들고자 했습니다.
 카드 조합에 따라 전투 방식이 달라지고, 매번 다른 덱을 구성하며 플레이하는 재미를 주는 것이 목표였습니다.
@@ -877,13 +863,3 @@ Save(player);
 | 여러 시스템을 하나의 게임 흐름으로 연결 | 카드 → 보상 → 편성, 방 → 체크포인트 → 복귀의 연결 경험 |
 | 씬 전환 후 싱글톤 전투 시스템이 작동하지 않던 경험 | 객체 소멸과 애플리케이션 종료 상태를 분리하고, 초기화·등록 시점을 함께 고려해야 함 |
 | 시스템 구현에 비해 부족했던 콘텐츠 | 카드 획득·덱 구성·연속 스테이지 진행의 재미를 충분히 보여주지 못한 아쉬움 |
-
-### 8.3 추가 확인 사항
-
-다음 통합 동작은 Editor에서 추가 확인이 필요합니다.
-
-- 카드 발동 중 타겟 사망, 동시 입력, 단발·다단 패링 성공 뒤 같은 공격의 재접촉.
-- 풀 재사용 시 HitBox 기록·투사체 수명·이펙트 상태가 초기화되는지.
-- 보스 애니메이션 이벤트와 Collider·레이저 참조 연결.
-- 서로 다른 씬 및 클리어/미클리어 방에서 체크포인트 복귀와 적 생성 여부.
-- 실제 Inspector 값에 따른 덱 편성 조건과 보상 후보 고갈 시 UI 동작.
