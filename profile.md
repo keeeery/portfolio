@@ -27,7 +27,10 @@
 
 - Unity
 - C#
+- 데이터 설계 (ScriptableObject · DTO/Def)
 - 디자인 패턴
+- 멀티플레이 동기화 (ASP.NET Core WebSocket · 서버 권위)
+- URP 렌더링 · Shader Graph
 
 ## 페이지 설정
 
