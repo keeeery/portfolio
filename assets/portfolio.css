@@ -81,6 +81,27 @@ code { font-family: var(--mono); font-size: .88em; background: var(--accent-soft
 .sec-head h2 { margin-top: 10px; font-size: clamp(28px, 3.8vw, 42px); font-weight: 800; line-height: 1.2; letter-spacing: -.025em; }
 .sec-r { flex: none; padding-top: 2px; font-size: 14px; font-weight: 700; color: var(--muted); }
 
+/* (직접 고친 기능) 줄어드는 머리(화면만, 프로젝트 · 기술 스택): 묶음(.pg) 첫 절의 큰 머리가 머리 막대 아래에 닿으면 같은 모양의 겹친 머리(.pg-panel)로 바뀌어 붙고,
+   더 내리는 만큼 한 줄 막대(44px)로 줄어듦(크기·위치는 portfolio.js bindProjectHeads가 스크롤에 맞춰 넣음). 소개·기능 소개 두 절(.pg)이 끝날 때까지 붙어 있음.
+   .pg-bar는 높이 0이라 자리를 차지하지 않음. 기능 소개 절의 머리는 화면에서 읽기 도구용으로만 남김(인쇄에서는 그대로 보임) */
+@media screen {
+  .pg-bar { position: sticky; top: var(--top-h); z-index: 10; height: 0; }
+  .pg-panel { position: absolute; left: 0; right: 0; top: 0; height: 44px; overflow: hidden; background: var(--paper); visibility: hidden;
+              transition: background-color .25s; }
+  .pg.stuck .pg-panel { visibility: visible; }
+  .pg.stuck > .sec:first-of-type > .wrap > .sec-head { opacity: 0; }           /* 겹친 머리가 대신 보임(읽기 도구에는 그대로 남음) */
+  .pg.on-core .pg-panel, .pg-tint .pg-panel { background: var(--tint); }   /* .pg-tint = 바탕이 tint인 절(기술 스택) */
+  .pg-w { height: 100%; }
+  .pg-in { position: relative; height: 100%; }
+  .pg-in > * { position: absolute; left: 0; top: 0; margin: 0; white-space: nowrap; transform-origin: 0 0; will-change: transform; }
+  .pg-title { font-size: clamp(28px, 3.8vw, 42px); font-weight: 800; line-height: 1.2; letter-spacing: -.025em; color: var(--ink); overflow: hidden; text-overflow: ellipsis; }
+  .pg-team { padding-top: 2px; font-size: 14px; font-weight: 700; color: var(--muted); }
+  .pg-sub { display: none; }                                            /* 제목 오른쪽, 제목과 같은 모양 */
+  .pg.in-core .pg-sub { display: inline; }
+  .pg > .sec.core { scroll-margin-top: calc(var(--top-h) + 44px); }
+  .pg > .sec.core > .wrap > .sec-head { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
+}
+
 /* 머리 막대(화면만): 반투명 검은 띠 */
 .top { position: sticky; top: 0; z-index: 20; background: color-mix(in srgb, var(--paper) 78%, transparent);
        backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border-bottom: 1px solid color-mix(in srgb, var(--line) 70%, transparent); }
@@ -223,7 +244,6 @@ code { font-family: var(--mono); font-size: .88em; background: var(--accent-soft
   .meta .wide, .meta > div:nth-child(n+4) { grid-column: 1 / -1; }
   .fe { grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: 40px; }
   .fe.noshot { grid-template-columns: 1fr; }
-  .shots { position: sticky; top: calc(var(--top-h) + 20px); }
   .fe[style*="--shots:3"] .shots, .fe[style*="--shots:4"] .shots { grid-template-columns: 1fr 1fr; }
   .flist li { grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 24px; }
   .glance > li { grid-template-columns: 220px minmax(0, 1fr) 200px; gap: 32px; }

@@ -86,6 +86,9 @@
       ? link({ href, label: esc(u), kind }) : esc(u)}</dd></div>`).join('')}</dl>` : '';
     const sec = (id, eyebrow, title, right, body, cls = '') => `<section id="${esc(id)}" class="sec${cls ? ' ' + cls : ''}"><div class="wrap">
       <div class="sec-head"><div><p class="eyebrow">${esc(eyebrow)}</p><h2>${esc(title)}</h2></div>${right ? `<p class="sec-r">${esc(right)}</p>` : ''}</div>${body}</div></section>`;
+    // (직접 고친 기능) 줄어드는 머리: 절 머리와 같은 모양의 겹친 머리. 큰 머리가 위에 닿으면 붙고 더 내리면 한 줄로 줄어듦(bindProjectHeads). sub = 제목 오른쪽에 붙는 말(기능 소개)
+    const stickyBar = (eyebrow, title, right, sub = '') => `<div class="pg-bar no-print" aria-hidden="true"><div class="pg-panel"><div class="wrap pg-w"><div class="pg-in"><p class="eyebrow pg-eb">${esc(eyebrow)}</p><p class="pg-title">${esc(title)}${sub
+      ? `<span class="pg-sub"> · ${esc(sub)}</span>` : ''}</p>${right ? `<p class="pg-team">${esc(right)}</p>` : ''}</div></div></div></div>`;
     const out = [];
 
     // ① 머리: 이름 · 영문 이름 · 한 줄 정체성 · 연락처
@@ -103,15 +106,19 @@
     if (prof.intro) out.push(sec('intro', t('en.about'), t('page.intro'), '',`<div class="about">${prof.intro.split(/\n+/).filter((l) => l.trim()).map((l) => `<p>${inline(l)}</p>`).join('')}</div>`));
 
     // ③ 기술 스택: 기술마다 "무엇을 만들며 썼는지"(evidence)와 근거 프로젝트(같은 페이지의 그 프로젝트로)
-    if ((pf.skills || []).length) out.push(sec('stack', t('en.skills'), t('page.stack'), t('page.stack-note'),`<ul class="skills">${pf.skills.map((s) => `<li class="skill">
-      <h3>${esc(s.name)}</h3><ul>${(s.evidence || []).map((e) => `<li><span>${inline(e.text)}</span>${byId[e.project] ? link({ href: `#p-${e.project}`, label: esc(byId[e.project].title), kind: 'anchor', cls: 'chip' }) : ''}</li>`).join('')}</ul></li>`).join('')}</ul>`, 'tint'));
+    //   (직접 고친 기능) 목록이 길어 프로젝트처럼 줄어드는 머리를 붙임(.pg-tint: 막대 바탕도 이 절의 색)
+    if ((pf.skills || []).length) out.push(`<div class="pg pg-tint">${stickyBar(t('en.skills'), t('page.stack'), t('page.stack-note'))}` + sec('stack', t('en.skills'), t('page.stack'), t('page.stack-note'),`<ul class="skills">${pf.skills.map((s) => `<li class="skill">
+      <h3>${esc(s.name)}</h3><ul>${(s.evidence || []).map((e) => `<li><span>${inline(e.text)}</span>${byId[e.project] ? link({ href: `#p-${e.project}`, label: esc(byId[e.project].title), kind: 'anchor', cls: 'chip' }) : ''}</li>`).join('')}</ul></li>`).join('')}</ul>`, 'tint') + '</div>');
 
     // ④ 프로젝트마다 소개 + 기능 소개
+    //   (직접 고친 기능) 두 절을 .pg로 묶음. 소개 절의 큰 제목은 제자리에서 올라오다가 머리 막대 아래에 닿으면 붙고(스냅),
+    //   더 내리는 만큼 줄어들어 한 줄짜리 막대("PROJECT 01 / 04  프로젝트 이름 · 기능 소개")가 되어 두 절이 끝날 때까지 붙어 있음(bindProjectHeads).
+    //   기능 소개 절의 머리(.sec-head)는 화면에서 읽기 도구용으로만 남기고(눈에 안 보임 — 이름이 겹치지 않게), 인쇄(PDF)에서는 쪽마다 그대로 보임
     projects.forEach((p, j) => {
       const no = t('page.project-no', { no: pad2(j + 1), total });
-      out.push(projectIntro(p, no, sec, btn, printUrls));
       const fe = features(p, no, sec, btn);
-      if (fe) out.push(fe);
+      const team = PF.teamLabel(p.team);
+      out.push(`<div class="pg">${stickyBar(no, p.title, team, fe ? t('page.features') : '')}${projectIntro(p, no, sec, btn, printUrls)}${fe}</div>`);
     });
 
     // ④-2 기타 프로젝트(portfolio.json others): 주력과 따로, 프로젝트마다 소개 카드 하나(기능 소개 쪽 없음). 카드 id는 p-<폴더>라 기술 스택 칩·예전 주소가 그대로 옴
@@ -154,7 +161,7 @@
       if (w && h) { if (off(w, h)) i.parentElement.classList.add('fit'); }
       else if (i.complete) mark(); else i.addEventListener('load', mark, { once: true });
     });
-    info.sections = [...root.querySelectorAll('main > section[id], main > footer[id]')].map((s) => s.id);
+    info.sections = [...root.querySelectorAll('main > section[id], main > .pg > section[id], main > footer[id]')].map((s) => s.id);
     info.projects = projects.length;
     info.others = others.length;
   }
@@ -248,7 +255,62 @@
       window.print();
     });
     addEventListener('beforeprint', () => eager());                    // Ctrl+P: 아직 받지 않은 그림을 바로 받기 시작(할 수 있는 만큼)
+    bindProjectHeads();
   }
+
+  // (직접 고친 기능) 줄어드는 머리(프로젝트 · 기술 스택): 묶음 첫 절의 큰 머리(.sec-head)가 막대 자리(머리 막대 아래 + 16px)에 닿으면 같은 모양의 겹친 머리(.pg-panel)로 바꿔 붙이고(.stuck),
+  //   그 뒤로 내린 만큼(shrink px) 큰 머리 → 한 줄 막대(BAR_H)로 줄어듦: 높이·제목 크기·위치를 스크롤에 맞춰 사이값으로(진행도 k 0→1).
+  //   기능 소개가 막대 아래 화면의 절반을 넘게 차지하면 제목 오른쪽에 같은 모양으로 " · 기능 소개"(.in-core), 기능 소개 절이 막대에 닿으면 막대 바탕도 그 절 색(.on-core)
+  function bindProjectHeads() {
+    const BAR_H = 44, PAD = 16, SMALL = 15, GAP = 14;                   // 한 줄 막대 높이 · 큰 머리 위아래 여백 · 한 줄일 때 제목 글자 크기 · 칸 사이
+    const groups = [...root.querySelectorAll('.pg')].map((g) => ({ g, panel: g.querySelector('.pg-panel'), inner: g.querySelector('.pg-in'),
+      eb: g.querySelector('.pg-eb'), title: g.querySelector('.pg-title'), team: g.querySelector('.pg-team'),
+      head: g.querySelector('.sec .sec-head'), core: g.querySelector('.sec.core') })).filter((x) => x.panel && x.head);
+    if (!groups.length) return;
+    const lerp = (a, b, k) => a + (b - a) * k;
+    const update = () => {
+      const topH = parseFloat(getComputedStyle(groups[0].g.querySelector('.pg-bar')).top) || 0;
+      groups.forEach((x) => {
+        const { g, panel, inner, eb, title, team, head, core } = x;
+        const hr = head.getBoundingClientRect();
+        const s = hr.top - (topH + PAD);                                 // 0 이하 = 큰 머리가 막대 자리에 닿음
+        const stuck = s <= 0;
+        g.classList.toggle('stuck', stuck);
+        if (!stuck) { g.classList.remove('in-core', 'on-core'); return; }
+        // 큰 머리의 실제 배치(읽기만)
+        const h2 = head.querySelector('h2'), hEb = head.querySelector('.eyebrow'), hR = head.querySelector('.sec-r');
+        const r2 = h2.getBoundingClientRect(), rEb = hEb.getBoundingClientRect(), rR = hR?.getBoundingClientRect();
+        const bigH = hr.height + PAD * 2, F = parseFloat(getComputedStyle(h2).fontSize) || 42, lineH = r2.height;
+        const k = Math.min(1, Math.max(0, -s / (bigH - BAR_H + 60)));
+        const W = inner.clientWidth, ebW = eb.offsetWidth, ebH = eb.offsetHeight, teamW = team?.offsetWidth || 0, teamH = team?.offsetHeight || 0;
+        const narrow = W < 480;                                          // 좁은 화면: 한 줄일 때 팀 표시는 빼고 제목에 자리를 줌
+        const h = lerp(bigH, BAR_H, k), sc = lerp(1, SMALL / F, k);
+        // 쓰기
+        panel.style.height = `${h}px`;
+        panel.style.boxShadow = `0 1px 0 color-mix(in srgb, var(--line) ${Math.round(k * 100)}%, transparent)`;
+        title.style.fontSize = `${F}px`;
+        eb.style.transform = `translate(0px, ${lerp(PAD + rEb.top - hr.top, (BAR_H - ebH) / 2, k)}px)`;
+        const tx = lerp(r2.left - hr.left, ebW + GAP, k * k), ty = lerp(PAD + r2.top - hr.top, (BAR_H - lineH * SMALL / F) / 2, k);
+        title.style.transform = `translate(${tx}px, ${ty}px) scale(${sc})`;
+        const room = W - tx - (team && !narrow ? teamW + GAP : 0);       // 제목이 쓸 수 있는 너비(줄어든 크기 기준)
+        title.style.maxWidth = `${Math.max(40, room / sc)}px`;
+        if (team) {
+          const bigL = rR ? rR.left - hr.left : W - teamW, bigT = rR ? PAD + rR.top - hr.top : PAD;
+          team.style.transform = `translate(${lerp(bigL, W - teamW, k)}px, ${lerp(bigT, (BAR_H - teamH) / 2, k)}px)`;
+          team.style.opacity = narrow ? String(1 - k) : '1';
+        }
+        const bb = topH + h, ct = core ? core.getBoundingClientRect().top : Infinity;
+        g.classList.toggle('in-core', ct <= bb + (innerHeight - bb) / 2);
+        g.classList.toggle('on-core', ct <= bb + 1);
+      });
+    };
+    update();
+    addEventListener('scroll', update, { passive: true });
+    addEventListener('resize', update);
+    document.fonts?.ready.then(update);
+  }
+
+
 
   const eager = () => document.querySelectorAll('img[loading="lazy"]').forEach((i) => { i.loading = 'eager'; });
   const loaded = (i) => (i.complete ? null : new Promise((r) => {     // decode()·rAF는 쓰지 않음: 가려진 창에서 끝나지 않음(발표 덱 키트와 같은 이유)
