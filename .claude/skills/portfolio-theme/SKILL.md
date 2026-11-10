@@ -44,7 +44,7 @@ argument-hint: "[되돌리기 | 덧붙일 요청 — 예: 강조색은 내 색 �
 2. 수강생의 덧붙인 요청(`$ARGUMENTS`·대화)을 반영합니다 — 규칙의 결과보다 요청이 먼저입니다.
 3. [theme-template.css](theme-template.css)의 형식 그대로 `theme/theme.css`를 씁니다(Write).
    - 머리 주석의 `{자리}`를 채웁니다. **참고한 화면 설명에 회사·서비스 이름, 로고, 문구를 적지 않습니다**("검은 바탕의 게임 회사 소개 페이지"처럼 인상만).
-   - 쓰지 않는 줄은 지웁니다(Montserrat·Pretendard면 `@import` 두 줄, 어두운 바탕이면 `--t-diagram`).
+   - 쓰지 않는 줄은 지웁니다(Montserrat·Pretendard면 `@import` 두 줄, `--t-diagram`은 보통 지움 — 기본 = 카드 색).
    - 강조가 한 색이면 `--t-accent-2`·`-3`은 지우지 말고 `--t-accent`와 **같은 값**으로 둡니다(지우면 자동 짝 색이 선 끝·진행 막대에 보임).
 4. 점검을 돌립니다:
    ```bash

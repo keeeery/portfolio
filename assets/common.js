@@ -180,6 +180,63 @@ const PF = (() => {
     return t;
   }
 
+  // ── 다이어그램(Mermaid) 색 — 페이지의 지금 색(테마 손잡이 · 밝은/어두운 화면)에서 뽑아 mermaid 'base' 테마 변수로 ──
+  //   판(--diagram-bg) · 글자(--ink) · 선(--muted) · 테두리(--line-2) · 강조(--accent)를 계산된 색으로 읽어 섞음.
+  //   print: true → 흰 종이용(상세 문서 인쇄). 수강생 문서에 %%{init}%%·classDef·style이 있으면 그 값이 이김(mermaid 규칙).
+  //   글자 크기는 기본 테마와 같아서(16px) 테마를 바꿔도 그림 크기·발표 덱 배치는 그대로
+  let colorProbe, colorCtx;
+  function cssRgb(expr, fallback) {                                       // CSS 색 식(var()·color-mix() 포함) → [r, g, b]
+    if (!document.body) return fallback;
+    if (!colorProbe) {
+      colorProbe = document.createElement('span'); colorProbe.setAttribute('aria-hidden', 'true'); colorProbe.style.display = 'none';
+      colorCtx = document.createElement('canvas').getContext('2d', { willReadFrequently: true });
+    }
+    if (!colorProbe.isConnected) document.body.appendChild(colorProbe);
+    colorProbe.style.color = 'rgb(1, 2, 3)'; colorProbe.style.color = expr;
+    const c = getComputedStyle(colorProbe).color;
+    if (!c || c === 'rgb(1, 2, 3)') return fallback;                     // 읽지 못한 식
+    colorCtx.clearRect(0, 0, 1, 1); colorCtx.fillStyle = '#000'; colorCtx.fillStyle = c; colorCtx.fillRect(0, 0, 1, 1);
+    return [...colorCtx.getImageData(0, 0, 1, 1).data.slice(0, 3)];
+  }
+  function mermaidConfig({ print = false } = {}) {
+    const base = { startOnLoad: false, securityLevel: 'loose', fontFamily: 'Pretendard, sans-serif' };
+    const WHITE = [255, 255, 255];
+    const P = print ? WHITE : cssRgb('var(--diagram-bg)', null);
+    if (!P) return { ...base, theme: 'default' };                         // 색을 읽지 못하면 예전처럼 기본 테마
+    const INK = print ? [23, 24, 28] : cssRgb('var(--ink)', [23, 24, 28]);
+    const MUT = print ? [107, 111, 123] : cssRgb('var(--muted)', mix(P, INK, 0.6));
+    const L2 = print ? [213, 215, 221] : cssRgb('var(--line-2)', mix(P, INK, 0.25));
+    const A = cssRgb('var(--accent)', [47, 111, 235]);
+    const dark = lum(P) < 0.18;
+    const reach = (c, min) => { let x = c; for (let t = 0; t <= 1 && contrast(x, P) < min; t += 0.04) x = mix(c, INK, t); return x; };   // 판 위에서 보이게
+    const node = mix(P, A, dark ? 0.2 : 0.1);
+    const nodeBorder = reach(mix(P, A, dark ? 0.75 : 0.65), 3);
+    const line = reach(MUT, 3);
+    const border = reach(L2, 1.6);
+    const group = mix(P, INK, dark ? 0.06 : 0.035);
+    const group2 = mix(P, INK, dark ? 0.1 : 0.06);
+    const h = (c) => rgbHex(c);
+    const v = {
+      darkMode: dark, background: h(P), fontFamily: base.fontFamily, fontSize: '16px',
+      primaryColor: h(node), primaryTextColor: h(INK), primaryBorderColor: h(nodeBorder),
+      secondaryColor: h(group2), secondaryTextColor: h(INK), secondaryBorderColor: h(border),
+      tertiaryColor: h(group), tertiaryTextColor: h(INK), tertiaryBorderColor: h(border),
+      mainBkg: h(node), nodeBorder: h(nodeBorder), nodeTextColor: h(INK), textColor: h(INK), titleColor: h(INK),
+      lineColor: h(line), defaultLinkColor: h(line), edgeLabelBackground: h(P),
+      clusterBkg: h(group), clusterBorder: h(border),
+      noteBkgColor: h(group2), noteTextColor: h(INK), noteBorderColor: h(border),
+      // 시퀀스 다이어그램
+      actorBkg: h(node), actorBorder: h(nodeBorder), actorTextColor: h(INK), actorLineColor: h(line),
+      signalColor: h(INK), signalTextColor: h(INK), labelBoxBkgColor: h(node), labelBoxBorderColor: h(nodeBorder), labelTextColor: h(INK),
+      loopTextColor: h(INK), activationBkgColor: h(group2), activationBorderColor: h(border), sequenceNumberColor: h(P),
+      // 상태 다이어그램
+      transitionColor: h(line), transitionLabelColor: h(INK), stateLabelColor: h(INK), stateBkg: h(node),
+      compositeBackground: h(group), compositeTitleBackground: h(group2), compositeBorder: h(border), altBackground: h(group2),
+      specialStateColor: h(line), innerEndBackground: h(nodeBorder), labelColor: h(INK),
+    };
+    return { ...base, theme: 'base', themeVariables: v };
+  }
+
   // ── 화면 모드 전환(어두운 ↔ 밝은) — theme/theme-light.css(:root[data-pf-mode="light"])가 있을 때만 버튼이 생김 ──
   //   처음에는 기기 설정(prefers-color-scheme)을 따르고, 버튼으로 고르면 localStorage 'pf-mode'에 남아 그 뒤로는 기기 설정보다 우선
   //   각 html <head>의 짧은 스크립트가 그리기 전에 모드를 정함(깜빡임 없음). 고른 적이 없으면 페이지를 연 채로 기기 설정이 바뀌어도 따라감
@@ -255,6 +312,6 @@ const PF = (() => {
   const { t, tab, label, load: loadStrings, report: stringsReport } = PFStr;
 
   return { esc, inline, isUrl, shortUrl, loadJSON, loadText, encodePath, srcPath, projectUrl, docUrl, siteBase, visibleUrl, metaValue, teamLabel,
-           slugger, normTitle, resolveHeading, keyOk, deckSceneFor, headingsOf, ICON, NEWTAB, link, markNewTab, themeTokens, applyTheme, contrast, hexRgb, modeButton, setMode, getMode, hasLightMode,
+           slugger, normTitle, resolveHeading, keyOk, deckSceneFor, headingsOf, ICON, NEWTAB, link, markNewTab, themeTokens, applyTheme, mermaidConfig, contrast, hexRgb, modeButton, setMode, getMode, hasLightMode,
            FILE_HELP, noDataHtml, isFile, notice, guardFileProtocol, noData, t, tab, label, loadStrings, stringsReport };
 })();

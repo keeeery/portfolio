@@ -137,11 +137,9 @@ def main(path):
             rows.append(f'  {"✓" if r >= 7 else "✗"} {"코드 글자 / 코드 판":<26} {r:5.2f} : 1  (기준 7, 코드 판은 늘 어둡게)')
             if r < 7: errs.append('--t-code-bg는 어두운 색(코드 강조색 github-dark가 어두운 판 기준)')
         if 'diagram' in T and re.fullmatch(r'#[0-9A-Fa-f]{6}', T['diagram']):
-            r = contrast(T['diagram'], '#333333')
-            rows.append(f'  {"✓" if r >= 7 else "✗"} {"다이어그램 글자 / 판":<26} {r:5.2f} : 1  (기준 7, 다이어그램 판은 늘 밝게)')
-            if r < 7: errs.append('--t-diagram은 밝은 색(학생 문서의 mermaid 테마가 밝은 판 기준)')
-        elif not dark:
-            notes.append('밝은 바탕인데 --t-diagram이 없습니다 — 다이어그램 판이 기본 회청색(#F4F5FA)입니다. 카드 색과 같게 두면 바탕과 어울립니다(rules.md §2-10)')
+            r = contrast(T['diagram'], C['ink'])
+            rows.append(f'  {"✓" if r >= 7 else "✗"} {"다이어그램 글자 / 판":<26} {r:5.2f} : 1  (기준 7, 다이어그램 글자 = --t-ink)')
+            if r < 7: errs.append('--t-diagram은 제목 글자(--t-ink)와 대비 7 이상(다이어그램 색은 판·글자·강조색에서 뽑음)')
         if 'accent' in T and not ('accent-2' in T and 'accent-3' in T) and T.get('grad', '').count('accent-2') == 0:
             notes.append('강조가 한 색(라벨 단색)인데 --t-accent-2·-3이 없습니다 — 지우면 짝 색이 선 끝·진행 막대에 보입니다. 강조색과 같은 값으로(rules.md §2-6)')
         if not dark and 'shadow' not in T:

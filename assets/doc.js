@@ -139,19 +139,26 @@
       if (img) para.classList.add('pf-figure');
     });
 
-    // ⑦ Mermaid (theme default, securityLevel loose). 글꼴을 먼저 받아 글자 폭을 맞춤
+    // ⑦ Mermaid (securityLevel loose). 글꼴을 먼저 받아 글자 폭을 맞춤
+    //   색은 PF.mermaidConfig — 화면용(.mmd-screen, 테마 손잡이 · 밝은/어두운 화면을 따름)과 인쇄용(.mmd-print, 흰 종이)을 따로 그림.
+    //   인쇄 직전에는 비동기로 다시 그릴 수 없어서 인쇄용을 미리 그려 두고 CSS(@media print)로 바꿔 보임
     let n = 0;
     const figs = [];
     doc.querySelectorAll('code.language-mermaid').forEach((code) => {
       const fig = document.createElement('figure');
       fig.className = 'mmd';
       const div = document.createElement('div');
-      div.className = 'mermaid';
-      div.id = `mmd-${n++}`;
+      div.className = 'mermaid mmd-screen';
+      div.id = `mmd-${n}`;
       div.textContent = code.textContent;
+      const pdiv = document.createElement('div');
+      pdiv.className = 'mermaid mmd-print';
+      pdiv.dataset.svgId = `mmd-p-${n++}`;
+      pdiv.setAttribute('aria-hidden', 'true');
+      fig._mmdSrc = code.textContent;
       const acc = /^\s*accTitle\s*:\s*(.+)$/m.exec(code.textContent)?.[1]?.trim();
       fig.dataset.label = acc || PF.t('doc.diagram-n', { n });
-      fig.appendChild(div);
+      fig.append(div, pdiv);
       fig.insertAdjacentHTML('beforeend', `<div class="mmd-bar"><details class="mmd-src"><summary>${T('doc.diagram-src')}</summary><pre><code>${esc(code.textContent)}</code></pre></details>` +
         `<button type="button" class="mmd-zoom">${T('doc.zoom')}</button></div>`);
       (code.closest('pre') || code).replaceWith(fig);
@@ -187,22 +194,46 @@
     };
     markPrintWide();
     document.fonts?.addEventListener('loadingdone', markPrintWide);
-    if (window.mermaid && figs.length) {
-      mermaid.initialize({ startOnLoad: false, theme: 'default', securityLevel: 'loose', fontFamily: 'Pretendard, sans-serif' });
-      try { await mermaid.run({ nodes: doc.querySelectorAll('.mermaid') }); }
-      catch (err) { console.warn('[doc] Mermaid 렌더 오류:', err); }
-    }
-    figs.forEach((fig) => {
-      const svg = fig.querySelector('.mermaid svg');
-      if (!svg) { fig.querySelector('.mermaid')?.classList.add('pf-mmd-error'); return; }
+    const finishSvg = (fig, box) => {
+      const svg = box.querySelector('svg');
+      if (!svg) { box.classList.add('pf-mmd-error'); return; }
       const natural = svg.viewBox?.baseVal?.width || parseFloat(svg.style.maxWidth) || 0;
       if (natural) { svg.setAttribute('width', String(Math.ceil(natural))); svg.style.maxWidth = '100%'; svg.removeAttribute('height'); }
       svg.dataset.naturalWidth = String(natural);
+      if (box.classList.contains('mmd-print')) { svg.setAttribute('aria-hidden', 'true'); return; }
       svg.setAttribute('role', 'img');
       svg.setAttribute('aria-label', fig.dataset.label);
       svg.querySelectorAll('a[href], a[*|href]').forEach((a) => {           // Mermaid click 링크에도 같은 분류
         const h = a.getAttribute('href') || a.getAttribute('xlink:href') || '';
         if (/^https?:/i.test(h)) { a.setAttribute('target', '_blank'); a.setAttribute('rel', 'noopener'); }
+      });
+    };
+    const runMermaid = async (sel, cfg) => {
+      mermaid.initialize(cfg);
+      try { await mermaid.run({ nodes: doc.querySelectorAll(sel) }); }
+      catch (err) { console.warn('[doc] Mermaid 렌더 오류:', err); }
+    };
+    if (window.mermaid && figs.length) {
+      // 인쇄용: 화면에 보이지 않는 상자에서는 글자 폭을 잴 수 없어서 mermaid.render(본문 밖 임시 자리)로 그려 넣음
+      mermaid.initialize({ ...PF.mermaidConfig({ print: true }), suppressErrorRendering: true });
+      for (const fig of figs) {
+        const box = fig.querySelector('.mmd-print');
+        try { box.innerHTML = (await mermaid.render(box.dataset.svgId, fig._mmdSrc)).svg; } catch { box.replaceChildren(); }
+      }
+      await runMermaid('.mmd-screen', PF.mermaidConfig());
+    }
+    figs.forEach((fig) => fig.querySelectorAll('.mermaid').forEach((box) => finishSvg(fig, box)));
+    // 화면 모드(☀/☾)를 바꾸면 화면용 그림만 새 색으로 다시 그림(인쇄용은 그대로)
+    let mmdQueue = Promise.resolve();
+    if (window.mermaid && figs.length) window.addEventListener('pf-mode', () => {
+      mmdQueue = mmdQueue.then(async () => {
+        figs.forEach((fig) => {
+          const box = fig.querySelector('.mmd-screen');
+          box.removeAttribute('data-processed'); box.classList.remove('pf-mmd-error');
+          box.textContent = fig._mmdSrc;
+        });
+        await runMermaid('.mmd-screen', PF.mermaidConfig());
+        figs.forEach((fig) => finishSvg(fig, fig.querySelector('.mmd-screen')));
       });
     });
 
@@ -235,12 +266,12 @@
     // ⑩ 목차 현재 위치(스크롤 기준) + 레일 "지금 읽는 절"
     trackSection(headings.filter((h) => h.tagName === 'H2' || h.tagName === 'H3'));
 
-    // ⑪ 이미지 크게 보기, 다이어그램 크게 보기(같은 페이지 dialog)
+    // ⑪ 이미지 크게 보기, 다이어그램 크게 보기(같은 페이지 dialog) — 다이어그램은 그림을 누르거나 [크게 보기] 단추로(단추는 키보드용)
     doc.addEventListener('click', (e) => {
       const img = e.target.closest('img');
       if (img && !img.closest('a')) return zoom({ src: img.currentSrc || img.src, caption: img.alt });
-      const zb = e.target.closest('.mmd-zoom');
-      if (zb) { const svg = zb.closest('.mmd').querySelector('.mermaid svg'); if (svg) zoom({ svg, caption: zb.closest('.mmd').dataset.label }); }
+      const hit = e.target.closest('.mmd-zoom') || (!e.target.closest('a') && e.target.closest('.mmd-screen'));   // 다이어그램 안 링크(click)는 그대로 열림
+      if (hit) { const fig = hit.closest('.mmd'), svg = fig.querySelector('.mmd-screen svg'); if (svg) zoom({ svg, caption: fig.dataset.label }); }
     });
     // 코드 오른쪽 흐림 표시: 가로로 더 있을 때만
     const fade = (pre) => pre.classList.toggle('fade-r', pre.scrollWidth > pre.clientWidth + 1 && pre.scrollLeft + pre.clientWidth < pre.scrollWidth - 1);
@@ -303,13 +334,19 @@
     dlg.className = 'lightbox';
     dlg.setAttribute('aria-label', '크게 보기');
     dlg.innerHTML = `<div class="lb-stage"></div><p class="lb-cap"></p><button type="button" class="btn lb-close">${T('ui.close-esc')}</button>`;
-    dlg.addEventListener('click', (e) => { if (e.target === dlg || e.target.closest('.lb-close') || e.target.tagName === 'IMG') dlg.close(); });
+    dlg.addEventListener('click', (e) => { if (e.target === dlg || e.target.closest('.lb-close') || e.target.tagName === 'IMG' || (e.target.closest('.lb-svg svg') && !e.target.closest('a'))) dlg.close(); });
     document.body.appendChild(dlg);
     return ({ src, svg, caption }) => {
       const st = dlg.querySelector('.lb-stage');
       st.className = svg ? 'lb-stage lb-svg' : 'lb-stage';
       st.innerHTML = '';
-      if (svg) { const c = svg.cloneNode(true); c.removeAttribute('id'); c.style.maxWidth = 'none'; st.appendChild(c); }
+      if (svg) {
+        // mermaid 색 규칙은 SVG id(#mmd-n …)에 묶여 있어서, 복제본은 새 id로 바꾸고 규칙의 id도 같이 바꿈(id를 지우면 색이 빠져 검게 보임)
+        const c = svg.cloneNode(true), old = svg.id;
+        c.id = 'mmd-lightbox';
+        if (old) { const re = new RegExp(`#${old.replace(/[^\w-]/g, '\\$&')}(?![\\w-])`, 'g'); c.querySelectorAll('style').forEach((s) => { s.textContent = s.textContent.replace(re, '#mmd-lightbox'); }); }
+        c.removeAttribute('aria-hidden'); c.style.maxWidth = 'none'; st.appendChild(c);
+      }
       else { const im = new Image(); im.src = src; im.alt = caption || ''; st.appendChild(im); }
       dlg.querySelector('.lb-cap').textContent = caption || '';
       dlg.showModal();

@@ -5,7 +5,7 @@
    주석의 설계 근거(docs/design/…의 portfolio-structure·deck-vs-scroll·01 §, R0, 결정 F·Q·# 번호)와 원본 시안(spikes/…)은 템플릿 유지관리용 maintainer 브랜치에 있습니다. 이 레포에 없어도 정상입니다.
    (common.js PF.applyTheme: 글자용 밝은 강조색은 어두운 바탕 7:1 이상, 흰 글자를 올리는 칠은 4.5:1 이상). 아래 값은 기본 강조색 #2F6FEB의 계산값.
    어두운 테마: 검은 장면(--bg) · 한 단 밝은 카드(--card) · 흰 글자 · 강조색 → 보랏빛 그러데이션(--grad 글자, --glow 번호·자리 표시, 장 표지·맺음의 광채).
-   영문 라벨(눈썹 글자·목차 머리·장 번호)은 Montserrat(--display). 다이어그램은 학생 문서의 %%{init}%% 테마(밝은 색)가 그대로 읽히게 밝은 판 위에 둡니다.
+   영문 라벨(눈썹 글자·목차 머리·장 번호)은 Montserrat(--display). 다이어그램은 장면 색을 따릅니다(PF.mermaidConfig: 판 --diagram-bg = 카드 색 · 글자 · 선 · 강조색, 밝은/어두운 화면을 바꾸면 다시 그림).
    인쇄(16:9 PDF)도 화면과 같은 어두운 장면입니다(scene-kit.css의 print-color-adjust: exact).
    테마 손잡이(--t-*)는 theme/theme.css(/portfolio-theme가 씀)에서 받습니다. 비어 있으면 아래 기본값 = 어두운 기본 테마
    장면 안 금지(§9-4): vw·vh, 뷰포트 @media, fixed·sticky, overflow:auto 상자, CSS background-image
@@ -21,7 +21,7 @@
   --fx: var(--t-glow, 1);                                        /* 배경 광채 세기 0~1 */
   --shadow: var(--t-shadow, rgb(0 0 0 / .8));
   --radius: var(--t-radius, 20px); --pill: var(--t-pill, 999px);
-  --code-bg: var(--t-code-bg, #111116); --ok: #1B7A4B; --ok-ink: color-mix(in srgb, #2BB673 70%, var(--ink)); --diagram-bg: var(--t-diagram, #F4F5FA);
+  --code-bg: var(--t-code-bg, #111116); --ok: #1B7A4B; --ok-ink: color-mix(in srgb, #2BB673 70%, var(--ink)); --diagram-bg: var(--t-diagram, var(--card));
   --sans: 'Pretendard', 'Noto Sans KR', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   --display: var(--t-display, 'Montserrat'), var(--sans);
   --mono: 'D2Coding', Consolas, monospace;
@@ -235,7 +235,7 @@ table.kv td.role { color: var(--accent-ink); font-weight: 800; }
 .vis[data-arr="row"] { flex-direction: row; align-items: flex-start; }
 .vbox { margin: 0; display: flex; flex-direction: column; gap: 6px; flex: none; max-width: 100%; min-width: 0; }
 .vmedia { border-radius: calc(var(--radius) * .6); overflow: hidden; background: var(--card); border: 1px solid var(--line); display: flex; align-items: center; justify-content: center; }
-.vbox[data-kind="mermaid"] .vmedia { background: var(--diagram-bg); border-color: var(--diagram-bg); }   /* 다이어그램은 밝은 판(학생 문서의 밝은 mermaid 테마가 그대로 읽히게) */
+.vbox[data-kind="mermaid"] .vmedia { background: var(--diagram-bg); }   /* 다이어그램 판 = 카드 색(그림 색은 PF.mermaidConfig가 이 판 기준으로 뽑음) */
 .vbox[data-kind="image"] .vmedia img { width: 100%; height: 100%; object-fit: contain; display: block; }
 .vbox[data-kind="mermaid"] .vmedia svg { width: 100% !important; height: 100% !important; max-width: none !important; display: block; }
 .vbox[data-kind="code"] .vmedia { display: block; background: var(--code-bg); border: 0; box-shadow: inset 0 0 0 1px var(--line); }

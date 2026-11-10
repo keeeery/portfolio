@@ -108,20 +108,38 @@
   // ── 원문 블록 → 장면에 넣을 준비(이미지 크기·다이어그램 SVG를 미리 구함) ──
   let mmdHost = null;
   const svgCache = new Map();
-  async function renderMermaid(els) {
+  const mmdIdx = new Map();                                              // 원문 블록 → 번호(SVG id dk-mmd-n · 장면 그림의 data-mmd)
+  // 색은 PF.mermaidConfig(테마 손잡이 · 밝은/어두운 화면). again = 화면 모드를 바꿔 같은 블록을 새 색으로 다시 그림
+  let mmdPass = 0;                                                       // 다시 그릴 때마다 새 id(같은 id의 SVG가 장면·축소 미리보기에 남아 있으면 mermaid가 엉뚱한 곳에 그림)
+  async function renderMermaid(els, { again = false } = {}) {
     if (!els.length) return;
     if (!window.mermaid) { els.forEach((el) => svgCache.set(el, { error: 'Mermaid를 불러오지 못했습니다' })); return; }
-    mermaid.initialize({ startOnLoad: false, theme: 'default', securityLevel: 'loose', fontFamily: 'Pretendard, sans-serif', suppressErrorRendering: true });
-    if (!mmdHost) { mmdHost = document.createElement('div'); mmdHost.setAttribute('aria-hidden', 'true'); Object.assign(mmdHost.style, { position: 'absolute', left: '-20000px', top: '0', width: '1280px', visibility: 'hidden' }); document.body.appendChild(mmdHost); }
-    let n = 0;
+    mermaid.initialize({ ...PF.mermaidConfig(), suppressErrorRendering: true });
+    if (!mmdHost) { mmdHost = document.createElement('div'); mmdHost.setAttribute('aria-hidden', 'true'); Object.assign(mmdHost.style, { position: 'absolute', left: '-20000px', top: '0', width: '1280px', visibility: 'hidden' }); }
+    if (!mmdHost.isConnected) document.body.appendChild(mmdHost);         // 덱 키트가 장면을 붙인 뒤에는 떨어져 있을 수 있음(떨어진 자리에서는 글자 폭을 못 잼)
+    const pass = again ? `-m${++mmdPass}` : '';
     for (const el of els) {
-      if (svgCache.has(el)) continue;
+      if (!again && svgCache.has(el)) continue;
+      if (!mmdIdx.has(el)) mmdIdx.set(el, mmdIdx.size);
       const text = el.querySelector('code')?.textContent || '';
-      try { const { svg } = await mermaid.render(`dk-mmd-${n++}`, text, mmdHost); svgCache.set(el, { svg }); }
-      catch (err) { svgCache.set(el, { error: String(err?.message || err).split('\n')[0].slice(0, 120) }); info.errors.push('mermaid: ' + (err?.message || err)); }
+      try { const { svg } = await mermaid.render(`dk-mmd-${mmdIdx.get(el)}${pass}`, text, mmdHost); svgCache.set(el, { svg }); }
+      catch (err) { if (again) { console.warn('[deck] 다이어그램 다시 그리기 오류:', err); continue; } svgCache.set(el, { error: String(err?.message || err).split('\n')[0].slice(0, 120) }); info.errors.push('mermaid: ' + (err?.message || err)); }
     }
     mmdHost.replaceChildren();
   }
+  // 화면 모드(☀/☾)를 바꾸면 다이어그램을 새 색으로 다시 그려 장면·축소 미리보기의 그림만 바꿔 끼움(크기·배치는 그대로)
+  let mmdQueue = Promise.resolve();
+  window.addEventListener('pf-mode', () => {
+    mmdQueue = mmdQueue.then(async () => {
+      const els = [...mmdIdx.keys()];
+      if (!els.length) return;
+      await renderMermaid(els, { again: true });
+      document.querySelectorAll('.vbox[data-kind="mermaid"][data-mmd]').forEach((f) => {
+        const r = svgCache.get(els[+f.dataset.mmd]), m = f.querySelector('.vmedia');
+        if (r?.svg && m) m.innerHTML = r.svg;
+      });
+    }).catch((err) => console.warn('[deck] 다이어그램 다시 그리기 오류:', err));
+  });
   async function resolveVisuals(model, P, p) {
     const mm = [];
     for (const c of model) for (const sl of c.slides) {
@@ -162,7 +180,7 @@
     if (k === 'mermaid') {
       const r = svgCache.get(v.el) || {};
       if (!r.svg) return `<figure class="vbox err">${PF.vband('visual-missing', `다이어그램을 그리지 못했습니다: ${r.error || ''}`)}</figure>`;
-      return `<figure class="vbox" data-kind="mermaid"><div class="vmedia">${r.svg}</div>${cap(v.ref.caption?.text ? inline(v.ref.caption.text) : '')}${warn}</figure>`;
+      return `<figure class="vbox" data-kind="mermaid" data-mmd="${mmdIdx.get(v.el)}"><div class="vmedia">${r.svg}</div>${cap(v.ref.caption?.text ? inline(v.ref.caption.text) : '')}${warn}</figure>`;
     }
     if (k === 'code') {
       const all = codeLines(v.el).length, [a, b] = chunk;

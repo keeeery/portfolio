@@ -17,9 +17,7 @@
 
 ### 1.1 What — 무엇을 만들었나
 
-![Arcanist 로고](images/arcanist-logo.png)
-
-![Arcanist 플레이 화면 — 화염구 카드로 해골 병사를 공격하는 장면](images/cover-play.png)
+![Arcanist 로고와, 화염구 카드로 해골 병사를 공격하는 플레이 화면](images/cover-play-logo.png)
 
 2D 액션에 실시간 카드 사용을 결합한 게임입니다.
 플레이어는 이동·점프·공격·패링을 하며, 충전된 게이지로 카드를 뽑아 Q/W/E 슬롯에서 사용합니다.

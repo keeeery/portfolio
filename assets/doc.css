@@ -6,7 +6,7 @@
    1200px 미만은 목차를 [목차] 서랍으로, 720px 미만은 휴대폰 한 열. 인쇄는 A4(코드·그림이 쪽 사이에서 잘리지 않게만, 빈칸 0은 보장 안 함).
    장면 키트 CSS는 싣지 않습니다(결정 #14의 인쇄 규칙이 흐르는 문서를 빈 쪽으로 만들기 때문, §4-8).
    화면은 어두운 테마(포트폴리오 문서·발표 덱과 같은 검은 바탕 · 한 단 밝은 카드 · 강조색 → 보랏빛 그러데이션). 인쇄는 맨 아래 @media print에서 흰 종이용 밝은 색으로 되돌림.
-   다이어그램은 학생 문서의 %%{init}%% 테마(밝은 색)가 그대로 읽히게 밝은 판(--diagram-bg) 위에 둡니다.
+   다이어그램은 페이지 색을 따릅니다(PF.mermaidConfig: 판 --diagram-bg = 카드 색 · 글자 · 선 · 강조색, 밝은/어두운 화면을 바꾸면 다시 그림). 인쇄는 흰 종이용 그림(.mmd-print)으로 바꿔 보임.
    테마 손잡이(--t-*)는 theme/theme.css(/portfolio-theme가 씀)에서 받습니다. 비어 있으면 아래 기본값 = 어두운 기본 테마
    ───────────────────────────────────────────────────────────── */
 :root {
@@ -20,7 +20,7 @@
   --ink: var(--t-ink, #F4F4F6); --body: var(--t-body, #BDBDC7); --muted: var(--t-muted, #9A9AA6); --faint: var(--t-faint, color-mix(in srgb, var(--muted) 85%, var(--paper)));
   --line: var(--t-line, #24242C); --line-2: var(--t-line-2, #3D3D48);
   --paper: var(--t-bg, #0A0A0D); --bg: var(--paper); --surface: var(--t-surface, #131318); --th: color-mix(in srgb, var(--ink) 5%, var(--surface));
-  --code-bg: var(--t-code-bg, #111116); --diagram-bg: var(--t-diagram, #F4F5FA); --shadow: var(--t-shadow, rgb(0 0 0 / .8));
+  --code-bg: var(--t-code-bg, #111116); --diagram-bg: var(--t-diagram, var(--surface)); --shadow: var(--t-shadow, rgb(0 0 0 / .8));
   --sans: 'Pretendard', 'Noto Sans KR', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   --mono: 'JetBrains Mono', 'D2Coding', Consolas, monospace;
   --r: var(--t-radius, 20px); --radius: calc(var(--r) * .7); --pill: var(--t-pill, 999px);
@@ -174,8 +174,11 @@ code { font-family: var(--mono); font-size: .88em; background: var(--accent-soft
 .md :is(.pf-figure, img, .table-wrap:has(img)) { overflow-anchor: none; }
 
 .md .mmd { margin: 22px 0; }
-.mmd .mermaid { display: flex; justify-content: center; padding: 16px; border: 1px solid var(--diagram-bg); border-radius: calc(var(--r) * .7); overflow-x: auto; background: var(--diagram-bg); }
+.mmd .mermaid { display: flex; justify-content: center; padding: 16px; border: 1px solid var(--line); border-radius: calc(var(--r) * .7); overflow-x: auto; background: var(--diagram-bg); }
 .mmd .mermaid svg { display: block; max-width: 100%; height: auto; }
+.mmd .mmd-screen:has(svg) { cursor: zoom-in; }   /* 그림을 누르면 크게 보기(이미지와 같음) */
+.mmd .mmd-screen a { cursor: pointer; }
+.mmd .mmd-print { display: none; }   /* 인쇄용 흰 종이 그림(@media print에서 화면용 대신 보임) */
 .mmd-bar { contain: inline-size; display: flex; flex-wrap: wrap; align-items: flex-start; justify-content: space-between; gap: 6px 12px; margin-top: 6px; font-size: 13px; }
 .mmd-src summary { color: var(--muted); cursor: pointer; font-weight: 600; }
 .mmd-src pre { margin: 8px 0 0; max-height: 320px; overflow: auto; background: var(--code-bg); border: 1px solid var(--line); border-radius: 8px; }
@@ -204,7 +207,7 @@ dialog.lightbox { border: 0; padding: 0; background: transparent; max-width: 96v
 dialog.lightbox::backdrop { background: rgba(10, 11, 14, .82); }
 .lb-stage img { display: block; max-width: 94vw; max-height: 84vh; border-radius: calc(var(--r) * .5); margin: 0 auto; }
 .lb-stage.lb-svg { max-width: 94vw; max-height: 84vh; overflow: auto; background: var(--diagram-bg); border-radius: calc(var(--r) * .5); padding: 16px; touch-action: pan-x pan-y pinch-zoom; }
-.lb-stage.lb-svg svg { display: block; height: auto; }
+.lb-stage.lb-svg svg { display: block; height: auto; cursor: zoom-out; }
 .lb-cap { color: #fff; text-align: center; font-size: 14px; margin-top: 10px; }
 .lb-close { display: block; margin: 10px auto 0; }
 
@@ -294,7 +297,9 @@ dialog.lightbox::backdrop { background: rgba(10, 11, 14, .82); }
   .md th, .md td { padding: 4pt 6pt; white-space: normal; overflow-wrap: break-word; }
   .md :is(th, td) a, .md .table-wrap.print-wide :is(th, td) { overflow-wrap: anywhere; }
   thead { display: table-header-group; }
-  .mmd .mermaid { border: 0; padding: 0; overflow: visible; }
+  .mmd .mermaid { border: 0; padding: 0; overflow: visible; background: none; }
+  .mmd:has(.mmd-print svg) .mmd-screen { display: none; }
+  .mmd .mmd-print:has(svg) { display: flex; }
   .mermaid svg, .md img { max-width: 100% !important; height: auto; max-height: 230mm; }
   .md a { color: inherit; text-decoration: none; }
   .link-list { margin-top: 18pt; border-top: 1px solid #ccc; padding-top: 8pt; font-size: 9pt; }
