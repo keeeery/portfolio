@@ -69,7 +69,7 @@
       "what": "채굴과 낙하 배치의 공유 결과를 서버에서 확정하고, 클라이언트가 순서대로 런타임 지형에 적용",
       "how": "`RoomClient.RequestExcavation()` 요청을 서버 `GameSession.TryExcavate()`가 검증해 변경 셀 Batch로 방송하고, 클라이언트는 `BaseRevision → ResultRevision` 순서로 적용. 앞선 변경보다 먼저 온 Batch는 `SortedDictionary`에 보관했다가 연속 적용",
       "why": "서버가 공유 셀 상태를 확정해 채굴·드롭·배치의 기준 상태를 통일 (요청 왕복 지연과 실패 처리 필요)",
-      "section": "3.3 핵심 API와 채굴 변경 순서",
+      "section": "3.2 핵심 API와 채굴 변경 순서",
       "image": {
         "src": "images/mining-crystal-break.png",
         "w": 1196,
@@ -82,7 +82,7 @@
       "what": "여러 청크가 동시에 정착해도 청크마다 배치 확정을 독립적으로 요청",
       "how": "`pendingCollapsePlacementIds`에 `RequestId → CollapseID`를 저장해 같은 청크의 중복 요청만 막고, 낙하 배치 요청은 시간 초과 대신 성공·오류·취소에 연결해 정리",
       "why": "하나의 대기 플래그를 쓰면 먼저 보낸 요청 때문에 다음 청크의 배치 제안이 버려질 수 있음. CollapseID별 예약·소유권으로 다중 청크·동시 플레이어의 상태 간섭을 완화",
-      "section": "3.4 다중 낙하 — 전역 대기 대신 요청·청크별 상태",
+      "section": "3.3 다중 낙하 — 전역 대기 대신 요청·청크별 상태",
       "image": {
         "src": "images/falling-chunk.png",
         "w": 720,
@@ -112,7 +112,7 @@
       "solution": "전체 스냅샷을 주고받지 않고 Batch의 Revision(BaseRevision → ResultRevision)만 비교해 순서대로 적용하고 초기 맵은 시드로 생성(강사님과 같은 개선안을 제안, 구현은 강사님의 도움). lock 구간은 방 단위 FIFO 방송 큐로 상태 변경과 WebSocket 송신을 분리(직접 구현)",
       "result": "원인 파악부터 해결까지 하루. 여러 클라이언트에서 원활하게 플레이되는 것을 확인 (지연 시간과 처리량의 개선 폭은 별도로 측정하지 않음)",
       "lesson": "",
-      "section": "3.2 대표 문제 해결 — 큰 스냅샷과 긴 잠금 구간으로 멈추던 멀티플레이"
+      "section": "8.1 큰 스냅샷과 긴 잠금 구간으로 멈추던 멀티플레이"
     },
     {
       "title": "채굴로 공간을 만들었는데 매몰이 풀리지 않는 문제",
@@ -121,7 +121,7 @@
       "solution": "프레임 종료까지 기다린 뒤(`WaitForEndOfFrame`) `Physics2D.SyncTransforms()`로 물리 Transform을 동기화하고 매몰 판정을 다시 진행",
       "result": "",
       "lesson": "",
-      "section": "4.2 핵심 API와 문제 해결 — Grid와 Collider의 갱신 시점"
+      "section": "8.2 Grid와 Collider의 갱신 시점 — 채굴해도 풀리지 않던 매몰"
     },
     {
       "title": "같은 TSV인데 다른 OS에서 테이블 버전 불일치",
@@ -244,10 +244,17 @@
         ]
       },
       {
+        "key": "troubleshooting",
+        "title": "트러블슈팅",
+        "sectionPath": [
+          "8. 트러블슈팅"
+        ]
+      },
+      {
         "key": "results",
         "title": "결과와 배운 점",
         "sectionPath": [
-          "8. 결과와 배운 점"
+          "9. 결과와 배운 점"
         ]
       }
     ],
@@ -468,7 +475,7 @@
         },
         "sectionPath": [
           "2. 기능 A — 테이블 기반 지형 생성과 동일 맵 구성",
-          "2.6 세부 구현 — 결정적 생성의 데이터 검증과 난수 경계",
+          "2.5 결정적 생성의 데이터 검증과 난수 경계",
           "TSV에 저장된 값(DTO)과 조회해 쓰는 값(Def)의 분리"
         ],
         "points": [
@@ -492,126 +499,62 @@
         ]
       },
       {
+        "key": "render-choice",
+        "chapter": "terrain-gen",
+        "layout": "full",
+        "tab": "선택",
+        "title": {
+          "text": "지형 표현 — 셀마다 객체 대신 Chunk Mesh",
+          "verbatim": true
+        },
+        "lead": {
+          "text": "약 1만 셀(프로토타입 시험 맵 100×105)의 지형을 어떤 단위로 그리고, 충돌을 어떻게 줄 것인가?",
+          "verbatim": true
+        },
+        "sectionPath": [
+          "2. 기능 A — 테이블 기반 지형 생성과 동일 맵 구성",
+          "2.6 고민과 선택"
+        ],
+        "points": [
+          {
+            "label": "이유",
+            "text": "채굴과 붕괴로 셀이 계속 바뀌는 게임이라 개발이 이어질수록 문제가 커질 것으로 판단해, 상대적으로 비용이 저렴한 Chunk Mesh와 EdgeCollider를 택했습니다.",
+            "verbatim": true
+          },
+          {
+            "label": "",
+            "text": "AI로 빠르게 만든 프로토타입으로 붕괴 동작을 먼저 확인하고, 실제 게임에 쓸 표현 방식은 비용을 따져 다시 골랐습니다.",
+            "verbatim": true
+          }
+        ],
+        "visuals": [
+          {
+            "kind": "table",
+            "n": 1,
+            "fp": "구분|[A] Unity Tilemap|[B] 셀마다 GameObject·Collider|[C] 32×32 Chunk Mesh + 외곽선 EdgeCollider ✓"
+          }
+        ]
+      },
+      {
         "key": "gen-tradeoffs",
         "chapter": "terrain-gen",
         "layout": "full",
         "tab": "선택",
         "title": {
-          "text": "2.7 고민과 선택",
+          "text": "2.6 고민과 선택",
           "verbatim": true
         },
         "lead": null,
         "sectionPath": [
           "2. 기능 A — 테이블 기반 지형 생성과 동일 맵 구성",
-          "2.7 고민과 선택"
+          "2.6 고민과 선택"
         ],
         "points": [],
         "visuals": [
           {
             "kind": "table",
-            "n": 1,
+            "n": 2,
             "fp": "선택|이점|남는 비용"
-          }
-        ]
-      },
-      {
-        "key": "freeze-problem",
-        "chapter": "collapse-sync",
-        "layout": "problem",
-        "tab": "문제 해결",
-        "title": {
-          "text": "3.2 대표 문제 해결 — 큰 스냅샷과 긴 잠금 구간으로 멈추던 멀티플레이",
-          "verbatim": true
-        },
-        "lead": {
-          "text": "처음에는 lock 안의 과도한 처리를 주원인으로 의심했습니다.",
-          "verbatim": false
-        },
-        "sectionPath": [
-          "3. 기능 B — 채굴·지형 붕괴의 서버 확정 파이프라인",
-          "3.2 대표 문제 해결 — 큰 스냅샷과 긴 잠금 구간으로 멈추던 멀티플레이",
-          "3.2.1 증상과 초기 선택"
-        ],
-        "points": [
-          {
-            "label": "문제",
-            "text": "처음 멀티플레이 테스트에서 한 명이 땅을 조금만 파도 게임이 멈췄고, 한참 지나서야 복구됨",
-            "verbatim": true
-          },
-          {
-            "label": "원인",
-            "text": "채굴 요청의 Revision이 서버와 조금만 어긋나도 요청을 거절하고 전체 스냅샷을 다시 보냈음",
-            "verbatim": true
-          },
-          {
-            "label": "해결",
-            "text": "전체 스냅샷 대신 서버가 보내는 Batch의 Revision만 비교해 순서대로 적용 (강사님과 같은 개선안을 제안, 구현은 강사님의 도움)",
-            "verbatim": false
-          },
-          {
-            "label": "결과",
-            "text": "개선 후에는 여러 클라이언트가 원활하게 플레이되는 것을 직접 확인했습니다.",
-            "verbatim": true
-          }
-        ],
-        "visuals": [
-          {
-            "kind": "code",
-            "n": 1,
-            "fp": "// 리팩터링 전 Room.ExecuteTerrainCommandAsync() 발췌",
-            "sectionPath": [
-              "3. 기능 B — 채굴·지형 붕괴의 서버 확정 파이프라인",
-              "3.2 대표 문제 해결 — 큰 스냅샷과 긴 잠금 구간으로 멈추던 멀티플레이",
-              "3.2.2 원인 분석 — 전체 상태 처리와 송신 대기가 묶인 구간"
-            ]
-          }
-        ]
-      },
-      {
-        "key": "broadcast-queue",
-        "chapter": "collapse-sync",
-        "layout": "visual",
-        "tab": "문제 해결",
-        "title": {
-          "text": "3.2.3 해결 — 상태 변경·방송 등록과 실제 송신을 분리",
-          "verbatim": true
-        },
-        "lead": {
-          "text": "방 단위 FIFO 방송 큐를 도입하고, 지형 명령 구간에서는 상태 변경과 결과의 큐 등록까지만 수행하도록 수정했습니다.",
-          "verbatim": true
-        },
-        "sectionPath": [
-          "3. 기능 B — 채굴·지형 붕괴의 서버 확정 파이프라인",
-          "3.2 대표 문제 해결 — 큰 스냅샷과 긴 잠금 구간으로 멈추던 멀티플레이",
-          "3.2.3 해결 — 상태 변경·방송 등록과 실제 송신을 분리"
-        ],
-        "points": [
-          {
-            "label": "해결",
-            "text": "실제 WebSocket 송신은 별도 방송 루프가 담당합니다.",
-            "verbatim": true
-          },
-          {
-            "label": "해결",
-            "text": "단일 reader `Channel`로 방송 순서 관리",
-            "verbatim": true
-          },
-          {
-            "label": "결과",
-            "text": "핵심 효과는 소켓 대기가 지형 상태 변경 구간을 붙잡던 결합을 끊은 것입니다.",
-            "verbatim": true
-          },
-          {
-            "label": "",
-            "text": "Snapshot 생성의 상태 복사는 여전히 잠금이 필요하고, 방송 큐도 한 메시지를 모든 멤버에게 보낼 때까지 기다리는 비용은 남습니다.",
-            "verbatim": true
-          }
-        ],
-        "visuals": [
-          {
-            "kind": "mermaid",
-            "n": 1,
-            "fp": "flowchart LR"
           }
         ]
       },
@@ -621,7 +564,7 @@
         "layout": "visual",
         "tab": "흐름",
         "title": {
-          "text": "3.3 핵심 API와 채굴 변경 순서",
+          "text": "3.2 핵심 API와 채굴 변경 순서",
           "verbatim": true
         },
         "lead": {
@@ -630,7 +573,7 @@
         },
         "sectionPath": [
           "3. 기능 B — 채굴·지형 붕괴의 서버 확정 파이프라인",
-          "3.3 핵심 API와 채굴 변경 순서"
+          "3.2 핵심 API와 채굴 변경 순서"
         ],
         "points": [
           {
@@ -663,7 +606,7 @@
         "layout": "code",
         "tab": "구현",
         "title": {
-          "text": "3.4 다중 낙하 — 전역 대기 대신 요청·청크별 상태",
+          "text": "3.3 다중 낙하 — 전역 대기 대신 요청·청크별 상태",
           "verbatim": true
         },
         "lead": {
@@ -672,7 +615,7 @@
         },
         "sectionPath": [
           "3. 기능 B — 채굴·지형 붕괴의 서버 확정 파이프라인",
-          "3.4 다중 낙하 — 전역 대기 대신 요청·청크별 상태"
+          "3.3 다중 낙하 — 전역 대기 대신 요청·청크별 상태"
         ],
         "points": [
           {
@@ -705,13 +648,13 @@
         "layout": "full",
         "tab": "선택",
         "title": {
-          "text": "3.10 고민과 선택",
+          "text": "3.7 고민과 선택",
           "verbatim": true
         },
         "lead": null,
         "sectionPath": [
           "3. 기능 B — 채굴·지형 붕괴의 서버 확정 파이프라인",
-          "3.10 고민과 선택"
+          "3.7 고민과 선택"
         ],
         "points": [],
         "visuals": [
@@ -771,45 +714,6 @@
               "text": "빨갛게 표시된 칸 안에 HJ가 쓰러져 있고, 옆에서 굴착 기계가 움직이는 화면",
               "verbatim": true
             }
-          }
-        ]
-      },
-      {
-        "key": "collider-timing",
-        "chapter": "falling-terrain",
-        "layout": "problem",
-        "tab": "문제 해결",
-        "title": {
-          "text": "4.2 핵심 API와 문제 해결 — Grid와 Collider의 갱신 시점",
-          "verbatim": true
-        },
-        "lead": null,
-        "sectionPath": [
-          "4. 기능 C — 낙하 지형 충돌·탈출·매몰 상태",
-          "4.2 핵심 API와 문제 해결 — Grid와 Collider의 갱신 시점"
-        ],
-        "points": [
-          {
-            "label": "문제",
-            "text": "지형 Batch 적용과 `TerrainGridWorld`의 Mesh·EdgeCollider 재생성은 같은 순간에 끝나지 않습니다.",
-            "verbatim": true
-          },
-          {
-            "label": "원인",
-            "text": "논리 셀 삭제 직후 물리 공간을 검사하면 이전 Collider 때문에 아직 갇혔다고 판단할 수 있습니다.",
-            "verbatim": true
-          },
-          {
-            "label": "해결",
-            "text": "그래서 프레임 종료까지 기다린 뒤 물리 Transform을 동기화하고 매몰 판정을 이어 갑니다.",
-            "verbatim": true
-          }
-        ],
-        "visuals": [
-          {
-            "kind": "code",
-            "n": 1,
-            "fp": "// FallingTerrainInteraction.cs, ResolvePendingBurialsAfterT"
           }
         ]
       },
@@ -903,7 +807,7 @@
         "layout": "code",
         "tab": "구현",
         "title": {
-          "text": "7.4 세부 구현 — 원격 플레이어는 표시 계층으로 유지",
+          "text": "원격 플레이어는 표시 계층으로 유지",
           "verbatim": true
         },
         "lead": {
@@ -912,7 +816,8 @@
         },
         "sectionPath": [
           "7. 기능 F — 로비에서 게임 결과까지 연결하는 통합 계층",
-          "7.4 세부 구현 — 원격 플레이어는 표시 계층으로 유지"
+          "7.3 세부 구현",
+          "원격 플레이어는 표시 계층으로 유지"
         ],
         "points": [
           {
@@ -940,13 +845,14 @@
         "layout": "screens",
         "tab": "결과",
         "title": {
-          "text": "7.7 세부 구현 — 대기방 프리뷰·채팅·승자 표시",
+          "text": "대기방 프리뷰·채팅·승자 표시",
           "verbatim": true
         },
         "lead": null,
         "sectionPath": [
           "7. 기능 F — 로비에서 게임 결과까지 연결하는 통합 계층",
-          "7.7 세부 구현 — 대기방 프리뷰·채팅·승자 표시"
+          "7.3 세부 구현",
+          "대기방 프리뷰·채팅·승자 표시"
         ],
         "points": [],
         "visuals": [
@@ -973,18 +879,253 @@
         ]
       },
       {
+        "key": "freeze-problem",
+        "chapter": "troubleshooting",
+        "layout": "problem",
+        "tab": "문제 해결",
+        "title": {
+          "text": "8.1 큰 스냅샷과 긴 잠금 구간으로 멈추던 멀티플레이",
+          "verbatim": true
+        },
+        "lead": {
+          "text": "처음에는 lock 안의 과도한 처리를 주원인으로 의심했습니다.",
+          "verbatim": false
+        },
+        "sectionPath": [
+          "8. 트러블슈팅",
+          "8.1 큰 스냅샷과 긴 잠금 구간으로 멈추던 멀티플레이",
+          "8.1.1 증상과 초기 선택"
+        ],
+        "points": [
+          {
+            "label": "문제",
+            "text": "처음 멀티플레이 테스트에서 한 명이 땅을 조금만 파도 게임이 멈췄고, 한참 지나서야 복구됨",
+            "verbatim": true
+          },
+          {
+            "label": "원인",
+            "text": "채굴 요청의 Revision이 서버와 조금만 어긋나도 요청을 거절하고 전체 스냅샷을 다시 보냈음",
+            "verbatim": true
+          },
+          {
+            "label": "해결",
+            "text": "전체 스냅샷 대신 서버가 보내는 Batch의 Revision만 비교해 순서대로 적용 (강사님과 같은 개선안을 제안, 구현은 강사님의 도움)",
+            "verbatim": false
+          },
+          {
+            "label": "결과",
+            "text": "개선 후에는 여러 클라이언트가 원활하게 플레이되는 것을 직접 확인했습니다.",
+            "verbatim": true
+          }
+        ],
+        "visuals": [
+          {
+            "kind": "code",
+            "n": 1,
+            "fp": "// 리팩터링 전 Room.ExecuteTerrainCommandAsync() 발췌",
+            "sectionPath": [
+              "8. 트러블슈팅",
+              "8.1 큰 스냅샷과 긴 잠금 구간으로 멈추던 멀티플레이",
+              "8.1.2 원인 분석 — 전체 상태 처리와 송신 대기가 묶인 구간"
+            ]
+          }
+        ]
+      },
+      {
+        "key": "broadcast-queue",
+        "chapter": "troubleshooting",
+        "layout": "visual",
+        "tab": "문제 해결",
+        "title": {
+          "text": "8.1.3 해결 — 상태 변경·방송 등록과 실제 송신을 분리",
+          "verbatim": true
+        },
+        "lead": {
+          "text": "방 단위 FIFO 방송 큐를 도입하고, 지형 명령 구간에서는 상태 변경과 결과의 큐 등록까지만 수행하도록 수정했습니다.",
+          "verbatim": true
+        },
+        "sectionPath": [
+          "8. 트러블슈팅",
+          "8.1 큰 스냅샷과 긴 잠금 구간으로 멈추던 멀티플레이",
+          "8.1.3 해결 — 상태 변경·방송 등록과 실제 송신을 분리"
+        ],
+        "points": [
+          {
+            "label": "해결",
+            "text": "실제 WebSocket 송신은 별도 방송 루프가 담당합니다.",
+            "verbatim": true
+          },
+          {
+            "label": "해결",
+            "text": "단일 reader `Channel`로 방송 순서 관리",
+            "verbatim": true
+          },
+          {
+            "label": "결과",
+            "text": "핵심 효과는 소켓 대기가 지형 상태 변경 구간을 붙잡던 결합을 끊은 것입니다.",
+            "verbatim": true
+          },
+          {
+            "label": "",
+            "text": "Snapshot 생성의 상태 복사는 여전히 잠금이 필요하고, 방송 큐도 한 메시지를 모든 멤버에게 보낼 때까지 기다리는 비용은 남습니다.",
+            "verbatim": true
+          }
+        ],
+        "visuals": [
+          {
+            "kind": "mermaid",
+            "n": 1,
+            "fp": "flowchart LR"
+          }
+        ]
+      },
+      {
+        "key": "collider-timing",
+        "chapter": "troubleshooting",
+        "layout": "problem",
+        "tab": "문제 해결",
+        "title": {
+          "text": "8.2 Grid와 Collider의 갱신 시점 — 채굴해도 풀리지 않던 매몰",
+          "verbatim": true
+        },
+        "lead": null,
+        "sectionPath": [
+          "8. 트러블슈팅",
+          "8.2 Grid와 Collider의 갱신 시점 — 채굴해도 풀리지 않던 매몰"
+        ],
+        "points": [
+          {
+            "label": "문제",
+            "text": "지형 Batch 적용과 `TerrainGridWorld`의 Mesh·EdgeCollider 재생성은 같은 순간에 끝나지 않습니다.",
+            "verbatim": true
+          },
+          {
+            "label": "원인",
+            "text": "논리 셀 삭제 직후 물리 공간을 검사하면 이전 Collider 때문에 아직 갇혔다고 판단할 수 있습니다.",
+            "verbatim": true
+          },
+          {
+            "label": "해결",
+            "text": "그래서 프레임 종료까지 기다린 뒤 물리 Transform을 동기화하고 매몰 판정을 이어 갑니다.",
+            "verbatim": true
+          }
+        ],
+        "visuals": [
+          {
+            "kind": "code",
+            "n": 1,
+            "fp": "// FallingTerrainInteraction.cs, ResolvePendingBurialsAfterT"
+          }
+        ]
+      },
+      {
+        "key": "chunk-pending",
+        "chapter": "troubleshooting",
+        "layout": "overview",
+        "tab": "문제 해결",
+        "title": {
+          "text": "8.3 여러 청크가 동시에 떨어지면 뒤 청크가 확정되지 않던 문제",
+          "verbatim": true
+        },
+        "lead": {
+          "text": "플레이 테스트와 1차 시연 중",
+          "verbatim": true
+        },
+        "sectionPath": [
+          "8. 트러블슈팅",
+          "8.3 여러 청크가 동시에 떨어지면 뒤 청크가 확정되지 않던 문제"
+        ],
+        "points": [
+          {
+            "label": "문제",
+            "text": "여러 청크 중 뒤 청크가 확정되지 않음",
+            "verbatim": true
+          },
+          {
+            "label": "원인",
+            "text": "먼저 보낸 요청을 기다리는 동안 함께 정착한 뒤 청크의 배치 제안은 경고 로그만 남기고 버려짐",
+            "verbatim": true
+          },
+          {
+            "label": "해결",
+            "text": "대기 상태를 요청 ID → CollapseID 사전(`pendingCollapsePlacementIds`)으로 바꾸고, 같은 CollapseID의 중복 요청만 막음",
+            "verbatim": true
+          }
+        ],
+        "visuals": []
+      },
+      {
+        "key": "chain-owner",
+        "chapter": "troubleshooting",
+        "layout": "overview",
+        "tab": "문제 해결",
+        "title": {
+          "text": "8.4 연쇄 붕괴 제한이 소진되지 않고 다른 플레이어가 내 연쇄를 덮어쓰던 문제",
+          "verbatim": true
+        },
+        "lead": {
+          "text": "플레이 테스트와 1차 시연 중",
+          "verbatim": true
+        },
+        "sectionPath": [
+          "8. 트러블슈팅",
+          "8.4 연쇄 붕괴 제한이 소진되지 않고 다른 플레이어가 내 연쇄를 덮어쓰던 문제"
+        ],
+        "points": [
+          {
+            "label": "문제",
+            "text": "연쇄 제한 횟수가 소진되지 않음. 다른 플레이어 변경 이후 내 연쇄가 중단되거나 잘못 이어짐",
+            "verbatim": true
+          },
+          {
+            "label": "원인",
+            "text": "서버가 확정한 낙하 배치를 일반 지형 변경처럼 처리해, 연쇄의 한 단계가 끝날 때마다 `chainCount`가 0으로 돌아감",
+            "verbatim": true
+          },
+          {
+            "label": "해결",
+            "text": "내가 소유한 낙하를 CollapseID 집합(`locallyOwnedCollapseIds`)으로 추적",
+            "verbatim": true
+          }
+        ],
+        "visuals": []
+      },
+      {
+        "key": "problem-summary",
+        "chapter": "troubleshooting",
+        "layout": "full",
+        "tab": "문제 해결",
+        "title": {
+          "text": "8.5 그 밖에 해결한 문제",
+          "verbatim": true
+        },
+        "lead": null,
+        "sectionPath": [
+          "8. 트러블슈팅",
+          "8.5 그 밖에 해결한 문제"
+        ],
+        "points": [],
+        "visuals": [
+          {
+            "kind": "table",
+            "n": 1,
+            "fp": "증상|원인·코드상 경로|소스에 반영된 대응"
+          }
+        ]
+      },
+      {
         "key": "play-screens",
         "chapter": "results",
         "layout": "screens",
         "tab": "결과",
         "title": {
-          "text": "8.1 구현 결과",
+          "text": "9.1 구현 결과",
           "verbatim": true
         },
         "lead": null,
         "sectionPath": [
-          "8. 결과와 배운 점",
-          "8.1 구현 결과"
+          "9. 결과와 배운 점",
+          "9.1 구현 결과"
         ],
         "points": [],
         "visuals": [
@@ -999,7 +1140,8 @@
             },
             "sectionPath": [
               "5. 기능 D — 서버 인벤토리와 아이템·상점의 연결",
-              "5.6 팀 아이템 연동 — 미리보기와 서버 확정 결과의 분리"
+              "5.5 세부 구현",
+              "팀 아이템 연동 — 미리보기와 서버 확정 결과의 분리"
             ]
           },
           {
@@ -1013,7 +1155,8 @@
             },
             "sectionPath": [
               "6. 기능 E — 탐험 기록과 현재 시야를 분리한 지도",
-              "6.4 세부 구현 — 두 겹의 안개 Mesh와 전체 지도 조작"
+              "6.3 세부 구현",
+              "두 겹의 안개 Mesh와 전체 지도 조작"
             ]
           },
           {
@@ -1027,31 +1170,9 @@
             },
             "sectionPath": [
               "7. 기능 F — 로비에서 게임 결과까지 연결하는 통합 계층",
-              "7.3 세부 구현 — 로비 상태 순서와 게임 시작 준비 장벽"
+              "7.3 세부 구현",
+              "로비 상태 순서와 게임 시작 준비 장벽"
             ]
-          }
-        ]
-      },
-      {
-        "key": "problem-summary",
-        "chapter": "results",
-        "layout": "full",
-        "tab": "문제 해결",
-        "title": {
-          "text": "8.2 대표 문제 해결",
-          "verbatim": true
-        },
-        "lead": null,
-        "sectionPath": [
-          "8. 결과와 배운 점",
-          "8.2 대표 문제 해결"
-        ],
-        "points": [],
-        "visuals": [
-          {
-            "kind": "table",
-            "n": 1,
-            "fp": "증상|원인·코드상 경로|소스에 반영된 대응"
           }
         ]
       }

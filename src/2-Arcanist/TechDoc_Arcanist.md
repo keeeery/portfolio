@@ -401,7 +401,9 @@ return new CardSkillExecutionResult(CardSkillExecutionStatus.Executed, card);
 
 소스: `BuffController.cs`, `ActiveBuff.cs`.
 
-### 3.7 세부 구현 — 게이지 초과분과 손패의 작업 상태
+### 3.7 세부 구현
+
+#### 게이지 초과분과 손패의 작업 상태
 
 패링 보상 `AddCells`는 현재 게이지에 더한 칸이 최대치를 넘으면 `overflowCells`로 남깁니다.
 다음 드로우 주기의 `BeginNextGaugeCycle`은 이 초과분을 가져와 게이지를 채운 상태로 재충전합니다.
@@ -425,7 +427,7 @@ currentCell = Mathf.Min(totalCells, gaugeCells.Length);
 
 ![카드를 뽑은 뒤의 손패 — Q·W 슬롯에 카드가 들어 있음](images/card-draw-crop.png)
 
-### 3.8 세부 구현 — 투사체의 생성·이동·폭발·반납
+#### 투사체의 생성·이동·폭발·반납
 
 `ProjectileController.OnEnable`은 수명·폭발 상태를 초기화하고 충돌체를 켭니다.
 `Initialize`에서 방향과 공격 소유자를 전달하며, 생성 애니메이션 뒤 `StartMove` 이벤트로 이동을 시작할 수 있습니다.
@@ -439,7 +441,7 @@ currentCell = Mathf.Min(totalCells, gaugeCells.Length);
 
 소스: `CardGaugeController.cs`, `CardHandState.cs`, `ProjectileController.cs`.
 
-### 3.9 고민과 선택 — 효과 재사용
+### 3.8 고민과 선택 — 효과 재사용
 
 `CardEffectSpawner`는 프리팹별 `ComponentPool<Transform>`을 Dictionary로 보유합니다.
 반환은 비활성화, 획득은 비활성 객체의 재활성화로 수행합니다.
@@ -513,7 +515,9 @@ foreach (CardData card in candidates)
 
 ![방 클리어 후 등급이 다른 카드 3장 중 하나를 고르는 보상 선택 화면](images/reward-selection-zoom.png)
 
-### 4.4 세부 구현 — 편집 입력과 데이터 변경 경로
+### 4.4 세부 구현
+
+#### 편집 입력과 데이터 변경 경로
 
 전체 카드 목록은 보유하되 덱에 없는 카드 → 덱에 있는 카드 → 미보유 카드 순으로 나눠 표시합니다.
 미보유 카드도 도감처럼 확인할 수 있으나, 드래그 시작과 편성은 보유 여부를 검사합니다.
@@ -528,7 +532,7 @@ foreach (CardData card in candidates)
 정적 데이터는 `CardDatabase.AllCards`로 명시적으로 읽게 해 조회 경로를 단순하게 했습니다.
 덱 최대 슬롯 수도 UI의 별도 수치 대신 PlayerInventory 설정에 맞추도록 연결했습니다.
 
-### 4.5 세부 구현 — 편집 위치 제한과 종료 조건
+#### 편집 위치 제한과 종료 조건
 
 일반 인벤토리 열기에서는 출구 영역에 있는지에 따라 `SetDeckEditMode`를 설정합니다.
 오벨리스크 안에서는 아래 방향키로 편집 모드를 열 수 있습니다.
@@ -547,7 +551,7 @@ Tooltip CanvasGroup은 raycast를 막지 않으며, 슬롯이 비활성화되거
 
 소스: `InventorySlotList.cs`, `CardDragHandler.cs`, `TooltipController.cs`, `OverlayInputHandler.cs`.
 
-### 4.6 고민과 선택
+### 4.5 고민과 선택
 
 보유 목록과 덱을 분리하면 수집과 전투 편성을 독립적으로 다룰 수 있습니다.
 이벤트 동기화는 UI나 보상 코드가 CardSystem 내부 목록을 직접 수정하는 경로를 줄입니다.
@@ -627,7 +631,9 @@ protected override void OnDisable()
 
 ![골렘의 근접 공격](images/golem-melee-crop.png)
 
-### 5.4 세부 구현 — 입력 명령과 2D 충돌 이동
+### 5.4 세부 구현
+
+#### 입력 명령과 2D 충돌 이동
 
 `CharacterController2D`는 Rigidbody2D를 Kinematic으로 설정하고 자체 중력·점프 횟수·대시 타이머를 관리합니다.
 외부 입력은 `SetMoveInput`, `RequestJump`, `RequestDash`, `AddExternalMovement`로 받고 실제 이동은 FixedUpdate에 모읍니다.
@@ -635,7 +641,7 @@ protected override void OnDisable()
 
 수평·수직 이동량을 각각 BoxCast로 검사하고 `skinWidth`를 남겨 이동을 제한한 뒤 MovePosition을 호출합니다.
 지면 확인도 BoxCast를 사용합니다. 대시 중에는 수직 속도를 끄고 시작 y 위치를 유지합니다.
-이는 Dynamic Rigidbody의 힘·마찰을 그대로 이용하는 이동과 다른, 명령 기반 충돌 이동 구조입니다.
+이는 Dynamic Rigidbody의 힘·마찰을 그대로 이용하는 이동과 다른, 명령 기반 충돌 이동 구조입니다(선택 이유는 5.5).
 
 방향·대시 쿨타임은 이동 런타임이, 달리기 자원·회복 지연은 SprintRuntime이 맡습니다.
 이처럼 플레이어 조율 컴포넌트에서 계산과 연출을 분리하면 입력 차단·사망·리스폰에서 같은 초기화 진입점을 사용할 수 있습니다.
@@ -647,7 +653,7 @@ protected override void OnDisable()
 
 소스: `CharacterController2D.cs`.
 
-### 5.5 세부 구현 — 콤보 입력 창과 패링 판정 창
+#### 콤보 입력 창과 패링 판정 창
 
 플레이어 공격 상태는 초 단위 타이머 대신 Animator의 normalizedTime(애니메이션 진행률)으로 입력 창을 구분합니다.
 진행률 0.35 미만에서는 이전 공격 예약을 지우고, 0.35 초과~0.75 미만에서 다음 D 입력을 받습니다.
@@ -655,8 +661,9 @@ protected override void OnDisable()
 
 패링 상태는 Enter에서 판정 창을 열고 이동을 멈춥니다.
 진행률 0.8 이상에서 판정 창을 닫으며, Exit에서도 다시 닫아 다른 상태로 빠져나갈 때 열려 있는 판정을 정리합니다.
+판정 창을 닫는 시점(진행률 0.8)은 직접 플레이 테스트를 하며, 애니메이션과 어긋나 보이지 않으면서 난이도가 적절한 값을 찾아 정했습니다.
 
-### 5.6 세부 구현 — 일반 적의 순찰·추적·공격
+#### 일반 적의 순찰·추적·공격
 
 Idle은 대기 후 Patrol로 이동하고, 감지된 대상이 있으면 Attack으로 전환합니다.
 Patrol은 출발 지점 A와 순찰 지점 B를 번갈아 목표로 사용하며, 목적지에 도착하면 잠시 Idle로 돌아갑니다.
@@ -676,13 +683,31 @@ EnemyCombat은 공격 쿨타임과 2종 공격 인덱스를 선택하고 Animato
 
 소스: `AttackState.cs`, `ParryState.cs`, `EnemyStateMachine.cs`, `EnemyCombat.cs`.
 
-### 5.7 고민과 선택
+### 5.5 고민과 선택
+
+**플레이어 이동 — 물리 엔진 대신 직접 계산한 이동**
+
+> **결정 대상**: 플레이어 이동을 Dynamic Rigidbody2D의 물리에 맡길 것인가, 직접 계산할 것인가?
+
+| 구분 | [A] Dynamic Rigidbody2D | [B] Kinematic + BoxCast 직접 이동 ✓ |
+|---|---|---|
+| 방식 | 중력·힘·마찰을 물리 엔진이 계산 | 자체 중력·점프 횟수·대시 타이머를 직접 관리하고, 수평·수직 이동량을 BoxCast로 검사한 뒤 MovePosition |
+| 비용 | 더블 점프·대시처럼 물리 법칙을 벗어난 움직임을 원하는 대로 다듬기 어려움 | 충돌 검사(BoxCast·skinWidth)와 지면 판정을 직접 맡아야 함 |
+
+**[최종 결정]** B를 선택했습니다. 플레이어 조작은 중력에 따른 물리 작용을 그대로 적용하기보다 움직임을 직접 만드는 쪽이,
+더블 점프·대시 같은 동작을 더할 때 개발자에게는 원하는 움직임을, 플레이어에게는 불편하지 않은 조작감을 주기에 적합하다고 판단했습니다.
+
+**[감수한 대가]** 수평·수직 이동과 지면 확인을 모두 BoxCast로 직접 검사하고, skinWidth를 남겨 벽에 끼지 않게 해야 합니다(§5.4).
+
+**그 밖의 선택**
 
 | 구조 | 이점 | 비용·제약 |
 |---|---|---|
 | 이동 규칙·자원·연출 분리 | 스태미나 규칙과 FX의 수정 지점을 구분 | 조합과 의존성 전달 필요 |
 | 일반 적 감지 결과 캐시 | 매 프레임 감지 계산을 반복하지 않음 | 감지 간격만큼 판단 지연 가능 |
 | 컴포넌트 기반 보스 상태 | 상태별 Collider·연출 참조를 Inspector에서 설정 | 프리팹 구성과 상태 타입 등록 규칙 필요 |
+
+일반 적은 플레이어와의 거리(감지·공격 범위)로 Idle/Patrol/Attack을 전이하고 공격 패턴이 하나뿐이라, 상태마다 오브젝트를 추가해야 하는 Mono 기반 상태 머신 대신 순수 C# 상태 머신(`EnemyStateMachine`)으로 만들었습니다.
 
 보스는 근접·레이저·팔 발사처럼 여러 공격 패턴을 갖기 때문에, 패턴마다 상태 컴포넌트를 두는 구조가 개발과 관리에 유리하다고 판단했습니다.
 상태가 컴포넌트이므로 Collider·프리팹·지속시간을 Inspector에서 직접 연결하기 쉽습니다.
@@ -749,7 +774,9 @@ Animator를 재바인딩하고 체력을 복원하며 `ResetRuntimeCardsForRespa
 
 ![사망 창 — 위 방향키로 체크포인트에서 부활](images/death-panel.png)
 
-### 6.4 세부 구현 — 전투 완료와 보상 완료의 방 상태
+### 6.4 세부 구현
+
+#### 전투 완료와 보상 완료의 방 상태
 
 RoomController는 Ready/Combat/Reward/Cleared를 구분합니다.
 `IsRoomCleared`는 Reward와 Cleared 모두 true지만, `IsRewardObtained`와 `CanExit`는 Cleared에서만 true입니다.
@@ -764,14 +791,14 @@ RoomController는 Ready/Combat/Reward/Cleared를 구분합니다.
 활성 상태를 다시 적용할 때는 진행 중 파괴 코루틴을 정지하고 Break 트리거를 초기화합니다.
 클리어한 방으로 복귀할 때 이 활성 상태가 복원되지 않는 문제를 찾아, `RoomFactory`가 적 컨트롤러 GameObject 대신 컴포넌트만 끄도록 고쳤습니다. 수정 뒤의 실행 확인은 §8.2에 남은 과제로 두었습니다.
 
-#### 일반 적 생성과 전멸 판정
+##### 일반 적 생성과 전멸 판정
 
 `EnemyRoomController`는 일반 적 프리팹 목록에서 무작위로 고르고, 스폰 지점은 한 번 쓴 곳을 목록에서 빼 서로 겹치지 않게 선택합니다. 생성 수는 `normalEnemyCount`(소스 기본값 3)와 스폰 지점 수 중 작은 값입니다.
 생성한 적에는 `SendMessage("SetTarget")`으로 플레이어 Transform을 전달하고, Rigidbody2D를 Dynamic으로 켜며 Collider를 활성화합니다.
 `Update`는 생성한 적이 모두 `isDead`인지 검사하고, 전멸하면 `RoomController.OnAllEnemiesDefeated`를 호출한 뒤 더 검사하지 않습니다.
 보스 방은 `RoomController.Update`가 `BossController`의 사망을 검사해 같은 `OnAllEnemiesDefeated`로 연결합니다.
 
-#### 출구 안내와 입력 처리
+##### 출구 안내와 입력 처리
 
 `RoomExitController`는 잠금 상태에서는 상호작용을 받지 않고, 플레이어 Collider를 HashSet으로 세어 영역 안 여부를 판단합니다(오벨리스크와 같은 방식).
 위 방향키를 누르면 상호작용을 한 번 소비하고 안내를 숨깁니다. Reward 상태에서는 보상 창을 열고, Cleared 상태에서는 오벨리스크의 Break 애니메이션이 끝난 뒤 다음 방 전환을 요청합니다.
@@ -779,7 +806,7 @@ RoomController는 Ready/Combat/Reward/Cleared를 구분합니다.
 
 소스: `EnemyRoomController.cs`, `RoomExitController.cs`, `InputPromptController.cs`, `RoomController.cs`, `RoomFactory.cs`.
 
-### 6.5 세부 구현 — 메뉴·옵션·인트로와 시간 기준
+#### 메뉴·옵션·인트로와 시간 기준
 
 Pause·Inventory·Reward는 timeScale을 0으로 하고 키보드 입력을 차단합니다.
 OverlayMotion과 보상 선택은 unscaled time으로 진행하여 정지된 게임 안에서도 UI 연출을 완료합니다.
@@ -804,7 +831,7 @@ BGM 보간은 scaled time을 쓰므로 게임이 일시정지되면 페이드도
 
 소스: `RoomController.cs`, `Obelisk.cs`, `OptionWindowController.cs`, `IntroSceneController.cs`.
 
-### 6.6 세부 구현 — 입력 차단 플래그의 적용 범위
+#### 입력 차단 플래그의 적용 범위
 
 메뉴와 복귀 경로는 `SimpleInput.IsKeyBoardInputBlocked`를 설정하지만,
 래퍼에서 이 값을 검사하는 함수는 수평·수직 축 입력뿐입니다.
@@ -820,7 +847,10 @@ ParallaxLayer는 카메라 이동 차이에 비율을 적용하고 자식 배경
 
 소스: `SimpleInput.cs`, `PlayerShadowProjector.cs`, `PlayerCameraController.cs`, `ParallaxLayer.cs`.
 
-### 6.7 고민과 선택
+### 6.5 고민과 선택
+
+체크포인트를 씬·방·체크포인트 ID로 찾아 복원한 것은 한 방에 체크포인트를 두 개 이상 둘 것을 고려했기 때문입니다.
+실제로 방마다 체크포인트가 두 개씩 있습니다(Room_01: CP_01·CP_02, Room_02: CP_03·CP_04).
 
 ID 기반 복원은 실행 중 GameObject 참조를 파일에 직접 저장하지 않는 장점이 있습니다.
 대신 방·체크포인트 ID와 씬 이름이 실제 콘텐츠와 일치해야 합니다.
@@ -830,7 +860,7 @@ ID 기반 복원은 실행 중 GameObject 참조를 파일에 직접 저장하�
 
 ---
 
-## 7. 대표 문제 해결 — 씬 전환과 객체 생명주기
+## 7. 트러블슈팅 — 씬 전환과 객체 생명주기
 
 ### 7.1 전투 시스템 문제와 싱글톤 종료 상태의 분리
 

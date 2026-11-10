@@ -6,8 +6,8 @@
 | 구분 | 시스템 | 핵심 내용 | 절 |
 |---|---|---|---|
 | 핵심 A | 데이터 기반 지형 생성 | 깊이·동굴·광물 규칙과 시드 생성, TSV → DTO → Def 데이터 경로, 클라이언트/서버 규칙 일치 | §2 |
-| 핵심 B | 채굴·붕괴 권위 동기화 | Revision, 요청별 대기, CollapseID별 소유권과 연쇄 처리 | §3 |
-| 핵심 C | 낙하 지형·매몰 상호작용 | 물리 충돌, 탈출·매몰 상태, Collider 재생성 시점 | §4 |
+| 핵심 B | 채굴·붕괴 권위 동기화 | Revision, 요청별 대기, CollapseID별 소유권과 연쇄 처리 | §3 · §8.1 |
+| 핵심 C | 낙하 지형·매몰 상호작용 | 물리 충돌, 탈출·매몰 상태, Collider 재생성 시점 | §4 · §8.2 |
 | 보조 D | 인벤토리·아이템·상점 | 서버 확정 상태를 모델과 HUD로 전달하는 흐름 | §5 |
 | 보조 E | 탐험·시야·지도 | 탐험 이력과 현재 관측 분리, 지형 변경과 조명 반영 | §6 |
 | 보조 F | 로비·게임 진행·표시 | 접속 준비, 카운트다운, 원격 플레이어, 결과와 사용자 피드백 | §7 |
@@ -53,7 +53,7 @@
 | 인원 | 3인 |
 | Engine | Unity `6000.3.15f1`, URP `17.3.0` |
 | Language | C# (클라이언트·서버) |
-| 주요 패키지 | Input System `1.19.0`, Newtonsoft Json `3.2.2`, UniTask `2.5.11`, Cinemachine `3.1.7`, 2D Tilemap, DOTween 소스 |
+| 주요 패키지 | Input System `1.19.0`, Newtonsoft Json `3.2.2`, UniTask `2.5.11`, Cinemachine `3.1.7`, DOTween 소스 |
 | 서버 | ASP.NET Core, target framework `net10.0` |
 | 통신 | `ClientWebSocket` / ASP.NET Core WebSocket, JSON 메시지 |
 | 데이터 | 클라이언트 StreamingAssets TSV, 서버 Data TSV 및 설정 |
@@ -65,7 +65,8 @@
 지형 생성·채굴·붕괴·멀티플레이 동기화를 전담하여 설계·구현했습니다.
 데이터 기반 지형 생성부터 충돌·매몰, 서버 연결, 상태 변경·송신 분리,
 청크 소유권과 연쇄 붕괴 안정화까지 연결했습니다.
-초기 맵을 시드로 공유하는 구조와 채굴 요청 정책(요청의 Revision 대조를 없애고 Batch의 Revision으로 순서를 맞추는 방식)은 강사님과 같은 개선안을 제안했고, 구현은 강사님의 도움을 받았습니다(§3.2).
+초기 맵을 시드로 공유하는 구조와 채굴 요청 정책(요청의 Revision 대조를 없애고 Batch의 Revision으로 순서를 맞추는 방식)은 강사님과 같은 개선안을 제안했고, 구현은 강사님의 도움을 받았습니다(§8.1).
+서버는 강사님이 만들어 주신 ASP.NET Core WebSocket 기본 틀 위에 게임 로직을 구현했습니다.
 
 ### 1.5 전체 구조
 
@@ -121,7 +122,7 @@ flowchart LR
 | `TerrainManager` | 지형 조회·변경 API와 기반 지지 여부 탐색 |
 | `TerrainCollapseCoordinator` | 지형 변경 뒤 부유 그룹의 낙하 시작 요청 조정 |
 
-기본 지형은 셀마다 GameObject를 만들지 않고 32×32 셀 단위 Mesh로 표현합니다.
+기본 지형은 셀마다 GameObject를 만들지 않고 32×32 셀 단위 Mesh로 표현합니다(선택 이유는 2.6).
 셀 변경은 `dirtyChunks`와 `colliderDirty`에 기록됩니다.
 `LateUpdate()`에서 변경 Chunk의 Mesh를 갱신하고, Collider가 dirty이면 외곽선 Collider를 재생성합니다.
 Mesh는 변경된 Chunk 단위로, Collider는 별도 dirty 표시로 다시 만들므로 두 갱신 범위는 다릅니다.
@@ -165,7 +166,9 @@ ApplyTerrainSnapshot(TerrainNetworkAdapter.FromGeneratedMap(map));
 클라이언트와 서버가 같은 규칙으로 정규화하므로, Windows와 macOS에서 내용이 같은 TSV가 다른 버전으로 판단되지 않습니다.
 이 정규화는 데이터가 완전히 같은데도 Windows와 macOS에서 서로 다른 해시가 생성되는 것을 에디터 로그에서 발견한 뒤, 원인(BOM·줄바꿈 차이)을 찾아 넣은 것입니다.
 
-### 2.4 세부 구현 — 동굴 후보를 적용한 뒤 연결성 검증과 복원
+### 2.4 세부 구현
+
+#### 동굴 후보를 적용한 뒤 연결성 검증과 복원
 
 `TerrainCaveGenerator`는 깊이 범위와 경계 여유를 만족하는 시작점을 찾고,
 수평 방향에 작은 수직 변화를 누적하며 원형 셀들을 이어 동굴 후보를 만듭니다.
@@ -193,7 +196,7 @@ return false;
 게임 중 `TerrainManager.FindFloatingGroups()`는 상하좌우 탐색에서 기반암이나 스폰 플랫폼과의 인접을 검사합니다.
 두 경로는 쓰이는 시점과 지지 조건이 다른 별개의 판정입니다.
 
-### 2.5 세부 구현 — 광물 밀도와 군집 크기의 분리
+#### 광물 밀도와 군집 크기의 분리
 
 `TerrainMineralClusterGenerator`는 깊이 섹션과 광물 규칙을 순서대로 읽고,
 적합한 바탕 셀에서 `ClusterDensity` 확률로 군집 생성을 시작합니다.
@@ -214,7 +217,7 @@ return false;
 
 소스: `TerrainCaveGenerator.cs`, `TerrainMapConnectivityValidator.cs`, `TerrainMineralClusterGenerator.cs`.
 
-### 2.6 세부 구현 — 결정적 생성의 데이터 검증과 난수 경계
+### 2.5 결정적 생성의 데이터 검증과 난수 경계
 
 지형 테이블은 값을 읽은 뒤 참조와 적용 순서를 확정합니다. 깊이 섹션은 `SectionOrder`로 정렬하고 첫 구간 0, 마지막 구간 1, 인접 구간의 연속성을 검사합니다. 광물은 섹션별 `ResourceOrder`, 변칙 군집은 섹션·`VariantOrder`, 동굴은 `CaveOrder` 순서로 적용합니다. 중복 ID·순서와 없는 타일·자원 참조는 로딩 오류로 처리합니다.
 
@@ -262,7 +265,31 @@ foreach (TerrainTileDTO dto in rows)
 
 소스: `TerrainTsvReader.cs`, `TerrainTileDef.cs`, `TerrainDataTables.cs`, `TerrainTableSeedGenerator.cs`, `RoomClient.Terrain.cs`.
 
-### 2.7 고민과 선택
+### 2.6 고민과 선택
+
+**지형 표현 — 셀마다 객체 대신 Chunk Mesh**
+
+> **결정 대상**: 약 1만 셀(프로토타입 시험 맵 100×105)의 지형을 어떤 단위로 그리고, 충돌을 어떻게 줄 것인가?
+
+지형 붕괴 프로토타입은 처음에 AI를 활용해 Unity Tilemap으로 만들었습니다.
+AI로 빠르게 만든 프로토타입으로 붕괴 동작을 먼저 확인하고, 실제 게임에 쓸 표현 방식은 비용을 따져 다시 골랐습니다.
+
+| 구분 | [A] Unity Tilemap | [B] 셀마다 GameObject·Collider | [C] 32×32 Chunk Mesh + 외곽선 EdgeCollider ✓ |
+|---|---|---|---|
+| 거친 과정 | AI를 활용해 만든 첫 프로토타입의 방식 | 셀 하나에 객체와 Collider 하나 | 프로토타입을 리팩터링하며 채택, 팀 프로젝트로 포팅 |
+| 문제·비용 | 사용하기 다소 불편 | 팀원 개발 환경에서 로드 시간이 길고 프레임이 떨어짐 | 정점·UV·외곽선 Collider를 직접 만들고 갱신해야 함 |
+
+**[최종 결정]** C를 선택했습니다. 셀마다 객체와 Collider를 두는 방식은 팀원 개발 환경에서 로드 시간이 길고 프레임이 떨어져, 세부 측정 없이 버렸습니다.
+채굴과 붕괴로 셀이 계속 바뀌는 게임이라 개발이 이어질수록 문제가 커질 것으로 판단해, 상대적으로 비용이 저렴한 Chunk Mesh와 EdgeCollider를 택했습니다.
+이 과정에서 사용이 다소 불편했던 Tilemap도 자연스럽게 쓰지 않게 되었습니다.
+
+**[얻은 것]** 셀이 바뀌면 그 셀이 속한 Chunk의 Mesh만 다시 만들고, 그리는 지형 객체는 셀 수가 아니라 Chunk 수(프로토타입 맵에서 최대 16개)가 됩니다.
+
+**[감수한 대가]** 셀의 정점·UV·외곽선 Collider를 직접 만들어야 하고, 셀 하나를 흔드는 연출도 정점을 직접 옮겨야 합니다(§4.3).
+
+**[아쉬운 점]** 문제는 팀원 환경에서 확인했지만, 두 방식을 수치로 측정해 비교하지는 않았습니다.
+
+**그 밖의 선택**
 
 | 선택 | 이점 | 남는 비용 |
 |---|---|---|
@@ -289,124 +316,9 @@ foreach (TerrainTileDTO dto in rows)
 | `GameSession` | 채굴·붕괴 예약·배치 검증과 서버 상태 갱신 |
 | `Room` | 지형 명령 순서와 확정 메시지 방송 큐 관리 |
 
-### 3.2 대표 문제 해결 — 큰 스냅샷과 긴 잠금 구간으로 멈추던 멀티플레이
+이 파이프라인을 만들며 겪은 멀티플레이 멈춤 문제와 해결 과정은 8.1에 있습니다.
 
-#### 3.2.1 증상과 초기 선택
-
-| 단계 | 내용 |
-|---|---|
-| 증상 | 처음 멀티플레이 테스트에서 한 명이 땅을 조금만 파도 게임이 멈췄고, 한참 지나서야 복구됨 |
-| 처음 의심 | lock 안에서 너무 많은 처리를 하는 것이 주원인이라고 의심 |
-| 확인한 주원인 | lock 안의 과도한 처리도 문제였지만, 주원인은 **지형 전체 스냅샷**이 자주 오가며 데이터 용량이 너무 커진 것. 채굴 요청의 Revision이 서버와 조금만 어긋나도 요청을 거절하고 전체 스냅샷을 다시 보냈음 |
-| 해결 | 전체 스냅샷을 주고받지 않고, 서버가 보내는 변경 Batch의 Revision(`BaseRevision → ResultRevision`)만 비교해 순서대로 적용하도록 바꿔 테스트한 뒤 해결. 이 방향은 강사님과 같은 개선안을 제안했고, 구현은 강사님의 도움을 받음 |
-| 함께 고친 것 | 처음 의심한 lock 구간은 직접 상태 변경과 송신을 분리해 줄임(§3.2.3) |
-| 걸린 시간 | 하루 |
-
-개선 후에는 여러 클라이언트가 원활하게 플레이되는 것을 직접 확인했습니다.
-
-초기 구조도 플레이 중 일반 변경은 셀 목록을 담은 `TerrainChangeBatch`로 방송했습니다.
-하지만 채굴 요청에 `ExpectedTerrainRevision`을 붙여, 서버 Revision과 다르면 `terrain.revision_mismatch`로 거절하고 요청한 클라이언트에 전체 지형 Snapshot을 다시 보냈습니다(§3.2.4).
-연달아 파면 앞 요청이 Revision을 올리므로 이 경로를 자주 타게 되었고, 그래서 땅을 조금만 파도 큰 전체 지형 데이터가 오갔습니다. lock 안의 처리와 송신 대기(§3.2.2)는 그 비용을 더 키웠습니다.
-
-#### 3.2.2 원인 분석 — 전체 상태 처리와 송신 대기가 묶인 구간
-
-리팩터링 전 서버에는 상태 접근을 보호하는 동기 lock과 비동기 명령을 직렬화하는 Gate가 있었습니다.
-
-| 구간 | 잠금 안에서 수행하던 작업 | 대기·처리 비용의 영향 |
-|---|---|---|
-| `GameSession.stateGate`의 C# `lock` | 전체 셀을 DTO로 복사하고 `OrderBy`·`ToList`로 Snapshot 생성 | 복사·정렬·할당이 끝날 때까지 같은 상태 잠금을 사용하는 작업 대기 |
-| `Room.terrainPipelineGate`의 `SemaphoreSlim` | 지형 명령 실행 후 오류·전체 Snapshot 송신 또는 Batch·드롭 방송 완료까지 `await` | 느린 소켓 송신이 다음 지형 명령 시작을 지연시킬 수 있음 |
-| `Room.gate`의 `SemaphoreSlim` | 입장 시 welcome·맵·전체 지형·아이템·인벤토리 메시지 송신과 Join 방송 | 초기 동기화 송신이 입퇴장 처리의 잠금 유지 시간에 포함 |
-
-```csharp
-// 리팩터링 전 Room.ExecuteTerrainCommandAsync() 발췌
-await terrainPipelineGate.WaitAsync();
-try
-{
-    await command();
-}
-finally
-{
-    terrainPipelineGate.Release();
-}
-```
-
-과거 `TerrainExcavationPacketHandler`는 위 `command` 안에서
-`await context.BroadcastAsync(batch)`와 드롭 방송을 실행했습니다.
-Revision 오류가 나면 오류 메시지와 전체 지형 Snapshot의 송신도 이 안에서 기다렸습니다.
-`BroadcastAsync()`는 모든 멤버의 송신을 `Task.WhenAll()`로 기다리고,
-`SendRawAsync()`는 `CancellationToken.None`으로 WebSocket 송신을 수행했습니다.
-따라서 한 연결의 지연이 방의 지형 처리 잠금 해제까지 길어지는 경로가 있었습니다.
-
-정리하면 동기 `lock`에는 전체 Snapshot 복사·정렬 비용이, 비동기 Gate에는 송신 대기 시간이 들어 있었습니다(동기 lock 안에서 직접 `await`한 것은 아님).
-그래서 교착 상태가 아니라, 앞 작업의 처리 지연이 뒤 작업의 대기로 이어지는 문제였습니다.
-전체 Snapshot은 매 틱이 아니라 입장·특정 오류 복구·예약 복구 때 보냈습니다.
-
-#### 3.2.3 해결 — 상태 변경·방송 등록과 실제 송신을 분리
-
-방 단위 FIFO 방송 큐를 도입하고,
-지형 명령 구간에서는 상태 변경과 결과의 큐 등록까지만 수행하도록 수정했습니다.
-실제 WebSocket 송신은 별도 방송 루프가 담당합니다.
-
-```mermaid
-flowchart LR
-    subgraph Before["리팩터링 전 · 지형 Gate 유지"]
-        A["상태 변경 / 전체 복구 생성"] --> B["모든 소켓 송신 완료 대기"]
-        B --> C["Gate 해제"]
-    end
-    subgraph After["리팩터링 후"]
-        D["Gate 획득 / 상태 변경"] --> E["FIFO 큐 등록 / Gate 해제"]
-        E -.-> F["별도 방송 루프 / 소켓 송신"]
-    end
-```
-
-| 수정 | 변경한 처리 | 결과 구조 |
-|---|---|---|
-| 지형 처리와 송신 분리 | `ExecuteTerrainCommandAsync(Action)`·`EnqueueBroadcast()` | 지형 Gate가 소켓 송신 완료를 기다리지 않음 |
-| Batch 순서 유지 | 단일 reader `Channel`로 방송 순서 관리 | 상태 변경과 결과 큐 등록 순서를 연결 |
-| 입퇴장 송신 구간 분리 | `Room.JoinAsync()`의 상태 처리와 송신 분리 | 멤버 상태 작업과 네트워크 대기의 임계 구간 분리 |
-| Snapshot 생성 비용 범위 축소 | 당시 `CreateTerrainSnapshotMessage()`의 복사·정렬 분리 | 잠금 안에서 상태 복사, 정렬은 잠금 밖으로 이동 |
-| 전체 복구 조건 축소 | 낙하 예약 검증과 오류별 복구 조건 조정 | 예약 충돌 등에서 불필요한 전체 Snapshot 복구를 줄이는 정책 조정 |
-| 송신 시간 제한 | `SendTimeoutMilliseconds = 3000` | 느리거나 실패한 연결의 송신에 취소·정리 경로 부여 |
-
-핵심 효과는 **소켓 대기가 지형 상태 변경 구간을 붙잡던 결합을 끊은 것**입니다.
-Snapshot 생성의 상태 복사는 여전히 잠금이 필요하고, 방송 큐도 한 메시지를 모든 멤버에게 보낼 때까지 기다리는 비용은 남습니다.
-
-#### 3.2.4 후속 개선 — 변경 셀 Batch와 전역 Revision의 역할 정리
-
-과거에는 요청의 `ExpectedTerrainRevision`이 방 전체 Revision과 다르면 채굴을 거절했습니다.
-서로 다른 셀을 동시에 파도 먼저 처리한 요청이 방 Revision을 올리면 나중 요청은 거절될 수 있었습니다.
-당시 클라이언트는 이 오류에서 `hasTerrainSnapshot = false`로 바꾸고 전체 Snapshot을 기다렸으며,
-수신 후 지형 복원과 플레이어 재배치를 수행했습니다.
-이 경로가 땅을 조금만 파도 전체 지형을 주고받게 만든 주원인이었습니다(§3.2.1).
-
-현재는 채굴 유효성을 셀·예약·장착 곡괭이·거리·채굴 가능 여부로 검사하고,
-성공 결과를 변경 셀 Batch로 확정합니다. 게임 진행 여부는 `PacketDispatcher`가 확인합니다.
-
-“셀 단위 동기화”는 **바뀐 셀만 전송·적용하는 단위**입니다.
-셀별 버전 번호는 없으며 `TerrainGridData.Revision`과 서버 `State.Terrain.Revision`은 방 지형 전체에 하나입니다.
-한 번의 채굴 또는 여러 셀을 포함한 낙하 배치를 확정하면 하나의 `BaseRevision → ResultRevision` 전이가 생깁니다.
-클라이언트는 이 순서를 따라 결과를 적용하고, 낙하 충돌은 `CollapseID`·소유자·원본 셀 예약으로 구분합니다.
-
-| 개선 대상 | 개선 후 처리 |
-|---|---|
-| 앞선 Revision보다 먼저 도착한 Batch | `RoomClient`가 미래 Batch를 버퍼링하고 연속 적용 |
-| 동시에 진행되는 낙하 | 서버의 원본 셀 예약과 소유자 검증 |
-| 무관한 셀 변경으로 인한 채굴 거절 | 요청의 전역 Revision 검사 대신 현재 셀·아이템·거리 검사 |
-| 초기 전체 지형 전송 | 프로필·시드·데이터 버전 공유 후 클라이언트에서 생성 |
-| 다중 청크와 연쇄 처리 | 요청별 대기·CollapseID별 소유권 추적, 서버 확정 뒤 연쇄 검사 |
-
-#### 3.2.5 결과와 남은 비용
-
-지형 Gate와 송신을 분리하고 전체 복구 경로를 줄인 뒤,
-여러 클라이언트에서 원활하게 플레이되는 것을 확인했습니다.
-지연 시간과 처리량의 개선 폭은 별도로 측정하지 않았습니다.
-
-지금은 초기 맵을 시드·프로필·테이블 버전으로 생성하고 일반 변경은 Batch로 공유합니다.
-전체 지형 Snapshot 전송을 없앤 대신, 게임 도중 재접속·중간 참여 때의 지형 복원은 따로 설계해야 합니다.
-무제한 방송 큐가 쌓이거나 느린 연결이 다른 방송을 늦추는 상황도 부하 테스트로 확인해야 합니다.
-
-### 3.3 핵심 API와 채굴 변경 순서
+### 3.2 핵심 API와 채굴 변경 순서
 
 ![HJ가 파란 광물 타일을 캐서 타일이 사라지고 파편 효과가 남은 화면](images/mining-crystal-break.png)
 
@@ -460,7 +372,7 @@ while (bufferedTerrainBatches.TryGetValue(
 `TerrainGridData`는 적용 전 BaseRevision과 중복 좌표를 검사한 뒤 셀 목록을 반영하고,
 마지막에 `Revision = batch.ResultRevision`을 수행합니다.
 
-### 3.4 다중 낙하 — 전역 대기 대신 요청·청크별 상태
+### 3.3 다중 낙하 — 전역 대기 대신 요청·청크별 상태
 
 여러 청크가 동시에 정착할 때 하나의 대기 플래그를 사용하면 먼저 보낸 요청 때문에
 다음 청크의 배치 제안이 버려질 수 있습니다.
@@ -484,7 +396,7 @@ if (pendingCollapsePlacementIds.ContainsValue(proposal.CollapseId))
 반면 낙하 배치 요청은 단순 시간 초과로 지우지 않습니다.
 늦게 도착한 확정 Batch의 소유권을 식별해야 하므로 성공·오류·취소에 연결해 정리합니다.
 
-### 3.5 연쇄 붕괴 — 물리 완료와 서버 확정을 구분
+### 3.4 연쇄 붕괴 — 물리 완료와 서버 확정을 구분
 
 `RebuildCompleted`는 정착·만료된 로컬 청크의 제안 처리와 제거, 물리 프레임 대기 후 발생합니다.
 그 순간 서버가 최종 배치를 확정한 것은 아니므로, 권위 모드에서는 이 이벤트로 연쇄 탐색을 시작하지 않습니다.
@@ -504,7 +416,7 @@ if (reason == TerrainChangeReason.CollapsePlacement)
 }
 ```
 
-### 3.6 서버 검증과 순서 보장
+### 3.5 서버 검증과 순서 보장
 
 서버 `TryExcavate()`는 장착 곡괭이 ID와 테이블의 채굴력·거리를 확인하고 내구도와 드롭을 확정합니다.
 `TryStartCollapse()`는 요청 그룹들을 검증한 뒤 소유자와 원본 셀을 예약합니다.
@@ -516,7 +428,9 @@ if (reason == TerrainChangeReason.CollapsePlacement)
 방송은 단일 reader `Channel`이 순서대로 읽습니다.
 같은 소켓의 동시 송신은 멤버별 `SendLock`으로 직렬화하고 송신 시간 제한을 둡니다.
 
-### 3.7 세부 구현 — 낙하 예약과 최종 변경을 하나의 Batch로 확정
+### 3.6 세부 구현
+
+#### 낙하 예약과 최종 변경을 하나의 Batch로 확정
 
 서버의 낙하 시작 요청에는 여러 그룹이 들어갈 수 있습니다.
 `TryStartCollapse()`는 먼저 그룹 내부 중복과 그룹 사이의 셀 중복을 확인하고,
@@ -554,7 +468,7 @@ foreach (GridCoord sourceCell in sourceCells)
 서버는 원본 영역과 겹치는 목적지는 허용하지만 원본이 아닌 기존 지형과 겹치면 거절합니다.
 플레이어 위치와 목적지가 겹치면 디버그 진단 로그만 남기고, 배치를 거절하거나 플레이어를 밀어내지는 않습니다.
 
-### 3.8 세부 구현 — 확정되지 않은 낙하의 취소·원본 복구
+#### 확정되지 않은 낙하의 취소·원본 복구
 
 | 상황 | 서버 처리 | 클라이언트 처리 |
 |---|---|---|
@@ -574,7 +488,7 @@ foreach (GridCoord sourceCell in sourceCells)
 
 소스: `GameSession.Terrain.cs`, `RoomClient.Terrain.cs`.
 
-### 3.9 세부 구현 — 방송 큐와 초기 입장의 잠금 범위
+#### 방송 큐와 초기 입장의 잠금 범위
 
 일반 지형 명령은 `terrainPipelineGate` 안에서 상태 변경과 방송 등록 순서를 맞춘 뒤 실제 송신을 큐에서 처리합니다. 초기 입장의 `JoinAsync()`는 별도 경로로, welcome·맵 세션·아이템·체력 상태를 보내는 동안에도 이 Gate를 유지합니다. 따라서 입장 처리 중에는 그 송신이 끝날 때까지 지형 명령이 기다립니다.
 
@@ -586,7 +500,7 @@ foreach (GridCoord sourceCell in sourceCells)
 
 소스: `Room.cs`, `RoomHub.cs`.
 
-### 3.10 고민과 선택
+### 3.7 고민과 선택
 
 | 선택 | 얻는 점 | 비용·제약 |
 |---|---|---|
@@ -626,7 +540,7 @@ stateDiagram-v2
 
 상태명은 `FallingTerrainInteraction`의 플래그와 처리 흐름을 요약한 논리 상태입니다.
 
-### 4.2 핵심 API와 문제 해결 — Grid와 Collider의 갱신 시점
+### 4.2 핵심 API — 탈출·매몰 판정과 피해 전달
 
 | API·이벤트 | 역할 |
 |---|---|
@@ -635,32 +549,11 @@ stateDiagram-v2
 | `CollisionImpactRequested`, `BurialImpactRequested`, `BurialDamageRequested` | 충돌·매몰 피해를 외부 어댑터로 전달 |
 | `ResetState()` | 리스폰 등에서 접촉·매몰 상태 정리 |
 
-지형 Batch 적용과 `TerrainGridWorld`의 Mesh·EdgeCollider 재생성은 같은 순간에 끝나지 않습니다.
-논리 셀 삭제 직후 물리 공간을 검사하면 이전 Collider 때문에 아직 갇혔다고 판단할 수 있습니다.
-그래서 프레임 종료까지 기다린 뒤 물리 Transform을 동기화하고 매몰 판정을 이어 갑니다.
+논리 셀 삭제와 Collider 재생성 시점이 달라 생긴 매몰 판정 문제와 해결은 8.2에 있습니다.
 
-```csharp
-// FallingTerrainInteraction.cs, ResolvePendingBurialsAfterTerrainSettled() 발췌
-yield return new WaitForEndOfFrame();
-Physics2D.SyncTransforms();
+### 4.3 세부 구현
 
-if (IsCurrentSpaceEmpty())
-{
-    ReleasePendingBurials(collapseIds);
-}
-else if (TryFindDownwardReleasePosition(out Vector2 releasePosition))
-{
-    character.SetPosition(releasePosition);
-    Physics2D.SyncTransforms();
-    ReleasePendingBurials(collapseIds);
-}
-else
-{
-    EnterBuriedState();
-}
-```
-
-### 4.3 세부 구현 — 물리 정착과 Grid 배치 후보 선택
+#### 물리 정착과 Grid 배치 후보 선택
 
 `FallingChunk`는 저속이라는 조건만으로 정착하지 않습니다.
 지형 접촉의 지지 방향·폭과 최근 접촉 여부를 확인하고,
@@ -707,7 +600,7 @@ return collisionCount < bestCollisionCount;
 
 소스: `FallingChunk.cs`, `TerrainSampler.cs`, `CollapseManager.cs`.
 
-### 4.4 연동 구현 — 속도 계산·충돌 이동·지형 상태의 분리
+#### 연동 구현 — 속도 계산·충돌 이동·지형 상태의 분리
 
 `PlayerController`는 플레이어 루트의 실행 순서를 조정하고,
 입력·속도·충돌·지형 상태·생명주기를 별도 객체에 위임합니다.
@@ -736,7 +629,7 @@ Dynamic·Kinematic 낙하 청크는 이 보정 대상에서 제외해,
 플랫폼 폭 안으로 수평 위치를 제한하고 몸 전체가 경계를 지날 때까지 상태를 유지합니다.
 플랫폼 안에서 등반을 취소한 경우 아래로 통과시키는 경로도 둡니다.
 
-### 4.5 연동 구현 — 낙하 높이·등반과 서버 체력의 경계
+#### 연동 구현 — 낙하 높이·등반과 서버 체력의 경계
 
 `FallDamageDetector`는 현재 수직 속도만으로 피해를 계산하지 않습니다.
 마지막 정적 지면의 높이와 착지 높이 차이를 타일 수로 바꾸고,
@@ -768,7 +661,7 @@ int damage = Mathf.CeilToInt(baseDamage * damageMultiplier);
 
 소스: `PlayerController.cs`, `PlayerCollisionMove.cs`, `PlayerTerrainState.cs`, `FallDamageDetector.cs`, `PlayerHp.cs`.
 
-### 4.6 세부 구현 — 타격 연출과 지형 확정 상태의 분리
+#### 타격 연출과 지형 확정 상태의 분리
 
 `TerrainGridWorld.TrySetCellVisualOffset()`은 셀의 Mesh 정점·자원 표시·균열 표시 위치만 움직입니다. `TerrainGridData` 좌표와 내구도, 경계 Collider는 바꾸지 않습니다. Chunk마다 셀의 시작 정점 인덱스를 캐시하고, 연출로 바뀐 정점은 `visualDirtyChunks`에 모아 `LateUpdate()`에서 반영합니다.
 
@@ -778,7 +671,7 @@ int damage = Mathf.CeilToInt(baseDamage * damageMultiplier);
 
 ![HJ가 선택한 파란 광물 타일을 타격하는 화면, 아래 흙 타일에 균열 표시](images/mining-hit-crack.png)
 
-### 4.7 세부 구현 — 필드 아이템도 붕괴에서 탈출시키기
+#### 필드 아이템도 붕괴에서 탈출시키기
 
 `WorldItemDrop`도 `IFallingTerrainEscapeTarget`을 구현합니다. 청크가 아이템 위를 덮는 경우 같은 CollapseID의 처리를 중복하지 않고, 현재 열에서 좌우로 거리를 늘려 빈 후보를 찾습니다. 후보는 아이템 Bounds가 Grid와 겹치지 않고 청크의 수직 낙하 경로에서도 벗어나야 합니다. 낙하 중 탈출에는 이동 경로의 빈 공간도 검사합니다.
 
@@ -786,7 +679,7 @@ int damage = Mathf.CeilToInt(baseDamage * damageMultiplier);
 
 소스: `TerrainGridWorld.cs`, `TerrainTileHitEffect.cs`, `TerrainCrackOverlayManager.cs`, `WorldItemDrop.cs`.
 
-### 4.8 고민과 선택
+### 4.4 고민과 선택
 
 단순히 충돌할 때마다 플레이어를 밀어내면 같은 청크와 반복 충돌하거나,
 공중에서 플레이어가 청크를 밀어 올리는 식의 부작용이 생길 수 있습니다.
@@ -859,7 +752,9 @@ itemReadyTime.Remove(pending.ItemID);
 판매는 스폰 구역·생존·게임 진행 조건과 금액 overflow를 검사합니다.
 상점은 기존 장비와의 차액과 구매 기록을 서버에서 처리하고, 가격도 서버가 확정합니다.
 
-### 5.5 세부 구현 — 장착 장비와 수집 수량·가격의 분리
+### 5.5 세부 구현
+
+#### 장착 장비와 수집 수량·가격의 분리
 
 서버는 장착 곡괭이를 일반 소모 아이템의 수량과 구분해 `EquippedPickaxeItemID`로 관리합니다.
 구매 시 다음 장비의 채굴력이 현재보다 높아야 하며,
@@ -883,7 +778,7 @@ UI의 구매 취소 표시와 서버가 허용하는 범위를 함께 맞출 필
 
 소스: `GameSession.cs`, `PlayerSellController.cs`.
 
-### 5.6 팀 아이템 연동 — 미리보기와 서버 확정 결과의 분리
+#### 팀 아이템 연동 — 미리보기와 서버 확정 결과의 분리
 
 아이템 고유 동작과 연출은 팀 구현을 포함하며,
 온라인 경로에서는 요청 전 입력·미리보기와 서버 확정 뒤 피드백을 연결합니다.
@@ -912,7 +807,7 @@ UI의 구매 취소 표시와 서버가 허용하는 범위를 함께 맞출 필
 `TorchLight`는 지형 변경 이벤트에서 설치 셀이 다시 지형으로 막혔는지 확인해 제거하고,
 점유 등록·활성 광원 목록·시야 변경 알림을 정리합니다.
 
-### 5.7 남은 구현 차이 — 다이너마이트 확정 뒤 로컬 지형 변경
+#### 남은 구현 차이 — 다이너마이트 확정 뒤 로컬 지형 변경
 
 지뢰의 `ExplodeFromServer()`는 폭발 표시만 생성하지만,
 다이너마이트의 같은 메서드는 `ExplosiveBase.Detonate()`를 호출합니다.
@@ -926,7 +821,7 @@ UI의 구매 취소 표시와 서버가 허용하는 범위를 함께 맞출 필
 
 소스: `DynamiteItem.cs`, `DynamiteExplosive.cs`, `ExplosiveBase.cs`, `Detector.cs`, `GridOccupancy.cs`.
 
-### 5.8 세부 구현 — 요청별로 다른 서버 검증 범위
+#### 요청별로 다른 서버 검증 범위
 
 필드 아이템 획득은 서버가 DropID와 수량·획득 대기 시간·수용량을 관리합니다. 거리 판정은 요청에 담긴 아이템 좌표와 서버가 보관한 플레이어 좌표 사이에서 수행합니다. 서버는 드롭 생성 좌표와 요청 좌표를 대조하지 않으므로, 클라이언트 물리로 움직인 드롭 위치를 그대로 믿습니다.
 
@@ -936,13 +831,19 @@ UI의 구매 취소 표시와 서버가 허용하는 범위를 함께 맞출 필
 
 소스: `GameSession.cs`, `ItemController.cs`, `PickaxeItem.cs`.
 
-### 5.9 고민과 선택
+### 5.6 고민과 선택
 
 | 선택 | 이유 | 확인할 제약 |
 |---|---|---|
 | 수량과 무게를 서버 스냅샷으로 교체 | 획득·판매·사망 등 여러 경로의 결과를 하나의 기준으로 복원 | 전체 스냅샷 전송/재구성 비용 |
 | 로컬 예상 쿨타임 + 거절 시 취소 | 사용 직후 반응성과 서버 규칙 동시 유지 | 늦은 응답과 연속 요청의 상관관계 관리 |
 | 아이템 데이터와 표시 분리 | ItemID와 공통 데이터로 슬롯·상점 표현 | 클라이언트/서버 Item 테이블 버전 일치 필요 |
+
+인벤토리는 지형 데이터에 비해 크기가 작아, 바뀐 부분만 보내지 않고 서버 스냅샷을 통째로 교체해도 문제가 없다고 판단했습니다.
+표시도 아이템 한 종류만 바뀌면 전체 목록을 `ItemID` 순으로 정렬해 다시 그립니다(§5.2).
+플레이어가 슬롯 순서를 직접 바꾸는 기능을 넣지 않아 지켜야 할 순서가 없으므로, 이 방식을 문제 삼지 않았습니다.
+슬롯 변경 기능을 넣지 않은 것은, 아래로 파 내려가는 플레이에서 화면 아래의 인벤토리 슬롯을 마우스로 다루게 하면 의도치 않은 클릭 실수가 나올 수 있다고 보았기 때문입니다.
+슬롯은 숫자 키(1~0) 또는 마우스 휠 스크롤로 고릅니다.
 
 ---
 
@@ -973,7 +874,9 @@ ExploreVisionRadius(playerCell);
 누적 탐험은 반경과 지형 차폐를 검사하며, 현재 시야는 플레이어 및 배치 횃불의 영역을 합칩니다.
 현재 시야의 통로 확산과 탐험 기록의 직선 시야 검사는 서로 다른 알고리즘입니다.
 
-### 6.3 세부 구현 — 탐험 이력과 현재 관측의 계산 경로
+### 6.3 세부 구현
+
+#### 탐험 이력과 현재 관측의 계산 경로
 
 누적 탐험은 `visionRadius` 안의 원형 후보를 순회하며 `HasLineOfSight()`로 차폐를 검사합니다.
 새로 탐험한 셀만 `CellsExplored`에 전달합니다.
@@ -996,7 +899,7 @@ ExploreVisionRadius(playerCell);
 
 소스: `PlayerExplorationController.cs`, `ExplorationMapData.cs`.
 
-### 6.4 세부 구현 — 두 겹의 안개 Mesh와 전체 지도 조작
+#### 두 겹의 안개 Mesh와 전체 지도 조작
 
 월드 안개는 탐험 이력과 현재 시야를 두 Mesh 계층으로 표현합니다. `ExplorationForWorldView`는 32×32 셀 Chunk를 사용하고, 이전·새 관측 셀이 속한 Chunk를 dirty 집합에 모읍니다. 관측 범위를 떠난 탐험 지역도 현재 시야 안개에는 다시 가려지며, 지상과 기반암·스폰 플랫폼은 표시 예외로 둡니다.
 
@@ -1008,7 +911,7 @@ Tab 전체 지도는 프레임 Mask와 지도 콘텐츠의 RectTransform을 구�
 
 소스: `ExplorationForWorldView.cs`, `TerrainMinimapPresenter.cs`, `MinimapView.cs`.
 
-### 6.5 고민과 선택
+### 6.4 고민과 선택
 
 | 구분 | 누적 탐험 | 현재 관측 |
 |---|---|---|
@@ -1045,7 +948,9 @@ Tab 전체 지도는 프레임 Mask와 지도 콘텐츠의 RectTransform을 구�
 송신은 `ConcurrentQueue<string>`과 `SemaphoreSlim`을 사용한 루프로 처리합니다.
 메시지 수신 스레드에서 Unity 오브젝트를 직접 수정하지 않기 위한 경계입니다.
 
-### 7.3 세부 구현 — 로비 상태 순서와 게임 시작 준비 장벽
+### 7.3 세부 구현
+
+#### 로비 상태 순서와 게임 시작 준비 장벽
 
 로비의 참가자 상태에도 Revision이 있지만 지형 Revision과는 별개입니다.
 `LobbyHub.BroadcastStateAsync()`는 참가자 목록과 수신 대상을 잠금 안에서 구성하고,
@@ -1073,7 +978,7 @@ Tab 전체 지도는 프레임 Mask와 지도 콘텐츠의 RectTransform을 구�
 
 같은 준비 통지가 다시 와도 집합이므로 인원 수가 중복 증가하지 않습니다.
 
-### 7.4 세부 구현 — 원격 플레이어는 표시 계층으로 유지
+#### 원격 플레이어는 표시 계층으로 유지
 
 원격 상태는 목표 위치·속도·접지·등반·매몰·사망 표시로 분리됩니다.
 `RemotePlayerView.Update()`는 목표 위치로 지수 보간하며,
@@ -1092,7 +997,7 @@ transform.position = new Vector3(next.x, next.y, current.z);
 
 소스: `LobbyHub.cs`, `LobbySocketClient.cs`, `RemotePlayerView.cs`, `RemotePlayerAnimationView.cs`.
 
-### 7.5 세부 구현 — 멀티플레이에서의 모달 입력과 환경설정
+#### 멀티플레이에서의 모달 입력과 환경설정
 
 `PauseMenuController`는 메뉴·설정·결과 창의 활성 상태를 모달 입력 차단 조건으로 제공합니다.
 `PlayerInputReader`는 채팅 입력 중이거나 모달이 열리면 빈 입력을 전달합니다.
@@ -1109,7 +1014,7 @@ PlayerPrefs 키에는 `Application.dataPath`의 Hash128을 접두어로 넣습�
 같은 경로의 빌드를 덮어쓰면 설정을 유지하며,
 같은 실행 파일을 다른 폴더로 옮기면 별도 설정 키를 사용하게 됩니다.
 
-### 7.6 팀 오디오 연동 — 위치 효과음·변형 클립·볼륨 적용
+#### 팀 오디오 연동 — 위치 효과음·변형 클립·볼륨 적용
 
 `GameSound`는 `SoundCue`를 Resources 클립 또는 변형 클립 폴더에 연결합니다.
 변형이 여러 개면 바로 이전 인덱스를 제외하고 선택해 같은 소리의 연속 재생을 줄입니다.
@@ -1127,7 +1032,7 @@ PlayerPrefs 키에는 `Application.dataPath`의 Hash128을 접두어로 넣습�
 
 소스: `PauseMenuController.cs`, `SettingsController.cs`, `PlayerInputReader.cs`, `GameSound.cs`.
 
-### 7.7 세부 구현 — 대기방 프리뷰·채팅·승자 표시
+#### 대기방 프리뷰·채팅·승자 표시
 
 대기방 아바타는 게임용 Prefab을 비활성 부모 아래 생성한 뒤 MonoBehaviour·물리·AudioSource를 끄고 Animator만 Idle로 표시합니다. 게임용 Prefab 재사용과 게임플레이 진입을 분리한 경로입니다. 슬롯 색상은 `MaterialPropertyBlock`으로 적용하고 같은 팔레트를 인게임 플레이어와 공유합니다.
 
@@ -1141,7 +1046,7 @@ PlayerPrefs 키에는 `Application.dataPath`의 Hash128을 접두어로 넣습�
 
 소스: `LobbyPlayerSlotView.cs`, `ChatPanelView.cs`, `GameTimerBarView.cs`.
 
-### 7.8 고민과 선택
+### 7.4 고민과 선택
 
 서버 확정 지연과 실패는 내부 로그만으로는 사용자가 이해하기 어렵습니다.
 로딩 오버레이, 시스템 메시지, 상점 알림, 쿨타임 복원과 같은 피드백을 함께 연결했습니다.
@@ -1149,14 +1054,195 @@ PlayerPrefs 키에는 `Application.dataPath`의 Hash128을 접두어로 넣습�
 
 ---
 
-## 8. 결과와 배운 점
+## 8. 트러블슈팅
 
-### 8.1 구현 결과
+### 8.1 큰 스냅샷과 긴 잠금 구간으로 멈추던 멀티플레이
+
+#### 8.1.1 증상과 초기 선택
+
+| 단계 | 내용 |
+|---|---|
+| 증상 | 처음 멀티플레이 테스트에서 한 명이 땅을 조금만 파도 게임이 멈췄고, 한참 지나서야 복구됨 |
+| 처음 의심 | lock 안에서 너무 많은 처리를 하는 것이 주원인이라고 의심 |
+| 확인한 주원인 | lock 안의 과도한 처리도 문제였지만, 주원인은 **지형 전체 스냅샷**이 자주 오가며 데이터 용량이 너무 커진 것. 채굴 요청의 Revision이 서버와 조금만 어긋나도 요청을 거절하고 전체 스냅샷을 다시 보냈음 |
+| 해결 | 전체 스냅샷을 주고받지 않고, 서버가 보내는 변경 Batch의 Revision(`BaseRevision → ResultRevision`)만 비교해 순서대로 적용하도록 바꿔 테스트한 뒤 해결. 이 방향은 강사님과 같은 개선안을 제안했고, 구현은 강사님의 도움을 받음 |
+| 함께 고친 것 | 처음 의심한 lock 구간은 직접 상태 변경과 송신을 분리해 줄임(§8.1.3) |
+| 걸린 시간 | 하루 |
+
+개선 후에는 여러 클라이언트가 원활하게 플레이되는 것을 직접 확인했습니다.
+
+초기 구조도 플레이 중 일반 변경은 셀 목록을 담은 `TerrainChangeBatch`로 방송했습니다.
+하지만 채굴 요청에 `ExpectedTerrainRevision`을 붙여, 서버 Revision과 다르면 `terrain.revision_mismatch`로 거절하고 요청한 클라이언트에 전체 지형 Snapshot을 다시 보냈습니다(§8.1.4).
+연달아 파면 앞 요청이 Revision을 올리므로 이 경로를 자주 타게 되었고, 그래서 땅을 조금만 파도 큰 전체 지형 데이터가 오갔습니다. lock 안의 처리와 송신 대기(§8.1.2)는 그 비용을 더 키웠습니다.
+
+#### 8.1.2 원인 분석 — 전체 상태 처리와 송신 대기가 묶인 구간
+
+리팩터링 전 서버에는 상태 접근을 보호하는 동기 lock과 비동기 명령을 직렬화하는 Gate가 있었습니다.
+
+| 구간 | 잠금 안에서 수행하던 작업 | 대기·처리 비용의 영향 |
+|---|---|---|
+| `GameSession.stateGate`의 C# `lock` | 전체 셀을 DTO로 복사하고 `OrderBy`·`ToList`로 Snapshot 생성 | 복사·정렬·할당이 끝날 때까지 같은 상태 잠금을 사용하는 작업 대기 |
+| `Room.terrainPipelineGate`의 `SemaphoreSlim` | 지형 명령 실행 후 오류·전체 Snapshot 송신 또는 Batch·드롭 방송 완료까지 `await` | 느린 소켓 송신이 다음 지형 명령 시작을 지연시킬 수 있음 |
+| `Room.gate`의 `SemaphoreSlim` | 입장 시 welcome·맵·전체 지형·아이템·인벤토리 메시지 송신과 Join 방송 | 초기 동기화 송신이 입퇴장 처리의 잠금 유지 시간에 포함 |
+
+```csharp
+// 리팩터링 전 Room.ExecuteTerrainCommandAsync() 발췌
+await terrainPipelineGate.WaitAsync();
+try
+{
+    await command();
+}
+finally
+{
+    terrainPipelineGate.Release();
+}
+```
+
+과거 `TerrainExcavationPacketHandler`는 위 `command` 안에서
+`await context.BroadcastAsync(batch)`와 드롭 방송을 실행했습니다.
+Revision 오류가 나면 오류 메시지와 전체 지형 Snapshot의 송신도 이 안에서 기다렸습니다.
+`BroadcastAsync()`는 모든 멤버의 송신을 `Task.WhenAll()`로 기다리고,
+`SendRawAsync()`는 `CancellationToken.None`으로 WebSocket 송신을 수행했습니다.
+따라서 한 연결의 지연이 방의 지형 처리 잠금 해제까지 길어지는 경로가 있었습니다.
+
+정리하면 동기 `lock`에는 전체 Snapshot 복사·정렬 비용이, 비동기 Gate에는 송신 대기 시간이 들어 있었습니다(동기 lock 안에서 직접 `await`한 것은 아님).
+그래서 교착 상태가 아니라, 앞 작업의 처리 지연이 뒤 작업의 대기로 이어지는 문제였습니다.
+전체 Snapshot은 매 틱이 아니라 입장·특정 오류 복구·예약 복구 때 보냈습니다.
+
+#### 8.1.3 해결 — 상태 변경·방송 등록과 실제 송신을 분리
+
+방 단위 FIFO 방송 큐를 도입하고,
+지형 명령 구간에서는 상태 변경과 결과의 큐 등록까지만 수행하도록 수정했습니다.
+실제 WebSocket 송신은 별도 방송 루프가 담당합니다.
+
+```mermaid
+flowchart LR
+    subgraph Before["리팩터링 전 · 지형 Gate 유지"]
+        A["상태 변경 / 전체 복구 생성"] --> B["모든 소켓 송신 완료 대기"]
+        B --> C["Gate 해제"]
+    end
+    subgraph After["리팩터링 후"]
+        D["Gate 획득 / 상태 변경"] --> E["FIFO 큐 등록 / Gate 해제"]
+        E -.-> F["별도 방송 루프 / 소켓 송신"]
+    end
+```
+
+| 수정 | 변경한 처리 | 결과 구조 |
+|---|---|---|
+| 지형 처리와 송신 분리 | `ExecuteTerrainCommandAsync(Action)`·`EnqueueBroadcast()` | 지형 Gate가 소켓 송신 완료를 기다리지 않음 |
+| Batch 순서 유지 | 단일 reader `Channel`로 방송 순서 관리 | 상태 변경과 결과 큐 등록 순서를 연결 |
+| 입퇴장 송신 구간 분리 | `Room.JoinAsync()`의 상태 처리와 송신 분리 | 멤버 상태 작업과 네트워크 대기의 임계 구간 분리 |
+| Snapshot 생성 비용 범위 축소 | 당시 `CreateTerrainSnapshotMessage()`의 복사·정렬 분리 | 잠금 안에서 상태 복사, 정렬은 잠금 밖으로 이동 |
+| 전체 복구 조건 축소 | 낙하 예약 검증과 오류별 복구 조건 조정 | 예약 충돌 등에서 불필요한 전체 Snapshot 복구를 줄이는 정책 조정 |
+| 송신 시간 제한 | `SendTimeoutMilliseconds = 3000` | 느리거나 실패한 연결의 송신에 취소·정리 경로 부여 |
+
+핵심 효과는 **소켓 대기가 지형 상태 변경 구간을 붙잡던 결합을 끊은 것**입니다.
+Snapshot 생성의 상태 복사는 여전히 잠금이 필요하고, 방송 큐도 한 메시지를 모든 멤버에게 보낼 때까지 기다리는 비용은 남습니다.
+
+#### 8.1.4 후속 개선 — 변경 셀 Batch와 전역 Revision의 역할 정리
+
+과거에는 요청의 `ExpectedTerrainRevision`이 방 전체 Revision과 다르면 채굴을 거절했습니다.
+서로 다른 셀을 동시에 파도 먼저 처리한 요청이 방 Revision을 올리면 나중 요청은 거절될 수 있었습니다.
+당시 클라이언트는 이 오류에서 `hasTerrainSnapshot = false`로 바꾸고 전체 Snapshot을 기다렸으며,
+수신 후 지형 복원과 플레이어 재배치를 수행했습니다.
+이 경로가 땅을 조금만 파도 전체 지형을 주고받게 만든 주원인이었습니다(§8.1.1).
+
+현재는 채굴 유효성을 셀·예약·장착 곡괭이·거리·채굴 가능 여부로 검사하고,
+성공 결과를 변경 셀 Batch로 확정합니다. 게임 진행 여부는 `PacketDispatcher`가 확인합니다.
+
+“셀 단위 동기화”는 **바뀐 셀만 전송·적용하는 단위**입니다.
+셀별 버전 번호는 없으며 `TerrainGridData.Revision`과 서버 `State.Terrain.Revision`은 방 지형 전체에 하나입니다.
+한 번의 채굴 또는 여러 셀을 포함한 낙하 배치를 확정하면 하나의 `BaseRevision → ResultRevision` 전이가 생깁니다.
+클라이언트는 이 순서를 따라 결과를 적용하고, 낙하 충돌은 `CollapseID`·소유자·원본 셀 예약으로 구분합니다.
+
+| 개선 대상 | 개선 후 처리 |
+|---|---|
+| 앞선 Revision보다 먼저 도착한 Batch | `RoomClient`가 미래 Batch를 버퍼링하고 연속 적용 |
+| 동시에 진행되는 낙하 | 서버의 원본 셀 예약과 소유자 검증 |
+| 무관한 셀 변경으로 인한 채굴 거절 | 요청의 전역 Revision 검사 대신 현재 셀·아이템·거리 검사 |
+| 초기 전체 지형 전송 | 프로필·시드·데이터 버전 공유 후 클라이언트에서 생성 |
+| 다중 청크와 연쇄 처리 | 요청별 대기·CollapseID별 소유권 추적, 서버 확정 뒤 연쇄 검사 |
+
+#### 8.1.5 결과와 남은 비용
+
+지형 Gate와 송신을 분리하고 전체 복구 경로를 줄인 뒤,
+여러 클라이언트에서 원활하게 플레이되는 것을 확인했습니다.
+지연 시간과 처리량의 개선 폭은 별도로 측정하지 않았습니다.
+
+지금은 초기 맵을 시드·프로필·테이블 버전으로 생성하고 일반 변경은 Batch로 공유합니다.
+전체 지형 Snapshot 전송을 없앤 대신, 게임 도중 재접속·중간 참여 때의 지형 복원은 따로 설계해야 합니다.
+무제한 방송 큐가 쌓이거나 느린 연결이 다른 방송을 늦추는 상황도 부하 테스트로 확인해야 합니다.
+
+### 8.2 Grid와 Collider의 갱신 시점 — 채굴해도 풀리지 않던 매몰
+
+| 단계 | 내용 |
+|---|---|
+| 증상 | 채굴하여 공간을 만들었는데 매몰이 풀리지 않음 |
+| 원인 | 이전 EdgeCollider가 남은 시점의 검사 |
+| 해결 | 렌더/물리 갱신 순서 뒤 재검사 |
+
+지형 Batch 적용과 `TerrainGridWorld`의 Mesh·EdgeCollider 재생성은 같은 순간에 끝나지 않습니다.
+논리 셀 삭제 직후 물리 공간을 검사하면 이전 Collider 때문에 아직 갇혔다고 판단할 수 있습니다.
+그래서 프레임 종료까지 기다린 뒤 물리 Transform을 동기화하고 매몰 판정을 이어 갑니다.
+
+```csharp
+// FallingTerrainInteraction.cs, ResolvePendingBurialsAfterTerrainSettled() 발췌
+yield return new WaitForEndOfFrame();
+Physics2D.SyncTransforms();
+
+if (IsCurrentSpaceEmpty())
+{
+    ReleasePendingBurials(collapseIds);
+}
+else if (TryFindDownwardReleasePosition(out Vector2 releasePosition))
+{
+    character.SetPosition(releasePosition);
+    Physics2D.SyncTransforms();
+    ReleasePendingBurials(collapseIds);
+}
+else
+{
+    EnterBuriedState();
+}
+```
+
+### 8.3 여러 청크가 동시에 떨어지면 뒤 청크가 확정되지 않던 문제
+
+| 단계 | 내용 |
+|---|---|
+| 발견 | 플레이 테스트와 1차 시연 중 |
+| 증상 | 여러 청크 중 뒤 청크가 확정되지 않음 |
+| 원인 | 클라이언트가 낙하 배치 확정을 기다리는 상태를 하나(`pendingCollapsePlacementId`)만 두어서, 먼저 보낸 요청을 기다리는 동안 함께 정착한 뒤 청크의 배치 제안은 경고 로그만 남기고 버려짐. 서버의 원본 셀 예약은 시간 초과로 취소되고 원본이 복구됨 |
+| 해결 | 대기 상태를 요청 ID → CollapseID 사전(`pendingCollapsePlacementIds`)으로 바꾸고, 같은 CollapseID의 중복 요청만 막음. 성공·오류·취소 때는 해당 요청만 정리(§3.3) |
+| 시점 | 서버 권위 지형 동기화를 도입(9월 1일)한 뒤 생겼고, 9월 9일에 수정 |
+
+### 8.4 연쇄 붕괴 제한이 소진되지 않고 다른 플레이어가 내 연쇄를 덮어쓰던 문제
+
+| 단계 | 내용 |
+|---|---|
+| 발견 | 플레이 테스트와 1차 시연 중 |
+| 증상 | 연쇄 제한 횟수가 소진되지 않음. 다른 플레이어 변경 이후 내 연쇄가 중단되거나 잘못 이어짐 |
+| 원인 | 서버가 확정한 낙하 배치를 일반 지형 변경처럼 처리해, 연쇄의 한 단계가 끝날 때마다 `chainCount`가 0으로 돌아감. 연쇄의 소유 여부도 마지막에 받은 배치의 값 하나(`placementOwnerForCurrentChain`)로만 기억해, 다른 플레이어의 배치가 내 연쇄의 소유권을 덮어씀 |
+| 해결 | 낙하 배치(`CollapsePlacement`)를 일반 변경과 분리해 진행 중인 연쇄의 다음 단계로 잇고, 내가 소유한 낙하를 CollapseID 집합(`locallyOwnedCollapseIds`)으로 추적. 낙하 취소·스냅샷 갱신 때 소유 상태를 정리(§3.4) |
+| 시점 | 9월 16일에 수정 |
+
+### 8.5 그 밖에 해결한 문제
+
+| 증상 | 원인·코드상 경로 | 소스에 반영된 대응 |
+|---|---|---|
+| 같은 TSV인데 다른 OS에서 버전 불일치 | BOM·CRLF/LF의 바이트 차이 | 클라이언트/서버 해시 입력 정규화 |
+| 아이템 사용 거절 뒤 쿨타임만 남음 | 요청과 예상 쿨타임의 연결 누락 | RequestId별 대기·실패 시 취소 |
+
+---
+
+## 9. 결과와 배운 점
+
+### 9.1 구현 결과
 
 | 목표 | 구현 결과 | 핵심 클래스·처리 |
 |---|---|---|
 | 긴 지형 임계 구간 축소 | 상태 변경·FIFO 등록과 WebSocket 송신 분리 | `Room.ExecuteTerrainCommandAsync`·방송 큐 |
-| 셀 작업이 전체 지형 복구로 확대되는 결합 완화 | 채굴 요청의 전역 Revision 검사 제거와 변경 셀 Batch 적용 | 3.2의 과거·현재 비교 |
+| 셀 작업이 전체 지형 복구로 확대되는 결합 완화 | 채굴 요청의 전역 Revision 검사 제거와 변경 셀 Batch 적용 | 8.1의 과거·현재 비교 |
 | 같은 공유 상태를 기준으로 채굴 | 서버 검증과 전역 Revision Batch 적용 경로 | `TryExcavate`, `ApplyAuthoritativeBatch` |
 | 동시 낙하의 전역 단일 요청 대기 제거 | RequestId별 배치 대기 및 CollapseID별 소유권 | `RoomClient`·`TerrainCollapseCoordinator` |
 | 서버 확정 전 연쇄 재검사 방지 | 권위 모드의 물리 완료 콜백과 연쇄 검사 분리 | `TerrainCollapseCoordinator` |
@@ -1164,19 +1250,7 @@ PlayerPrefs 키에는 `Application.dataPath`의 Hash128을 접두어로 넣습�
 | 아이템 거절과 HUD 상태 연결 | 요청 실패의 예상 쿨타임 취소, 권위 인벤토리 적용 | `ItemController`·`ReplaceWithSnapshot` |
 | 정지 상태의 지형 변경도 시야에 반영 | 지형 변경 플래그 기반 시야 재계산 | `PlayerExplorationController` |
 
-### 8.2 대표 문제 해결
-
-| 증상 | 원인·코드상 경로 | 소스에 반영된 대응 |
-|---|---|---|
-| 멀티플레이 진행이 멈춤 | 채굴 요청의 Revision이 어긋날 때마다 전체 지형 Snapshot을 다시 보내는 큰 데이터(주원인), 전체 Snapshot 복사·정렬과 지형 Gate 안의 송신 대기 | 전체 Snapshot 대신 Batch의 Revision으로 순서 적용·초기 시드 동기화(강사님 도움), 상태 변경·송신 분리, FIFO 큐 |
-| 여러 청크 중 뒤 청크가 확정되지 않음 | 단일 전역 배치 대기 | 청크별 요청 추적, 같은 CollapseID만 중복 방지 |
-| 다른 플레이어 변경 이후 내 연쇄가 중단되거나 잘못 이어짐 | 마지막 Batch 소유자 하나로 상태를 대표 | 소유 CollapseID 집합과 확정 배치별 연쇄 검사 |
-| 연쇄 제한 횟수가 소진되지 않음 | 재배치도 일반 변경으로 처리하여 카운터 초기화 | `CollapsePlacement` 원인 분리 |
-| 채굴하여 공간을 만들었는데 매몰이 풀리지 않음 | 이전 EdgeCollider가 남은 시점의 검사 | 렌더/물리 갱신 순서 뒤 재검사 |
-| 같은 TSV인데 다른 OS에서 버전 불일치 | BOM·CRLF/LF의 바이트 차이 | 클라이언트/서버 해시 입력 정규화 |
-| 아이템 사용 거절 뒤 쿨타임만 남음 | 요청과 예상 쿨타임의 연결 누락 | RequestId별 대기·실패 시 취소 |
-
-### 8.3 한계와 개선 과제
+### 9.2 한계와 개선 과제
 
 - **부분 권위 구조**: 플레이어 좌표·피해 근거와 낙하 결과 일부를 클라이언트가 보고합니다. 이동 거리·실제 물리 궤적을 서버에서 재현하는 검증은 없습니다.
 - **결정적 생성 유지 비용**: 테이블 해시 일치 외에 생성 코드·연산·난수 순서의 일치를 별도 확인해야 합니다.
@@ -1184,10 +1258,11 @@ PlayerPrefs 키에는 `Application.dataPath`의 Hash128을 접두어로 넣습�
 - **Revision 누락 복구**: 미래 Batch 버퍼링만으로 영구 누락을 해결할 수 없습니다. 재접속·재동기화 시나리오 검증이 필요합니다.
 - **방송 적체**: 무제한 `Channel`의 큐 길이와 느린 연결에 대한 운영 정책을 측정해야 합니다.
 - **UI·시야 할당**: 전체 인벤토리 표시 재구성과 시야 컬렉션 생성이 있습니다. 병목 여부는 Profiler에서 판단해야 합니다.
-- **다이너마이트 로컬 지형 변경**: 서버 폭발 확정 뒤에도 로컬 지형을 다시 바꿀 수 있는 경로가 남아 있습니다(§5.7).
+- **다이너마이트 로컬 지형 변경**: 서버 폭발 확정 뒤에도 로컬 지형을 다시 바꿀 수 있는 경로가 남아 있습니다(§5.5).
+- **지형 표현 방식의 근거**: 셀마다 객체를 두던 방식의 로드 시간·프레임 저하는 팀원 환경에서 확인했지만 수치로 남기지 않았습니다(§2.6).
 - **추가 검증**: 소유자 퇴장, 늦은 확정·취소 메시지, 장시간 부하에서의 안정성 검증이 필요합니다.
 
-### 8.4 배운 점과 회고
+### 9.3 배운 점과 회고
 
 지형 시스템과 멀티플레이 동기화는 직접 해보고 싶었던 분야였고, 팀의 역할 분담에 따라 맡은 영역이기도 했습니다.
 

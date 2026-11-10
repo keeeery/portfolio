@@ -113,7 +113,7 @@
   ],
   "screenshots": [],
   "retro": {
-    "section": "10. 결과와 배운 점",
+    "section": "11. 결과와 배운 점",
     "achieved": [
       "환경 물체를 직접 조작하는 전투: 화면 타겟 → Rigidbody 홀딩 → 휘두르기·투척 → 전투 이벤트",
       "시간 정지 중 염동력 조작: 객체별 시간 상태와 잡기·투척 예외",
@@ -200,10 +200,17 @@
         ]
       },
       {
+        "key": "troubleshooting",
+        "title": "트러블슈팅",
+        "sectionPath": [
+          "10. 트러블슈팅"
+        ]
+      },
+      {
         "key": "result",
         "title": "결과와 배운 점",
         "sectionPath": [
-          "10. 결과와 배운 점"
+          "11. 결과와 배운 점"
         ]
       }
     ],
@@ -491,7 +498,7 @@
         "points": [
           {
             "label": "문제",
-            "text": "1차 시연에서 강사·동료 수강생·지인 모두에게 \"들고 있는 물체가 시야를 가려 보스의 움직임을 볼 수 없다\"는 피드백을 받았습니다(§10.3).",
+            "text": "1차 시연에서 강사·동료 수강생·지인 모두에게 \"들고 있는 물체가 시야를 가려 보스의 움직임을 볼 수 없다\"는 피드백을 받았습니다(§11.2).",
             "verbatim": true
           },
           {
@@ -507,48 +514,6 @@
             "fp": "flowchart TB"
           }
         ]
-      },
-      {
-        "key": "body-overlap",
-        "chapter": "boss",
-        "layout": "overview",
-        "tab": "문제 해결",
-        "title": {
-          "text": "가장 오래 붙잡은 문제 — 보스 몸체와 플레이어 자세",
-          "verbatim": true
-        },
-        "lead": {
-          "text": "보스는 플레이어를 뚫고 지나가고, 플레이어는 보스에게 막히도록 만들려고 했습니다.",
-          "verbatim": true
-        },
-        "sectionPath": [
-          "5. 기능 D — 보스 패턴·전투 판정과 시각 피드백",
-          "5.8 연동 구현 — 큰 보스 몸체와 겹칠 때의 이동 보정",
-          "가장 오래 붙잡은 문제 — 보스 몸체와 플레이어 자세"
-        ],
-        "points": [
-          {
-            "label": "문제",
-            "text": "플레이어가 보스 몸 안쪽으로 들어가짐",
-            "verbatim": true
-          },
-          {
-            "label": "문제",
-            "text": "겹칠 때 무작정 밀어내도록 하면 물리적으로 말이 안 되는 움직임이 나옴",
-            "verbatim": true
-          },
-          {
-            "label": "문제",
-            "text": "대형 보스의 배 아래쪽으로 들어가면 무적이 됨",
-            "verbatim": true
-          },
-          {
-            "label": "배운 점",
-            "text": "2D에서는 고려할 필요도 없던 문제였지만, 3D에서는 생각보다 고려할 문제가 많았습니다.",
-            "verbatim": true
-          }
-        ],
-        "visuals": []
       },
       {
         "key": "reward-link",
@@ -749,7 +714,7 @@
           "verbatim": true
         },
         "lead": {
-          "text": "1차 시연에서도 \"필터가 있어도 원하는 칩을 찾기 어렵다\"는 피드백을 받았습니다(§10.3).",
+          "text": "1차 시연에서도 \"필터가 있어도 원하는 칩을 찾기 어렵다\"는 피드백을 받았습니다(§11.2).",
           "verbatim": true
         },
         "sectionPath": [
@@ -842,12 +807,129 @@
         ]
       },
       {
+        "key": "body-overlap",
+        "chapter": "troubleshooting",
+        "layout": "overview",
+        "tab": "문제 해결",
+        "title": {
+          "text": "10.1 가장 오래 붙잡은 문제 — 보스 몸체와 플레이어 자세",
+          "verbatim": true
+        },
+        "lead": {
+          "text": "보스는 플레이어를 뚫고 지나가고, 플레이어는 보스에게 막히도록 만들려고 했습니다.",
+          "verbatim": true
+        },
+        "sectionPath": [
+          "10. 트러블슈팅",
+          "10.1 가장 오래 붙잡은 문제 — 보스 몸체와 플레이어 자세"
+        ],
+        "points": [
+          {
+            "label": "문제",
+            "text": "플레이어가 보스 몸 안쪽으로 들어가짐",
+            "verbatim": true
+          },
+          {
+            "label": "문제",
+            "text": "겹칠 때 무작정 밀어내도록 하면 물리적으로 말이 안 되는 움직임이 나옴",
+            "verbatim": true
+          },
+          {
+            "label": "문제",
+            "text": "대형 보스의 배 아래쪽으로 들어가면 무적이 됨",
+            "verbatim": true
+          },
+          {
+            "label": "배운 점",
+            "text": "2D에서는 고려할 필요도 없던 문제였지만, 3D에서는 생각보다 고려할 문제가 많았습니다.",
+            "verbatim": true
+          }
+        ],
+        "visuals": []
+      },
+      {
+        "key": "minimap-overlay",
+        "chapter": "troubleshooting",
+        "layout": "overview",
+        "tab": "문제 해결",
+        "title": {
+          "text": "10.2 시간 정지 효과가 미니맵에도 보이던 문제",
+          "verbatim": true
+        },
+        "lead": null,
+        "sectionPath": [
+          "10. 트러블슈팅",
+          "10.2 시간 정지 효과가 미니맵에도 보이던 문제"
+        ],
+        "points": [
+          {
+            "label": "문제",
+            "text": "시간 정지 효과가 미니맵에도 표시",
+            "verbatim": true
+          },
+          {
+            "label": "원인",
+            "text": "메인 화면과 미니맵의 렌더 범위 차이",
+            "verbatim": true
+          },
+          {
+            "label": "이유",
+            "text": "미니맵은 플레이어·보스·물체의 위치를 보여 주는 기능에만 집중하는 것이 맞다고 판단",
+            "verbatim": true
+          },
+          {
+            "label": "해결",
+            "text": "카메라별 오버레이 제외 처리",
+            "verbatim": true
+          }
+        ],
+        "visuals": []
+      },
+      {
+        "key": "load-fade",
+        "chapter": "troubleshooting",
+        "layout": "overview",
+        "tab": "문제 해결",
+        "title": {
+          "text": "10.3 씬 로드 직후 화면·소리 연출이 끊겨 보이던 문제",
+          "verbatim": true
+        },
+        "lead": null,
+        "sectionPath": [
+          "10. 트러블슈팅",
+          "10.3 씬 로드 직후 화면·소리 연출이 끊겨 보이던 문제"
+        ],
+        "points": [
+          {
+            "label": "문제",
+            "text": "씬 로드 시간 때문에 소리 페이드 인과 화면이 켜지는 연출이 끊겨 보임",
+            "verbatim": true
+          },
+          {
+            "label": "원인",
+            "text": "씬 로드 완료만으로 바로 화면을 켜면 초기 Start 처리·셰이더 준비로 생긴 긴 프레임이 연출을 건너뛰게 함",
+            "verbatim": true
+          },
+          {
+            "label": "해결",
+            "text": "최소 홀드·안정 프레임 대기와 상한, UI·소리 페이드 분리",
+            "verbatim": true
+          },
+          {
+            "label": "이유",
+            "text": "게임 플레이에 영향을 주는 문제는 아니지만, 사소한 부분까지 챙겨 게임의 완성도를 높이려 함",
+            "verbatim": true
+          }
+        ],
+        "visuals": []
+      },
+      {
         "key": "feedback",
         "chapter": "result",
         "layout": "full",
         "tab": "결과",
         "title": {
-          "text": "10.3 1차 시연 피드백과 반영",
+          "text": "11.2 1차 시연 피드백과 반영",
           "verbatim": true
         },
         "lead": {
@@ -855,8 +937,8 @@
           "verbatim": true
         },
         "sectionPath": [
-          "10. 결과와 배운 점",
-          "10.3 1차 시연 피드백과 반영"
+          "11. 결과와 배운 점",
+          "11.2 1차 시연 피드백과 반영"
         ],
         "points": [],
         "visuals": [

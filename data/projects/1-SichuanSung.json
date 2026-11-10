@@ -653,6 +653,42 @@
         ]
       },
       {
+        "key": "flow-choice",
+        "chapter": "progress",
+        "layout": "overview",
+        "tab": "선택",
+        "title": {
+          "text": "고민과 선택 — 진행 흐름을 상태 머신 대신 bool과 코루틴으로",
+          "verbatim": true
+        },
+        "lead": {
+          "text": "여섯 단계의 진행을 `GameManager`의 bool 네 개와 진행 코루틴으로 조율합니다.",
+          "verbatim": false
+        },
+        "sectionPath": [
+          "5. 기능 D — 한 판의 진행·시간 평가와 최고 기록",
+          "고민과 선택 — 진행 흐름을 상태 머신 대신 bool과 코루틴으로"
+        ],
+        "points": [
+          {
+            "label": "이유",
+            "text": "처음 끝까지 만들어 본 게임이었기 때문에, 당시 다룰 수 있던 bool과 코루틴으로 진행 흐름을 구성했습니다.",
+            "verbatim": true
+          },
+          {
+            "label": "이유",
+            "text": "지금 돌아봐도, 단계가 여섯 개뿐이고 씬도 하나인 게임에 상태 머신을 따로 두는 것은 규모에 비해 과하다고 판단합니다.",
+            "verbatim": true
+          },
+          {
+            "label": "문제",
+            "text": "다만 bool 조합으로 상태를 나타내다 보니, 게임 오버 뒤에도 재시작 입력을 받으려고 `isGameClear`를 `true`로 두는 것처럼 값 하나가 클리어와 게임 오버를 함께 나타내게 되었습니다.",
+            "verbatim": true
+          }
+        ],
+        "visuals": []
+      },
+      {
         "key": "result-table",
         "chapter": "result",
         "layout": "full",

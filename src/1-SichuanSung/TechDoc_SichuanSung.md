@@ -292,10 +292,22 @@ if (bestRecord == 0f || clearTime < bestRecord)
 
 ![클리어 결과 화면 — 별 평가와 이번 기록·최고 기록](images/result-clear.png)
 
-단일 수치 저장이라 별도 파일 구조 없이 PlayerPrefs를 사용했고,
-게임 진행은 전용 상태 머신 대신 몇 개의 bool과 코루틴으로 조율했습니다.
+단일 수치 저장이라 별도 파일 구조 없이 PlayerPrefs를 사용했습니다.
 
 소스: [GameManager.cs](https://github.com/keeeery/Unity_2D_SichuanSung/blob/main/Assets/SichuanSung/Scripts/GameManager.cs), [UIManager.cs](https://github.com/keeeery/Unity_2D_SichuanSung/blob/main/Assets/SichuanSung/Scripts/UIManager.cs).
+
+#### 고민과 선택 — 진행 흐름을 상태 머신 대신 bool과 코루틴으로
+
+진행은 시작 화면 → 카운트다운 → 보드 준비 → 플레이 → 결과 → 재시작의 여섯 단계이고,
+`GameManager`는 이를 `isGameClear`·`IsGameStarted`·`isCountingDown`·`canClick` 네 개의 bool과
+`StartGameSequence`·`RestartGameSequence`·`GameOverSequence` 코루틴으로 조율합니다.
+
+처음 끝까지 만들어 본 게임이었기 때문에, 당시 다룰 수 있던 bool과 코루틴으로 진행 흐름을 구성했습니다.
+지금 돌아봐도, 단계가 여섯 개뿐이고 씬도 하나인 게임에 상태 머신을 따로 두는 것은 규모에 비해 과하다고 판단합니다.
+
+다만 bool 조합으로 상태를 나타내다 보니, 게임 오버 뒤에도 재시작 입력을 받으려고 `isGameClear`를 `true`로 두는 것처럼
+값 하나가 클리어와 게임 오버를 함께 나타내게 되었습니다.
+6.2의 「시간 초과와 제거·재배치가 겹칠 때 코루틴을 한꺼번에 취소하는 경로가 없음」도 같은 구조에서 남은 과제입니다.
 
 ---
 
