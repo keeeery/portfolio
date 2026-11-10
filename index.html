@@ -15,7 +15,7 @@
 <link rel="stylesheet" href="assets/portfolio.css" />
 <link rel="stylesheet" href="theme/theme.css" /><!-- 테마(색·모양·영문 글꼴): /portfolio-theme가 씀. /portfolio-update가 건드리지 않음 -->
 <link rel="stylesheet" href="theme/theme-light.css" /><!-- 밝은 화면 테마(있을 때만 [☀/☾] 버튼이 생김) -->
-<script>try { if (localStorage.getItem('pf-mode') === 'light') document.documentElement.dataset.pfMode = 'light'; } catch (e) {}</script><!-- 고른 화면 모드를 그리기 전에 되살림 -->
+<script>try { const m = localStorage.getItem('pf-mode'); if (m ? m === 'light' : matchMedia('(prefers-color-scheme: light)').matches) document.documentElement.dataset.pfMode = 'light'; } catch (e) {}</script><!-- 그리기 전에 화면 모드를 정함: 버튼으로 고른 모드가 있으면 그것, 없으면 기기 설정(라이트/다크) -->
 </head>
 <body>
 <a class="skip-link" href="#main">본문으로 건너뛰기</a>

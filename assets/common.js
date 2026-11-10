@@ -181,7 +181,8 @@ const PF = (() => {
   }
 
   // ── 화면 모드 전환(어두운 ↔ 밝은) — theme/theme-light.css(:root[data-pf-mode="light"])가 있을 때만 버튼이 생김 ──
-  //   고른 모드는 localStorage 'pf-mode'에 남고, 각 html <head>의 짧은 스크립트가 그리기 전에 되살림(깜빡임 없음)
+  //   처음에는 기기 설정(prefers-color-scheme)을 따르고, 버튼으로 고르면 localStorage 'pf-mode'에 남아 그 뒤로는 기기 설정보다 우선
+  //   각 html <head>의 짧은 스크립트가 그리기 전에 모드를 정함(깜빡임 없음). 고른 적이 없으면 페이지를 연 채로 기기 설정이 바뀌어도 따라감
   //   글자 크기·간격은 그대로라 발표 덱 배치 점검에 영향 없음. 인쇄(제출 PDF·상세 문서)는 모드와 상관없이 흰 종이
   const MODE_KEY = 'pf-mode', root = document.documentElement;
   const getMode = () => (root.dataset.pfMode === 'light' ? 'light' : 'dark');
@@ -210,13 +211,16 @@ const PF = (() => {
     const m = getMode();
     return `<button type="button" class="pf-mode ${cls}" data-pf-mode-toggle data-a="mode" aria-label="${modeLabel(m)}" title="${modeLabel(m)}">${m === 'light' ? MOON : SUN}</button>`;
   }
-  function setMode(m) {
+  function setMode(m, { save = true } = {}) {
     if (m === 'light') root.dataset.pfMode = 'light'; else delete root.dataset.pfMode;
-    try { localStorage.setItem(MODE_KEY, m); } catch (e) { /* 저장 못 해도 이번 화면은 바뀜 */ }
+    if (save) try { localStorage.setItem(MODE_KEY, m); } catch (e) { /* 저장 못 해도 이번 화면은 바뀜 */ }
     applyTheme(lastAccent);                                               // 강조색 글자 진하기는 바탕 기준이라 다시 계산
     syncModeButtons();
     window.dispatchEvent(new CustomEvent('pf-mode', { detail: m }));
   }
+  const savedMode = () => { try { return localStorage.getItem(MODE_KEY); } catch (e) { return null; } };
+  const sysLight = window.matchMedia?.('(prefers-color-scheme: light)');
+  sysLight?.addEventListener?.('change', (e) => { if (!savedMode()) setMode(e.matches ? 'light' : 'dark', { save: false }); });   // 고른 적이 없을 때만 기기 설정을 따라감
   window.PFMode = { button: modeButton, set: setMode, get: getMode, available: hasLightMode };   // 발표 덱 키트(deck-kit.js)는 PF 이름을 따로 써서 이것으로 부름
   document.addEventListener('click', (e) => {
     const b = e.target.closest?.('[data-pf-mode-toggle]'); if (!b) return;
