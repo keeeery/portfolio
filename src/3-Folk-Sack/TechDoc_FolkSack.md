@@ -18,7 +18,7 @@
 
 ### 1.1 What — 무엇을 만들었나
 
-![지상 마을의 상점 아래 지하에서 HJ·굴착 기계·PSH 세 플레이어가 광물 타일을 채굴하는 화면](images/cover-village-mining.png)
+![Folk Sack 로고와, 지상 마을의 상점 아래 지하에서 세 플레이어가 광물 타일을 채굴하는 화면](images/cover-village-mining-logo.png)
 
 **Folk Sack**은 Unity 2D 멀티플레이 채굴 게임입니다. 플레이어는 지하 지형을 채굴하고 광물을 수집하며,
 지상에서 자원을 판매하거나 장비와 사용 아이템을 구매합니다.

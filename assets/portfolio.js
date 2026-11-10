@@ -286,7 +286,10 @@
         const narrow = W < 480;                                          // 좁은 화면: 한 줄일 때 팀 표시는 빼고 제목에 자리를 줌
         const h = lerp(bigH, BAR_H, k), sc = lerp(1, SMALL / F, k);
         // 쓰기
+        // 묶음의 끝이 막대보다 위로 올라오면 막대도 그만큼 같이 밀려 올라감 → 다음 절(상단바로 이동한 절)을 덮지 않음
+        const push = Math.min(0, g.getBoundingClientRect().bottom - (topH + h));
         panel.style.height = `${h}px`;
+        panel.style.transform = push ? `translateY(${push}px)` : '';
         panel.style.boxShadow = `0 1px 0 color-mix(in srgb, var(--line) ${Math.round(k * 100)}%, transparent)`;
         title.style.fontSize = `${F}px`;
         eb.style.transform = `translate(0px, ${lerp(PAD + rEb.top - hr.top, (BAR_H - ebH) / 2, k)}px)`;

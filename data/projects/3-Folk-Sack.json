@@ -4,7 +4,7 @@
   "schemaVersion": 2,
   "title": "Folk Sack",
   "tagline": "지하를 채굴해 자원을 모으고, 지형 붕괴·매몰 위험 속에서 경쟁하는 Unity 2D 멀티플레이 채굴 게임",
-  "cover": "images/cover-village-mining.png",
+  "cover": "images/cover-village-mining-logo.png",
   "team": {
     "type": "team",
     "size": "3인",
