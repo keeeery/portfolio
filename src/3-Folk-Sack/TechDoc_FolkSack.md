@@ -58,7 +58,7 @@
 | 통신 | `ClientWebSocket` / ASP.NET Core WebSocket, JSON 메시지 |
 | 데이터 | 클라이언트 StreamingAssets TSV, 서버 Data TSV 및 설정 |
 | GitHub | 클라이언트 [https://github.com/KooHoo-Dev/3rd-TeamProject-KH](https://github.com/KooHoo-Dev/3rd-TeamProject-KH), 서버 [https://github.com/KooHoo-Dev/3rd-TeamProject-KH-Server](https://github.com/KooHoo-Dev/3rd-TeamProject-KH-Server) |
-| 시연 영상 | [YouTube](https://youtu.be/6BlW58UlKig) |
+| 시연 영상 | [YouTube](https://youtu.be/CcB693b4HrY) |
 
 ### 1.4 담당 범위
 
