@@ -4,7 +4,7 @@
   "schemaVersion": 2,
   "title": "Folk Sack",
   "tagline": "지하를 채굴해 자원을 모으고, 지형 붕괴·매몰 위험 속에서 경쟁하는 Unity 2D 멀티플레이 채굴 게임",
-  "cover": null,
+  "cover": "images/cover-village-mining.png",
   "team": {
     "type": "team",
     "size": "3인",
@@ -57,7 +57,12 @@
       "how": "클라이언트가 `map_session`의 프로필·시드와 테이블 버전을 확인해 초기 맵을 재생성하고, `TerrainNetworkAdapter.FromGeneratedMap()`으로 Revision 0 런타임 스냅샷으로 변환. 이후 채굴·재배치 변경은 서버 Batch로 적용",
       "why": "시드와 프로필로 초기 맵을 재생성해 초기 전체 맵 전송 부담을 줄이는 구조 (대신 생성기·난수 순서·데이터를 양쪽에서 동기화해야 함)",
       "section": "2.3 핵심 기능 — 초기 맵을 공유하는 계약",
-      "image": null
+      "image": {
+        "src": "images/terrain-seed-zoom.png",
+        "w": 768,
+        "h": 576,
+        "caption": "시드 생성 규칙에 따라 생성된 지형 시드"
+      }
     },
     {
       "title": "채굴·지형 붕괴의 서버 확정 파이프라인",
@@ -65,7 +70,12 @@
       "how": "`RoomClient.RequestExcavation()` 요청을 서버 `GameSession.TryExcavate()`가 검증해 변경 셀 Batch로 방송하고, 클라이언트는 `BaseRevision → ResultRevision` 순서로 적용. 앞선 변경보다 먼저 온 Batch는 `SortedDictionary`에 보관했다가 연속 적용",
       "why": "서버가 공유 셀 상태를 확정해 채굴·드롭·배치의 기준 상태를 통일 (요청 왕복 지연과 실패 처리 필요)",
       "section": "3.3 핵심 API와 채굴 변경 순서",
-      "image": null
+      "image": {
+        "src": "images/mining-crystal-break.png",
+        "w": 1196,
+        "h": 897,
+        "caption": "채굴되어 부서지는 광물 타일"
+      }
     },
     {
       "title": "다중 낙하 — 요청·청크별 상태와 CollapseID 소유권",
@@ -73,7 +83,12 @@
       "how": "`pendingCollapsePlacementIds`에 `RequestId → CollapseID`를 저장해 같은 청크의 중복 요청만 막고, 낙하 배치 요청은 시간 초과 대신 성공·오류·취소에 연결해 정리",
       "why": "하나의 대기 플래그를 쓰면 먼저 보낸 요청 때문에 다음 청크의 배치 제안이 버려질 수 있음. CollapseID별 예약·소유권으로 다중 청크·동시 플레이어의 상태 간섭을 완화",
       "section": "3.4 다중 낙하 — 전역 대기 대신 요청·청크별 상태",
-      "image": null
+      "image": {
+        "src": "images/falling-chunk.png",
+        "w": 720,
+        "h": 540,
+        "caption": "붕괴되어 낙하 중인 지형 덩어리"
+      }
     },
     {
       "title": "낙하 지형 충돌·탈출·매몰 상태",
@@ -81,7 +96,12 @@
       "how": "`FallingTerrainInteraction`이 접촉 → 탈출 / 정착 결과 대기 → 매몰 상태를 관리하고, `FallingTerrainContracts`의 계약과 이벤트로 캐릭터 이동·피해 계층에 연결",
       "why": "`PlayerController` 하나에 지형 판정과 피해 로직을 모두 넣지 않도록 분리하고, 피해도 HP를 직접 여러 번 차감하는 대신 이벤트와 어댑터로 전달",
       "section": "4.1 개요와 구조",
-      "image": null
+      "image": {
+        "src": "images/burial-death.png",
+        "w": 968,
+        "h": 726,
+        "caption": "매몰되어 사망한 플레이어"
+      }
     }
   ],
   "troubleshooting": [
@@ -113,7 +133,44 @@
       "section": "2.3 핵심 기능 — 초기 맵을 공유하는 계약"
     }
   ],
-  "screenshots": [],
+  "screenshots": [
+    {
+      "src": "images/mining-crystal-break.png",
+      "w": 1196,
+      "h": 897,
+      "caption": "HJ가 파란 광물 타일을 캐서 타일이 사라지고 파편 효과가 남은 화면"
+    },
+    {
+      "src": "images/falling-chunk.png",
+      "w": 720,
+      "h": 540,
+      "caption": "두 플레이어 바로 위에 받침 없이 떠 있는 세로 지형 덩어리"
+    },
+    {
+      "src": "images/burial-death.png",
+      "w": 968,
+      "h": 726,
+      "caption": "빨갛게 표시된 칸 안에 HJ가 쓰러져 있고, 옆에서 굴착 기계가 움직이는 화면"
+    },
+    {
+      "src": "images/dynamite-throw.png",
+      "w": 760,
+      "h": 570,
+      "caption": "두 플레이어 옆으로 던진 다이너마이트가 날아가는 화면"
+    },
+    {
+      "src": "images/full-map.png",
+      "w": 988,
+      "h": 741,
+      "caption": "Tab 전체 지도에 탐험한 굴 경로와 플레이어 위치 점이 표시된 화면"
+    },
+    {
+      "src": "images/lobby-ready-wait.png",
+      "w": 2690,
+      "h": 2018,
+      "caption": "'게임 시작 대기중' 타이머와 네 플레이어가 지상에 모인 화면, 채팅창에 '모든 플레이어가 준비되었습니다' 시스템 메시지"
+    }
+  ],
   "retro": {
     "section": "8. 결과와 배운 점",
     "achieved": [
@@ -383,6 +440,16 @@
             "kind": "code",
             "n": 1,
             "fp": "// RoomClient.Terrain.cs, HandleMapSession() 발췌"
+          },
+          {
+            "kind": "image",
+            "src": "images/terrain-seed-zoom.png",
+            "w": 768,
+            "h": 576,
+            "caption": {
+              "text": "생성된 맵의 가운데 부분 — 흙·주황 흙·회색 돌 구간의 경계와 동굴·광물 군집",
+              "verbatim": true
+            }
           }
         ]
       },
@@ -653,6 +720,16 @@
             "kind": "mermaid",
             "n": 1,
             "fp": "stateDiagram-v2"
+          },
+          {
+            "kind": "image",
+            "src": "images/burial-death.png",
+            "w": 968,
+            "h": 726,
+            "caption": {
+              "text": "빨갛게 표시된 칸 안에 HJ가 쓰러져 있고, 옆에서 굴착 기계가 움직이는 화면",
+              "verbatim": true
+            }
           }
         ]
       },
@@ -813,6 +890,104 @@
             "kind": "code",
             "n": 1,
             "fp": "// RemotePlayerView.Update() 발췌"
+          }
+        ]
+      },
+      {
+        "key": "lobby-screens",
+        "chapter": "lobby",
+        "layout": "screens",
+        "tab": "결과",
+        "title": {
+          "text": "7.7 세부 구현 — 대기방 프리뷰·채팅·승자 표시",
+          "verbatim": true
+        },
+        "lead": null,
+        "sectionPath": [
+          "7. 기능 F — 로비에서 게임 결과까지 연결하는 통합 계층",
+          "7.7 세부 구현 — 대기방 프리뷰·채팅·승자 표시"
+        ],
+        "points": [],
+        "visuals": [
+          {
+            "kind": "image",
+            "src": "images/lobby-room-chat.png",
+            "w": 2328,
+            "h": 1746,
+            "caption": {
+              "text": "대기실(4/4) 화면 — 네 플레이어 슬롯의 아바타와 오른쪽 채팅창, '호스트가 게임을 시작할 때까지 기다리는 중입니다' 안내",
+              "verbatim": true
+            }
+          },
+          {
+            "kind": "image",
+            "src": "images/game-result.png",
+            "w": 1067,
+            "h": 800,
+            "caption": {
+              "text": "'게임 종료!' 결과 창에 '1. 다이아만캠 824 G (YOU)' 순위와 로비 화면·메인 화면 버튼",
+              "verbatim": true
+            }
+          }
+        ]
+      },
+      {
+        "key": "play-screens",
+        "chapter": "results",
+        "layout": "screens",
+        "tab": "결과",
+        "title": {
+          "text": "8.1 구현 결과",
+          "verbatim": true
+        },
+        "lead": null,
+        "sectionPath": [
+          "8. 결과와 배운 점",
+          "8.1 구현 결과"
+        ],
+        "points": [],
+        "visuals": [
+          {
+            "kind": "image",
+            "src": "images/dynamite-throw.png",
+            "w": 760,
+            "h": 570,
+            "caption": {
+              "text": "두 플레이어 옆으로 던진 다이너마이트가 날아가는 화면",
+              "verbatim": true
+            },
+            "sectionPath": [
+              "5. 기능 D — 서버 인벤토리와 아이템·상점의 연결",
+              "5.6 팀 아이템 연동 — 미리보기와 서버 확정 결과의 분리"
+            ]
+          },
+          {
+            "kind": "image",
+            "src": "images/full-map.png",
+            "w": 988,
+            "h": 741,
+            "caption": {
+              "text": "Tab 전체 지도에 탐험한 굴 경로와 플레이어 위치 점이 표시된 화면",
+              "verbatim": true
+            },
+            "sectionPath": [
+              "6. 기능 E — 탐험 기록과 현재 시야를 분리한 지도",
+              "6.4 세부 구현 — 두 겹의 안개 Mesh와 전체 지도 조작"
+            ]
+          },
+          {
+            "kind": "image",
+            "src": "images/lobby-ready-wait.png",
+            "w": 2690,
+            "h": 2018,
+            "caption": {
+              "text": "'게임 시작 대기중' 타이머와 네 플레이어가 지상에 모인 화면, 채팅창에 '모든 플레이어가 준비되었습니다' 시스템 메시지",
+              "verbatim": true
+            },
+            "sectionPath": [
+              "7. 기능 F — 로비에서 게임 결과까지 연결하는 통합 계층",
+              "7.3 세부 구현 — 로비 상태 순서와 게임 시작 준비 장벽"
+            ]
           }
         ]
       },

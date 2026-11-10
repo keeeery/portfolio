@@ -18,6 +18,8 @@
 
 ### 1.1 What — 무엇을 만들었나
 
+![지상 마을의 상점 아래 지하에서 HJ·굴착 기계·PSH 세 플레이어가 광물 타일을 채굴하는 화면](images/cover-village-mining.png)
+
 **Folk Sack**은 Unity 2D 멀티플레이 채굴 게임입니다. 플레이어는 지하 지형을 채굴하고 광물을 수집하며,
 지상에서 자원을 판매하거나 장비와 사용 아이템을 구매합니다.
 지지 구조가 사라진 지형은 물리 청크로 낙하하고, 플레이어는 충돌 피해나 매몰 위험에 노출됩니다.
@@ -144,6 +146,10 @@ Mesh는 변경된 Chunk 단위로, Collider는 별도 dirty 표시로 다시 만
 게임 중 채굴·재배치 변경은 이후 서버 Batch로 적용됩니다.
 여기서 `TerrainSnapshot`은 생성한 초기 맵을 런타임 모델에 넘기는 로컬 형식으로, 예전에 서버가 보내던 전체 지형 복구 Snapshot과는 역할이 다릅니다.
 인벤토리·HP·월드 드롭은 지금도 각자의 Snapshot으로 초기화·동기화합니다.
+
+![생성된 맵의 가운데 부분 — 흙·주황 흙·회색 돌 구간의 경계와 동굴·광물 군집](images/terrain-seed-zoom.png)
+
+![에디터 씬 뷰로 본 생성된 맵 전체 — 위에서부터 밝은 흙·주황 흙·회색 돌 구간과 그 사이의 동굴·광물 군집](images/terrain-seed-map.png)
 
 ```csharp
 // RoomClient.Terrain.cs, HandleMapSession() 발췌
@@ -356,6 +362,8 @@ Snapshot 생성의 상태 복사는 여전히 잠금이 필요하고, 방송 큐
 
 ### 3.3 핵심 API와 채굴 변경 순서
 
+![HJ가 파란 광물 타일을 캐서 타일이 사라지고 파편 효과가 남은 화면](images/mining-crystal-break.png)
+
 | 사용 목적 | API 또는 메시지 | 주의점 |
 |---|---|---|
 | 채굴 요청 등록 | `RoomClient.RequestExcavation(targetCell, itemId)` | `true`는 송신 큐 등록 성공이며 채굴 성공 확정은 아님 |
@@ -412,6 +420,8 @@ while (bufferedTerrainBatches.TryGetValue(
 다음 청크의 배치 제안이 버려질 수 있습니다.
 그래서 `pendingCollapsePlacementIds`에 `RequestId → CollapseID`를 저장해,
 같은 청크의 중복 요청만 막고 다른 청크는 독립적으로 보냅니다.
+
+![두 플레이어 바로 위에 받침 없이 떠 있는 세로 지형 덩어리](images/falling-chunk.png)
 
 ```csharp
 // RoomClient.cs, HandlePlacementProposed() 발췌
@@ -549,6 +559,8 @@ foreach (GridCoord sourceCell in sourceCells)
 매몰 상태와 지속 피해 요청을 담당합니다.
 `FallingTerrainContracts`의 계약과 이벤트를 통해 캐릭터 이동·피해 계층에 연결됩니다.
 `PlayerController` 하나에 지형 판정과 피해 로직을 모두 넣지 않는 방향으로 분리했습니다.
+
+![빨갛게 표시된 칸 안에 HJ가 쓰러져 있고, 옆에서 굴착 기계가 움직이는 화면](images/burial-death.png)
 
 ```mermaid
 stateDiagram-v2
@@ -702,6 +714,8 @@ int damage = Mathf.CeilToInt(baseDamage * damageMultiplier);
 `RespawnController`는 지연 후 온라인에서는 리스폰 요청을 보내고,
 서버 응답에서 위치·지형 상태·체력을 복구합니다.
 
+![HJ가 쓰러진 칸이 빨갛게 표시되고, 채팅창에 요청 거절과 'HJ님이 사망했습니다' 시스템 메시지](images/fall-death-chat.png)
+
 소스: `PlayerController.cs`, `PlayerCollisionMove.cs`, `PlayerTerrainState.cs`, `FallDamageDetector.cs`, `PlayerHp.cs`.
 
 ### 4.6 세부 구현 — 타격 연출과 지형 확정 상태의 분리
@@ -711,6 +725,8 @@ int damage = Mathf.CeilToInt(baseDamage * damageMultiplier);
 `TerrainTileHitEffect`는 셀별 Tween을 관리하고 같은 셀의 이전 연출을 종료한 뒤 새 타격을 재생합니다. Tween 초기화 전후 `UnityEngine.Random.state`를 보관·복원하여 흔들림 연출이 전역 난수 상태에 영향을 남기지 않도록 합니다. 이는 맵 생성용 `System.Random`과는 별도 난수 경계입니다.
 
 균열은 손상률 20·40·60·80% 중 통과한 가장 높은 단계로 표시합니다. `TerrainCrackOverlayManager`는 손상 셀만 `SpriteRenderer`를 가지며, 회복·제거되어 표시가 필요 없으면 비활성화해 Stack에 반환합니다. 기본 지형 Mesh와 달리 광물 자원과 균열은 별도 View를 사용합니다.
+
+![HJ가 선택한 파란 광물 타일을 타격하는 화면, 아래 흙 타일에 균열 표시](images/mining-hit-crack.png)
 
 ### 4.7 세부 구현 — 필드 아이템도 붕괴에서 탈출시키기
 
@@ -834,6 +850,8 @@ UI의 구매 취소 표시와 서버가 허용하는 범위를 함께 맞출 필
 궤적 계산에 지형 충돌 반사나 첫 충돌 위치 검사가 없으므로,
 강조점은 실제 착탄점이 아니라 표시 시간 구간의 끝점입니다.
 
+![두 플레이어 옆으로 던진 다이너마이트가 날아가는 화면](images/dynamite-throw.png)
+
 `Detector`는 서버 확정 응답마다 별도 파동 코루틴을 시작합니다.
 오프라인 프리뷰용 코루틴 슬롯을 공유하지 않아,
 연속된 확정 응답이 앞 응답의 표시를 취소하는 문제를 피합니다.
@@ -936,6 +954,8 @@ ExploreVisionRadius(playerCell);
 
 Tab 전체 지도는 프레임 Mask와 지도 콘텐츠의 RectTransform을 구분하고, 원래 앵커·피벗·위치를 보관했다가 복원합니다. 확대 시 커서 아래 지점이 유지되도록 줌 전후 배율로 pan을 보정하며, 이동 범위는 확대된 콘텐츠 크기로 제한합니다. 전체 지도는 원격 플레이어 마커를 탐험 여부와 별개로 표시하고, 결과 화면의 어둡게 표시 상태도 Tab 개폐와 별도로 관리합니다.
 
+![Tab 전체 지도에 탐험한 굴 경로와 플레이어 위치 점이 표시된 화면](images/full-map.png)
+
 소스: `ExplorationForWorldView.cs`, `TerrainMinimapPresenter.cs`, `MinimapView.cs`.
 
 ### 6.5 고민과 선택
@@ -998,6 +1018,9 @@ Tab 전체 지도는 프레임 Mask와 지도 콘텐츠의 RectTransform을 구�
 서버 `MarkPlayerReady()`는 준비 ID를 집합에 넣고 기대 인원이 모였을 때
 준비 지연과 카운트다운을 더한 미래 시작 시각을 확정합니다.
 끝나는 시각은 시작 시각에 게임 길이를 더해 정합니다.
+
+!['게임 시작 대기중' 타이머와 네 플레이어가 지상에 모인 화면, 채팅창에 '모든 플레이어가 준비되었습니다' 시스템 메시지](images/lobby-ready-wait.png)
+
 같은 준비 통지가 다시 와도 집합이므로 인원 수가 중복 증가하지 않습니다.
 
 ### 7.4 세부 구현 — 원격 플레이어는 표시 계층으로 유지
@@ -1060,7 +1083,11 @@ PlayerPrefs 키에는 `Application.dataPath`의 Hash128을 접두어로 넣습�
 
 채팅은 로비·인게임 연결을 선택해 보내며 입력을 200자로 제한합니다. `ChatPanelView`는 최근 100개 메시지를 Queue로 보관하고 닉네임·본문의 꺾쇠를 이스케이프해 텍스트 마크업으로 해석되는 것을 막습니다. 입력 중·포인터가 올라간 상태는 화면 페이드 및 게임 입력 차단에 별도로 연결됩니다.
 
+![대기실(4/4) 화면 — 네 플레이어 슬롯의 아바타와 오른쪽 채팅창, '호스트가 게임을 시작할 때까지 기다리는 중입니다' 안내](images/lobby-room-chat.png)
+
 시간 종료 승자는 판매되지 않은 광물의 평가액을 포함하지 않고 실제 골드로 결정합니다. 최고 골드가 같으면 해당 플레이어를 모두 승자로 지정합니다. 결과 UI의 순위도 같은 골드에는 같은 순위를 주고 다음 순위를 건너뛰는 방식으로 표시합니다. 목표 골드 종료 역시 골드 아이템 수량을 기준으로 합니다.
+
+!['게임 종료!' 결과 창에 '1. 다이아만캠 824 G (YOU)' 순위와 로비 화면·메인 화면 버튼](images/game-result.png)
 
 소스: `LobbyPlayerSlotView.cs`, `ChatPanelView.cs`, `GameTimerBarView.cs`.
 
