@@ -56,6 +56,7 @@
           ${deckBtn}${ext.join('')}
           <span class="newtab-note">${T('ui.newtab')}</span>
         </nav>
+        ${PF.modeButton('btn')}
       </div>
     </header>
     <div class="print-only print-urls"></div>

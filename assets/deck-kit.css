@@ -42,7 +42,7 @@
     height: 30px; min-width: 32px; padding: 0 12px; border: 1px solid var(--line-2, #2E2E38); border-radius: var(--pill, 999px); background: var(--card, #15151B);
     font: 600 13px/1 'Pretendard', system-ui, sans-serif; color: var(--ink, #E8E8EE); cursor: pointer; white-space: nowrap; flex: none; }
   .pf-hud button[data-a="prev"], .pf-hud button[data-a="next"] { padding: 0; width: 32px; font-size: 18px; }
-  .pf-hud button[data-a="help"] { padding: 0; width: 30px; }
+  .pf-hud button[data-a="help"], .pf-hud button[data-a="mode"] { padding: 0; width: 30px; }
   .pf-hud button:hover { border-color: var(--accent-ink, #6D9AF1); color: var(--accent-ink, #6D9AF1); background: var(--card, #15151B); }
   .pf-hud button:focus-visible { outline: 2px solid var(--accent-ink, #6D9AF1); outline-offset: 2px; }
   .pf-hud button[aria-disabled="true"] { opacity: .4; cursor: default; border-color: var(--line-2, #2E2E38); color: var(--ink, #E8E8EE); }

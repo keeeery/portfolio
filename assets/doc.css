@@ -78,6 +78,8 @@ code { font-family: var(--mono); font-size: .88em; background: var(--accent-soft
 .crumb b { color: var(--ink); font-weight: 800; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .head-nav { margin-left: auto; display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
 .newtab-note { font-size: 12.5px; color: var(--faint); }
+.doc-head .pf-mode { padding: 0; width: 34px; height: 34px; justify-content: center; cursor: pointer; background: transparent; color: var(--ink); }   /* 밝은·어두운 화면 전환 */
+@media print { .doc-head .pf-mode { display: none; } }
 
 /* ── 공통 틀 ─────────────────────────────── */
 .doc-page { max-width: var(--page-max); margin: 0 auto; padding-inline: var(--pad);
@@ -233,6 +235,7 @@ dialog.lightbox::backdrop { background: rgba(10, 11, 14, .82); }
 @media screen and (max-width: 719.98px) {          /* 휴대폰 (§4-6) */
   .doc-head-in { min-height: 0; padding-block: 10px; }
   .head-nav { display: none; }                     /* 링크는 접힌 [한눈에] 상자로 */
+  .doc-head .pf-mode { margin-left: auto; }
   .glance { display: block; }
   .doc-main { padding-top: 22px; }
   .doc-intro { margin-bottom: 24px; }

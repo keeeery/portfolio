@@ -90,6 +90,7 @@ code { font-family: var(--mono); font-size: .88em; background: var(--accent-soft
 .top nav a { font-size: 13.5px; font-weight: 600; color: var(--muted); text-decoration: none; white-space: nowrap; transition: color .15s; }
 .top nav a:hover { color: var(--accent-ink); }
 .top .pdf { padding: 8px 16px; font-size: 13px; }
+.top .pf-mode { padding: 0; width: 34px; height: 34px; justify-content: center; margin-right: -14px; cursor: pointer; background: transparent; color: var(--ink); font: inherit; }   /* 밝은·어두운 화면 전환(theme/theme-light.css가 있을 때만) */
 
 /* ① 머리: 뒤에 크게 깔린 영문 이름(장식) · 광채 */
 .hero { position: relative; overflow-x: clip; padding: clamp(96px, 14vw, 176px) 0 clamp(64px, 9vw, 112px);

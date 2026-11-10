@@ -143,7 +143,7 @@
     root.innerHTML = `<header class="top no-print"><div class="wrap top-in">
         <a class="top-name" href="#cover">${esc(nameT)}</a>
         <nav aria-label="절 이동"><ul>${nav.map(([id, label]) => `<li><a href="#${esc(id)}">${esc(label)}</a></li>`).join('')}</ul></nav>
-        <button type="button" class="btn primary pdf" data-pdf>${T('ui.pdf')}</button></div></header>
+        ${PF.modeButton('btn')}<button type="button" class="btn primary pdf" data-pdf>${T('ui.pdf')}</button></div></header>
       <main id="main">${out.join('')}</main>`;
     root.querySelectorAll('img').forEach((i) => { if (!i.hasAttribute('loading')) i.loading = 'lazy'; i.decoding = 'async'; });
     // 그림 칸 4:3 고정(직접 고친 기능): 그림 비율이 4:3과 15% 넘게 다르면(로고 등) 칸에 .fit — 잘라 내지 않고 전체를 보여 줌

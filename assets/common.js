@@ -171,12 +171,58 @@ const PF = (() => {
   }
   // theme/theme.css의 테마 손잡이(없으면 빈 글자)
   const themeVar = (name) => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+  let lastAccent;
   function applyTheme(hex) {
+    lastAccent = hex;
     const accent = themeVar('--t-accent');
     const t = themeTokens(isHex(accent) ? accent : hex, { bg: themeVar('--t-bg'), a2: themeVar('--t-accent-2'), a3: themeVar('--t-accent-3') });
     if (t) Object.entries(t).forEach(([k, v]) => document.documentElement.style.setProperty(k, v));
     return t;
   }
+
+  // ── 화면 모드 전환(어두운 ↔ 밝은) — theme/theme-light.css(:root[data-pf-mode="light"])가 있을 때만 버튼이 생김 ──
+  //   고른 모드는 localStorage 'pf-mode'에 남고, 각 html <head>의 짧은 스크립트가 그리기 전에 되살림(깜빡임 없음)
+  //   글자 크기·간격은 그대로라 발표 덱 배치 점검에 영향 없음. 인쇄(제출 PDF·상세 문서)는 모드와 상관없이 흰 종이
+  const MODE_KEY = 'pf-mode', root = document.documentElement;
+  const getMode = () => (root.dataset.pfMode === 'light' ? 'light' : 'dark');
+  let lightOk = null;
+  function hasLightMode() {                                              // 밝은 테마 파일이 실제로 바탕색을 바꾸는지
+    if (lightOk !== null) return lightOk;
+    const cur = root.dataset.pfMode;
+    root.dataset.pfMode = 'light'; const a = themeVar('--t-bg');
+    root.dataset.pfMode = 'dark'; const b = themeVar('--t-bg');
+    if (cur) root.dataset.pfMode = cur; else delete root.dataset.pfMode;
+    return (lightOk = isHex(a) && a.toUpperCase() !== b.toUpperCase());
+  }
+  const SUN = '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>';
+  const MOON = '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"/></svg>';
+  const modeLabel = (m) => (m === 'light' ? '어두운 화면으로' : '밝은 화면으로');
+  function syncModeButtons() {
+    const m = getMode();
+    document.querySelectorAll('[data-pf-mode-toggle]').forEach((b) => {
+      b.innerHTML = m === 'light' ? MOON : SUN;                           // 누르면 바뀔 모드의 아이콘
+      b.setAttribute('aria-label', modeLabel(m)); b.title = modeLabel(m);
+    });
+  }
+  // 버튼 HTML(밝은 테마 파일이 없으면 빈 글자). cls = 페이지의 버튼 모양 클래스
+  function modeButton(cls = '') {
+    if (!hasLightMode()) return '';
+    const m = getMode();
+    return `<button type="button" class="pf-mode ${cls}" data-pf-mode-toggle data-a="mode" aria-label="${modeLabel(m)}" title="${modeLabel(m)}">${m === 'light' ? MOON : SUN}</button>`;
+  }
+  function setMode(m) {
+    if (m === 'light') root.dataset.pfMode = 'light'; else delete root.dataset.pfMode;
+    try { localStorage.setItem(MODE_KEY, m); } catch (e) { /* 저장 못 해도 이번 화면은 바뀜 */ }
+    applyTheme(lastAccent);                                               // 강조색 글자 진하기는 바탕 기준이라 다시 계산
+    syncModeButtons();
+    window.dispatchEvent(new CustomEvent('pf-mode', { detail: m }));
+  }
+  window.PFMode = { button: modeButton, set: setMode, get: getMode, available: hasLightMode };   // 발표 덱 키트(deck-kit.js)는 PF 이름을 따로 써서 이것으로 부름
+  document.addEventListener('click', (e) => {
+    const b = e.target.closest?.('[data-pf-mode-toggle]'); if (!b) return;
+    e.stopPropagation();
+    setMode(getMode() === 'light' ? 'dark' : 'light');
+  }, true);
 
   // ── 안내 문구(옛 렌더러와 같은 글) ──
   const FILE_HELP = `<p>이 페이지는 <code>data/</code>와 기술 문서를 불러와 그리기 때문에, 파일을 더블클릭해서는 열리지 않습니다.</p>
@@ -205,6 +251,6 @@ const PF = (() => {
   const { t, tab, label, load: loadStrings, report: stringsReport } = PFStr;
 
   return { esc, inline, isUrl, shortUrl, loadJSON, loadText, encodePath, srcPath, projectUrl, docUrl, siteBase, visibleUrl, metaValue, teamLabel,
-           slugger, normTitle, resolveHeading, keyOk, deckSceneFor, headingsOf, ICON, NEWTAB, link, markNewTab, themeTokens, applyTheme, contrast, hexRgb,
+           slugger, normTitle, resolveHeading, keyOk, deckSceneFor, headingsOf, ICON, NEWTAB, link, markNewTab, themeTokens, applyTheme, contrast, hexRgb, modeButton, setMode, getMode, hasLightMode,
            FILE_HELP, noDataHtml, isFile, notice, guardFileProtocol, noData, t, tab, label, loadStrings, stringsReport };
 })();
