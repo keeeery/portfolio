@@ -509,6 +509,75 @@
         ]
       },
       {
+        "key": "body-overlap",
+        "chapter": "boss",
+        "layout": "overview",
+        "tab": "문제 해결",
+        "title": {
+          "text": "가장 오래 붙잡은 문제 — 보스 몸체와 플레이어 자세",
+          "verbatim": true
+        },
+        "lead": {
+          "text": "보스는 플레이어를 뚫고 지나가고, 플레이어는 보스에게 막히도록 만들려고 했습니다.",
+          "verbatim": true
+        },
+        "sectionPath": [
+          "5. 기능 D — 보스 패턴·전투 판정과 시각 피드백",
+          "5.8 연동 구현 — 큰 보스 몸체와 겹칠 때의 이동 보정",
+          "가장 오래 붙잡은 문제 — 보스 몸체와 플레이어 자세"
+        ],
+        "points": [
+          {
+            "label": "문제",
+            "text": "플레이어가 보스 몸 안쪽으로 들어가짐",
+            "verbatim": true
+          },
+          {
+            "label": "문제",
+            "text": "겹칠 때 무작정 밀어내도록 하면 물리적으로 말이 안 되는 움직임이 나옴",
+            "verbatim": true
+          },
+          {
+            "label": "문제",
+            "text": "대형 보스의 배 아래쪽으로 들어가면 무적이 됨",
+            "verbatim": true
+          },
+          {
+            "label": "배운 점",
+            "text": "2D에서는 고려할 필요도 없던 문제였지만, 3D에서는 생각보다 고려할 문제가 많았습니다.",
+            "verbatim": true
+          }
+        ],
+        "visuals": []
+      },
+      {
+        "key": "reward-link",
+        "chapter": "growth",
+        "layout": "full",
+        "tab": "구현",
+        "title": {
+          "text": "임무 데이터와 보상 데이터의 연결 — DTO와 Def",
+          "verbatim": true
+        },
+        "lead": {
+          "text": "증강 칩의 TSV → DTO → Def 구조는 팀이 만든 것을 사용했고, 직접 맡은 부분은 임무 데이터와 보상 데이터의 연결입니다.",
+          "verbatim": true
+        },
+        "sectionPath": [
+          "6. 기능 E — 칩·스킬·임무와 보상·저장",
+          "6.4 핵심 기능 — 데이터 기반 보상 연결",
+          "임무 데이터와 보상 데이터의 연결 — DTO와 Def"
+        ],
+        "points": [],
+        "visuals": [
+          {
+            "kind": "table",
+            "n": 1,
+            "fp": "단계|처리"
+          }
+        ]
+      },
+      {
         "key": "save-restore",
         "chapter": "growth",
         "layout": "visual",

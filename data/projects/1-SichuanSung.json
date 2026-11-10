@@ -39,7 +39,7 @@
   ],
   "links": {
     "github": "https://github.com/keeeery/Unity_2D_SichuanSung",
-    "video": "https://youtu.be/HsASP1tOWC8",
+    "video": "https://youtu.be/_bbqGfWJcZI",
     "extra": []
   },
   "intent": {
@@ -559,6 +559,29 @@
             "kind": "mermaid",
             "n": 1,
             "fp": "sequenceDiagram"
+          }
+        ]
+      },
+      {
+        "key": "remove-choice",
+        "chapter": "select",
+        "layout": "full",
+        "tab": "선택",
+        "title": {
+          "text": "4.3 고민과 선택",
+          "verbatim": true
+        },
+        "lead": null,
+        "sectionPath": [
+          "4. 기능 C — 선택·연결선·제거 연출의 순서 제어",
+          "4.3 고민과 선택"
+        ],
+        "points": [],
+        "visuals": [
+          {
+            "kind": "table",
+            "n": 1,
+            "fp": "고민|대안|선택과 이유|비용"
           }
         ]
       },

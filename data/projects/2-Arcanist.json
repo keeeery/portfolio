@@ -40,7 +40,7 @@
   ],
   "links": {
     "github": "https://github.com/KooHoo-Dev/3rd-2D-Project-keeeery",
-    "video": "https://youtu.be/xyBh7i-7-Eg",
+    "video": "https://youtu.be/8hEJXeohnA8",
     "extra": []
   },
   "intent": {
@@ -104,7 +104,7 @@
   "troubleshooting": [
     {
       "title": "씬 전환 후 싱글톤 전투 시스템이 작동하지 않는 문제",
-      "problem": "싱글톤으로 구현한 전투 시스템이 씬 전환 후 작동하지 않았습니다.",
+      "problem": "보스 씬으로 넘어가면 싱글톤으로 구현한 전투 시스템이 작동하지 않아, 플레이어와 보스 사이의 전투가 이루어지지 않았습니다.",
       "cause": "`SingletonBase<T>`가 `OnDestroy()`에서 `applicationIsQuitting = true`를 설정해, 인스턴스가 한 번 파괴되면 애플리케이션이 실행 중이어도 `Instance`가 null을 반환했습니다.",
       "solution": "종료 플래그는 `OnApplicationQuit()`에서 설정하고, `OnDestroy()`에서는 참조·초기화 상태만 정리하도록 일반 소멸과 애플리케이션 종료의 처리를 분리했습니다.",
       "result": "인스턴스가 파괴된 뒤에도 종료 중이 아니면 기존 객체 검색 또는 새 인스턴스 생성이 가능합니다.",
@@ -554,6 +554,30 @@
         ]
       },
       {
+        "key": "card-data-choice",
+        "chapter": "card",
+        "layout": "full",
+        "tab": "선택",
+        "title": {
+          "text": "고민과 선택 — 카드별 클래스 대신 실행 클래스와 SO 데이터",
+          "verbatim": true
+        },
+        "lead": null,
+        "sectionPath": [
+          "3. 기능 B — 카드 순환과 모션 연계 스킬",
+          "3.1 데이터와 실행 책임 분리",
+          "고민과 선택 — 카드별 클래스 대신 실행 클래스와 SO 데이터"
+        ],
+        "points": [],
+        "visuals": [
+          {
+            "kind": "table",
+            "n": 1,
+            "fp": "고민|대안|선택과 이유|비용"
+          }
+        ]
+      },
+      {
         "key": "card-cycle",
         "chapter": "card",
         "layout": "visual",
@@ -897,7 +921,10 @@
           "text": "7.1 전투 시스템 문제와 싱글톤 종료 상태의 분리",
           "verbatim": true
         },
-        "lead": null,
+        "lead": {
+          "text": "DontDestroyOnLoad만으로 씬 사이의 유지가 보장된다고 가정했고, 이 가정을 검증하는 데 시간이 걸렸습니다.",
+          "verbatim": false
+        },
         "sectionPath": [
           "7. 대표 문제 해결 — 씬 전환과 객체 생명주기",
           "7.1 전투 시스템 문제와 싱글톤 종료 상태의 분리"
@@ -905,12 +932,12 @@
         "points": [
           {
             "label": "문제",
-            "text": "싱글톤으로 구현한 전투 시스템이 씬 전환 후 작동하지 않는 문제를 겪었습니다.",
+            "text": "보스 씬으로 넘어가면 플레이어와 보스 사이의 전투가 작동하지 않음",
             "verbatim": true
           },
           {
             "label": "원인",
-            "text": "당시 `SingletonBase<T>`는 현재 인스턴스의 `OnDestroy()`에서 `applicationIsQuitting = true`를 설정했습니다.",
+            "text": "보스 씬의 `CombatSystem`은 중복 인스턴스로 파괴되고, 이전 씬의 `CombatSystem`만 남아 있었음",
             "verbatim": true
           },
           {
@@ -927,7 +954,7 @@
         "visuals": [
           {
             "kind": "table",
-            "n": 1,
+            "n": 2,
             "fp": "구분|변경 전|변경 후"
           }
         ]
