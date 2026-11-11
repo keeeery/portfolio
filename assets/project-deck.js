@@ -114,7 +114,7 @@
   async function renderMermaid(els, { again = false } = {}) {
     if (!els.length) return;
     if (!window.mermaid) { els.forEach((el) => svgCache.set(el, { error: 'Mermaid를 불러오지 못했습니다' })); return; }
-    mermaid.initialize({ ...PF.mermaidConfig(), suppressErrorRendering: true });
+    mermaid.initialize({ ...(typeof PF.mermaidConfig === 'function' ? PF.mermaidConfig() : { startOnLoad: false, theme: 'default', securityLevel: 'loose', fontFamily: 'Pretendard, sans-serif' }), suppressErrorRendering: true });   // 옛 common.js 캐시와 섞여도 기본 색으로 그림
     if (!mmdHost) { mmdHost = document.createElement('div'); mmdHost.setAttribute('aria-hidden', 'true'); Object.assign(mmdHost.style, { position: 'absolute', left: '-20000px', top: '0', width: '1280px', visibility: 'hidden' }); }
     if (!mmdHost.isConnected) document.body.appendChild(mmdHost);         // 덱 키트가 장면을 붙인 뒤에는 떨어져 있을 수 있음(떨어진 자리에서는 글자 폭을 못 잼)
     const pass = again ? `-m${++mmdPass}` : '';

@@ -208,6 +208,8 @@
         if (/^https?:/i.test(h)) { a.setAttribute('target', '_blank'); a.setAttribute('rel', 'noopener'); }
       });
     };
+    // 배포 직후 브라우저가 새 doc.js와 옛 common.js(캐시, 최대 10분)를 섞어 쓰면 PF.mermaidConfig가 없음 → 기본 색으로라도 그림(원문 글자로 남지 않게)
+    const mmdCfg = (o) => (typeof PF.mermaidConfig === 'function' ? PF.mermaidConfig(o) : { startOnLoad: false, theme: 'default', securityLevel: 'loose', fontFamily: 'Pretendard, sans-serif' });
     const runMermaid = async (sel, cfg) => {
       mermaid.initialize(cfg);
       try { await mermaid.run({ nodes: doc.querySelectorAll(sel) }); }
@@ -215,12 +217,12 @@
     };
     if (window.mermaid && figs.length) {
       // 인쇄용: 화면에 보이지 않는 상자에서는 글자 폭을 잴 수 없어서 mermaid.render(본문 밖 임시 자리)로 그려 넣음
-      mermaid.initialize({ ...PF.mermaidConfig({ print: true }), suppressErrorRendering: true });
+      mermaid.initialize({ ...mmdCfg({ print: true }), suppressErrorRendering: true });
       for (const fig of figs) {
         const box = fig.querySelector('.mmd-print');
         try { box.innerHTML = (await mermaid.render(box.dataset.svgId, fig._mmdSrc)).svg; } catch { box.replaceChildren(); }
       }
-      await runMermaid('.mmd-screen', PF.mermaidConfig());
+      await runMermaid('.mmd-screen', mmdCfg());
     }
     figs.forEach((fig) => fig.querySelectorAll('.mermaid').forEach((box) => finishSvg(fig, box)));
     // 화면 모드(☀/☾)를 바꾸면 화면용 그림만 새 색으로 다시 그림(인쇄용은 그대로)
@@ -232,7 +234,7 @@
           box.removeAttribute('data-processed'); box.classList.remove('pf-mmd-error');
           box.textContent = fig._mmdSrc;
         });
-        await runMermaid('.mmd-screen', PF.mermaidConfig());
+        await runMermaid('.mmd-screen', mmdCfg());
         figs.forEach((fig) => finishSvg(fig, fig.querySelector('.mmd-screen')));
       });
     });
