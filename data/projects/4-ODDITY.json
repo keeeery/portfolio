@@ -4,8 +4,7 @@
   "doc": "TechDoc_ODDITY.md",
   "title": "ODDITY",
   "tagline": "주변 물체를 들어 휘두르거나 던지고, 시간 정지와 초능력 스킬을 조합해 보스와 싸우는 Unity 3D 액션 게임",
-  "cover": null,
-  "coverLogo": "images/Logo_ODDITY_SmoochExtraBold.png",
+  "cover": "images/cover.jpg",
   "team": {
     "type": "team",
     "size": "4인",
@@ -55,7 +54,12 @@
       "how": "홀딩 위치와 현재 위치의 차이로 가속도를 만들고 목표 속도와의 차이로 감쇠를 적용해, `FixedUpdate`에서 `AddForce`(Acceleration)로 물체를 추종시킵니다.",
       "why": "Transform 직접 이동 대신 가속도 추종을 택해 Rigidbody를 유지하며 움직임과 공격을 연결하고, 위치 오차만 강하게 줄이면 물체가 목표를 지나치거나 흔들리므로 속도 감쇠와 상한을 함께 둡니다.",
       "section": "2.4 핵심 기능 — 물리 추종과 휘두르기",
-      "image": null
+      "image": {
+        "src": "images/psychokinesis-hold.png",
+        "w": 1170,
+        "h": 878,
+        "caption": "염동력으로 든 물체"
+      }
     },
     {
       "title": "객체별 시간 정지와 상태 복원",
@@ -63,7 +67,12 @@
       "how": "`TimeFreezable`이 정지·감속 동안 누적된 시간 차이로 로컬 시간을 계산하고, Animator 속도와 Rigidbody 운동 상태를 저장한 뒤 kinematic 전환·DOTween 일시정지를 했다가 해제 시 복구합니다.",
       "why": "`Time.timeScale`을 0으로 만드는 대신 객체별 시간 상태를 두어 플레이어와 일부 물체를 계속 조작할 수 있게 했습니다. 대신 관련 제어 코드가 로컬 시간을 사용해야 합니다.",
       "section": "4.2 핵심 기능 — 로컬 시간과 상태 복원",
-      "image": null
+      "image": {
+        "src": "images/time-freeze.png",
+        "w": 1170,
+        "h": 878,
+        "caption": "시간 정지된 보스"
+      }
     },
     {
       "title": "상황별 조준점",
@@ -71,7 +80,12 @@
       "how": "`Crosshair`가 염동력 대상의 잡기 가능 여부, 기본 공격과 같은 광선·사거리의 적 판정, `CombatManager` 처리 결과의 실제 피해를 읽어 `VertexHelper` 메시로 표시를 그립니다.",
       "why": "조준점 하나에 잡기·사거리·적중 표시를 겹쳐 시선을 화면 중앙에 둔 채 행동 가능 여부를 읽게 했습니다. 대신 표시끼리 겹치지 않도록 링·+·×의 반지름과 각도를 나눴습니다.",
       "section": "조준점이 지금 할 수 있는 행동을 보여 줌",
-      "image": null
+      "image": {
+        "src": "images/crosshair-hit.png",
+        "w": 400,
+        "h": 300,
+        "caption": "적중 표시가 뜬 조준점"
+      }
     },
     {
       "title": "피해 구간별 보스 피격 피드백",
@@ -79,7 +93,12 @@
       "how": "`BossHitFeedback`이 받은 피해를 공격자의 현재 공격력과 비교해 구간을 정하고(넉다운 반응은 강), 구간마다 연출 크기와 피격음을 다르게 냅니다.",
       "why": "공격력 칩을 끼우거나 보스가 달라져도 같은 종류의 공격은 같은 구간에 들어가도록 고정 수치 대신 공격력 비율로 판정합니다. 약한 피격은 자주 들어오므로 히트스톱을 걸지 않아 조작 흐름을 끊지 않습니다.",
       "section": "받은 피해를 공격자 공격력과 비교한 세 구간",
-      "image": null
+      "image": {
+        "src": "images/finishing-blow.png",
+        "w": 1170,
+        "h": 878,
+        "caption": "마무리 일격 섬광"
+      }
     }
   ],
   "troubleshooting": [
@@ -358,6 +377,16 @@
             "kind": "code",
             "n": 1,
             "fp": "Vector3 acceleration = offset * (followStrength * pullMultip"
+          },
+          {
+            "kind": "image",
+            "src": "images/psychokinesis-hold.png",
+            "w": 1170,
+            "h": 878,
+            "caption": {
+              "text": "훈련 공간에서 염동력으로 통(초록 외곽선)을 들고 있는 플레이어",
+              "verbatim": true
+            }
           }
         ]
       },
@@ -478,6 +507,113 @@
         ]
       },
       {
+        "key": "freeze-except",
+        "chapter": "time",
+        "layout": "screens",
+        "tab": "결과",
+        "title": {
+          "text": "4.3 핵심 기능 — 염동력과 정지 세계의 예외",
+          "verbatim": true
+        },
+        "lead": {
+          "text": "물체를 잡으면 전체 시간 정지에서 제외합니다.",
+          "verbatim": true
+        },
+        "sectionPath": [
+          "4. 기능 C — 객체별 시간 제어와 시간 정지 연출",
+          "4.3 핵심 기능 — 염동력과 정지 세계의 예외"
+        ],
+        "points": [
+          {
+            "label": "",
+            "text": "따라서 시간 정지와 염동력은 독립된 화면 효과가 아니라 같은 물체 상태를 공유합니다.",
+            "verbatim": true
+          }
+        ],
+        "visuals": [
+          {
+            "kind": "image",
+            "src": "images/freeze-hold.png",
+            "w": 1170,
+            "h": 878,
+            "caption": {
+              "text": "시간 정지 중 잡아 든 바위(초록 외곽선)와 홀로그램으로 멈춘 페르데로스",
+              "verbatim": true
+            }
+          },
+          {
+            "kind": "image",
+            "src": "images/psycho-slam.png",
+            "w": 1170,
+            "h": 878,
+            "caption": {
+              "text": "염동 내려찍기로 들어 올려져 홀로그램으로 멈춘 휴머노이드",
+              "verbatim": true
+            },
+            "sectionPath": [
+              "4. 기능 C — 객체별 시간 제어와 시간 정지 연출",
+              "4.3 핵심 기능 — 염동력과 정지 세계의 예외",
+              "염동 내려찍기 — 개별 정지·물리 이동·카메라 조율"
+            ]
+          }
+        ]
+      },
+      {
+        "key": "boss-env-attack",
+        "chapter": "boss",
+        "layout": "screens",
+        "tab": "결과",
+        "title": {
+          "text": "5.3 핵심 기능 — 환경 물체를 공유하는 보스 공격",
+          "verbatim": true
+        },
+        "lead": {
+          "text": "보스가 만들어 낸 파편도 플레이어의 잡기·투척 대상으로 연결되므로 공격 연출과 전투 자원이 겹칩니다.",
+          "verbatim": true
+        },
+        "sectionPath": [
+          "5. 기능 D — 보스 패턴·전투 판정과 시각 피드백",
+          "5.3 핵심 기능 — 환경 물체를 공유하는 보스 공격"
+        ],
+        "points": [],
+        "visuals": [
+          {
+            "kind": "image",
+            "src": "images/boss-drop-pattern.png",
+            "w": 1170,
+            "h": 878,
+            "caption": {
+              "text": "페르데로스의 투하 — 바닥의 원형 예고와 초록 외곽선이 생긴 바위",
+              "verbatim": true
+            },
+            "sectionPath": [
+              "5. 기능 D — 보스 패턴·전투 판정과 시각 피드백",
+              "5.2 보스 판단과 직접 확장한 패턴"
+            ]
+          },
+          {
+            "kind": "image",
+            "src": "images/charge-wall-hit.png",
+            "w": 1520,
+            "h": 1140,
+            "caption": {
+              "text": "벽에 돌진한 페르데로스와 벽에서 튀어나온 파편, 쓰러진 플레이어",
+              "verbatim": true
+            }
+          },
+          {
+            "kind": "image",
+            "src": "images/charge-wall-debris.png",
+            "w": 660,
+            "h": 495,
+            "caption": {
+              "text": "벽에 머리를 박은 페르데로스와 왼쪽 벽 쪽으로 튀는 파편",
+              "verbatim": true
+            }
+          }
+        ]
+      },
+      {
         "key": "boss-occlusion",
         "chapter": "boss",
         "layout": "visual",
@@ -539,6 +675,20 @@
             "kind": "table",
             "n": 1,
             "fp": "단계|처리"
+          },
+          {
+            "kind": "image",
+            "src": "images/boss-reward.jpg",
+            "w": 1920,
+            "h": 1080,
+            "caption": {
+              "text": "휴머노이드 처치 뒤 임무 완료 — 증강 칩 12개 지급",
+              "verbatim": true
+            },
+            "sectionPath": [
+              "6. 기능 E — 칩·스킬·임무와 보상·저장",
+              "6.4 핵심 기능 — 데이터 기반 보상 연결"
+            ]
           }
         ]
       },
@@ -618,6 +768,16 @@
             "kind": "code",
             "n": 1,
             "fp": "stableFrames = Time.unscaledDeltaTime <= stableFrameTime ? s"
+          },
+          {
+            "kind": "image",
+            "src": "images/scene-reveal.jpg",
+            "w": 1920,
+            "h": 1080,
+            "caption": {
+              "text": "로비로 돌아온 직후 — 화면은 켜졌고 체력 바·스킬 슬롯은 아직 반투명",
+              "verbatim": true
+            }
           }
         ]
       },
