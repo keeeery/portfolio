@@ -137,6 +137,8 @@
       const only = kids.length === 1 && kids[0].nodeType === 1 ? kids[0] : null;
       const img = only && (only.tagName === 'IMG' ? only : (only.tagName === 'A' && only.children.length >= 1 && [...only.childNodes].every((n) => n.nodeType === 1 ? n.tagName === 'IMG' || n.classList.contains('pf-newtab-icon') || n.classList.contains('pf-newtab-sr') : !n.textContent.trim()) ? only.querySelector('img') : null));
       if (img) para.classList.add('pf-figure');
+      // 한 줄에 그림만 여러 장(`![a](x) ![b](y)`) → 테두리·머리 칸 없이 나란히 — 직접 고친 부분
+      else if (kids.length >= 2 && kids.every((n) => n.nodeType === 1 && n.tagName === 'IMG')) para.classList.add('pf-figure', 'pf-figure-row');
     });
 
     // ⑦ Mermaid (securityLevel loose). 글꼴을 먼저 받아 글자 폭을 맞춤

@@ -166,6 +166,9 @@ code { font-family: var(--mono); font-size: .88em; background: var(--accent-soft
 .md th { text-align: left; background: var(--th); color: var(--ink); font-weight: 700; padding: 10px 14px; border: 1px solid var(--line); white-space: nowrap; }
 .md td { padding: 10px 14px; border: 1px solid var(--line); vertical-align: top; color: var(--body); }
 .md td img { display: block; margin: 0; border-radius: 8px; border: 1px solid var(--line); cursor: zoom-in; height: auto; }
+/* 한 줄에 그림만 여러 장 → 같은 폭으로 나란히(doc.js의 .pf-figure-row) — 직접 고친 부분 */
+.md > p.pf-figure-row { display: flex; gap: 12px; align-items: flex-start; width: 100%; }
+.md .pf-figure-row img { flex: 1 1 0; min-width: 0; width: 0; }
 
 .md .pf-figure { margin: 20px 0; }
 .md .pf-figure img { display: block; max-width: 100%; height: auto; border-radius: calc(var(--r) * .5); border: 1px solid var(--line); cursor: zoom-in; }
