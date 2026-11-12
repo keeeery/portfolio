@@ -61,7 +61,7 @@
         "src": "images/terrain-seed-zoom.png",
         "w": 768,
         "h": 576,
-        "caption": "시드 생성 규칙에 따라 생성된 지형 시드"
+        "caption": "데이터 테이블로 정의된 시드 생성 규칙에 따라 무작위로 생성된 지형 시드"
       }
     },
     {
@@ -74,7 +74,7 @@
         "src": "images/mining-crystal-break.png",
         "w": 1196,
         "h": 897,
-        "caption": "채굴되어 부서지는 광물 타일"
+        "caption": "광물 타일이 채굴되어 드롭된 광물"
       }
     },
     {
@@ -87,7 +87,7 @@
         "src": "images/falling-chunk.png",
         "w": 720,
         "h": 540,
-        "caption": "붕괴되어 낙하 중인 지형 덩어리"
+        "caption": "다른 지형으로부터 고립되어 붕괴 후 낙하 중인 지형 덩어리"
       }
     },
     {
@@ -100,7 +100,7 @@
         "src": "images/burial-death.png",
         "w": 968,
         "h": 726,
-        "caption": "매몰되어 사망한 플레이어"
+        "caption": "매몰되어 사망한 플레이어와 그 자리에 생성된 사망 보관함 타일"
       }
     }
   ],

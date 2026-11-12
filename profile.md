@@ -11,7 +11,7 @@
 - 한 줄 정체성: 플레이하기 편한 경험을 명확한 구조로 만드는 게임 클라이언트 개발자
 - 이메일: khinigs@naver.com
 - GitHub: https://github.com/keeeery
-- 기타 링크: 블로그 https://your-blog.example.com
+- 기타 링크: YouTube https://www.youtube.com/@k_eeeery
 
 ## 자기소개
 
@@ -60,3 +60,22 @@
   <!-- 비워 두면 src/ 폴더 이름 순서. 바꾸려면 폴더 이름을 쉼표로: 2-Yggdrasil, 1-action-platformer -->
 - 기타 프로젝트: 5-Nutrifit
   <!-- 주력 프로젝트와 따로, "기타 프로젝트" 절에 카드 하나로 짧게 소개할 폴더(쉼표로 여러 개). 기능 소개 쪽 없이 소개만 나오고, 발표 덱·상세 문서는 그대로 열립니다. 비워 두면 그 절이 없습니다 -->
+
+## 기타 프로젝트 (링크만)
+
+> 기술 문서 없이 "기타 프로젝트" 절에 소개와 링크만 있는 작은 카드로 나옵니다. 페이지(index.html)가 이 절을 직접 읽으므로 고친 뒤 새로고침만 하면 됩니다(다시 빌드 필요 없음).
+> `### 프로젝트 이름` 아래에 `- 소개:` `- 정보:` `- 기술:`(쉼표로 여러 개) `- 맡은 역할:` `- 링크:` 를 적습니다. 비운 항목은 나오지 않습니다.
+
+### Nako
+- 소개: 음식 영양 정보 검색, 운동 소개, 학식 칼로리 확인 기능을 한 앱에 담은 건강 관리 Android 앱
+- 정보: 2024.05 — 2024.06 · 4인 팀
+- 기술: Android, Java, Retrofit, Firebase Auth
+- 맡은 역할: 식품안전나라 영양성분 Open API로 음식을 검색해 열량·탄수화물·단백질·지방을 보여 주는 식단(Diet) 화면
+- 링크: https://github.com/juwonleee/3-1-MobileProgramming-Termproject
+
+### 3D Maze Escape Game
+- 소개: WebGL 기반 라이브러리 three.js로 그린, 매번 새로 만들어지는 3D 미로를 1인칭으로 탈출하는 웹 게임
+- 정보: 2024.11 · 3인 팀
+- 기술: JavaScript, three.js, WebGL, localStorage
+- 맡은 역할: 게임 구조 정리와 버그 수정, 벽 충돌 개선, 힌트(위에서 보기) 뒤 안개 복원, 종료 화면
+- 링크: https://github.com/keeeery/3D-Maze-Game

@@ -34,7 +34,7 @@ Nutrifit은 신체 정보와 식사 기록을 바탕으로 영양소 섭취 현�
 | 항목 | 내용 |
 |---|---|
 | 장르 | 영양 관리 Android 앱 + 추천 서버 |
-| 기간 | 2023.09 — 2024.06 |
+| 기간 | 2024.09 — 2025.06 |
 | 인원 | 5인 |
 | 플랫폼 | Android (XML Layout, Activity·Fragment) |
 | Language | Java (앱), Python (서버) |

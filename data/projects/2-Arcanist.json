@@ -58,7 +58,7 @@
         "src": "images/parry-combat-zoom.png",
         "w": 620,
         "h": 465,
-        "caption": "패링 성공 이펙트"
+        "caption": "패링 성공 이펙트 ― 보라색 조명과 파티클"
       }
     },
     {
@@ -71,7 +71,7 @@
         "src": "images/card-combat-zoom.png",
         "w": 640,
         "h": 480,
-        "caption": "화염구 사용 장면"
+        "caption": "화염구를 보스에게 적중시킨 장면"
       }
     },
     {

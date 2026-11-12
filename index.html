@@ -32,7 +32,7 @@
       --card: var(--t-surface, #131318);                                 /* 띠 위 카드 */
       --line: var(--t-line, rgba(255,255,255,.09));
       --ink: var(--t-ink, #F5F5F7);                                      /* 제목 글 */
-      --muted: var(--t-body, #C7C7CC);                                   /* 본문 글 */
+      --muted: color-mix(in srgb, var(--t-body, #C7C7CC) 85%, var(--ink)); /* 본문 글: 테마 본문색을 제목 글 쪽으로 15% — 어두운 테마에선 조금 밝게, 밝은 테마에선 조금 진하게 */
       --sub: var(--t-muted, #86868B);                                    /* 작은 보조 글 */
       --accent: var(--t-accent, var(--accent-profile, #2F6FEB));         /* 테마 강조색 → 없으면 profile.md 강조색 */
       --accent-ink: var(--accent);                                       /* 글자에 쓰는 강조색 = 버튼 강조색과 같은 값(섞지 않음) */
@@ -62,6 +62,12 @@
     strong { color: var(--ink); font-weight: 700; }
     a:focus-visible, .btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
     .nt-icon { display: inline-block; vertical-align: -1px; margin-left: 3px; opacity: .8; }
+    /* 공용 규칙 — 글자 링크(.tlink): 글자 링크는 모두 본문색(강조색은 버튼형 주 버튼 하나에만 — 캡슐 바 [발표 덱]), 글자 아래 4px 띄운 1px 옅은 밑줄(글자색 35%)로 누를 수 있음을 표시.
+       마우스를 올리면 밑줄이 글자색 그대로 진해지고, 본문색 링크는 글자도 제목 글 색으로. 인쇄에서는 밑줄 없음(아래 인쇄 규칙) */
+    .tlink { text-decoration-line: underline; text-decoration-thickness: 1px; text-underline-offset: 4px;
+             text-decoration-color: color-mix(in srgb, currentColor 35%, transparent); transition: color .2s ease, text-decoration-color .2s ease; }
+    .tlink:hover { text-decoration-color: currentColor; }
+    .tlink:not(.accent):hover { color: var(--ink); }
     .sr-only { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
     .skip-link { position: absolute; left: 12px; top: -48px; z-index: 100; padding: 8px 14px; border-radius: 8px; background: var(--accent); color: #fff; }
     .skip-link:focus { top: 12px; }
@@ -69,7 +75,7 @@
     .print-only { display: none; }
     /* 공용 규칙 — 글자 띄우기(.text-lift): 사진·흐린 그림처럼 색이 고르지 않은 바탕 위에서 글자가 잘 안 보일 때만 골라서 붙임.
        안쪽 모든 글자에 그 영역 바탕색 쪽의 아주 옅은 그림자(어두운 테마=어두운 그림자, 밝은 테마=밝은 그림자). 기본으로는 어디에도 붙지 않음 */
-    .text-lift, .text-lift * { text-shadow: 0 1px 3px color-mix(in srgb, var(--bg) 32%, transparent), 0 0 1px color-mix(in srgb, var(--bg) 18%, transparent); }
+    .text-lift, .text-lift * { text-shadow: 0 1px 12px color-mix(in srgb, var(--bg) 28%, transparent), 0 0 4px color-mix(in srgb, var(--bg) 10%, transparent); }
     /* 절 머리: 왼쪽 [작은 영문 · 큰 제목], 오른쪽 보조 글 */
     .sec-head { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 12px; margin-bottom: 40px; }
     .sec-head h2 { margin: 12px 0 0; font-size: clamp(30px, 4.6vw, 48px); font-weight: 700; letter-spacing: -.025em; line-height: 1.2; }
@@ -100,17 +106,24 @@
     @media (min-width: 760px) { .cap { margin: 56px 0 128px; } }
     /* 고정된 기능 소개 뒤: 캡슐의 제자리를 '마지막 기능까지 스크롤했을 때 떠 있던 자리'와 똑같이(트랙 끝 − 캡슐 높이 − 아래 여백 20px) → 고정이 풀리는 순간 그 자리에 붙음 */
     @media screen and (min-width: 760px) { .sec.core + .cap { margin-top: calc(-1 * (var(--cap-h, 50px) + 20px)); } }
-    .cap-pill { display: flex; gap: 6px; max-width: calc(100vw - 24px); padding: 6px; overflow-x: auto; border: 1px solid var(--line); border-radius: 999px;
-                background: color-mix(in srgb, var(--card) 72%, transparent); -webkit-backdrop-filter: blur(24px) saturate(1.6); backdrop-filter: blur(24px) saturate(1.6);
-                box-shadow: 0 12px 40px rgba(0,0,0,.35); pointer-events: auto;
-                opacity: 0; transform: translateY(36px) scale(.96); visibility: hidden;
-                transition: opacity .4s ease .05s, transform .5s cubic-bezier(.5,0,.75,0), visibility 0s linear .55s, box-shadow .3s ease;   /* 사라질 때: 아래로 가라앉음 */ }
-    .cap.on .cap-pill { opacity: 1; transform: none; visibility: visible; transition: opacity .45s ease, transform .6s cubic-bezier(.2,.7,.2,1), visibility 0s, box-shadow .3s ease; }
+    /* 공용 규칙 — 캡슐 바(.cap-pill 프로젝트 링크 · .hero-pill 맨 위 머리 링크): 반투명 카드색 + 흐림, 외곽선 1px, 완전히 둥근 모서리. 첫 버튼만 강조색(.btn-solid), 나머지는 바탕 없는 글자 버튼 */
+    .cap-pill, .hero-pill { display: flex; gap: 6px; max-width: calc(100vw - 24px); padding: 6px; overflow-x: auto; border: 1px solid var(--line); border-radius: 999px;
+                background: color-mix(in srgb, var(--card) 72%, transparent); -webkit-backdrop-filter: blur(24px) saturate(1.6); backdrop-filter: blur(24px) saturate(1.6); }
+    .cap-pill :is(.btn), .hero-pill .btn { white-space: nowrap; flex-shrink: 0; }
+    .cap-pill .btn:not(.btn-solid), .hero-pill .btn:not(.btn-solid) { border-color: transparent; background: transparent; }
+    .cap-pill .btn:not(.btn-solid):hover, .hero-pill .btn:not(.btn-solid):hover { background: color-mix(in srgb, var(--ink) 8%, transparent); }
+    /* 맨 위 머리의 캡슐 바: 제자리에 고정(움직임 없음) — 레퍼런스 크기에 맞춰 높이 64px(버튼 44px + 안쪽 여백 9px + 외곽선), 글자 15px */
+    .hero-pill { display: inline-flex; gap: 6px; padding: 9px; }
+    .hero-pill .btn { min-height: 44px; padding: 0 22px; font-size: 15px; }
+    @media (max-width: 480px) { .hero-pill { gap: 2px; padding: 6px; } .hero-pill .btn { min-height: 42px; padding: 0 15px; font-size: 14.5px; } }
+    .cap-pill { box-shadow: 0 12px 40px rgba(0,0,0,.35); pointer-events: auto;
+                transform: translateY(calc(100% + 64px)) scale(.96); visibility: hidden;                  /* 페이드 없이: 화면 아래 끝 밖(캡슐 높이 + 아래 여백 20px + 그림자)까지 내려가 있음 */
+                transition: transform .5s cubic-bezier(.5,0,.75,0), visibility 0s linear .5s, box-shadow .3s ease;   /* 사라질 때: 화면 아래로 가라앉음 */ }
+    .cap.on .cap-pill { transform: none; visibility: visible; transition: transform .6s cubic-bezier(.2,.7,.2,1), visibility 0s, box-shadow .3s ease; }   /* 나타날 때: 화면 아래에서 떠오름 */
     .cap.docked .cap-pill { box-shadow: none; }
+    .cap.snap .cap-pill { transition: none !important; }                 /* 위로 스크롤하다 다시 나타날 때: 떠오르지 않고 이미 제자리에 */
     @media (max-width: 480px) { .cap-pill { gap: 0; padding: 4px; } .cap-pill .btn { padding: 0 9px; font-size: 12.5px; } .cap-pill .nt-icon { display: none; } }
-    .cap-pill .btn { min-height: 36px; padding: 0 16px; font-size: 13px; white-space: nowrap; flex-shrink: 0; }
-    .cap-pill .btn:not(.btn-solid) { border-color: transparent; background: transparent; }
-    .cap-pill .btn:not(.btn-solid):hover { background: color-mix(in srgb, var(--ink) 8%, transparent); }
+    .cap-pill .btn { min-height: 36px; padding: 0 16px; font-size: 13px; }
     @media (prefers-reduced-motion: reduce) { .cap-pill, .cap.on .cap-pill { transition: none !important; } }
     /* 기능 소개(목록 + 고정된 큰 그림): 넓은 화면은 트랙(.fe, 기능 수 × 40vh + 한 화면) 안에서 [목록 40 | 그림 60]이 머리 막대 아래에 붙어 있음.
        현재 기능만 펼치고(.on) 나머지는 번호·제목만 흐리게. 760px 미만·인쇄는 기능마다 그림 → 글, 모두 펼침 */
@@ -178,6 +191,21 @@
     .fe-measure, .fe-measure *, .fe-snap, .fe-snap * { transition: none !important; }   /* 목록 높이를 잴 때 · 여러 칸 건너뛸 때 중간 항목을 즉시 접을 때 애니메이션 끔 */
     /* 그림 칸 4:3. 그림 비율이 4:3과 15% 넘게 다르면(.fit) 잘라 내지 않고 전체를 보여 줌 — 포트폴리오 문서와 같은 규칙 */
     .shot { position: relative; aspect-ratio: 4 / 3; background: #000; overflow: hidden; }
+    /* 프로젝트 요약(한눈에 보기): 작은 대표 이미지 + 줄 목록. 넓은 화면 [이미지 | 번호·이름·구분·기술 | 한 줄 소개·구현 범위·링크], 줄 사이는 정보 표와 같은 구분선 */
+    .gl { margin: 0; padding: 0; list-style: none; }
+    .gl-row:first-child { border-top: 0; padding-top: 0; }                /* 맨 위·맨 아래는 구분선 없이, 줄 사이에만 */
+    .gl-row:last-child { padding-bottom: 0; }
+    .gl-row { display: grid; grid-template-columns: 112px minmax(0, 1fr); gap: 16px 20px; align-items: start; padding: 28px 0; border-top: 1px solid var(--divider); }
+    .gl-thumb { display: block; border-radius: 12px; overflow: hidden; }
+    .gl-thumb .shot { transition: transform .4s cubic-bezier(.2,.7,.2,1); }
+    .gl-thumb:hover .shot { transform: scale(1.03); }
+    .gl-row:not(:has(.gl-thumb)) .gl-info { grid-column: 1 / -1; }
+    .gl-body { grid-column: 1 / -1; }
+    @media (min-width: 760px) {
+      .gl-row { grid-template-columns: 200px 220px minmax(0, 1fr); gap: 32px; padding: 32px 0; }
+      .gl-row:not(:has(.gl-thumb)) .gl-info { grid-column: 1 / 3; }
+      .gl-body { grid-column: auto; }
+    }
     .shot img { display: block; width: 100%; height: 100%; object-fit: cover; }
     .shot.fit img { object-fit: contain; padding: 8px; }
     .reveal { opacity: 0; transform: translateY(24px); transition: opacity .7s ease, transform .7s ease; }
@@ -206,6 +234,13 @@
     .pg > .sec.core { scroll-margin-top: calc(var(--top-h) + var(--ext-bg)); }
     @media screen { .pg > .sec.core .sec-head { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; } }
     @media (prefers-reduced-motion: reduce) { .nh-bg, .nh-bar > *, .nh-sub { transition: none !important; } }
+    /* 머리 막대 메뉴: 지금 보고 있는 절(스크롤 위치)을 이름(왼쪽 "주현진")과 같은 색 · 굵기 한 단계 위(400 → 500) · 글자 아래 따로 그은 선으로 */
+    .nav-a { position: relative; padding: 6px 0; transition: color .2s ease; }
+    .nav-a::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 2px; border-radius: 1px; background: var(--ink);
+                    transform: scaleX(0); transition: transform .3s cubic-bezier(.2,.7,.2,1); }
+    .nav-a.on { color: var(--ink); font-weight: 500; }
+    .nav-a.on::after { transform: scaleX(1); }
+    @media (prefers-reduced-motion: reduce) { .nav-a, .nav-a::after { transition: none; } }
 
     /* A4 인쇄(PDF로 저장): 화면 모드와 상관없이 흰 종이. 버튼·머리 막대·움직임은 빼고, 링크는 칠 수 있는 주소로 */
     @media print {
@@ -244,6 +279,8 @@
       .fe-list { gap: 14pt; }
       .stk { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14pt 20pt; }
       .stk-item { break-inside: avoid; }
+      .gl-row { grid-template-columns: 120pt 130pt minmax(0, 1fr); gap: 14pt; padding: 12pt 0; break-inside: avoid; }
+      .gl-body { grid-column: auto; }
       .stk-icon { width: 24px; height: 24px; }
       .stk-name { margin: 6pt 0 4pt; }
       .grid2 > *, .grid3 > *, .card-print { break-inside: avoid; border: 1px solid var(--line) !important; }
@@ -285,7 +322,7 @@
     ready.then(() => { if (new URLSearchParams(location.search).get('pf-audit') === '1') writeAudit(); });
     function report() {
       const imgs = [...document.images];
-      return { page: 'portfolio', ready: html.dataset.pfReady, sections: info.sections, projects: info.projects, others: info.others,
+      return { page: 'portfolio', ready: html.dataset.pfReady, sections: info.sections, projects: info.projects, others: info.others, linkCards: info.linkCards,
         images: { total: imgs.length, broken: imgs.filter((i) => i.complete && i.naturalWidth === 0).map((i) => i.getAttribute('src')), pending: imgs.filter((i) => !i.complete).map((i) => i.getAttribute('src')) },
         deckLinks: [...document.querySelectorAll('a[data-deck-scene]')].map((a) => a.getAttribute('href')),
         overflowX: Math.max(0, html.scrollWidth - html.clientWidth), errors: info.errors,
@@ -299,7 +336,7 @@
       'en.portfolio': 'PORTFOLIO', 'en.about': 'ABOUT ME', 'en.skills': 'SKILLS', 'en.project': 'PROJECT', 'en.feature': 'FEATURE', 'en.others': 'OTHER WORK',
       'en.glance': 'AT A GLANCE', 'en.contact': 'CONTACT', 'en.link': 'LINK',
       'page.updated': '업데이트 {date}', 'page.intro': '자기소개', 'page.stack': '기술 스택', 'page.stack-note': '근거 프로젝트와 함께', 'page.project-no': '{en.project} {no} / {total}',
-      'page.features': '기능 소개', 'page.see-in-deck': '{name.deck}에서 보기', 'page.see-in-doc': '기술문서에서 보기', 'page.browser-note': '이 문서는 넓은 화면(PC), Chrome 브라우저 환경에 최적화되어 있습니다.', 'page.last-updated': '마지막 업데이트 {date}', 'page.deck-all': '{name.deck} 전체', 'page.others': '기타 프로젝트', 'page.glance': '프로젝트 요약',
+      'page.features': '기능 소개', 'page.see-in-deck': '{name.deck}에서 보기', 'page.see-in-doc': '기술문서에서 보기', 'page.browser-note': '이 문서는 넓은 화면(PC), Chrome 브라우저 환경에 최적화되어 있습니다.', 'page.last-updated': '마지막 업데이트 {date}', 'page.deck-all': '{name.deck} 전체', 'page.others': '기타 프로젝트', 'page.link-card-open': '바로가기', 'page.glance': '프로젝트 요약',
       'page.nav-intro': '소개', 'page.nav-stack': '{page.stack}', 'page.nav-projects': '프로젝트', 'page.nav-others': '기타', 'page.nav-glance': '한눈에 보기', 'page.nav-contact': '연락처',
       'page.print-email': '이메일', 'page.print-web': '웹 {name.portfolio}',
       'ui.pdf': 'PDF로 저장', 'ui.preparing': '준비 중…', 'ui.skip': '본문으로 건너뛰기',
@@ -508,6 +545,35 @@
       return want;
     }
 
+    // 머리 막대 메뉴의 지금 절 표시: 머리 막대 바로 아래(화면 위 30%)에 걸친 절의 메뉴를 .on. 프로젝트 소개·기능 소개는 모두 [프로젝트], 맨 위 머리(cover)는 [소개], 맨 아래까지 내리면 마지막 절
+    function bindNavSpy() {
+      const links = [...document.querySelectorAll('.nav-a[data-nav]')];
+      if (!links.length) return;
+      const proj = links.find((a) => a.dataset.nav.startsWith('p-'));
+      const secs = [...document.querySelectorAll('#cover, #intro, #stack, section.sec.proj, section.sec.core, #others, #glance, #contact')]
+        .map((el) => [el, /^p-/.test(el.id) ? proj : links.find((a) => a.dataset.nav === (el.id === 'cover' ? 'intro' : el.id))]).filter(([, a]) => a);
+      let cur = null, raf = 0;
+      const update = () => {
+        raf = 0;
+        const y = innerHeight * 0.3;
+        let hit = null;
+        for (const [el, a] of secs) if (el.getBoundingClientRect().top <= y) hit = a;
+        if (secs.length && innerHeight + scrollY >= html.scrollHeight - 2) hit = secs[secs.length - 1][1];
+        if (hit === cur) return;
+        cur?.classList.remove('on'); cur?.removeAttribute('aria-current');
+        cur = hit;
+        cur?.classList.add('on'); cur?.setAttribute('aria-current', 'location');
+        const nav = cur?.parentElement;                                  // 좁은 화면에서 메뉴가 넘치면 지금 절이 보이게(메뉴만 옆으로, 페이지 스크롤은 건드리지 않음)
+        if (nav && nav.scrollWidth > nav.clientWidth) {
+          const l = cur.offsetLeft - nav.offsetLeft, r = l + cur.offsetWidth;
+          if (l < nav.scrollLeft) nav.scrollLeft = l - 8; else if (r > nav.scrollLeft + nav.clientWidth) nav.scrollLeft = r - nav.clientWidth + 8;
+        }
+      };
+      addEventListener('scroll', () => { raf ||= requestAnimationFrame(update); }, { passive: true });
+      addEventListener('resize', () => { raf ||= requestAnimationFrame(update); });
+      update();
+    }
+
     // ① 머리 막대(layout: nav sticky) + 화면 모드 · PDF
     function Nav({ prof, projects, others, hasSkills, bars }) {
       const items = [['intro', t('page.nav-intro'), prof.intro], ['stack', t('page.nav-stack'), hasSkills],
@@ -519,7 +585,7 @@
           <div className="wrap relative flex h-14 items-center gap-4">
             <a href="#cover" className="font-semibold tracking-tight whitespace-nowrap">{prof.name || t('name.portfolio')}</a>
             <nav className="noscroll ml-auto flex min-w-0 gap-4 md:gap-6 overflow-x-auto text-[13px] text-[var(--muted)]" aria-label="절 이동">
-              {items.map(([id, label]) => <a key={id} href={`#${id}`} className="whitespace-nowrap hover:text-[var(--ink)]">{label}</a>)}
+              {items.map(([id, label]) => <a key={id} href={`#${id}`} data-nav={id} className="nav-a whitespace-nowrap hover:text-[var(--ink)]">{label}</a>)}
             </nav>
             <div className="flex shrink-0 items-center gap-2"><ModeButton /><PdfButton /></div>
           </div>
@@ -545,14 +611,22 @@
             <h1 className="mt-6 text-6xl md:text-8xl font-bold tracking-tight leading-none">{prof.name}</h1>
             {prof.nameEn && <p lang="en" className="mt-4 text-sm md:text-base tracking-[.3em] text-[var(--sub)]">{prof.nameEn}</p>}
             {prof.headline && <p className="mx-auto mt-10 max-w-[760px] text-2xl md:text-4xl font-semibold leading-snug tracking-tight"><Inline text={prof.headline} /></p>}
-            <div className="no-print mt-12 flex flex-wrap justify-center gap-3">
-              {prof.email && <a className="btn btn-solid" href={`mailto:${prof.email}`}>{prof.email}</a>}
-              {isUrl(prof.github) && <Ext className="btn" href={prof.github}>GitHub</Ext>}
-              {links.map((l) => <Ext key={l.url} className="btn" href={l.url}>{l.label}</Ext>)}
-            </div>
+            {(() => {                                                    // 캡슐 바: GitHub → 기타 링크(YouTube 등) → Email 순서, 첫 버튼만 강조색
+              const items = [isUrl(prof.github) && ['GitHub', prof.github, true], ...links.map((l) => [l.label, l.url, true]),
+                prof.email && ['Email', `mailto:${prof.email}`, false]].filter(Boolean);
+              return items.length > 0 && (
+                <div className="no-print mt-16 md:mt-20 flex justify-center">
+                  <nav className="hero-pill noscroll" aria-label="연락처 링크">
+                    {items.map(([k, href, ext], i) => ext
+                      ? <Ext key={href} className={'btn' + (i ? '' : ' btn-solid')} href={href}>{k}</Ext>
+                      : <a key={href} className={'btn' + (i ? '' : ' btn-solid')} href={href} title={href.slice(7)}>{k}</a>)}
+                  </nav>
+                </div>
+              );
+            })()}
             <div className="mx-auto inline-block text-left">
-              <PrintUrls rows={[prof.email && [t('page.print-email'), `mailto:${prof.email}`], isUrl(prof.github) && ['GitHub', prof.github],
-                ...links.map((l) => [l.label, l.url]), [t('page.print-web'), location.pathname]]} />
+              <PrintUrls rows={[isUrl(prof.github) && ['GitHub', prof.github], ...links.map((l) => [l.label, l.url]),
+                prof.email && [t('page.print-email'), `mailto:${prof.email}`], [t('page.print-web'), location.pathname]]} />
             </div>
           </div>
         </section>
@@ -632,28 +706,36 @@
             <Ext className="btn btn-solid" href={deckHref(p)}>{t('name.deck')}</Ext>
             <Ext className="btn" href={docHref(p)}>{t('name.doc')}</Ext>
             {isUrl(L.github) && <Ext className="btn" href={L.github}>GitHub</Ext>}
-            {isUrl(L.video) && <Ext className="btn" href={L.video}>{t('name.video')}</Ext>}
             {(L.extra || []).filter((l) => isUrl(l.url)).map((l) => <Ext key={l.url} className="btn" href={l.url}>{l.label}</Ext>)}
+            {isUrl(L.video) && <Ext className="btn" href={L.video}>{t('name.video')}</Ext>}
           </nav>
         </div>
       );
     }
     //   앞 프로젝트의 캡슐이 화면에서 사라지면 .on(떠오름), 위로 스크롤해 앞 캡슐이 다시 보이면 가라앉으며 사라짐(첫 프로젝트는 같은 지점으로 계산).
+    //   위로 스크롤하다 묶음이 다시 화면에 들어오면 떠오름 없이 이미 제자리(.snap).
     //   캡슐이 제자리(기능 소개 아래)에 닿으면 .docked(그림자 없앰)
     function bindCaps() {
       const items = [...document.querySelectorAll('.pg')].map((g) => ({ g, cap: g.querySelector('.cap'), intro: g.querySelector('.sec.proj'), on: false })).filter((x) => x.cap);
       if (!items.length) return;
       const measure = () => items.forEach(({ cap }) => cap.style.setProperty('--cap-h', `${cap.offsetHeight}px`));   // 고정 기능 소개 끝에 맞출 캡슐 높이
       measure(); addEventListener('resize', measure);
+      let lastY = scrollY;
       const update = () => {
         if (matchMedia('print').matches) return;
+        const up = scrollY < lastY; lastY = scrollY;
         items.forEach((x, j) => {
           const { g, cap, intro } = x;
           const r = g.getBoundingClientRect();
           // 앞 프로젝트의 캡슐이 화면 위로 완전히 사라지면 나타남. 첫 프로젝트(앞 캡슐 없음)는 같은 지점 = 소개 절 위 끝이 '캡슐 아래 여백'만큼 내려온 때
           const prev = items[j - 1]?.cap;
           const gate = prev ? prev.getBoundingClientRect().bottom <= 0 : (intro || g).getBoundingClientRect().top <= (parseFloat(getComputedStyle(cap).marginBottom) || 0);
-          x.on = r.bottom > 0 && gate;
+          const on = r.bottom > 0 && gate;
+          if (on && !x.on && up) {                                       // 위로 스크롤해 묶음 아래 끝이 다시 들어올 때: 떠오름 없이 바로 제자리
+            cap.classList.add('snap');
+            requestAnimationFrame(() => requestAnimationFrame(() => cap.classList.remove('snap')));
+          }
+          x.on = on;
           cap.classList.toggle('on', x.on);
           const cb = cap.getBoundingClientRect().bottom, stuckB = innerHeight - (parseFloat(getComputedStyle(cap).bottom) || 0);
           cap.classList.toggle('docked', cb < stuckB - 1);
@@ -945,51 +1027,94 @@
       addEventListener('resize', update);
     }
 
-    // ⑦ 기타 프로젝트(layout.json에 없는 절 — 디자인 요청대로, 소개 카드 하나)
-    function Others({ others }) {
-      if (!others.length) return null;
+    // profile.md "## 기타 프로젝트 (링크만)" 절 → [{ title, intro, info, tech[], role, url }] (기술 문서 없이 소개·링크만 있는 카드)
+    function parseLinkCards(md) {
+      const lines = md.replace(new RegExp('<' + '!--[\\s\\S]*?--' + '>', 'g'), '').split(/\r?\n/);
+      const start = lines.findIndex((l) => /^##\s+기타 프로젝트\s*\(링크/.test(l.trim()));
+      if (start < 0) return [];
+      const cards = []; let cur = null;
+      const KEYS = { '소개': 'intro', '정보': 'info', '기술': 'tech', '맡은 역할': 'role', '링크': 'url' };
+      for (const raw of lines.slice(start + 1)) {
+        const l = raw.trim();
+        if (/^##\s/.test(l)) break;
+        const h = l.match(/^###\s+(.+)$/);
+        if (h) { cur = { title: h[1].trim() }; cards.push(cur); continue; }
+        const m = cur && l.match(/^-\s*([^:：]+)[:：]\s*(.*)$/);
+        if (m && KEYS[m[1].trim()] && m[2].trim()) cur[KEYS[m[1].trim()]] = m[2].trim();
+      }
+      return cards.filter((c) => c.title).map((c) => ({ ...c, tech: (c.tech || '').split(',').map((x) => x.trim()).filter(Boolean), url: isUrl(c.url) ? c.url : '' }));
+    }
+    const linkHost = (u) => /github\.com/i.test(u) ? 'GitHub' : t('page.link-card-open');
+
+    // 기타 프로젝트 카드 한 장(링크만 있는 카드와 data/의 기타 프로젝트가 같은 형식). c: { id?, title, info, intro, role, tech[], links: [[이름, 주소]] }
+    function LinkCard({ c }) {
+      return (
+        <article id={c.id ? `p-${c.id}` : undefined} className="card-print reveal flex flex-col rounded-3xl border border-[var(--line)] bg-[var(--card)] p-7">
+          <h3 className="text-xl font-bold tracking-tight">{c.title}</h3>
+          {c.info && <p className="mt-2 text-xs text-[var(--sub)]">{c.info}</p>}
+          {c.intro && <p className="mt-4 text-[15px] leading-relaxed"><Inline text={c.intro} /></p>}
+          {c.role && <p className="mt-3 text-sm leading-relaxed"><b className="font-semibold">{t('name.role-short')}</b> ― <Inline text={c.role} /></p>}
+          {c.tech.length > 0 && <div className="mt-5 flex flex-wrap gap-2">{c.tech.map((g) => <span key={g} className="chip">{g}</span>)}</div>}
+          {c.links.length > 0 && (
+            <div className="mt-auto pt-6">
+              <div className="no-print flex flex-wrap gap-x-4 gap-y-1 text-sm">{c.links.map(([k, href]) =>   /* 프로젝트 요약과 같은 글자 링크(모두 본문색) */
+                <Ext key={href} className="tlink text-[var(--muted)]" href={href}>{k}</Ext>)}</div>
+              <PrintUrls rows={c.links} />
+            </div>
+          )}
+        </article>
+      );
+    }
+    // data/의 기타 프로젝트 → 카드 형식(정보 = 기간 · 인원 팀)
+    const otherCard = (p) => {
+      const meta = Object.fromEntries((p.meta || []).map((m) => [m.label, m.value]));
+      const who = meta['인원'] ? `${meta['인원']}${p.team?.type === 'team' ? ' 팀' : ''}` : teamLabel(p.team);
+      return { id: p.id, title: p.title, info: [meta['기간'], who].filter(Boolean).join(' · '), intro: p.tagline, role: p.team?.role,
+        tech: p.tags || [], links: projectUrlRows(p).filter(Boolean) };
+    };
+
+    // ⑦ 기타 프로젝트(layout.json에 없는 절) — data/의 기타 프로젝트 + profile.md의 링크만 있는 카드를 같은 형식으로, 넓은 화면에서 가로 3장
+    function Others({ others, links = [] }) {
+      const end = (c) => { const m = [...String(c.info || '').matchAll(/(\d{4})\.(\d{1,2})/g)].pop(); return m ? +m[1] * 100 + +m[2] : Infinity; };   // 정보의 마지막 "YYYY.MM" = 종료 시점(날짜가 하나면 그 달)
+      const cards = [...others.map(otherCard), ...links.map((c) => ({ ...c, links: c.url ? [[linkHost(c.url), c.url]] : [] }))]
+        .map((c, i) => ({ c, i })).sort((a, b) => end(a.c) - end(b.c) || a.i - b.i).map((x) => x.c);   // 종료 시점 순서(날짜 없는 카드는 맨 뒤, 같으면 적은 순서)
+      if (!cards.length) return null;
       return (
         <section id="others" className="sec py-24 md:py-32">
           <div className="wrap">
             <SecHead en={t('en.others')} title={t('page.others')} />
-            <div className="space-y-5">
-              {others.map((p) => (
-                <article key={p.id} id={`p-${p.id}`} className="card-print reveal rounded-3xl border border-[var(--line)] bg-[var(--card)] p-7 md:p-10">
-                  <h3 className="text-2xl md:text-3xl font-bold tracking-tight">{p.title}</h3>
-                  {p.tagline && <p className="mt-4 text-lg leading-snug"><Inline text={p.tagline} /></p>}
-                  <p className="mt-6 text-sm font-semibold">{teamLabel(p.team)}</p>
-                  <MetaTable p={p} className="mt-4 max-w-[760px]" />
-                  {(p.tags || []).length > 0 && <div className="mt-5 flex flex-wrap gap-2">{p.tags.map((g) => <span key={g} className="chip">{g}</span>)}</div>}
-                  <div className="mt-7"><ProjectLinks p={p} /><PrintUrls rows={projectUrlRows(p)} /></div>
-                </article>
-              ))}
-            </div>
+            <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">{cards.map((c) => <LinkCard key={c.id || c.title} c={c} />)}</div>
           </div>
         </section>
       );
     }
 
-    // ⑧ 한눈에 보기(layout: grid 3열 · 그림 없음 · tinted)
+    // ⑧ 한눈에 보기(작은 대표 이미지 + 줄 목록 · tinted — layout.json의 grid 3열 대신 사용자 요청)
     function Glance({ projects }) {
       if (!projects.length) return null;
       return (
         <section id="glance" className="sec tinted py-24 md:py-32">
           <div className="wrap">
             <SecHead en={t('en.glance')} title={t('page.glance')} />
-            <ul className="grid3">
+            <ul className="gl">
               {projects.map((p, j) => (
-                <li key={p.id} className="reveal flex flex-col rounded-3xl bg-[var(--card)] p-7">
-                  <p className="accent text-sm font-bold tabular-nums">{pad2(j + 1)}</p>
-                  <a href={`#p-${p.id}`} className="mt-2 text-2xl font-bold tracking-tight hover:underline">{p.title}</a>
-                  <p className="mt-1 text-xs text-[var(--sub)]">{teamLabel(p.team)}</p>
-                  {p.tagline && <p className="mt-4 text-[15px] leading-relaxed"><Inline text={p.tagline} /></p>}
-                  {(p.tags || []).length > 0 && <p className="mt-4 text-xs text-[var(--sub)]">{p.tags.slice(0, 4).join(' · ')}</p>}
-                  {p.team?.role && <p className="mt-4 text-sm leading-relaxed text-[var(--muted)]"><b className="accent">{t('name.role-short')}</b> <Inline text={p.team.role} /></p>}
-                  <div className="mt-auto flex flex-wrap gap-x-4 gap-y-1 pt-6 text-sm">
-                    <Ext className="accent hover:underline" href={deckHref(p)}>{t('name.deck')}</Ext>
-                    <Ext className="text-[var(--muted)] hover:text-[var(--ink)]" href={docHref(p)}>{t('name.doc-short')}</Ext>
-                    {isUrl(p.links?.github) && <Ext className="text-[var(--muted)] hover:text-[var(--ink)]" href={p.links.github}>GitHub</Ext>}
-                    {isUrl(p.links?.video) && <Ext className="text-[var(--muted)] hover:text-[var(--ink)]" href={p.links.video}>{t('name.video')}</Ext>}
+                <li key={p.id} className="gl-row reveal">
+                  {p.cover && <a href={`#p-${p.id}`} className="gl-thumb" tabIndex={-1} aria-hidden="true"><Shot src={img(p, p.cover)} alt="" /></a>}
+                  <div className="gl-info">
+                    <p className="accent text-sm font-bold tabular-nums">{pad2(j + 1)}</p>
+                    <a href={`#p-${p.id}`} className="mt-1 block text-2xl font-bold tracking-tight hover:underline">{p.title}</a>
+                    <p className="mt-1 text-xs text-[var(--sub)]">{teamLabel(p.team)}</p>
+                    {(p.tags || []).length > 0 && <p className="mt-3 text-xs leading-relaxed text-[var(--sub)]">{p.tags.slice(0, 4).join(' · ')}</p>}
+                  </div>
+                  <div className="gl-body">
+                    {p.tagline && <p className="text-[15px] leading-relaxed"><Inline text={p.tagline} /></p>}
+                    {p.team?.role && <p className="mt-3 text-sm leading-relaxed"><b className="font-semibold">{t('name.role-short')}</b> ― <Inline text={p.team.role} /></p>}
+                    <div className="mt-4 flex flex-wrap gap-x-4 gap-y-1 text-sm">
+                      <Ext className="tlink text-[var(--muted)]" href={deckHref(p)}>{t('name.deck')}</Ext>
+                      <Ext className="tlink text-[var(--muted)]" href={docHref(p)}>{t('name.doc-short')}</Ext>
+                      {isUrl(p.links?.github) && <Ext className="tlink text-[var(--muted)]" href={p.links.github}>GitHub</Ext>}
+                      {isUrl(p.links?.video) && <Ext className="tlink text-[var(--muted)]" href={p.links.video}>{t('name.video')}</Ext>}
+                    </div>
                   </div>
                 </li>
               ))}
@@ -1008,15 +1133,15 @@
             <div>
               <p className="eyebrow">{t('en.contact')}</p>
               <p className="mt-4 text-3xl md:text-4xl font-bold tracking-tight">{prof.name}</p>
-              {prof.email && <p className="mt-6"><a className="text-lg hover:underline" href={`mailto:${prof.email}`}>{prof.email}</a></p>}
-              {isUrl(prof.github) && <p className="mt-2"><Ext className="text-[var(--muted)] hover:text-[var(--ink)]" href={prof.github}>{shortUrl(prof.github)}</Ext></p>}
-              {links.map((l) => <p key={l.url} className="mt-2"><span className="text-[var(--sub)]">{l.label}</span> <Ext className="text-[var(--muted)] hover:text-[var(--ink)]" href={l.url}>{shortUrl(l.url)}</Ext></p>)}
+              {prof.email && <p className="mt-6"><a className="tlink text-lg" href={`mailto:${prof.email}`}>{prof.email}</a></p>}
+              {isUrl(prof.github) && <p className="mt-2"><Ext className="tlink text-[var(--muted)]" href={prof.github}>{shortUrl(prof.github)}</Ext></p>}
+              {links.map((l) => <p key={l.url} className="mt-2"><Ext className="tlink text-[var(--muted)]" href={l.url}>{shortUrl(l.url)}</Ext></p>)}
               <p className="print-only mt-2 text-[var(--sub)]">{visibleUrl(location.pathname)}</p>
             </div>
             <div>
-              <p className="eyebrow">{t('page.nav-projects')}</p>
+              <p className="eyebrow">{t('en.project')}</p>
               <ul className="mt-4 space-y-2 text-sm">
-                {all.map((p) => <li key={p.id}><a className="text-[var(--muted)] hover:text-[var(--ink)]" href={`#p-${p.id}`}>{p.title}</a></li>)}
+                {all.map((p) => <li key={p.id}><a className="tlink text-[var(--muted)]" href={`#p-${p.id}`}>{p.title}</a></li>)}
               </ul>
             </div>
             <div>
@@ -1030,7 +1155,7 @@
                     <li key={p.id}>
                       <b className="font-semibold">{p.title}</b>
                       <span className="mt-1 flex flex-wrap gap-x-3 gap-y-1">
-                        {ls.map(([k, u]) => <Ext key={u} className="text-[var(--muted)] hover:text-[var(--ink)]" href={u}>{k}<span className="print-only"> {shortUrl(u)}</span></Ext>)}
+                        {ls.map(([k, u]) => <Ext key={u} className="tlink text-[var(--muted)]" href={u}>{k}<span className="print-only"> {shortUrl(u)}</span></Ext>)}
                       </span>
                     </li>
                   );
@@ -1059,11 +1184,13 @@
             const pf = await res.json();
             const load = (id) => fetch(`data/projects/${encodeURIComponent(id)}.json`, { cache: 'no-cache' }).then((r) => r.ok ? r.json() : null).catch(() => null);
             const [projects, others] = await Promise.all([Promise.all((pf.projects || []).map(load)), Promise.all((pf.others || []).map(load))]).then((a) => a.map((x) => x.filter(Boolean)));
+            let links = [];
+            try { const r = await fetch('profile.md', { cache: 'no-cache' }); if (r.ok) links = parseLinkCards(await r.text()); } catch { /* 링크 카드 없음 */ }
             if (/^#[0-9a-fA-F]{6}$/.test(pf.settings?.accent || '')) html.style.setProperty('--accent-profile', pf.settings.accent);
             const name = pf.profile?.name;
             document.title = `${name ? name + ' · ' : ''}${t('name.portfolio')}`;
             document.querySelector('.skip-link').textContent = t('ui.skip');
-            setState({ status: 'ok', pf, projects, others });
+            setState({ status: 'ok', pf, projects, others, links });
           } catch (e) {
             info.errors.push(String(e && e.message || e));
             setState({ status: 'error', msg: String(e && e.message || e) });
@@ -1075,7 +1202,7 @@
       useEffect(() => {
         if (state.status !== 'ok') { if (state.status !== 'loading') { html.dataset.pfReady = 'yes'; resolveReady(report()); } return; }
         info.sections = [...document.querySelectorAll('main section[id], footer[id]')].map((s) => s.id);
-        info.projects = state.projects.length; info.others = state.others.length;
+        info.projects = state.projects.length; info.others = state.others.length; info.linkCards = state.links.length;
         bindReveal();
         bindHeads();
         bindCaps();
@@ -1083,6 +1210,7 @@
         bindFeatureHeights();
         pinIntroDark();
         bindBackdrop();
+        bindNavSpy();
         let userMoved = false;
         ['wheel', 'touchstart', 'keydown', 'pointerdown'].forEach((ev) => addEventListener(ev, () => { userMoved = true; }, { once: true, passive: true }));
         let arrived = goHash(state.projects), restoreY = null;
@@ -1111,7 +1239,7 @@
       if (state.status === 'loading') return <p className="msg">불러오는 중…</p>;
       if (state.status === 'file') return <div className="msg"><p>이 페이지는 data/를 불러와 그리기 때문에 파일을 더블클릭해서는 열리지 않습니다. 레포 폴더에서 아래 명령을 실행한 뒤 http://localhost:4600/custom/ 으로 여세요.</p><pre>python3 -m http.server 4600</pre></div>;
       if (state.status === 'error') return <div className="msg"><p>아직 포트폴리오 데이터가 없거나 읽지 못했습니다. Claude Code에서 아래 명령을 실행하세요.</p><pre>/portfolio-build</pre><p>{state.msg}</p></div>;
-      const { pf, projects, others } = state;
+      const { pf, projects, others, links } = state;
       const prof = pf.profile || {};
       const all = [...projects, ...others];
       const byId = Object.fromEntries(all.map((p) => [p.id, p]));
@@ -1119,7 +1247,7 @@
       const bars = [...projects.map((p, j) => ({ eyebrow: t('page.project-no', { no: pad2(j + 1), total }), title: p.title, sub: (p.highlights || []).length ? t('page.features') : '' }))];
       return (
         <>
-          <Nav prof={prof} projects={projects} others={others} hasSkills={(pf.skills || []).length > 0} bars={bars} />
+          <Nav prof={prof} projects={projects} others={[...others, ...links]} hasSkills={(pf.skills || []).length > 0} bars={bars} />
           <main id="main">
             <Cover pf={pf} prof={prof} />
             <Intro prof={prof} />
@@ -1135,7 +1263,7 @@
                 </div>
               );
             })}
-            <Others others={others} />
+            <Others others={others} links={links} />
             <Glance projects={projects} />
           </main>
           <Contact prof={prof} all={all} updated={pf.generatedAt} />
