@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>포트폴리오</title>
   <link rel="icon" href="data:,">
   <!-- 포트폴리오 문서(기본 페이지) — /portfolio-custom 직접 생성 모드로 만든 새 레이아웃을 기본 주소로 옮긴 것. 예전 고정 렌더러 배치는 classic.html.
@@ -26,7 +26,7 @@
   <style>
     /* 색은 포트폴리오 문서와 같은 테마(--t-*)를 그대로. 테마가 없으면 괄호 안 기본값 */
     :root {
-      --top-h: 56px; --ext-h: 40px; --ext-up: 8px; --ext-bg: 37px;                                                     /* 머리 막대 높이 */
+      --top-h: calc(56px + var(--safe-t)); --safe-t: env(safe-area-inset-top, 0px); --safe-b: env(safe-area-inset-bottom, 0px); --ext-h: 40px; --ext-up: 8px; --ext-bg: 37px;                                                     /* 머리 막대 높이 */
       --bg: var(--t-bg, #0A0A0D);                                        /* 바탕 */
       --band: color-mix(in srgb, var(--ink) 4%, var(--bg));              /* 배경색이 다른 띠(layout.json background: tinted) */
       --card: var(--t-surface, #131318);                                 /* 띠 위 카드 */
@@ -102,7 +102,7 @@
     @media (min-width: 760px) { .stk { grid-template-columns: repeat(3, minmax(0, 1fr)); column-gap: 48px; row-gap: 64px; } }
     /* 프로젝트 링크 캡슐: 앞 프로젝트의 캡슐이 화면에서 사라지면 화면 아래 가운데에 떠오르고(.on), 내려가다 기능 소개 아래 자리에 닿으면 거기 머묾(sticky).
        프로젝트 링크는 이 캡슐 하나로(프로젝트 소개 절에는 버튼 없음 — 인쇄용 주소 목록만) */
-    .cap { position: sticky; bottom: 20px; z-index: 30; display: flex; justify-content: center; margin: 48px 0 96px; pointer-events: none; }
+    .cap { position: sticky; bottom: calc(20px + var(--safe-b)); z-index: 30; display: flex; justify-content: center; margin: 48px 0 96px; pointer-events: none; }
     @media (min-width: 760px) { .cap { margin: 56px 0 128px; } }
     /* 고정된 기능 소개 뒤: 캡슐의 제자리를 '마지막 기능까지 스크롤했을 때 떠 있던 자리'와 똑같이(트랙 끝 − 캡슐 높이 − 아래 여백 20px) → 고정이 풀리는 순간 그 자리에 붙음 */
     @media screen and (min-width: 760px) { .sec.core + .cap { margin-top: calc(-1 * (var(--cap-h, 50px) + 20px)); } }
@@ -216,6 +216,8 @@
 
     /* 머리 막대 늘어남(화면만, 기술 스택 · 프로젝트마다): 묶음(.pg)의 큰 제목이 머리 막대 뒤로 완전히 사라지면 머리 막대 바탕(.nh-bg)이 37px 아래로(프로젝트 줄 아래 여백 16px) 늘어나고,
        그 안에 [PROJECT 00 / 00] → [프로젝트명 · 기능 소개]가 시간차를 두고 아래에서 위로 떠오름. 묶음이 끝나면 다시 줄어듦 */
+    /* 휴대폰(viewport-fit=cover): 페이지가 상태 표시줄·아래 도구 막대 뒤까지 그려짐 → 머리 막대는 상태 표시줄 높이만큼 안쪽으로, 바탕은 그 위까지 덮음 */
+    .site-head { padding-top: var(--safe-t); }
     .nh-bg { position: absolute; left: 0; right: 0; top: 0; height: var(--top-h); border-bottom: 1px solid var(--line);
              background: color-mix(in srgb, var(--bg) 80%, transparent); -webkit-backdrop-filter: blur(24px) saturate(1.6); backdrop-filter: blur(24px) saturate(1.6);
              transition: height .45s cubic-bezier(.2,.7,.2,1) .05s; }
@@ -634,6 +636,13 @@
     }
 
     // ③ 자기소개(layout: stack · 가운데)
+    //   profile.md 자기소개에 빈 줄이 있으면 빈 줄 = 문단 나눔, 문단 안의 줄바꿈 = 그 자리에서 줄바꿈(<br>).
+    //   빈 줄이 없으면 예전처럼 한 줄 = 한 문단. 첫 문단은 크게, 나머지는 작게.
+    function introParas(intro) {
+      const raw = String(intro || '').trim();
+      const paras = /\n[ \t]*\n/.test(raw) ? raw.split(/\n[ \t]*\n+/) : raw.split(/\n+/);
+      return paras.map((p) => p.split('\n').map((l) => l.trim()).filter(Boolean)).filter((p) => p.length);
+    }
     function Intro({ prof }) {
       if (!prof.intro) return null;
       return (
@@ -641,9 +650,11 @@
           <div className="wrap reveal text-center">
             <p className="eyebrow">{t('en.about')}</p>
             <h2 className="sr-only">{t('page.intro')}</h2>
-            <div className="mx-auto mt-8 max-w-[760px] space-y-5">
-              {prof.intro.split(/\n+/).filter((l) => l.trim()).map((l, i) =>
-                <p key={i} className={i ? 'text-lg md:text-xl leading-relaxed text-[var(--muted)]' : 'text-2xl md:text-4xl font-semibold leading-snug tracking-tight'}><Inline text={l} /></p>)}
+            <div className="mx-auto mt-8 max-w-[880px] space-y-5">
+              {introParas(prof.intro).map((para, i) =>
+                <p key={i} className={i ? 'text-lg md:text-xl leading-relaxed text-[var(--muted)]' : 'text-2xl md:text-4xl font-semibold leading-snug tracking-tight'}>
+                  {para.map((l, j) => <Fragment key={j}>{j ? <br /> : null}<Inline text={l} /></Fragment>)}
+                </p>)}
             </div>
           </div>
         </section>
@@ -1148,8 +1159,8 @@
               <p className="eyebrow">{t('en.link')}</p>
               <ul className="mt-4 space-y-3 text-sm">
                 {all.map((p) => {
-                  const ls = [isUrl(p.links?.github) && ['GitHub', p.links.github], isUrl(p.links?.video) && [t('name.video'), p.links.video],
-                    ...(p.links?.extra || []).filter((l) => isUrl(l.url)).map((l) => [l.label, l.url])].filter(Boolean);
+                  const ls = [isUrl(p.links?.github) && ['GitHub', p.links.github],          // GitHub → 추가 링크(서버 GitHub 등) → 시연 영상은 맨 끝에 YouTube로
+                    ...(p.links?.extra || []).filter((l) => isUrl(l.url)).map((l) => [l.label, l.url]), isUrl(p.links?.video) && ['YouTube', p.links.video]].filter(Boolean);
                   if (!ls.length) return null;
                   return (
                     <li key={p.id}>
