@@ -122,6 +122,7 @@
                 transition: transform .5s cubic-bezier(.5,0,.75,0), visibility 0s linear .5s, box-shadow .3s ease;   /* 사라질 때: 화면 아래로 가라앉음 */ }
     .cap.on .cap-pill { transform: none; visibility: visible; transition: transform .6s cubic-bezier(.2,.7,.2,1), visibility 0s, box-shadow .3s ease; }   /* 나타날 때: 화면 아래에서 떠오름 */
     .cap.docked .cap-pill { box-shadow: none; }
+    @media (max-width: 759px) { .cap-pill { box-shadow: 0 4px 14px rgba(0,0,0,.28); } }   /* 휴대폰: 그림자가 캡슐 아래 20px 안에서 끝나게(아이폰 Safari가 칠하는 아래 도구 막대 칸에 잘려 보이지 않게) */
     .cap.snap .cap-pill { transition: none !important; }                 /* 위로 스크롤하다 다시 나타날 때: 떠오르지 않고 이미 제자리에 */
     @media (max-width: 480px) { .cap-pill { gap: 0; padding: 4px; } .cap-pill .btn { padding: 0 9px; font-size: 12.5px; } .cap-pill .nt-icon { display: none; } }
     .cap-pill .btn { min-height: 36px; padding: 0 16px; font-size: 13px; }
@@ -217,14 +218,16 @@
 
     /* 머리 막대 늘어남(화면만, 기술 스택 · 프로젝트마다): 묶음(.pg)의 큰 제목이 머리 막대 뒤로 완전히 사라지면 머리 막대 바탕(.nh-bg)이 37px 아래로(프로젝트 줄 아래 여백 16px) 늘어나고,
        그 안에 [PROJECT 00 / 00] → [프로젝트명 · 기능 소개]가 시간차를 두고 아래에서 위로 떠오름. 묶음이 끝나면 다시 줄어듦 */
-    /* 휴대폰(viewport-fit=cover): 페이지가 상태 표시줄·아래 도구 막대 뒤까지 그려짐 → 머리 막대는 상태 표시줄 높이만큼 안쪽으로, 바탕은 그 위까지 덮음 */
-    /* 아이폰 Safari는 화면 위에 붙은 고정 요소의 '자기' 바탕색으로 상태 표시줄 칸을 칠함 → 머리 막대 바탕색을 머리 막대 자신에 두고(모드 따라 바뀜),
-       아래로 늘어나는 부분(.nh-bg)은 그 아래만 칠함(겹쳐서 두 번 칠해지지 않게) */
-    .site-head { padding-top: var(--safe-t); background-color: color-mix(in srgb, var(--bg) 80%, transparent); transition: background-color .25s; }
-    .nh-bg { position: absolute; left: 0; right: 0; top: 0; height: var(--top-h); border-bottom: 1px solid var(--line);
-             background: linear-gradient(transparent var(--top-h), color-mix(in srgb, var(--bg) 80%, transparent) var(--top-h)); -webkit-backdrop-filter: blur(24px) saturate(1.6); backdrop-filter: blur(24px) saturate(1.6);
-             transition: height .45s cubic-bezier(.2,.7,.2,1) .05s; }
-    .site-head.ext .nh-bg { height: calc(var(--top-h) + var(--ext-bg)); transition-delay: 0s; }
+    /* 휴대폰(viewport-fit=cover): 상태 표시줄 높이(safe-area)만큼 머리 막대를 안쪽으로 — 아이폰 Safari 탭에서는 0(상태 표시줄 칸은 Safari가 칠함), 홈 화면 웹 앱 등에서만 값이 생김 */
+    /* 아이폰 Safari는 화면 위에 붙은 고정 요소의 '자기' 바탕색으로 상태 표시줄 칸을 칠함 → 머리 막대 자신이 흐림 + 바탕색(모드 따라 바뀜)을 가짐.
+       아래로 늘어나는 띠(.nh-bg)는 머리 막대 밖의 형제 요소로 머리 막대 바로 아래에 붙여 같은 흐림 + 바탕색으로 칠함
+       (머리 막대 안에 두면 머리 막대의 흐림이 '흐림의 기준'이 되어 띠가 페이지를 흐리지 못하고, 겹쳐 칠하면 두 부분의 색이 달라짐) */
+    .site-head { padding-top: var(--safe-t); background-color: color-mix(in srgb, var(--bg) 80%, transparent);
+                 -webkit-backdrop-filter: blur(24px) saturate(1.6); backdrop-filter: blur(24px) saturate(1.6); transition: background-color .25s; }
+    .nh-bg { position: fixed; left: 0; right: 0; top: var(--top-h); z-index: 49; height: 0; border-bottom: 1px solid var(--line); pointer-events: none;
+             background: color-mix(in srgb, var(--bg) 80%, transparent); -webkit-backdrop-filter: blur(24px) saturate(1.6); backdrop-filter: blur(24px) saturate(1.6);
+             transition: height .45s cubic-bezier(.2,.7,.2,1) .05s, background-color .25s; }
+    .site-head.ext + .nh-bg { height: var(--ext-bg); transition-delay: 0s; }
     .nh-ext { position: absolute; left: 0; right: 0; top: calc(var(--top-h) - var(--ext-up)); height: var(--ext-h); overflow: hidden; pointer-events: none; }
     .nh-ext-w { display: grid; height: 100%; }
     .nh-bar { grid-area: 1 / 1; display: flex; align-items: center; gap: 14px; min-width: 0; }
@@ -591,8 +594,8 @@
         [projects[0] ? `p-${projects[0].id}` : '', t('page.nav-projects'), projects.length], ['others', t('page.nav-others'), others.length],
         ['glance', t('page.nav-glance'), projects.length], ['contact', t('page.nav-contact'), true]].filter((x) => x[0] && x[2]);
       return (
+        <>
         <header className="site-head no-print sticky top-0 z-50">
-          <div className="nh-bg" aria-hidden="true" />
           <div className="wrap relative flex h-14 items-center gap-4">
             <a href="#cover" className="font-semibold tracking-tight whitespace-nowrap">{prof.name || t('name.portfolio')}</a>
             <nav className="noscroll ml-auto flex min-w-0 gap-4 md:gap-6 overflow-x-auto text-[13px] text-[var(--muted)]" aria-label="절 이동">
@@ -609,6 +612,8 @@
             ))}
           </div></div>
         </header>
+        <div className="nh-bg no-print" aria-hidden="true" />{/* 머리 막대 아래로 늘어나는 띠 — 머리 막대의 형제여야 페이지를 흐림 */}
+        </>
       );
     }
 
