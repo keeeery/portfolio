@@ -3,6 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#000000">   <!-- 브라우저 막대 색(안드로이드 크롬·예전 iOS). 화면 모드를 바꾸면 syncBarColor()가 바탕색으로 맞춤 -->
   <title>포트폴리오</title>
   <link rel="icon" href="data:,">
   <!-- 포트폴리오 문서(기본 페이지) — /portfolio-custom 직접 생성 모드로 만든 새 레이아웃을 기본 주소로 옮긴 것. 예전 고정 렌더러 배치는 classic.html.
@@ -40,7 +41,7 @@
       --meta-label: var(--ink);                                         /* 정보 표 항목명(장르·기간…): 외곽선 버튼 글자색과 같게 */
       color-scheme: var(--t-scheme, dark);
     }
-    html { scroll-behavior: smooth; scroll-padding-top: calc(var(--top-h) + 8px); }
+    html { background: var(--bg); scroll-behavior: smooth; scroll-padding-top: calc(var(--top-h) + 8px); }
     body { margin: 0; background: var(--bg); color: var(--ink); font-family: Pretendard, -apple-system, "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
       -webkit-font-smoothing: antialiased; word-break: keep-all; overflow-wrap: anywhere; transition: background-color .25s; }
     .wrap { max-width: 1040px; margin: 0 auto; padding: 0 20px; }
@@ -102,8 +103,8 @@
     @media (min-width: 760px) { .stk { grid-template-columns: repeat(3, minmax(0, 1fr)); column-gap: 48px; row-gap: 64px; } }
     /* 프로젝트 링크 캡슐: 앞 프로젝트의 캡슐이 화면에서 사라지면 화면 아래 가운데에 떠오르고(.on), 내려가다 기능 소개 아래 자리에 닿으면 거기 머묾(sticky).
        프로젝트 링크는 이 캡슐 하나로(프로젝트 소개 절에는 버튼 없음 — 인쇄용 주소 목록만) */
-    .cap { position: sticky; bottom: calc(20px + var(--safe-b)); z-index: 30; display: flex; justify-content: center; margin: 48px 0 96px; pointer-events: none; }
-    @media (min-width: 760px) { .cap { margin: 56px 0 128px; } }
+    .cap { position: sticky; bottom: calc(20px + var(--safe-b)); z-index: 30; display: flex; justify-content: center; width: fit-content; max-width: 100%; margin: 48px auto 96px; pointer-events: none; }   /* 폭은 캡슐만큼 — 화면 폭 전체인 고정 요소는 아이폰 Safari가 아래 도구 막대 칸을 바탕색으로 칠함 */
+    @media (min-width: 760px) { .cap { margin: 56px auto 128px; } }
     /* 고정된 기능 소개 뒤: 캡슐의 제자리를 '마지막 기능까지 스크롤했을 때 떠 있던 자리'와 똑같이(트랙 끝 − 캡슐 높이 − 아래 여백 20px) → 고정이 풀리는 순간 그 자리에 붙음 */
     @media screen and (min-width: 760px) { .sec.core + .cap { margin-top: calc(-1 * (var(--cap-h, 50px) + 20px)); } }
     /* 공용 규칙 — 캡슐 바(.cap-pill 프로젝트 링크 · .hero-pill 맨 위 머리 링크): 반투명 카드색 + 흐림, 외곽선 1px, 완전히 둥근 모서리. 첫 버튼만 강조색(.btn-solid), 나머지는 바탕 없는 글자 버튼 */
@@ -217,9 +218,11 @@
     /* 머리 막대 늘어남(화면만, 기술 스택 · 프로젝트마다): 묶음(.pg)의 큰 제목이 머리 막대 뒤로 완전히 사라지면 머리 막대 바탕(.nh-bg)이 37px 아래로(프로젝트 줄 아래 여백 16px) 늘어나고,
        그 안에 [PROJECT 00 / 00] → [프로젝트명 · 기능 소개]가 시간차를 두고 아래에서 위로 떠오름. 묶음이 끝나면 다시 줄어듦 */
     /* 휴대폰(viewport-fit=cover): 페이지가 상태 표시줄·아래 도구 막대 뒤까지 그려짐 → 머리 막대는 상태 표시줄 높이만큼 안쪽으로, 바탕은 그 위까지 덮음 */
-    .site-head { padding-top: var(--safe-t); }
+    /* 아이폰 Safari는 화면 위에 붙은 고정 요소의 '자기' 바탕색으로 상태 표시줄 칸을 칠함 → 머리 막대 바탕색을 머리 막대 자신에 두고(모드 따라 바뀜),
+       아래로 늘어나는 부분(.nh-bg)은 그 아래만 칠함(겹쳐서 두 번 칠해지지 않게) */
+    .site-head { padding-top: var(--safe-t); background-color: color-mix(in srgb, var(--bg) 80%, transparent); transition: background-color .25s; }
     .nh-bg { position: absolute; left: 0; right: 0; top: 0; height: var(--top-h); border-bottom: 1px solid var(--line);
-             background: color-mix(in srgb, var(--bg) 80%, transparent); -webkit-backdrop-filter: blur(24px) saturate(1.6); backdrop-filter: blur(24px) saturate(1.6);
+             background: linear-gradient(transparent var(--top-h), color-mix(in srgb, var(--bg) 80%, transparent) var(--top-h)); -webkit-backdrop-filter: blur(24px) saturate(1.6); backdrop-filter: blur(24px) saturate(1.6);
              transition: height .45s cubic-bezier(.2,.7,.2,1) .05s; }
     .site-head.ext .nh-bg { height: calc(var(--top-h) + var(--ext-bg)); transition-delay: 0s; }
     .nh-ext { position: absolute; left: 0; right: 0; top: calc(var(--top-h) - var(--ext-up)); height: var(--ext-h); overflow: hidden; pointer-events: none; }
@@ -436,6 +439,11 @@
     const SUN = <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>;
     const MOON = <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"/></svg>;
     const getMode = () => (html.dataset.pfMode === 'light' ? 'light' : 'dark');
+    // 브라우저 막대 색(meta theme-color)을 지금 모드의 바탕색으로
+    function syncBarColor() {
+      const meta = document.querySelector('meta[name="theme-color"]'); if (!meta) return;
+      const c = getComputedStyle(html).getPropertyValue('--bg').trim(); if (c) meta.setAttribute('content', c);   // 바탕 전환 애니메이션 중간값이 아니라 목표 색
+    }
     const tVar = (n) => getComputedStyle(html).getPropertyValue(n).trim().toUpperCase();
     function hasLightMode() {
       const cur = html.dataset.pfMode;
@@ -457,6 +465,7 @@
         if (m === 'light') html.dataset.pfMode = 'light'; else delete html.dataset.pfMode;
         if (save) try { localStorage.setItem('pf-mode', m); } catch {}
         setModeState(m);
+        syncBarColor();
         window.dispatchEvent(new CustomEvent('pf-mode', { detail: m }));
       }
       if (!ok) return null;
@@ -1222,6 +1231,7 @@
         pinIntroDark();
         bindBackdrop();
         bindNavSpy();
+        syncBarColor();
         let userMoved = false;
         ['wheel', 'touchstart', 'keydown', 'pointerdown'].forEach((ev) => addEventListener(ev, () => { userMoved = true; }, { once: true, passive: true }));
         let arrived = goHash(state.projects), restoreY = null;
