@@ -24,13 +24,31 @@
 
 > 강조하고 싶은 기술을 적어 두세요. Claude가 기술 문서에서 **근거를 찾아** "경험 기반" 문장으로 만듭니다.
 > 근거를 찾지 못한 기술은 싣지 않고, 점검 리포트로 알려 줍니다. 비워 두면 문서에서 자동으로 고릅니다.
+> 기술 아래에 `- 문장 (프로젝트 이름)`으로 근거를 직접 적으면, 요약하지 않고 그 문장을 그대로 씁니다(기술 문서에 있는 사실인지만 확인).
 
 - Unity
+  - Raycast 카드 선택, Sprite 연결선 (사천성)
+  - DontDestroyOnLoad로 씬 전환 후 복귀 (Arcanist)
+  - 32×32 Chunk Mesh로 지형 표현 (Folk Sack)
+  - Rigidbody 물리 기반 염동력 (ODDITY)
 - C#
+  - BFS로 두 번 꺾임 연결 탐색 (사천성)
+  - SortedDictionary로 Batch 순서 보장 (Folk Sack)
+  - 객체별 시간 정지와 상태 복원 (ODDITY)
 - 데이터 설계 (ScriptableObject · DTO/Def)
+  - ScriptableObject로 카드 데이터 정의 (Arcanist)
+  - TSV → DTO → 읽기 전용 Def 변환·검증 (Folk Sack)
+  - DTO/Def로 임무·보상 데이터 연결 (ODDITY)
 - 디자인 패턴
+  - Observer로 피해 결과 통지 (Arcanist)
+  - 보스 공격 패턴을 상태 컴포넌트로 분리 (Arcanist)
+  - 오브젝트 풀로 파편 재사용 (ODDITY)
 - 멀티플레이 동기화 (ASP.NET Core WebSocket · 서버 권위)
+  - 서버 권위로 채굴·붕괴 결과 확정 (Folk Sack)
+  - 방송 큐로 상태 변경과 송신 분리 (Folk Sack)
 - URP 렌더링 · Shader Graph
+  - Shader Graph 화면 반전 연출 (Arcanist)
+  - RendererFeature로 외곽선·가림 실루엣 (ODDITY)
 
 ## 페이지 설정
 
