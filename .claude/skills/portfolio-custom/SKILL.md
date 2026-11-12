@@ -12,6 +12,9 @@ disable-model-invocation: true
 고정 렌더러(포트폴리오 문서 `index.html`)와 **같은 데이터**로, 겉모습만 새로 그린 페이지를 `custom/index.html`에 만듭니다.
 고정 렌더러 파일(`index.html`·`project.html`·`doc.html`·`assets/`)은 **수정하지 않습니다.**
 
+> **이 레포에서는** 직접 생성 페이지를 기본 주소로 씁니다: 결과 파일은 루트 `index.html`(경로는 `../` 없이 `data/`·`src/`·`theme/`·`project.html`)이고,
+> `custom/index.html`은 기본 주소로 넘기는 이동 페이지, 예전 고정 렌더러 배치는 `classic.html`입니다. 아래의 `custom/index.html`·`../`는 이 레포에서 루트 `index.html`·`./`로 읽습니다.
+
 ## 0. 준비
 
 1. `format/05-custom-page-prompts.md`의 **생성 규칙**과 `format/04-layout-patterns.md`의 패턴 13종을 읽습니다.

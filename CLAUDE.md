@@ -21,7 +21,8 @@
 │   └── _raw/                #    (/portfolio-image-crop) 원본 스크린샷 + crops.json — git 제외, build·check가 읽지 않음, 크롭 결과는 images/로
 ├── format/                  # 📏 가이드 판정 기준 (읽기 전용)
 ├── data/                    # 🤖 /portfolio-build가 생성 (portfolio.json, projects/*.json)
-├── index.html               # 🖥 고정 렌더러 — 포트폴리오 문서 (아래로 읽는 한 페이지, A4 인쇄 = 제출 PDF)
+├── index.html               # 🖥 포트폴리오 문서 (아래로 읽는 한 페이지, A4 인쇄 = 제출 PDF) — 이 레포는 /portfolio-custom 새 레이아웃을 기본 페이지로 씀
+├── classic.html             # 🖥 예전 고정 렌더러 배치(백업 주소). custom/index.html은 기본 주소로 넘기는 이동 페이지
 ├── project.html             # 🖥 고정 렌더러 — 발표 덱 (?p=<폴더 이름>, data/의 deck이 가리키는 기술 문서 원문 블록을 그대로 그림)
 ├── doc.html                 # 🖥 고정 렌더러 — 상세 기술문서 (?p=<폴더 이름>, src/의 기술 문서 md를 직접 읽음)
 ├── assets/                  # 🖥 렌더러 CSS·JS (포트폴리오 문서·덱 키트·장면 키트·상세 문서·md-blocks.js = 기술 문서 md 해석과 원문 블록 찾기, 발표 덱·상세 문서 공용 · strings.js = UI 문구 기본값과 문구 표 읽기 · deck-pptx.js = 발표 덱 [PPTX로 저장], 그린 장면을 재서 PowerPoint 개체로)
@@ -88,7 +89,8 @@ flowchart LR
 4. **고칠 곳은 소스다.** 페이지 내용이 틀리면 `data/`를 손으로 고치기보다 `src/`·`profile.md`를 고치고 다시 빌드하도록 안내합니다.
    발표 덱의 **장면 배치**(기술 문서를 읽는 사람에게는 달라질 필요가 없는 것: 틀·어떤 원문 블록을 보일지·나누기·합치기·숨기기·순서)는
    `/portfolio-edit`가 `src/<NN>/deck-edits.json`에 씁니다. 이 파일도 소스이고, 글은 원문 그대로이거나 줄인 것(→ "확인해 주세요")뿐입니다.
-5. **렌더러는 건드리지 않는다.** `index.html`, `project.html`, `doc.html`, `assets/`는 사용자가 요청할 때만 수정합니다.
+5. **렌더러는 건드리지 않는다.** (이 레포의 `index.html`은 새 레이아웃이라 `/portfolio-update` 전에 따로 보관하고, 업데이트 뒤 `git checkout <커밋> -- index.html`로 되돌립니다. 템플릿의 새 `index.html`은 `classic.html`로 옮깁니다.)
+    `index.html`, `project.html`, `doc.html`, `assets/`는 사용자가 요청할 때만 수정합니다.
    디자인 변경 요청은 ① `profile.md`의 강조색 ② `theme/strings.tsv`(문구 표 — 절 이름·버튼·라벨 문구) ③ `/portfolio-theme`(레퍼런스 화면 → `theme/theme.css`, 색·모양·영문 글꼴) ④ `/portfolio-custom`(배치까지 새로 — 따라 할 레퍼런스 배치가 있으면 먼저 `/portfolio-layout` → `theme/layout.json`) 순으로 안내합니다.
    `theme/theme.css`·`theme/strings.tsv`·`theme/layout.json`은 렌더러가 아니라 수강생의 파일입니다(테마는 `/portfolio-theme`, 배치 레퍼런스는 `/portfolio-layout`이 씀).
    **문구 표**는 UI 문구만 바꿉니다(사실·설명은 기술 문서). 수강생이 직접 고치는 것이 기본이고, "고쳐 줘"라고 하면 그 줄의 맨 끝 "내 문구" 칸만 고칩니다

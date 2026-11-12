@@ -299,6 +299,7 @@ argument-hint: "[프로젝트 폴더 이름 (생략하면 전체)]"
      `deck.slides[].sectionPath`에 있다" 항목이 최종입니다 — 맞지 않으면 포트폴리오 문서 기능 소개의 [발표 덱에서 보기]가 장면이 아니라 덱 맨 앞으로 갑니다.
 
    **7-3. 포트폴리오 문서(`http://localhost:4600/`)**
+   — 이 레포의 기본 페이지 `index.html`은 `/portfolio-custom`으로 만든 새 레이아웃입니다(예전 배치는 `classic.html`). `report()` 모양은 같으므로 아래대로 읽습니다.
    — 장면이 아니라 아래로 읽는 한 페이지라 잘림 띠·장면 점검 지표가 없습니다. `await PFPage.whenReady()` 뒤 `PFPage.report()`를 읽습니다
    (브라우저 도구가 없으면 `index.html?pf-audit=1`의 `#pf-audit`, 형식은 7-1과 같음).
    - `sections`에 `portfolio.json`의 프로젝트마다 `p-<폴더>`·`p-<폴더>-core`(기능이 있을 때)가 있어야 합니다. 빠졌으면 그 프로젝트 JSON을 읽지 못한 것 → §4의 이름(대소문자) 검증으로 돌아감.
