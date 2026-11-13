@@ -50,12 +50,12 @@ UI/UX는 공격 예고와 HUD·미니맵, 화면·UI·소리가 함께 바뀌는
 
 | 항목 | 내용 |
 |---|---|
-| 장르 | 3D 보스 액션 |
+| 장르 | 3D 보스 러시 액션 |
 | 기간 | 2026.10 — 2026.11 |
 | 인원 | 4인 |
-| Engine | Unity `6000.3.15f1`, URP·Shader Graph `17.3.0` (ScriptableRendererFeature·RenderGraph) |
+| Engine | Unity `6000.3.15f1`, URP `17.3.0` |
 | Language | C# |
-| 주요 패키지 | Input System `1.19.0`, AI Navigation `2.0.12`, Cinemachine `3.1.7`, UniTask, DOTween, Odin Inspector |
+| 주요 패키지 | Shader Graph `17.3.0`, Input System `1.19.0`, AI Navigation `2.0.12`, Cinemachine `3.1.7`, UniTask, DOTween, Odin Inspector |
 | 데이터 | 증강 칩·보상·임무 TSV, 로컬 JSON 저장 |
 | GitHub | [https://github.com/KooHoo-Dev/3rd_3D_1-3D-Project-team_odd](https://github.com/KooHoo-Dev/3rd_3D_1-3D-Project-team_odd) |
 | 시연 영상 | [YouTube](https://youtu.be/PXWZMTSK4lk) |

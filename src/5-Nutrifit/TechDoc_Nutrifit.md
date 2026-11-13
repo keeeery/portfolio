@@ -1,6 +1,6 @@
 # Nutrifit — 영양소 기반 음식 추천과 앱·서버 연동 기술 문서
 
-> **한 줄 소개**: 신체 정보와 식사 기록으로 남은 영양소를 계산해 다음 식사 후보를 추천하는 Android 앱
+> **한 줄 소개**: 신체 정보와 식사 기록으로 남은 영양소를 계산해 다음 식사 후보를 추천하는 Android 애플리케이션
 > **구현 범위**: 추천 서버(데이터 정제·영양소 목표 계산·코사인 유사도 추천·Flask API)와 Android 통계·추천 화면
 
 | 구분 | 시스템 | 핵심 내용 | 절 |
@@ -33,14 +33,14 @@ Nutrifit은 신체 정보와 식사 기록을 바탕으로 영양소 섭취 현�
 
 | 항목 | 내용 |
 |---|---|
-| 장르 | 영양 관리 Android 앱 + 추천 서버 |
+| 장르 | Android 헬스케어 애플리케이션 |
 | 기간 | 2024.09 — 2025.06 |
 | 인원 | 5인 |
-| 플랫폼 | Android (XML Layout, Activity·Fragment) |
+| 플랫폼 | Android |
 | Language | Java (앱), Python (서버) |
 | 주요 패키지 | OkHttp `4.10.0`, Gson `2.10`, FoodLens SDK |
 | 서버 | Flask, pandas, NumPy, scikit-learn |
-| GitHub | [앱](https://github.com/keeeery/Nutrifit), [추천 서버](https://github.com/keeeery/Nutrifit_Recommendation) |
+| GitHub | [애플리케이션](https://github.com/keeeery/Nutrifit), [추천 서버](https://github.com/keeeery/Nutrifit_Recommendation) |
 
 ### 1.4 담당 범위
 

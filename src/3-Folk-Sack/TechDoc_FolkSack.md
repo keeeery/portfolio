@@ -52,9 +52,9 @@
 | 기간 | 2026.08 — 2026.09 |
 | 인원 | 3인 |
 | Engine | Unity `6000.3.15f1`, URP `17.3.0` |
-| Language | C# (클라이언트·서버) |
+| Language | C# |
 | 주요 패키지 | Input System `1.19.0`, Newtonsoft Json `3.2.2`, UniTask `2.5.11`, Cinemachine `3.1.7`, DOTween 소스 |
-| 서버 | ASP.NET Core, target framework `net10.0` |
+| 서버 | ASP.NET Core (.NET `10.0`) |
 | 통신 | `ClientWebSocket` / ASP.NET Core WebSocket, JSON 메시지 |
 | 데이터 | 클라이언트 StreamingAssets TSV, 서버 Data TSV 및 설정 |
 | GitHub | 클라이언트 [https://github.com/KooHoo-Dev/3rd-TeamProject-KH](https://github.com/KooHoo-Dev/3rd-TeamProject-KH)<br/> 서버 [https://github.com/KooHoo-Dev/3rd-TeamProject-KH-Server](https://github.com/KooHoo-Dev/3rd-TeamProject-KH-Server) |

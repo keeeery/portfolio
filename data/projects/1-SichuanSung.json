@@ -25,11 +25,12 @@
     },
     {
       "label": "환경",
-      "value": "Unity 6000.3.15f1, URP 17.3.0 (2D SpriteRenderer), C#"
+      "value": "Unity 6000.3.15f1, URP, C#"
     }
   ],
   "tags": [
-    "Unity 6.3",
+    "Unity 6000.3.15f1",
+    "URP",
     "C#",
     "큐 기반 탐색",
     "Coroutine",

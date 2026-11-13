@@ -13,7 +13,7 @@
   "meta": [
     {
       "label": "장르",
-      "value": "3D 보스 액션"
+      "value": "3D 보스 러시 액션"
     },
     {
       "label": "기간",
@@ -25,13 +25,14 @@
     },
     {
       "label": "환경",
-      "value": "Unity 6000.3.15f1, URP·Shader Graph 17.3.0 (ScriptableRendererFeature·RenderGraph), C#"
+      "value": "Unity 6000.3.15f1, URP, C#"
     }
   ],
   "tags": [
-    "Unity 6.3",
+    "Unity 6000.3.15f1",
+    "URP",
     "C#",
-    "URP RendererFeature",
+    "RendererFeature",
     "물리 기반 염동력",
     "오브젝트 풀",
     "상태 머신",

@@ -3,7 +3,7 @@
   "id": "5-Nutrifit",
   "doc": "TechDoc_Nutrifit.md",
   "title": "Nutrifit",
-  "tagline": "신체 정보와 식사 기록으로 남은 영양소를 계산해 다음 식사 후보를 추천하는 Android 앱",
+  "tagline": "신체 정보와 식사 기록으로 남은 영양소를 계산해 다음 식사 후보를 추천하는 Android 애플리케이션",
   "cover": null,
   "team": {
     "type": "team",
@@ -13,7 +13,7 @@
   "meta": [
     {
       "label": "장르",
-      "value": "영양 관리 Android 앱 + 추천 서버"
+      "value": "Android 헬스케어 애플리케이션"
     },
     {
       "label": "기간",
@@ -25,13 +25,14 @@
     },
     {
       "label": "환경",
-      "value": "Android (XML Layout, Activity·Fragment), Java (앱), Python (서버)"
+      "value": "Android, Java, Python, Flask"
     }
   ],
   "tags": [
     "Android",
     "Java",
-    "Flask API",
+    "Python",
+    "Flask",
     "pandas",
     "코사인 유사도",
     "OkHttp",
@@ -42,7 +43,7 @@
     "video": "",
     "extra": [
       {
-        "label": "앱 GitHub",
+        "label": "애플리케이션 GitHub",
         "url": "https://github.com/keeeery/Nutrifit"
       }
     ]

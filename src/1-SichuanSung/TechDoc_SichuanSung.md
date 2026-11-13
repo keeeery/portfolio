@@ -45,7 +45,7 @@
 | 장르 | 2D 퍼즐 |
 | 기간 | 2025.05 (며칠간 제작) |
 | 인원 | 1인 |
-| Engine | Unity `6000.3.15f1`, URP `17.3.0` (2D SpriteRenderer) |
+| Engine | Unity `6000.3.15f1`, URP `17.3.0` |
 | Language | C# |
 | 주요 패키지 | Input System `1.19.0`, uGUI, TextMesh Pro |
 | 데이터 | PlayerPrefs의 최고 클리어 시간 |

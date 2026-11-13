@@ -14,7 +14,7 @@
   "meta": [
     {
       "label": "장르",
-      "value": "2D 카드 액션"
+      "value": "2D 액션 플랫포머"
     },
     {
       "label": "기간",
@@ -26,11 +26,12 @@
     },
     {
       "label": "환경",
-      "value": "Unity 6000.3.15f1, Universal RP 17.3.0, C#"
+      "value": "Unity 6000.3.15f1, URP, C#"
     }
   ],
   "tags": [
-    "Unity 6.3",
+    "Unity 6000.3.15f1",
+    "URP",
     "C#",
     "HitBox/HurtBox",
     "ScriptableObject",

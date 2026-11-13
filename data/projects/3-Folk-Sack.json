@@ -25,11 +25,12 @@
     },
     {
       "label": "환경",
-      "value": "Unity 6000.3.15f1, URP 17.3.0, C# (클라이언트·서버)"
+      "value": "Unity 6000.3.15f1, URP, C#, ASP.NET Core"
     }
   ],
   "tags": [
-    "Unity 6.3",
+    "Unity 6000.3.15f1",
+    "URP",
     "C#",
     "ASP.NET Core",
     "WebSocket",
