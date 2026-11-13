@@ -18,7 +18,7 @@
 > 2~3문장. 어떤 개발자인지, 무엇을 잘하고 싶은지. (Claude가 고쳐 쓰지 않고 그대로 싣습니다)
 
 플레이어에게는 편하고 인상적인 경험을,
-개발자에게는 명확해서 편한 구조를 추구하는 개발자입니다.
+개발자에게는 명확한 구조를 주는 것을 추구하는 개발자입니다.
 
 UI·연출처럼 눈에 띄는 부분부터 입력 타이밍·시인성처럼 사소하지만 완성도를 가르는 디테일까지 챙기고,
 왜 그렇게 만들었는지 문서로 설명합니다.
@@ -30,28 +30,35 @@ UI·연출처럼 눈에 띄는 부분부터 입력 타이밍·시인성처럼 �
 > 기술 아래에 `- 문장 (프로젝트 이름)`으로 근거를 직접 적으면, 요약하지 않고 그 문장을 그대로 씁니다(기술 문서에 있는 사실인지만 확인).
 
 - Unity
-  - Raycast 카드 선택, Sprite 연결선 (사천성)
-  - DontDestroyOnLoad로 씬 전환 후 복귀 (Arcanist)
-  - 32×32 Chunk Mesh로 지형 표현 (Folk Sack)
-  - Rigidbody 물리 기반 염동력 (ODDITY)
+  - Input System · Cinemachine · DOTween 활용 (ODDITY)
+  - Rigidbody 물리와 Raycast 판정 (ODDITY)
 - C#
-  - BFS로 두 번 꺾임 연결 탐색 (사천성)
-  - SortedDictionary로 Batch 순서 보장 (Folk Sack)
-  - 객체별 시간 정지와 상태 복원 (ODDITY)
-- 데이터 설계 (ScriptableObject · DTO/Def)
-  - ScriptableObject로 카드 데이터 정의 (Arcanist)
-  - TSV → DTO → 읽기 전용 Def 변환·검증 (Folk Sack)
-  - DTO/Def로 임무·보상 데이터 연결 (ODDITY)
+  - 큐 기반 경로 탐색 (사천성)
+  - 이벤트 기반 상태 변경 통지 (Folk Sack)
+  - async 비동기 처리 (Folk Sack)
+- 데이터 설계
+  - TSV → DTO → Def 데이터 파이프라인 (Folk Sack)
+  - ScriptableObject 데이터 정의 (Arcanist)
 - 디자인 패턴
-  - Observer로 피해 결과 통지 (Arcanist)
-  - 보스 공격 패턴을 상태 컴포넌트로 분리 (Arcanist)
-  - 오브젝트 풀로 파편 재사용 (ODDITY)
-- 멀티플레이 동기화 (ASP.NET Core WebSocket · 서버 권위)
-  - 서버 권위로 채굴·붕괴 결과 확정 (Folk Sack)
-  - 방송 큐로 상태 변경과 송신 분리 (Folk Sack)
+  - 상태 머신 기반 AI·보스 패턴 (Arcanist)
+  - Observer·중재자로 전투 결과 전달 (Arcanist)
+  - 오브젝트 풀 재사용 (ODDITY)
+- 멀티플레이 · ASP.NET Core · WebSocket
+  - 서버 권위 상태 동기화 (Folk Sack)
+  - 로비·대기방·게임 진행 흐름 (Folk Sack)
 - URP 렌더링 · Shader Graph
-  - Shader Graph 화면 반전 연출 (Arcanist)
-  - RendererFeature로 외곽선·가림 실루엣 (ODDITY)
+  - Shader Graph 화면 연출 (Arcanist)
+  - RendererFeature 외곽선·가림 실루엣 (ODDITY)
+  - Light2D 조명 연출 (Arcanist)
+
+## 써 본 도구
+
+> 위 기술 스택 카드 아래에 근거 문장 없이 작은 아이콘과 이름으로만, 가운데 정렬해 나옵니다. 페이지(index.html)가 이 절을 직접 읽으므로 고친 뒤 새로고침만 하면 됩니다(다시 빌드 필요 없음).
+> 한 줄에 `- 묶음 이름: 도구, 도구, 도구`(쉼표로 여러 개). 실제로 써 본 것만 적습니다. 비워 두면 나오지 않습니다.
+> 아이콘은 이름으로 정해집니다(Java·Android·Python·three.js·WebGL·Git·Fork·Asana 등). 맞는 아이콘이 없는 이름은 체크 표시로 나옵니다.
+
+- 언어·플랫폼: Android, Java, Python, WebGL, three.js
+- 협업 도구: Git, GitHub, Fork, Asana
 
 ## 페이지 설정
 
@@ -70,7 +77,7 @@ UI·연출처럼 눈에 띄는 부분부터 입력 타이밍·시인성처럼 �
 > `### 프로젝트 이름` 아래에 `- 소개:` `- 정보:` `- 기술:`(쉼표로 여러 개) `- 맡은 역할:` `- 링크:` 를 적습니다. 비운 항목은 나오지 않습니다.
 
 ### Nako
-- 소개: 음식 영양 정보 검색, 운동 소개, 학식 칼로리 확인 기능을 한 앱에 담은 건강 관리 Android 앱
+- 소개: 음식 영양 정보 검색, 운동 소개, 학식 칼로리 확인 기능을 한 애플리케이션에 담은 건강 관리 Android 애플리케이션
 - 정보: 2024.05 — 2024.06 · 4인 팀
 - 기술: Android, Java, Retrofit, Firebase Auth
 - 맡은 역할: 식품안전나라 영양성분 Open API로 음식을 검색해 열량·탄수화물·단백질·지방을 보여 주는 식단(Diet) 화면
