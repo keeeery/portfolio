@@ -41,9 +41,9 @@
   const metaRows = (p.meta || []).map((m) => `<div><dt>${esc(m.label)}</dt><dd>${inline(m.value)}</dd></div>`).join('') +
     (p.team?.role ? `<div class="role"><dt>${T('name.role')}</dt><dd>${inline(p.team.role)}</dd></div>` : '');
   const ext = [
-    PF.isUrl(p.links?.github) && link({ href: p.links.github, label: 'GitHub', kind: 'external', cls: 'btn' }),
+    ...PF.repoLinks(p).map((r) => link({ href: r.url, label: esc(r.label), kind: 'external', cls: 'btn' })),   // 저장소가 둘 이상이면 'GitHub(역할)'
     PF.isUrl(p.links?.video) && link({ href: p.links.video, label: T('name.video'), kind: 'external', cls: 'btn' }),
-    ...(p.links?.extra || []).filter((l) => PF.isUrl(l.url)).map((l) => link({ href: l.url, label: esc(l.label), kind: 'external', cls: 'btn' })),
+    ...PF.otherLinks(p).map((l) => link({ href: l.url, label: esc(l.label), kind: 'external', cls: 'btn' })),
   ].filter(Boolean);
   const deckBtn = link({ href: deckUrl(), label: T('name.deck'), kind: 'page', cls: 'btn primary' });
   const tags = (p.tags || []).length ? `<ul class="tags">${p.tags.map((t) => `<li>${esc(t)}</li>`).join('')}</ul>` : '';

@@ -37,6 +37,14 @@ const PF = (() => {
     (m, code, bold) => (code !== undefined ? `<code>${code}</code>` : `<strong>${bold}</strong>`));
   const isUrl = (u) => /^https?:\/\//i.test(u || '');
   const shortUrl = (u) => String(u || '').replace(/^https?:\/\/(www\.)?/i, '').replace(/\/$/, '');
+  // 프로젝트 저장소 링크: 저장소가 하나면 'GitHub', 둘 이상이면 모두 'GitHub(역할)'.
+  // 주 저장소 = links.github(+ links.githubRole), 나머지 저장소 = links.extra 중 role이 있는 항목. role이 없는 extra는 그 밖의 링크(otherLinks)
+  const repoLinks = (p) => {
+    const L = p?.links || {};
+    const rs = [isUrl(L.github) && { role: L.githubRole, url: L.github }, ...(L.extra || []).filter((l) => l.role && isUrl(l.url))].filter(Boolean);
+    return rs.map((r) => ({ label: rs.length > 1 && r.role ? `GitHub(${r.role})` : 'GitHub', url: r.url }));
+  };
+  const otherLinks = (p) => (p?.links?.extra || []).filter((l) => !l.role && isUrl(l.url));
 
   // 오류 문구의 경로는 사람이 읽게 디코딩(src/%EA%B8%B0… → src/기술…). 조각마다 encodeURIComponent로 만들었으므로 조각마다 되돌림(#·& 등 포함)
   const shownPath = (path) => String(path).split('/').map((s) => { try { return decodeURIComponent(s); } catch { return s; } }).join('/');
@@ -311,7 +319,7 @@ const PF = (() => {
   // ── 문구 표(assets/strings.js): t(키, 값) · tab(data의 탭 값) · label(data의 카드 라벨 값) · 페이지 시작 때 loadStrings()로 theme/strings.tsv를 읽음 ──
   const { t, tab, label, load: loadStrings, report: stringsReport } = PFStr;
 
-  return { esc, inline, isUrl, shortUrl, loadJSON, loadText, encodePath, srcPath, projectUrl, docUrl, siteBase, visibleUrl, metaValue, teamLabel,
+  return { esc, inline, isUrl, shortUrl, repoLinks, otherLinks, loadJSON, loadText, encodePath, srcPath, projectUrl, docUrl, siteBase, visibleUrl, metaValue, teamLabel,
            slugger, normTitle, resolveHeading, keyOk, deckSceneFor, headingsOf, ICON, NEWTAB, link, markNewTab, themeTokens, applyTheme, mermaidConfig, contrast, hexRgb, modeButton, setMode, getMode, hasLightMode,
            FILE_HELP, noDataHtml, isFile, notice, guardFileProtocol, noData, t, tab, label, loadStrings, stringsReport };
 })();
