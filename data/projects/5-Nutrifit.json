@@ -39,12 +39,14 @@
     "FoodLens SDK"
   ],
   "links": {
-    "github": "https://github.com/keeeery/Nutrifit_Recommendation",
+    "github": "https://github.com/keeeery/Nutrifit",
+    "githubRole": "앱",
     "video": "",
     "extra": [
       {
-        "label": "애플리케이션 GitHub",
-        "url": "https://github.com/keeeery/Nutrifit"
+        "label": "GitHub(서버)",
+        "role": "서버",
+        "url": "https://github.com/keeeery/Nutrifit_Recommendation"
       }
     ]
   },

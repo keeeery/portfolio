@@ -40,7 +40,7 @@ Nutrifit은 신체 정보와 식사 기록을 바탕으로 영양소 섭취 현�
 | Language | Java (앱), Python (서버) |
 | 주요 패키지 | OkHttp `4.10.0`, Gson `2.10`, FoodLens SDK |
 | 서버 | Flask, pandas, NumPy, scikit-learn |
-| GitHub | [애플리케이션](https://github.com/keeeery/Nutrifit), [추천 서버](https://github.com/keeeery/Nutrifit_Recommendation) |
+| GitHub | [앱](https://github.com/keeeery/Nutrifit), [서버](https://github.com/keeeery/Nutrifit_Recommendation) |
 
 ### 1.4 담당 범위
 

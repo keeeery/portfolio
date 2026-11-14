@@ -1,0 +1,39 @@
+{
+  "schemaVersion": 1,
+  "pin": [
+    {
+      "key": "ui-tools",
+      "after": "crosshair",
+      "chapter": "ui",
+      "layout": "visual",
+      "tab": "",
+      "title": {"text": "에디터 도구로 한 번에 맞춘 UI", "verbatim": true},
+      "lead": {"text": "초반에 UI 규칙을 정하지 않아 팀원마다 기준 해상도(1920×1080·3840×2160)와 배율이 다른 창이 쌓였습니다.", "verbatim": true},
+      "sectionPath": ["8. 기능 G — UI/UX ① 화면 UI와 조작", "8.4 UI 연출 부품과 스타일 통일", "에디터 도구로 한 번에 맞춘 UI"],
+      "points": [
+        {"label": "", "text": "규칙은 제가 정하고, 그 규칙을 한 번에 적용하는 에디터 도구는 AI 코딩 에이전트를 활용해 만들었습니다.", "verbatim": false},
+        {"label": "", "text": "도구는 다시 실행해도 같은 결과가 되도록 이미 만든 것을 지우고 새로 만들거나, 이미 맞춰진 것은 건너뜁니다.", "verbatim": true},
+        {"label": "", "text": "AI가 \"컴파일 오류 없음\"이라고 보고한 첫 버전은 Unity 콘솔에서 오류가 났는데, 확인해 보니 AI 쪽 컴파일 확인이 실제로는 실행되지 않고 있었습니다.", "verbatim": true},
+        {"label": "", "text": "적용한 뒤에는 겹치거나 어긋난 곳을 다시 점검해, X 버튼 크기에까지 0.65가 곱해진 문제를 찾아 고쳤습니다.", "verbatim": true}
+      ],
+      "visuals": [
+        {"kind": "image", "src": "images/ui-windows.jpg", "w": 1600, "h": 1200, "caption": {"text": "같은 규칙으로 맞춘 창 — 임무 목록·임무 이동·조작 가이드·환경설정의 제목줄과 우상단 X 버튼", "verbatim": true}}
+      ]
+    },
+    {
+      "key": "ui-tools-table",
+      "after": "ui-tools",
+      "chapter": "ui",
+      "layout": "full",
+      "tab": "",
+      "title": {"text": "에디터 도구로 한 번에 맞춘 UI", "verbatim": true},
+      "lead": null,
+      "sectionPath": ["8. 기능 G — UI/UX ① 화면 UI와 조작", "8.4 UI 연출 부품과 스타일 통일", "에디터 도구로 한 번에 맞춘 UI"],
+      "points": [],
+      "visuals": [
+        {"kind": "table", "n": 1, "fp": "도구|하는 일"}
+      ]
+    }
+  ],
+  "hide": []
+}

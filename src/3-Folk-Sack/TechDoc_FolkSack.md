@@ -57,7 +57,7 @@
 | 서버 | ASP.NET Core (.NET `10.0`) |
 | 통신 | `ClientWebSocket` / ASP.NET Core WebSocket, JSON 메시지 |
 | 데이터 | 클라이언트 StreamingAssets TSV, 서버 Data TSV 및 설정 |
-| GitHub | 클라이언트 [https://github.com/KooHoo-Dev/3rd-TeamProject-KH](https://github.com/KooHoo-Dev/3rd-TeamProject-KH)<br/> 서버 [https://github.com/KooHoo-Dev/3rd-TeamProject-KH-Server](https://github.com/KooHoo-Dev/3rd-TeamProject-KH-Server) |
+| GitHub | 클라이언트 [https://github.com/keeeery/Folk-Sack](https://github.com/keeeery/Folk-Sack)<br/> 서버 [https://github.com/KooHoo-Dev/3rd-TeamProject-KH-Server](https://github.com/KooHoo-Dev/3rd-TeamProject-KH-Server) |
 | 시연 영상 | [YouTube](https://youtu.be/XQi-Hra-ywg) |
 
 ### 1.4 담당 범위
@@ -271,8 +271,16 @@ foreach (TerrainTileDTO dto in rows)
 
 > **결정 대상**: 약 1만 셀(프로토타입 시험 맵 100×105)의 지형을 어떤 단위로 그리고, 충돌을 어떻게 줄 것인가?
 
-지형 붕괴 프로토타입은 처음에 AI를 활용해 Unity Tilemap으로 만들었습니다.
+지형 붕괴는 팀 프로젝트에 넣기 전에 별도 프로젝트에서 기술 검증용 프로토타입으로 먼저 만들었습니다.
+지형 일부 파괴 → 공중에 뜬 덩어리 탐색 → Rigidbody2D로 실제 낙하 → 멈춘 위치를 Grid 셀로 다시 기록하는 흐름과 상하좌우 연결 기준은 제가 정해 AI에게 작업 지시서로 정리하게 했고, 그 지시서를 확인하고 일부 고쳐 AI 코딩 에이전트에 넘겨 Unity Tilemap으로 만들었습니다.
+직접 플레이하며 확인해, 덩어리를 직사각형으로 묶는 바람에 옆 칸에 다시 기록되던 문제는 덩어리를 셀 모양 그대로 만들게 하고, 꼭짓점끼리만 맞닿은 타일은 떨어지도록 기준을 정해 고치게 했습니다.
 AI로 빠르게 만든 프로토타입으로 붕괴 동작을 먼저 확인하고, 실제 게임에 쓸 표현 방식은 비용을 따져 다시 골랐습니다.
+
+이후 수업에서 배운 데이터 기반 Grid 구조로 Tilemap을 바꾸는 리팩터링을 맡겼는데, 첫 버전은 셀마다 GameObject와 Collider를 만들어 플레이를 누르면 로딩이 오래 걸렸고, 이를 최적화하게 해 아래 C 방식이 되었습니다.
+리팩터링 결과는 참고한 수업 코드와 무엇이 같고 다른지 설명을 들으며 확인했고, 그 과정에서 빠져 있던 데이터 기반 맵 생성을 찾아 추가하게 했습니다.
+처음 만든 코드에서 저와 팀원이 순환 참조 문제를 발견한 뒤에는 고칠 곳을 짚게 해 직접 고쳤습니다.
+
+![기술 검증용 프로토타입의 맵 페인터와 시험 맵 — 파낸 자리와 낙하 덩어리(짙은 초록), 맨 아래 기반암 줄](images/prototype-collapse.png)
 
 | 구분 | [A] Unity Tilemap | [B] 셀마다 GameObject·Collider | [C] 32×32 Chunk Mesh + 외곽선 EdgeCollider ✓ |
 |---|---|---|---|
@@ -685,6 +693,10 @@ int damage = Mathf.CeilToInt(baseDamage * damageMultiplier);
 공중에서 플레이어가 청크를 밀어 올리는 식의 부작용이 생길 수 있습니다.
 그래서 청크별 처리 결과를 기억하고, 제한된 범위에서 실제 이동 가능한 공간을 찾으며,
 정착 대기와 매몰 진입을 구분합니다.
+
+밀어낼지 매몰할지를 가르는 판정 기준과 `escapeXOffset` 필드의 의미는 직접 정하고, 코드 반영은 AI 코딩 에이전트에 맡겼습니다.
+`escapeXOffset`은 밀어내기를 허용할 거리를 칸 크기 대비 비율로 나타내며, 그 거리 안에 빈 칸이 있으면 밀어내고 없으면 매몰됩니다.
+반영 결과는 플레이로 확인했고, 밀려나지 않거나 무조건 밀려나는 결과가 이어지자 플레이어 중심이 낙하 경로 안이면 옆 칸을, 밖이면 현재 칸을 검사해야 한다는 원인을 직접 찾아 바로잡았습니다.
 
 피해도 이동/접촉 컴포넌트가 HP를 직접 여러 번 차감하는 대신 이벤트와 어댑터로 전달합니다.
 네트워크 모드에서는 서버의 HP 변경 메시지와 초기 HP 스냅샷을 표시 상태에 반영하지만,

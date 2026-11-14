@@ -18,7 +18,7 @@
     },
     {
       "label": "기간",
-      "value": "2025.06 — 2025.07"
+      "value": "2026.06 — 2026.07"
     },
     {
       "label": "인원",
@@ -40,7 +40,7 @@
     "DOTween"
   ],
   "links": {
-    "github": "https://github.com/KooHoo-Dev/3rd-2D-Project-keeeery",
+    "github": "https://github.com/keeeery/Arcanist",
     "video": "https://youtu.be/8hEJXeohnA8",
     "extra": []
   },

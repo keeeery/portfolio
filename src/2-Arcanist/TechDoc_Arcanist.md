@@ -43,12 +43,12 @@
 | 항목 | 내용 |
 |---|---|
 | 장르 | 2D 액션 플랫포머 |
-| 기간 | 2025.06 — 2025.07 |
+| 기간 | 2026.06 — 2026.07 |
 | 인원 | 1인 |
 | Engine | Unity `6000.3.15f1`, URP `17.3.0` |
 | Language | C# |
 | 주요 패키지 | Input System `1.19.0`(프로젝트 입력 래퍼 `SimpleInput`), Cinemachine `3.1.7`, LDtkUnity `6.12.3`, 2D Animation `13.0.4` |
-| GitHub | [https://github.com/KooHoo-Dev/3rd-2D-Project-keeeery](https://github.com/KooHoo-Dev/3rd-2D-Project-keeeery) |
+| GitHub | [https://github.com/keeeery/Arcanist](https://github.com/keeeery/Arcanist) |
 | 시연 영상 | [YouTube](https://youtu.be/8hEJXeohnA8) |
 
 환경 설정: `ProjectVersion.txt`, `manifest.json`.
@@ -529,6 +529,8 @@ foreach (CardData card in candidates)
 기존 인벤토리 작업에서는 슬롯 목록·안내 메시지 책임을 분리하고, 카드 데이터 조회의 리플렉션을 공개 목록 API로 바꾸었습니다.
 정적 데이터는 `CardDatabase.AllCards`로 명시적으로 읽게 해 조회 경로를 단순하게 했습니다.
 덱 최대 슬롯 수도 UI의 별도 수치 대신 PlayerInventory 설정에 맞추도록 연결했습니다.
+이 정리에서 나눌 파일은 직접 만들어 두고, 최대 덱 장수의 기준도 `PlayerInventory.MaxDeckCardCount` 하나로 정해 값을 Inspector에서 직접 설정했습니다.
+코드를 새 파일로 옮기는 일과 InventoryWindow가 그 값을 참조하도록 바꾸는 일은 AI 코딩 에이전트에 맡겼습니다.
 
 #### 편집 위치 제한과 종료 조건
 
