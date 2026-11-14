@@ -18,7 +18,7 @@
 /* page-root: #root */
 /* caption: figcaption */
 /* backdrop: .proj-backdrop */
-/* check-single-line: .fe-title, .stk-name, .eyebrow, .sec-r, .gl-info > a, #contact .cols3 > :nth-child(2) li */
+/* check-single-line: .fe-title, .stk-name, .eyebrow, .sec-r, .gl-info > a, #contact .cols3 > :nth-child(2) li, .fe-inline > figcaption */
 /* check-table-cell: .sec.proj dl dd */
 /* check-table-box: .sec.proj .split .info */
 /* check-cover-image: .cover-fade .shot */
@@ -32,7 +32,7 @@
 @page { margin-top: 20mm; }
 
 @media print {
-  /* 글씨: 배치 폭 780(화면의 88%) — 절 머리 간격을 조금 줄이고, 기능 그림 칸을 맞춰 기능 4줄이 한 쪽에 */
+  /* 글씨: 배치 폭 780(화면의 88%) — 절 머리 간격을 조금 줄임. 기능 그림 칸 260은 아래 「기능 소개」 묶음이 250으로 덮어씀 */
   .fe-list > .fe-item { grid-template-columns: minmax(0, 1fr) 260px !important; }
   .sec-head { margin-bottom: 28px !important; } .sec.core .sec-head { margin-bottom: 28px !important; }
   /* 작은 글(영문 머리말·주소 목록·칩) 키우기 — 캡션은 도구가 줄바꿈을 보고 정함 */
@@ -69,4 +69,27 @@
     padding: calc(20mm / var(--pdf-scale, 1)) calc(14mm / var(--pdf-scale, 1)) calc(12mm / var(--pdf-scale, 1)) !important; }   /* 위 20mm = 다른 쪽의 종이 위 여백과 같게 */
   html, body { background: transparent !important; }                /* 쪽 배경(도구가 장 표지 쪽에 칠함)이 보이게 — 다른 쪽은 종이 흰색 그대로 */
   .proj-backdrop { display: block !important; }
+}
+
+@media print {
+  /* 링크 캡슐을 기능 소개 아래 → 프로젝트 소개 쪽 맨 아래로(기능 소개 쪽에 여유). 같은 부품(.cap-inline, 휴대폰용 자리)을 켜고 기능 소개 뒤 캡슐은 끔 */
+  .pg > .cap:not(.cap-inline) { display: none !important; }
+  .sec.proj .cap-inline { display: flex !important; position: static !important; left: auto !important; transform: none !important; max-width: 100% !important; margin: 40px auto 0 !important; }
+  .sec.proj .cap-inline .cap-pill { visibility: visible !important; opacity: 1 !important; transform: none !important; animation: none !important; }
+  .sec.proj .cap-inline .cap-row, .sec.proj .cap-inline .cb-full { animation: none !important; opacity: 1 !important; filter: none !important; }
+  /* 링크 캡슐: 화면의 뒤 흐림(backdrop-filter)·큰 그림자가 PDF에서 회색 사각형으로 찍혀, 인쇄에서는 끄고 바탕 + 외곽선 1px의 캡슐로 */
+  .cap .cap-shade, .cap .cb-ring, .cap .cap-dot { display: none !important; }
+  .cap .cb-full { -webkit-backdrop-filter: none !important; backdrop-filter: none !important; clip-path: none !important;
+                  background: var(--card) !important; border: 1px solid var(--line) !important; border-radius: 999px !important; }
+  /* 기능 그림 캡션: 한 줄에 들어가게 자간을 2% 줄이고 기준 크기를 낮춤(도구가 모든 캡션을 같은 크기로, 줄이 늘지 않는 데까지 키움) */
+  .fe-inline > figcaption { letter-spacing: -0.02em !important; font-size: 9px !important; white-space: normal; }
+  /* 기능 소개: 5개가 한 쪽에 들어가는 배치를 모든 프로젝트에 같게 — 4개인 프로젝트는 같은 자리에 놓이고 5번째 칸만 비어 있음
+     기능 사이 28 → 7, 그림 칸 260 → 250(종이 위 약 58mm), 절 머리 아래 28 → 10 */
+  .sec.core .fe-list { gap: 7px !important; }
+  .sec.core .fe-list > .fe-item { grid-template-columns: minmax(0, 1fr) 250px !important; }
+  .sec.core .sec-head { margin-bottom: 10px !important; }
+  /* 캡션은 자기 그림에 붙임: 그림과 캡션 사이 8 → 1(캡션 아래 ~ 다음 그림 사이 7보다 가깝게) */
+  .sec.core .fe-inline > figcaption { margin-top: 1px !important; }
+  /* 기능 설명을 늘 두 줄 높이로(한 줄짜리 설명도 아래 버튼이 다른 기능과 같은 자리에) — 줄 간격 1.625 × 2줄 */
+  .sec.core .fe-what { min-height: 3.25em !important; }
 }
