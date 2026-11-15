@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>자기소개서</title>
+<link rel="icon" href="data:," />
+<!-- 자기소개서 전문 페이지(직접 추가): 레포 맨 위의 자기소개서.md를 상세 기술문서(doc.html)와 같은 모양으로 그립니다.
+     같은 CSS(assets/doc.css)·md 해석(assets/md-blocks.js)을 쓰고, 그리는 일은 assets/letter.js가 합니다. 포트폴리오 문서의 자기소개 아래 [자기소개서 전문 ↗]가 이 페이지로 옵니다. -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/montserrat@5.2.8/latin-700.css" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/montserrat@5.2.8/latin-800.css" />
+<link rel="stylesheet" href="assets/doc.css" />
+<link rel="stylesheet" href="theme/theme.css" />
+<link rel="stylesheet" href="theme/theme-light.css" />
+<style>:root { --measure: 40rem; }
+  @media screen and (max-width: 719.98px) { .doc-head .crumb { flex-basis: 100%; } .doc-head .pf-mode { margin-left: 0; } #pdf-nav { display: flex; } }   /* 휴대폰: 기술문서는 머리 링크를 숨기지만, 여기는 둘째 줄에 [화면 모드][PDF로 보기][PDF로 저장] — 화면 모드 버튼이 버튼들 중 가장 왼쪽 */
+</style><!-- 글만 있는 문서라 글줄을 템플릿 기본 40rem(640px)으로 — 기술문서는 표·그림 때문에 45rem -->
+<script>try { const m = localStorage.getItem('pf-mode'); if (m ? m === 'light' : matchMedia('(prefers-color-scheme: light)').matches) document.documentElement.dataset.pfMode = 'light'; } catch (e) {}</script>
+<script src="https://cdn.jsdelivr.net/npm/marked@12.0.2/marked.min.js"></script>
+</head>
+<body>
+<div id="top"></div>
+<a class="skip-link" href="#main">본문으로 건너뛰기</a>
+<div id="app"><p class="loading">불러오는 중…</p></div>
+<noscript><div class="notice"><h1>JavaScript를 켜 주세요</h1><p>이 문서는 자기소개서.md를 읽어 브라우저에서 그립니다. JavaScript를 켠 뒤 다시 열어 주세요.</p></div></noscript>
+<script src="assets/strings.js"></script>
+<script src="assets/common.js"></script>
+<script src="assets/md-blocks.js"></script>
+<script src="assets/letter.js"></script>
+</body>
+</html>
