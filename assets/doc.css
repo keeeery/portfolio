@@ -70,7 +70,7 @@ code { font-family: var(--mono); font-size: .88em; background: var(--accent-soft
 
 /* ── 머리 막대 ───────────────────────────── */
 .doc-head { border-bottom: 1px solid var(--line); background: var(--paper); }
-.doc-head-in { max-width: var(--page-max); margin: 0 auto; padding: 10px var(--pad); min-height: 58px;
+.doc-head-in { max-width: var(--page-max); margin: 0 auto; padding: 0 var(--pad); min-height: 56px;   /* 높이는 포트폴리오 문서 머리 막대와 같은 56px(아래 선 1px은 따로) */
                display: flex; flex-wrap: wrap; align-items: center; gap: 8px 18px; }
 .crumb { display: flex; align-items: center; gap: 10px; font-size: 14px; font-weight: 600; color: var(--muted); min-width: 0; }
 .crumb a { text-decoration: none; color: var(--muted); white-space: nowrap; }
@@ -78,7 +78,7 @@ code { font-family: var(--mono); font-size: .88em; background: var(--accent-soft
 .crumb b { color: var(--ink); font-weight: 800; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .head-nav { margin-left: auto; display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
 .newtab-note { font-size: 12.5px; color: var(--faint); }
-.doc-head .pf-mode { padding: 0; width: 34px; height: 34px; justify-content: center; cursor: pointer; background: transparent; color: var(--ink); }   /* 밝은·어두운 화면 전환 */
+.doc-head .pf-mode { padding: 0; width: 34px; height: 34px; justify-content: center; cursor: pointer; }   /* 밝은·어두운 화면 전환 */
 .doc-head .pf-mode { margin-left: auto; } .doc-head .pf-mode + .head-nav { margin-left: 0; }   /* 화면 모드 버튼을 오른쪽 버튼 묶음의 가장 왼쪽에(포트폴리오 문서와 같은 순서). 버튼이 없으면(밝은 테마 없음) 링크 묶음이 그대로 오른쪽 끝으로 */
 @media print { .doc-head .pf-mode { display: none; } }
 
@@ -240,7 +240,7 @@ dialog.lightbox::backdrop { background: rgba(10, 11, 14, .82); }
   .doc-fab { display: flex; }
 }
 @media screen and (max-width: 719.98px) {          /* 휴대폰 (§4-6) */
-  .doc-head-in { min-height: 0; padding-block: 10px; }
+  .doc-head-in { min-height: 56px; padding-block: 10px; }
   .head-nav { display: none; }                     /* 링크는 접힌 [한눈에] 상자로 */
   .doc-head .pf-mode { margin-left: auto; }
   .glance { display: block; }
