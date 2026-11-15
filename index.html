@@ -124,7 +124,9 @@
     .pdf-menu .btn-solid { padding-right: 7px; }                         /* [파일로 받기]: 아이콘(18px)이 다운로드 버튼 아이콘과 같은 자리 — 버튼 오른쪽 끝에서 8px(외곽선 1px + 7px) */
     .pdf-menu .btn-solid .pm-save { display: block; margin-left: 2px; }   /* 글과 아이콘 사이는 다른 버튼과 같게(.btn 간격 + .nt-icon 여백) */
     .pdf-menu .btn:not(.btn-solid) { border-color: transparent; background: transparent; }
-    .pdf-menu .btn:not(.btn-solid):hover, .pdf-menu .btn:not(.btn-solid):focus-visible { border-color: color-mix(in srgb, var(--accent) 45%, var(--bg)); background: color-mix(in srgb, var(--accent) 16%, var(--bg)); }
+    /* 마우스 올림은 캡슐 바(.cap-pill)와 같게(예전 그대로): 글자 버튼은 테두리 없이 옅은 회색 바탕, [파일로 받기]는 고리 없이 살짝 밝게 */
+    .pdf-menu .btn:not(.btn-solid):hover, .pdf-menu .btn:not(.btn-solid):focus-visible { background: color-mix(in srgb, var(--ink) 8%, transparent); }
+    .pdf-menu .btn-solid:hover { box-shadow: none; filter: brightness(1.1); }
     .pdf-menu svg { flex-shrink: 0; }
     @media (prefers-reduced-motion: reduce) { .pdf-menu, .pdf-menu *, .pdf-btn { animation: none !important; transition: none; } }
     .btn-icon { width: 34px; min-height: 34px; padding: 0; justify-content: center; }
@@ -195,10 +197,9 @@
     .stk-tool { display: flex; flex-direction: column; align-items: center; gap: 8px; min-width: 64px; font-size: 13px; font-weight: 600; line-height: 1.3; color: var(--ink); }
     .stk-ticon { display: block; color: var(--ink); }
     .stk-line { display: grid; gap: 32px; }                            /* 한 줄에 묶음 여럿(profile.md에서 ` | `) — 휴대폰은 묶음마다 한 줄, 넓은 화면은 나란히 가운데 */
-    @media (min-width: 760px) { .stk-more { margin-top: 72px; } .stk-tools { column-gap: 24px; } .stk-line { display: flex; justify-content: center; column-gap: 64px; } }   /* 넓은 화면: 아이콘 사이 24(휴대폰은 아래 칸 나눔 그대로) */
-    /* 휴대폰: 줄마다 따로 채우면 폭에 따라 하나만 다음 줄로 넘어감 → 항목이 가장 많은 줄을 기준으로 한 줄의 칸 수(--per, 5개 이하로 고르게)를 정하고,
-       모든 줄이 같은 칸 폭(= 아이콘 사이 간격)을 씀. 칸이 남는 줄은 가운데로 */
-    @media (max-width: 759px) { .stk-tools { column-gap: 0; } .stk-tool { flex: 0 0 calc(100% / var(--per, 5)); min-width: 0; } }
+    @media (min-width: 760px) { .stk-more { margin-top: 72px; } .stk-tools { column-gap: 0; } .stk-tool { flex: 0 0 88px; min-width: 0; } .stk-line { display: flex; justify-content: center; column-gap: 64px; } }   /* 넓은 화면: 칸 폭 88px 고정 → 라벨 길이와 상관없이 아이콘 중심 사이가 늘 88px(휴대폰은 아래 칸 나눔 그대로) */
+    /* 휴대폰: 칸 폭 70px 고정(iPhone Safari 393px 폭에서 5칸일 때의 간격) → 화면 폭과 상관없이 아이콘 중심 사이가 늘 70px. 한 줄에 안 들어가면 다음 줄로, 줄은 가운데 */
+    @media (max-width: 759px) { .stk-tools { column-gap: 0; } .stk-tool { flex: 0 0 70px; min-width: 0; } }
     @media print { .stk-more { break-inside: avoid; } }
     /* 프로젝트 링크 캡슐: 앞 프로젝트의 캡슐이 화면에서 사라지면 화면 아래 가운데에 떠오르고(.on), 내려가다 기능 소개 아래 자리에 닿으면 거기 머묾(sticky).
        프로젝트 링크는 이 캡슐 하나로(프로젝트 소개 절에는 버튼 없음 — 인쇄용 주소 목록만) */
@@ -231,7 +232,7 @@
     .cap-pill { position: relative; pointer-events: auto; overflow: visible; background: transparent; border-color: transparent; -webkit-backdrop-filter: none; backdrop-filter: none;
                 transform: translateY(calc(100% + 64px)); visibility: hidden; }   /* 화면 아래 끝 밖(캡슐 높이 + 아래 여백 20px + 그림자)까지 내려가 있음 */
     .cap.on .cap-pill { transform: none; visibility: visible; }
-    .cap-pill { transform-origin: calc(var(--cap-h, 50px) / 2) 50%; }   /* 솟아오를 때 늘어남 · 가라앉을 때 찌그러짐의 기준 = 왼쪽 끝 동그라미의 가운데(동그라미가 옆으로 밀리지 않게) */
+    .cap-pill { transform-origin: calc(var(--cap-h, 50px) / 2) 0%; }   /* 늘어남의 기준 = 왼쪽 끝 동그라미의 위 끝 — 앞서 가는 위 끝은 제자리에 곧장 닿고, 길게 늘어난 아래쪽이 뒤따라 줄어듦(위 끝이 제자리를 지나치지 않음) */
     .cap.out .cap-pill { visibility: visible; }
     .cap-body { position: absolute; inset: -1px; pointer-events: none; }   /* 캡슐 외곽선까지(외곽선 1px은 자리만 남기고 투명) */
     .cb-full { position: absolute; inset: 0; }
@@ -247,7 +248,7 @@
     .cap.on .cb-full { animation: cap-reveal .9s both; }
     .cap.on .cb-ring-r { animation: cap-grow-r .9s both, cap-ring-in .9s both; }
     .cap.on .cb-ring-l { animation: cap-ring-in .9s both; }
-    .cap.on .cap-dot { animation: cap-dot-in .9s both, cap-dot-grow .9s both; }
+    .cap.on .cap-dot { animation: cap-dot-in .9s both, cap-row-edge .9s both; }   /* 폭은 몸통 끝(--cap-edge)을 따라감 — 아래 .cap-dot 폭 규칙 */
     .cap.on .cap-row { animation: cap-row-in .9s both, cap-row-edge .9s both; }
     .cap.out .cap-pill { animation: cap-out .55s both, cap-out-x .55s both; }
     .cap.out .cb-full { animation: cap-hide .55s both; }
@@ -256,34 +257,37 @@
     .cap.out .cap-dot { animation: cap-dot-out .55s both, cap-dot-shrink .55s both; }
     .cap.out .cap-row { animation: cap-row-out .55s both, cap-row-edge-out .55s both; }
     .cap.still :is(.cap-pill, .cb-full, .cb-ring, .cap-dot, .cap-row) { animation: none !important; }   /* 위로 스크롤하다 다시 나타날 때: 떠오르지 않고 이미 제자리에 */
-    /* 솟아오르기(위아래, cap-y — transform)와 펼치기(좌우, cap-x — translate)를 나눔 → 꼭대기(24%)에서 내려오기 시작하는 순간 펼치기도 함께 시작(내려오면서 펼쳐짐).
+    /* 움직임(0.9초): ① 0~0.3초 동그라미가 세로로 길게(1.4배) 늘어난 채 솟아올라 제자리를 지나치지 않고 곧장 멈추며 제 모양으로(더 올라갔다 내려오기 · 납작해지기 없음)
+       ② 0.25초부터 펼치기(처음에 빠르게 퍼져 길게 감속) · 0.4~0.52초 글자가 흐림이 걷히며 나타남 · 0.9초에 다 펼쳐짐.
+       솟아오르기(위아래, cap-y — transform) · 늘어남(cap-s — scale) · 펼치기(좌우, cap-x — translate)를 나눔.
        떠 있는 상태(.on)에서는 transform을 쓰지 않아 위아래 움직임에 씀. 출발 높이 --cap-rise(없으면 화면 아래 끝 밖 = 캡슐 높이 + 64px) */
-    @keyframes cap-y {                                                   /* 솟아올라 제자리보다 12px 위까지 → 내려와 제자리 */
-      0%   { transform: translateY(var(--cap-rise, calc(100% + 64px))); animation-timing-function: cubic-bezier(.2,.8,.3,1); }
-      24%  { transform: translateY(-12px); animation-timing-function: ease-in-out; }
-      38%, 100% { transform: none; }
+    @keyframes cap-y {                                                   /* 솟아오르기: 제자리를 지나치지 않고 곧장 제자리에(0~0.3초, 처음에 빠르고 끝에 부드럽게 멈춤) */
+      0%   { transform: translateY(var(--cap-rise, calc(100% + 64px))); animation-timing-function: cubic-bezier(.25,.8,.35,1); }
+      33%, 100% { transform: none; }
     }
-    @keyframes cap-x {                                                   /* 가운데에서 솟고 → 꼭대기부터 펼쳐지는 만큼 왼쪽 제자리로. 펼치기 곡선(.4,0,.2,1)은 천천히 출발 — 꼭대기에서 멈칫한 순간 바로 빠르게 튀어 나가면 꺾여 보임(몸통·끝 외곽선·점·버튼 줄 가림도 같은 곡선) */
-      0%, 24% { translate: calc((var(--cap-w, 300px) - var(--cap-h, 50px)) / 2) 0; animation-timing-function: cubic-bezier(.4,0,.2,1); }
+    @keyframes cap-x {                                                   /* 펼치기: 거의 다 솟아올랐을 때(28%) 시작(동그라미 가운데에서 양쪽으로 퍼지는 것처럼 보이게 왼쪽 제자리로) */
+      0%, 28% { translate: calc((var(--cap-w, 300px) - var(--cap-h, 50px)) / 2) 0; animation-timing-function: cubic-bezier(.15,0,.15,1); }
       100% { translate: 0 0; }
     }
     @keyframes cap-out-x { 0%, 6% { translate: 0 0; animation-timing-function: cubic-bezier(.5,0,.3,1); } 45%, 100% { translate: calc((var(--cap-w, 300px) - var(--cap-h, 50px)) / 2) 0; } }   /* 사라질 때: 접히는 만큼 가운데로 */
-    @keyframes cap-s {                                                   /* 오르는 동안 세로로 살짝 늘어났다 → 살짝 납작 → 제 모양 */
-      0%   { scale: .88 1.16; animation-timing-function: cubic-bezier(.2,.8,.3,1); }
-      24%  { scale: 1.02 .98; animation-timing-function: ease-in-out; }
-      34%, 100% { scale: 1 1; }
+    @keyframes cap-s {                                                   /* 솟아오르는 동안 세로로 길게(1.4배) 늘어났다가, 속도가 줄어드는 만큼 같은 곡선으로 제 모양(납작해지기 없음) */
+      0%   { scale: .94 1.4; animation-timing-function: cubic-bezier(.25,.8,.35,1); }
+      33%, 100% { scale: 1 1; }
     }
-    @keyframes cap-grow-r { 0%, 24% { right: calc(var(--cap-w, 300px) - var(--cap-h, 50px)); animation-timing-function: cubic-bezier(.4,0,.2,1); } 100% { right: 0; } }   /* 오른쪽 끝 외곽선: 왼쪽 끝 동그라미 → 제자리.
+    @keyframes cap-grow-r { 0%, 28% { right: calc(var(--cap-w, 300px) - var(--cap-h, 50px)); animation-timing-function: cubic-bezier(.15,0,.15,1); } 100% { right: 0; } }   /* 오른쪽 끝 외곽선: 왼쪽 끝 동그라미 → 제자리.
        위치 이동(translate)이 아니라 right로 — translate는 GPU에서 따로 움직여, 메인 스레드가 바쁠 때(첫 화면 여는 중) 늦게 그려지는 몸통 잘라 보이기보다 앞서 나가 빈 외곽선이 먼저 보임. right는 몸통과 같은 프레임에 그려짐 */
-    @keyframes cap-reveal { 0%, 24% { clip-path: inset(0 calc(100% - var(--cap-h, 50px)) 0 0 round 999px); animation-timing-function: cubic-bezier(.4,0,.2,1); } 100% { clip-path: inset(0 round 999px); } }   /* 몸통: 왼쪽 끝 동그라미 → 오른쪽으로 넓어짐 */
-    @keyframes cap-dot-in { 0%, 6% { scale: 0; opacity: 0; animation-timing-function: cubic-bezier(.3,1.35,.5,1); } 24%, 100% { scale: 1; opacity: 1; } }
-    @keyframes cap-dot-grow { 0%, 24% { width: var(--cap-dot, calc(var(--cap-h, 50px) - 14px)); animation-timing-function: cubic-bezier(.4,0,.2,1); } 70%, 100% { width: var(--b1, 90px); } }   /* 점 → 오른쪽으로 [발표 덱] 버튼 폭까지(바와 같은 방향 · 같은 때) */
+    @keyframes cap-reveal { 0%, 28% { clip-path: inset(0 calc(100% - var(--cap-h, 50px)) 0 0 round 999px); animation-timing-function: cubic-bezier(.15,0,.15,1); } 100% { clip-path: inset(0 round 999px); } }   /* 몸통: 왼쪽 끝 동그라미 → 오른쪽으로 넓어짐 */
+    @keyframes cap-dot-in { 0%, 8% { scale: 0; opacity: 0; animation-timing-function: cubic-bezier(.3,.5,.7,1); } 9% { opacity: 1; } 28%, 100% { scale: 1; opacity: 1; } }   /* 솟아오르는 중에 점이 생겨 펼치기 전에 버튼 높이로 */
+    /* 강조색 점 → [발표 덱] 버튼: 점의 폭은 펼쳐지는 몸통의 오른쪽 끝(--cap-edge, 버튼 줄 가림과 같은 키프레임 cap-row-edge)에서 왼쪽과 같은 안쪽 여백만큼 안쪽을 따라가고, 버튼 폭(--b1)에 닿으면 멈춤.
+       → 점이 몸통과 한 덩어리로 늘어나고, 버튼 글자가 나타나기(45%) 훨씬 전에 버튼 폭이 다 됨(예전에는 점이 따로 늦게 늘어나 버튼이 나타날 때 폭이 10px쯤 모자라 툭 늘어나 보였음).
+       움직이지 않을 때 --cap-edge는 아주 멀리(9999px)라 폭 = 버튼 폭 */
+    .cap-dot { width: clamp(var(--cap-dot, calc(var(--cap-h, 50px) - 14px)), calc(var(--cap-edge) - 2 * var(--cap-pad, 7px)), var(--b1, 90px)); }
     @keyframes cap-dot-shrink { 0%, 6% { width: var(--b1, 90px); animation-timing-function: cubic-bezier(.5,0,.3,1); } 45%, 100% { width: var(--cap-dot, calc(var(--cap-h, 50px) - 14px)); } }
     @keyframes cap-ring-in { 0%, 80% { opacity: 1; } 100% { opacity: 0; } }      /* 둥근 끝 외곽선 ↔ 몸통 외곽선: 끝무렵 서서히 바꿈 */
     @keyframes cap-ring-out { 0% { opacity: 0; } 8%, 100% { opacity: 1; } }
-    @keyframes cap-row-in {                                              /* 펼치기 직후(28%) 흐림이 걷히며 빠르게 나타남 — 늦게 나타나면 먼저 넓어진 몸통이 빈 막대로 보임. 아직 펼쳐지지 않은 쪽은 가림(--cap-edge)이 몸통 끝에 맞춰 가림 */
-      0%, 28% { opacity: 0; filter: blur(8px); animation-timing-function: cubic-bezier(.3,.7,.3,1); }
-      52%, 100% { opacity: 1; filter: blur(0); }
+    @keyframes cap-row-in {                                              /* 펼치기가 절반쯤 왔을 때(45%) 흐림이 걷히며 나타남 — 아직 펼쳐지지 않은 쪽은 가림(--cap-edge)이 몸통 끝에 맞춰 가림 */
+      0%, 45% { opacity: 0; filter: blur(8px); animation-timing-function: cubic-bezier(.3,.7,.3,1); }
+      58%, 100% { opacity: 1; filter: blur(0); }
     }
     @keyframes cap-out {
       0%, 45% { transform: none; animation-timing-function: cubic-bezier(.5,0,.75,0); }
@@ -297,8 +301,8 @@
     @property --cap-edge { syntax: '<length>'; inherits: false; initial-value: 9999px; }   /* 움직이지 않을 때는 아주 멀리(가림 없음) */
     @property --cap-in { syntax: '<length>'; inherits: false; initial-value: 0px; }
     @keyframes cap-row-edge {
-      0%, 24% { --cap-edge: var(--cap-h, 50px); --cap-in: 10px; animation-timing-function: cubic-bezier(.4,0,.2,1); }
-      85% { --cap-in: 10px; }
+      0%, 28% { --cap-edge: var(--cap-h, 50px); --cap-in: 10px; animation-timing-function: cubic-bezier(.15,0,.15,1); }
+      88% { --cap-in: 10px; }
       100% { --cap-edge: var(--cap-w, 300px); --cap-in: -50px; }
     }
     @keyframes cap-row-edge-out {
@@ -328,6 +332,15 @@
                -webkit-mask-image: linear-gradient(to right, transparent, #000 var(--fl), #000 min(calc(100% - var(--fr)), calc(var(--cap-edge) - var(--cap-pad, 7px) - var(--cap-in) - 36px)), transparent min(100%, calc(var(--cap-edge) - var(--cap-pad, 7px) - var(--cap-in))));
                        mask-image: linear-gradient(to right, transparent, #000 var(--fl), #000 min(calc(100% - var(--fr)), calc(var(--cap-edge) - var(--cap-pad, 7px) - var(--cap-in) - 36px)), transparent min(100%, calc(var(--cap-edge) - var(--cap-pad, 7px) - var(--cap-in)))); }   /* 7px = 캡슐 왼쪽 끝 → 버튼 줄 왼쪽 끝(외곽선 1px + 안쪽 여백 6px). 펼치는 동안의 오른쪽 끝 가림은 아래 --cap-edge */
     .cap-row.fl { --fl: 56px; } .cap-row.fr { --fr: 72px; }
+    /* 휴대폰: 넘겨서 볼 항목이 남은 쪽 끝(흐려진 자리)에 작은 화살표(‹ ›) — 캡슐(nav)에 붙여 버튼 줄과 함께 밀려가지 않음. 판단은 위 흐림과 같음(.al 왼쪽 · .ar 오른쪽) */
+    @media screen and (max-width: 759px) {
+      .cap-pill::before, .cap-pill::after, .hero-pill::before, .hero-pill::after {
+        content: ''; position: absolute; top: 50%; z-index: 2; width: 6px; height: 6px; border: solid var(--ink); border-width: 0 1.5px 1.5px 0;
+        opacity: 0; pointer-events: none; transition: opacity .2s; }
+      .cap-pill::before, .hero-pill::before { left: 13px; transform: translateY(-50%) rotate(135deg); }
+      .cap-pill::after, .hero-pill::after { right: 13px; transform: translateY(-50%) rotate(-45deg); }
+      .cap-pill.al::before, .hero-pill.al::before, .cap-pill.ar::after, .hero-pill.ar::after { opacity: .7; }
+    }
     @media (prefers-reduced-motion: reduce) { .cap-pill, .cb-full, .cb-ring, .cap-dot, .cap-row { transition: none !important; animation: none !important; } }
     /* 기능 소개(목록 + 고정된 큰 그림): 넓은 화면은 트랙(.fe, 기능 수 × 40vh + 한 화면) 안에서 [목록 40 | 그림 60]이 머리 막대 아래에 붙어 있음.
        현재 기능만 펼치고(.on) 나머지는 번호·제목만 흐리게. 760px 미만·인쇄는 기능마다 그림 → 글, 모두 펼침 */
@@ -507,14 +520,14 @@
        점 크기(--cap-dot) · 버튼 줄 왼쪽 끝(--cap-pad = 외곽선 1px + 안쪽 여백)은 이 캡슐의 안쪽 여백(--hp-pad)에 맞춤 */
     .hero-pill { --hp-pad: 9px; --cap-dot: calc(var(--cap-h, 64px) - 2px - 2 * var(--hp-pad)); --cap-pad: calc(1px + var(--hp-pad));
                  position: relative; overflow: visible; background: transparent; border-color: transparent; -webkit-backdrop-filter: none; backdrop-filter: none;
-                 transform-origin: calc(var(--cap-h, 64px) / 2) 50%; }
+                 transform-origin: calc(var(--cap-h, 64px) / 2) 0%; }
     @media (max-width: 480px) { .hero-pill { --hp-pad: 6px; } }
     .hero-pill .cap-dot { left: var(--hp-pad); top: var(--hp-pad); }
     #cover .hero-pill { --d: .3s; animation: cap-y .9s var(--d) both, cap-x .9s var(--d) both, cap-s .9s var(--d) both; }
     #cover .hero-pill .cb-full { animation: cap-reveal .9s var(--d) both; }
     #cover .hero-pill .cb-ring-r { animation: cap-grow-r .9s var(--d) both, cap-ring-in .9s var(--d) both; }
     #cover .hero-pill .cb-ring-l { animation: cap-ring-in .9s var(--d) both; }
-    #cover .hero-pill .cap-dot { animation: cap-dot-in .9s var(--d) both, cap-dot-grow .9s var(--d) both; }
+    #cover .hero-pill .cap-dot { animation: cap-dot-in .9s var(--d) both, cap-row-edge .9s var(--d) both; }
     #cover .hero-pill .cap-row { animation: cap-row-in .9s var(--d) both, cap-row-edge .9s var(--d) both; }
     @media (max-width: 759px) { #cover .hero-pill { animation: ci-up .8s cubic-bezier(.2,.8,.2,1) var(--d) backwards; } }   /* 휴대폰: 프로젝트 캡슐처럼 펼치기 없음(몸통·점·외곽선 움직임은 위 공용 규칙이 끔) → 아래에서 떠오르기만 */
     @media (prefers-reduced-motion: reduce) { #cover .hero-pill, #cover .hero-pill * { animation: none !important; } }
@@ -1043,7 +1056,7 @@
       );
     }
 
-    // ── 주소로 절 바로 가기(예전 포트폴리오 덱 주소 #s=… 도 같은 절로) · 새로고침하면 읽던 위치로 ──
+    // ── 주소로 절 바로 가기(예전 포트폴리오 덱 주소 #s=… 도 같은 절로) · 새로고침하거나 뒤로 돌아오면 읽던 위치로 ──
     const POS = `pf-portfolio-y:${location.pathname}`;
     try { history.scrollRestoration = 'manual'; } catch {}
     addEventListener('pagehide', () => { try { sessionStorage.setItem(POS, String(Math.round(scrollY))); } catch {} });
@@ -1434,7 +1447,11 @@
       measure(); addEventListener('resize', measure); document.fonts?.ready.then(measure);
       const motion = () => matchMedia('(min-width: 760px)').matches && !matchMedia('(prefers-reduced-motion: reduce)').matches;
       const rows = [...document.querySelectorAll('.cap-row')];             // 버튼 줄이 넘치면 아직 남은 쪽 끝을 흐림(프로젝트 소개 안 캡슐 포함)
-      const fade = (r) => { const max = r.scrollWidth - r.clientWidth; r.classList.toggle('fl', max > 1 && r.scrollLeft > 1); r.classList.toggle('fr', max > 1 && r.scrollLeft < max - 1); };
+      const fade = (r) => {
+        const max = r.scrollWidth - r.clientWidth, l = max > 1 && r.scrollLeft > 1, rt = max > 1 && r.scrollLeft < max - 1;
+        r.classList.toggle('fl', l); r.classList.toggle('fr', rt);
+        r.parentElement?.classList.toggle('al', l); r.parentElement?.classList.toggle('ar', rt);   // 캡슐에 화살표(휴대폰)
+      };
       // 캡슐 최대 폭: 추가 링크가 없는 캡슐 중 가장 넓은 것의 폭(화면 폭에 따라 버튼 크기가 달라서 그때마다 다시 잼)
       const capMax = () => {
         html.style.removeProperty('--cap-max');
@@ -1507,7 +1524,6 @@
       [/codex/i, [1, 12, 12], <><mask id="ti-codex" maskUnits="userSpaceOnUse" x="0" y="0" width="24" height="24"><rect width="24" height="24" fill="#fff" /><path d="M7.45 9.6 9.4 12.35 7.45 15.1M12.4 15.05h4.15" stroke="#000" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" fill="none" /></mask><path d="M9.91 2.02L11.42 2.02L12.10 2.17L12.78 2.41L12.83 2.51L13.31 2.70L13.31 2.80L13.55 2.85L14.18 3.43L15.16 3.29L16.66 3.38L17.58 3.67L18.75 4.35L19.62 5.23L20.30 6.39L20.59 7.32L20.69 8.24L20.54 9.69L21.17 10.42L21.17 10.57L21.32 10.67L21.61 11.20L21.76 11.78L21.85 11.88L22 12.66L21.95 14.21L21.61 15.33L20.98 16.39L20.40 17.02L20.30 17.02L20.30 17.12L19.72 17.56L18.99 17.95L18.26 18.19L18.07 18.87L17.97 18.92L17.78 19.45L17.05 20.42L16.81 20.57L16.81 20.67L15.69 21.44L15.50 21.44L15.50 21.54L14.48 21.88L13.84 21.98L12.83 21.98L12.05 21.83L10.88 21.39L10.79 21.25L10.50 21.15L10.11 20.86L9.91 20.62L9.82 20.62L9.82 20.52L9.04 20.67L7.78 20.67L7.24 20.57L6.37 20.28L5.16 19.55L4.57 18.97L4.57 18.87L4.48 18.87L4.23 18.43L4.09 18.33L3.60 17.32L3.41 16.59L3.31 15.62L3.36 14.79L3.50 14.31L2.73 13.38L2.34 12.61L2.10 11.83L2 11.05L2.10 9.55L2.34 8.77L2.44 8.72L2.44 8.53L3.12 7.46L3.21 7.46L3.41 7.12L4.23 6.44L5.16 5.96L5.74 5.81L5.83 5.37L5.93 5.33L5.93 5.13L6.32 4.35L7.29 3.24L8.46 2.46Z" fill="currentColor" stroke="none" mask="url(#ti-codex)" /></>],   /* Codex: 원본 로고의 구름 윤곽(긴 쪽 20칸) 안에 프롬프트 >_ (mask로 뚫음) */
     ];
     // 써 본 도구: 가장 많은 줄의 항목 수로 한 줄 칸 수를 정함(5개 이하, 넘치면 줄마다 고르게: 7 → 4·3, 9 → 5·4)
-    const toolsPer = (rows) => { const n = Math.max(1, ...rows.map((r) => r.tags.length)); return Math.ceil(n / Math.ceil(n / 5)); };
     function ToolIcon({ name }) {
       const hit = TOOL_ICONS.find(([re]) => re.test(name));
       const [k, x, y] = hit ? hit[1] : [1, 12, 12];
@@ -1541,7 +1557,7 @@
                 ))}
               </ul>
               {tools.length > 0 && (   /* profile.md "## 써 본 도구" — 근거 문장 없이 묶음 이름 + 작은 아이콘·이름, 가운데 정렬 */
-                <div className="stk-more reveal" style={{ '--per': toolsPer(tools) }}>
+                <div className="stk-more reveal">
                   {[...new Set(tools.map((r) => r.line))].map((n) => (
                     <div key={n} className="stk-line">
                       {tools.filter((r) => r.line === n).map((r) => (
@@ -2041,7 +2057,7 @@
         let userMoved = false;
         ['wheel', 'touchstart', 'keydown', 'pointerdown'].forEach((ev) => addEventListener(ev, () => { userMoved = true; }, { once: true, passive: true }));
         let arrived = goHash(state.projects), restoreY = null;
-        if (!arrived && performance.getEntriesByType?.('navigation')[0]?.type === 'reload') {
+        if (!arrived && ['reload', 'back_forward'].includes(performance.getEntriesByType?.('navigation')[0]?.type)) {   // 새로고침 · 뒤로(상세 기술문서의 [← 포트폴리오] 포함)로 다시 열렸을 때 읽던 위치로
           try { restoreY = +sessionStorage.getItem(POS) || null; } catch {}
           if (restoreY) scrollTo({ top: restoreY, behavior: 'instant' });
         }
