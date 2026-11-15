@@ -184,6 +184,10 @@ code { font-family: var(--mono); font-size: .88em; background: var(--accent-soft
 .md img { cursor: zoom-in; }
 /* 크기 정보가 없는 그림이 늦게 들어올 때 스크롤 고정의 기준이 되지 않게 → 바로 아래 제목·글이 기준이 되어 제자리에 머묾(doc.js hold()와 함께) */
 .md :is(.pf-figure, img, .table-wrap:has(img)) { overflow-anchor: none; }
+/* 세로 그림(높이 ≥ 폭 × 1.15, doc.js가 .pf-tall) → 한 줄 두 장(.pf-figure-row)의 한 칸 폭과 같게 줄여 가운데 — 직접 고친 부분 */
+.md > p.pf-tall { width: fit-content; }
+.md > p.pf-tall img { width: calc((var(--measure) - 12px) / 2); max-width: 100%; }
+@media screen and (max-width: 719.98px) { .md > p.pf-tall img { width: min(220px, 60vw); } }   /* 휴대폰 */
 
 .md .mmd { margin: 22px 0; }
 .mmd .mermaid { display: flex; justify-content: center; padding: 16px; border: 1px solid var(--line); border-radius: calc(var(--r) * .7); overflow-x: auto; background: var(--diagram-bg); }
@@ -297,6 +301,8 @@ dialog.lightbox::backdrop { background: rgba(10, 11, 14, .82); }
   .md > * { max-width: none !important; width: auto !important; min-width: 0 !important; margin-left: 0 !important; margin-right: 0 !important; }
   .md > :is(.mmd, .pf-figure) { width: fit-content !important; }
   pre, .table-wrap, .mmd, .mermaid, .pf-figure, blockquote, tr, img { break-inside: avoid; }
+  .md > p.pf-tall { margin-left: auto !important; margin-right: auto !important; }   /* 세로 그림: 인쇄에서도 가운데 */
+  .md > p.pf-tall img { width: 240pt; }
   h2, h3, h4 { break-after: avoid; }
   /* .fade-r(화면용 흐림 mask)이 인쇄에 남으면 코드가 그림으로 바뀌고 글자가 두 번 들어감(시안 검증에서 발견) → 인쇄에서 mask를 끔 */
   .md pre, .md pre.fade-r { white-space: pre-wrap; overflow: visible; background: #F6F8FA; border: 1px solid #D8DEE4; -webkit-mask-image: none; mask-image: none; }

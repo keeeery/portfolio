@@ -4,7 +4,7 @@
   "doc": "TechDoc_Nutrifit.md",
   "title": "Nutrifit",
   "tagline": "신체 정보와 식사 기록으로 남은 영양소를 계산해 다음 식사 후보를 추천하는 Android 애플리케이션",
-  "cover": null,
+  "cover": "images/cover.png",
   "team": {
     "type": "team",
     "size": "5인",
@@ -34,14 +34,13 @@
     "Python",
     "Flask",
     "pandas",
-    "코사인 유사도",
     "OkHttp",
-    "FoodLens SDK"
+    "scikit-learn"
   ],
   "links": {
     "github": "https://github.com/keeeery/Nutrifit",
     "githubRole": "앱",
-    "video": "",
+    "video": "https://youtube.com/shorts/G1EEo4VVekM",
     "extra": [
       {
         "label": "GitHub(서버)",
@@ -61,7 +60,12 @@
       "how": "섭취 영양소에 `eatAmount`를 곱해 차감하고 음수 잔여량은 0으로 제한한 뒤, 성분별 가중치를 곱한 잔여 벡터와 음식 벡터의 cosine similarity로 점수를 매겨 음식군별로 1개씩 최대 5개를 고릅니다.",
       "why": "사용자 평점 이력 기반 협업 필터링 대신 음식 영양소 벡터의 유사도를 써서 평점 이력이 없어도 계산할 수 있고, 음식군별 1개 선택으로 밥·국·반찬 형태를 구성합니다.",
       "section": "2.2 핵심 기능 및 사용법",
-      "image": null
+      "image": {
+        "src": "images/console-recommend.png",
+        "w": 1475,
+        "h": 722,
+        "caption": "collaborate_filtering.py 실행 결과 — 일일 권장량, 섭취 후 남은 권장량, 음식군별 추천 음식과 추천점수"
+      }
     },
     {
       "title": "식품 데이터 정제와 후보 테이블",
@@ -77,7 +81,12 @@
       "how": "`user_data.json`과 식사 파일을 `{ \"user\": [...], \"foods\": [...] }`로 합쳐 OkHttp로 `application/json; charset=utf-8` POST 요청을 만들고, `enqueue`로 비동기 요청한 뒤 응답 문자열을 UI 스레드로 넘겨 파싱합니다.",
       "why": "앱과 추천 계산의 책임을 나누기 위해 JSON 요청을 받는 Flask API로 분리했습니다. 화면과 계산을 따로 바꿀 수 있지만 계약을 양쪽에서 함께 관리해야 합니다.",
       "section": "3.1 요청과 응답",
-      "image": null
+      "image": {
+        "src": "images/recommend.png",
+        "w": 1080,
+        "h": 1537,
+        "caption": "추천 화면 — 서버 응답을 추천 식단 두 개로 나누어 표시한 화면"
+      }
     },
     {
       "title": "주간 통계 Canvas 차트",
@@ -85,11 +94,47 @@
       "how": "`StatisticsFragment`가 날짜별 기록을 집계해 목록만 차트 View에 넘기고, `CustomLineChart`는 Canvas·Path로 선·점·평균선과 터치 위치의 kcal 말풍선을, `CustomBarChart`는 탄수화물·단백질·지방의 g 구성비를 누적 막대로 그립니다.",
       "why": "",
       "section": "3.2 주간 통계 차트",
-      "image": null
+      "image": {
+        "src": "images/weekly-stats.png",
+        "w": 1080,
+        "h": 1667,
+        "caption": "주간 통계 — 터치한 날의 kcal 말풍선과 평균선, 3대 영양소 구성비 누적 막대"
+      }
     }
   ],
   "troubleshooting": [],
-  "screenshots": [],
+  "screenshots": [
+    {
+      "src": "images/photo-analysis.png",
+      "w": 1080,
+      "h": 1339,
+      "caption": "음식 인식 결과 — FoodLens SDK가 사진에서 인식한 음식과 총 섭취 칼로리"
+    },
+    {
+      "src": "images/user-info.png",
+      "w": 1080,
+      "h": 1860,
+      "caption": "사용자 정보 입력 — 목표 영양소 계산에 쓰는 몸무게·나이·성별·활동 수준과 선호하는 국·반찬 종류"
+    },
+    {
+      "src": "images/recommend.png",
+      "w": 1080,
+      "h": 1537,
+      "caption": "추천 화면 — 서버 응답을 추천 식단 두 개로 나누어 표시한 화면"
+    },
+    {
+      "src": "images/weekly-stats.png",
+      "w": 1080,
+      "h": 1667,
+      "caption": "주간 통계 — 터치한 날의 kcal 말풍선과 평균선, 3대 영양소 구성비 누적 막대"
+    },
+    {
+      "src": "images/console-recommend.png",
+      "w": 1475,
+      "h": 722,
+      "caption": "collaborate_filtering.py 실행 결과 — 일일 권장량, 섭취 후 남은 권장량, 음식군별 추천 음식과 추천점수"
+    }
+  ],
   "retro": {
     "section": "4. 결과와 배운 점",
     "achieved": [
@@ -99,12 +144,12 @@
       "주간 섭취 통계 — Canvas 기반 꺾은선·누적 막대 차트"
     ],
     "regrets": [
-      "응답 MIME·결과 개수·영양소 키의 계약이 앱과 서버 사이에서 맞지 않음",
+      "배포 서버의 최종 코드가 저장소에 없고, 공개 코드 기준으로는 응답 MIME·결과 개수·영양소 키가 앱과 맞지 않음",
       "선호 가중치(`boost=1.1`)가 실제 순위를 바꾸지 못함",
       "단위 표준화와 가중치 효과, 추천 품질을 측정하지 않음"
     ],
     "plans": [
-      "MIME·개수·키 계약을 통일하고 실행으로 확인",
+      "배포한 서버 코드를 저장소에 올리고 MIME·개수·키 계약을 통일해 실행으로 확인",
       "선호도 효과 개선",
       "단위 표준화와 데이터 품질·표본 평가"
     ]
@@ -167,12 +212,64 @@
         ],
         "visuals": [
           {
+            "kind": "image",
+            "src": "images/home.png",
+            "w": 1080,
+            "h": 1339,
+            "caption": {
+              "text": "홈 화면 — 일일 권장·섭취·잔여 칼로리, 3대 영양소 섭취량과 식사 기록",
+              "verbatim": true
+            }
+          },
+          {
             "kind": "table",
             "n": 1,
             "fp": "직접 구현한 부분|내용",
             "sectionPath": [
               "1. 프로젝트 개요",
               "1.4 담당 범위"
+            ]
+          }
+        ]
+      },
+      {
+        "key": "app-screens",
+        "chapter": "overview",
+        "layout": "screens",
+        "tab": "화면",
+        "title": {
+          "text": "1.1 What — 무엇을 만들었나",
+          "verbatim": true
+        },
+        "lead": null,
+        "sectionPath": [
+          "1. 프로젝트 개요",
+          "1.1 What — 무엇을 만들었나"
+        ],
+        "points": [],
+        "visuals": [
+          {
+            "kind": "image",
+            "src": "images/photo-analysis.png",
+            "w": 1080,
+            "h": 1339,
+            "caption": {
+              "text": "음식 인식 결과 — FoodLens SDK가 사진에서 인식한 음식과 총 섭취 칼로리",
+              "verbatim": true
+            }
+          },
+          {
+            "kind": "image",
+            "src": "images/user-info.png",
+            "w": 1080,
+            "h": 1860,
+            "caption": {
+              "text": "사용자 정보 입력 — 목표 영양소 계산에 쓰는 몸무게·나이·성별·활동 수준과 선호하는 국·반찬 종류",
+              "verbatim": true
+            },
+            "sectionPath": [
+              "2. 기능 A — 영양소 벡터 기반 추천",
+              "2.2 핵심 기능 및 사용법"
             ]
           }
         ]
@@ -219,7 +316,53 @@
           {
             "kind": "mermaid",
             "n": 1,
-            "fp": "flowchart LR"
+            "fp": "flowchart TB"
+          }
+        ]
+      },
+      {
+        "key": "system-diagram",
+        "chapter": "overview",
+        "layout": "full",
+        "tab": "구조",
+        "title": {
+          "text": "1.5 전체 구조",
+          "verbatim": true
+        },
+        "lead": null,
+        "sectionPath": [
+          "1. 프로젝트 개요",
+          "1.5 전체 구조"
+        ],
+        "points": [],
+        "visuals": [
+          {
+            "kind": "mermaid",
+            "n": 2,
+            "fp": "flowchart TB"
+          }
+        ]
+      },
+      {
+        "key": "data-design",
+        "chapter": "overview",
+        "layout": "full",
+        "tab": "구조",
+        "title": {
+          "text": "1.5 전체 구조",
+          "verbatim": true
+        },
+        "lead": null,
+        "sectionPath": [
+          "1. 프로젝트 개요",
+          "1.5 전체 구조"
+        ],
+        "points": [],
+        "visuals": [
+          {
+            "kind": "mermaid",
+            "n": 3,
+            "fp": "classDiagram"
           }
         ]
       },
@@ -245,7 +388,7 @@
           {
             "kind": "mermaid",
             "n": 1,
-            "fp": "flowchart LR"
+            "fp": "flowchart TB"
           }
         ]
       },
@@ -281,6 +424,34 @@
         ]
       },
       {
+        "key": "rec-console",
+        "chapter": "recommend",
+        "layout": "full",
+        "tab": "결과",
+        "title": {
+          "text": "2.2 핵심 기능 및 사용법",
+          "verbatim": true
+        },
+        "lead": null,
+        "sectionPath": [
+          "2. 기능 A — 영양소 벡터 기반 추천",
+          "2.2 핵심 기능 및 사용법"
+        ],
+        "points": [],
+        "visuals": [
+          {
+            "kind": "image",
+            "src": "images/console-recommend.png",
+            "w": 1475,
+            "h": 722,
+            "caption": {
+              "text": "collaborate_filtering.py 실행 결과 — 일일 권장량, 섭취 후 남은 권장량, 음식군별 추천 음식과 추천점수",
+              "verbatim": true
+            }
+          }
+        ]
+      },
+      {
         "key": "rec-tradeoff",
         "chapter": "recommend",
         "layout": "full",
@@ -300,6 +471,34 @@
             "kind": "table",
             "n": 1,
             "fp": "고민|대안|선택과 이유|남은 한계"
+          }
+        ]
+      },
+      {
+        "key": "ae-console",
+        "chapter": "recommend",
+        "layout": "full",
+        "tab": "실험",
+        "title": {
+          "text": "2.3 고민과 선택",
+          "verbatim": true
+        },
+        "lead": null,
+        "sectionPath": [
+          "2. 기능 A — 영양소 벡터 기반 추천",
+          "2.3 고민과 선택"
+        ],
+        "points": [],
+        "visuals": [
+          {
+            "kind": "image",
+            "src": "images/console-autoencoder.png",
+            "w": 1489,
+            "h": 760,
+            "caption": {
+              "text": "Autoencoder 실험(model_based_filtering.py) 실행 결과 — 10 epoch 학습 손실과 추천 음식",
+              "verbatim": true
+            }
           }
         ]
       },
@@ -336,6 +535,34 @@
         ]
       },
       {
+        "key": "rec-screen",
+        "chapter": "link",
+        "layout": "full",
+        "tab": "화면",
+        "title": {
+          "text": "3.1 요청과 응답",
+          "verbatim": true
+        },
+        "lead": null,
+        "sectionPath": [
+          "3. 기능 B — Android와 Flask의 연동",
+          "3.1 요청과 응답"
+        ],
+        "points": [],
+        "visuals": [
+          {
+            "kind": "image",
+            "src": "images/recommend.png",
+            "w": 1080,
+            "h": 1537,
+            "caption": {
+              "text": "추천 화면 — 서버 응답을 추천 식단 두 개로 나누어 표시한 화면",
+              "verbatim": true
+            }
+          }
+        ]
+      },
+      {
         "key": "stats-chart",
         "chapter": "link",
         "layout": "code",
@@ -364,6 +591,34 @@
             "kind": "code",
             "n": 1,
             "fp": "calorieChart.setData(labels, calorieData);"
+          }
+        ]
+      },
+      {
+        "key": "stats-screen",
+        "chapter": "link",
+        "layout": "full",
+        "tab": "화면",
+        "title": {
+          "text": "3.2 주간 통계 차트",
+          "verbatim": true
+        },
+        "lead": null,
+        "sectionPath": [
+          "3. 기능 B — Android와 Flask의 연동",
+          "3.2 주간 통계 차트"
+        ],
+        "points": [],
+        "visuals": [
+          {
+            "kind": "image",
+            "src": "images/weekly-stats.png",
+            "w": 1080,
+            "h": 1667,
+            "caption": {
+              "text": "주간 통계 — 터치한 날의 kcal 말풍선과 평균선, 3대 영양소 구성비 누적 막대",
+              "verbatim": true
+            }
           }
         ]
       },

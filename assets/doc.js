@@ -135,6 +135,16 @@
       // 한 줄에 그림만 여러 장(`![a](x) ![b](y)`) → 테두리·머리 칸 없이 나란히 — 직접 고친 부분
       else if (kids.length >= 2 && kids.every((n) => n.nodeType === 1 && n.tagName === 'IMG')) para.classList.add('pf-figure', 'pf-figure-row');
     });
+    // 세로 그림(앱 화면 등) → .pf-tall(폭을 한 줄 두 장의 한 칸만큼 줄여 가운데) — 직접 고친 부분.
+    //   그림 크기를 알아야 하므로 불러온 뒤 정함
+    doc.querySelectorAll(':scope > p.pf-figure:not(.pf-figure-row)').forEach((para) => {
+      const im = para.querySelector('img');
+      const mark = () => {
+        if (!(im.naturalWidth > 0 && im.naturalHeight >= im.naturalWidth * 1.15)) return;
+        para.classList.add('pf-tall');
+      };
+      if (im.complete) mark(); else im.addEventListener('load', mark, { once: true });
+    });
 
     // ⑦ Mermaid (securityLevel loose). 글꼴을 먼저 받아 글자 폭을 맞춤
     //   색은 PF.mermaidConfig — 화면용(.mmd-screen, 테마 손잡이 · 밝은/어두운 화면을 따름)과 인쇄용(.mmd-print, 흰 종이)을 따로 그림.
