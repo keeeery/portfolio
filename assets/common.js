@@ -117,18 +117,34 @@ const PF = (() => {
     return [...box.content.querySelectorAll('h1, h2, h3, h4, h5, h6')].map((h) => ({ level: +h.tagName[1], text: h.textContent.trim(), id: slug(h.textContent.trim()) }));
   }
 
-  // ── 링크 규칙(F10, portfolio-structure §5): 문서 사이·외부·원문 파일 = 새 탭 + ↗(aria-hidden) + 숨김 "(새 탭)".
-  //    같은 문서 안 이동(앵커·목차·건너뛰기·같은 덱 장면)·mailto:·덱 조작 버튼·라이트박스 = 같은 탭(target 없음)
+  // ── 링크 규칙: 포트폴리오 밖(http(s) 주소 — GitHub·영상 등)과 PDF 파일 = 새 탭 + 숨김 "(새 탭)".
+  //    포트폴리오 안의 이동(문서 사이·원문 파일·같은 문서 안)은 같은 탭(새 탭이 계속 쌓이지 않게 — 새 탭은 읽는 사람이 휠 클릭으로).
+  //    ↗(aria-hidden)는 문서 사이·외부·원문 파일 = "다른 페이지로 감" 표시. 같은 문서 안 이동·mailto:·덱 조작 버튼·라이트박스 = 표시 없음
   const ICON = '<svg class="pf-newtab-icon" aria-hidden="true" focusable="false" viewBox="0 0 12 12" width="12" height="12"><path d="M4.5 2.5h5v5M9.5 2.5 3 9" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>';
-  const NEWTAB = `${ICON}<span class="pf-sr-only pf-newtab-sr">(새 탭)</span>`;
+  //    외부(새 탭) = 상자+화살표 아이콘(포트폴리오 문서의 ext와 같은 모양) · 포트폴리오 안의 다른 페이지·원문 파일 = ↗ · 돌아가기(kind 'back') = 아이콘 없음
+  const ICON_EXT = '<svg class="pf-newtab-icon pf-ext-icon" aria-hidden="true" focusable="false" viewBox="0 0 12 12" width="12" height="12" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 2.25H3.75a1 1 0 0 0-1 1v5.5a1 1 0 0 0 1 1h5.5a1 1 0 0 0 1-1V7.5"/><path d="M7.25 2.25h3v3M10.25 2.25 6.25 6.25"/></svg>';
+  const NEWTAB = ICON;
+  const NEWTAB_SR = '<span class="pf-sr-only pf-newtab-sr">(새 탭)</span>';
+  const isExternal = (h) => /^https?:\/\//i.test(h || '') || /\.pdf(?:[?#]|$)/i.test(h || '');   // 외부 주소와 PDF 파일 = 새 탭
   const NEW_TAB_KINDS = new Set(['external', 'page', 'file']);
   function link({ href, label, kind = 'external', cls = '', attrs = '' }) {
-    const nt = NEW_TAB_KINDS.has(kind);
-    return `<a${cls ? ` class="${cls}"` : ''} href="${esc(href)}"${nt ? ' target="_blank" rel="noopener"' : ''}${attrs ? ' ' + attrs : ''}>${label}${nt ? NEWTAB : ''}</a>`;
+    const back = kind === 'back', ext = !back && isExternal(href), nt = !back && (NEW_TAB_KINDS.has(kind) || ext);
+    return `<a${cls ? ` class="${cls}"` : ''} href="${esc(href)}"${ext ? ' target="_blank" rel="noopener"' : ''}${back ? ' data-pf-back' : ''}${attrs ? ' ' + attrs : ''}>${label}${ext ? ICON_EXT + NEWTAB_SR : nt ? NEWTAB : ''}</a>`;
   }
-  function markNewTab(a) {                                           // 이미 있는 <a>(md 안 등)에 같은 규칙 적용
-    a.target = '_blank'; a.rel = 'noopener';
-    if (!a.querySelector('.pf-newtab-icon')) a.insertAdjacentHTML('beforeend', NEWTAB);
+  // 돌아가기 링크(data-pf-back): 포트폴리오 문서에서 왔으면 브라우저 '뒤로'처럼 돌아가 읽던 자리로(스크롤 위치 그대로).
+  //   다른 곳(발표 덱·주소 직접 입력)에서 왔으면 그냥 href(index.html)로. 휠 클릭·Ctrl/⌘ 클릭은 브라우저 기본 동작(새 탭) 그대로
+  document.addEventListener('click', (e) => {
+    const a = e.target.closest?.('a[data-pf-back]');
+    if (!a || e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+    let ref; try { ref = new URL(document.referrer); } catch { return; }
+    const page = (u) => u.pathname.replace(/\/index\.html$/, '/');               // '/' 와 '/index.html'은 같은 페이지
+    if (ref.origin !== location.origin || page(ref) !== page(new URL(a.getAttribute('href'), location.href)) || history.length < 2) return;
+    e.preventDefault(); history.back();
+  });
+  function markNewTab(a) {                                           // 이미 있는 <a>(md 안 등)에 같은 규칙 적용: ↗ 표시 + 외부 주소만 새 탭
+    const ext = isExternal(a.getAttribute('href'));
+    if (ext) { a.target = '_blank'; a.rel = 'noopener'; } else a.removeAttribute('target');
+    if (!a.querySelector('.pf-newtab-icon')) a.insertAdjacentHTML('beforeend', ext ? ICON_EXT + NEWTAB_SR : NEWTAB);
   }
 
   // ── 강조색(profile.md "강조색", theme/theme.css의 --t-accent가 있으면 그 색) → 색 토큰 ──

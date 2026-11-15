@@ -3,7 +3,7 @@
 //   주석의 설계 근거(docs/design/…의 portfolio-structure·deck-vs-scroll·01 §, R0, 결정 F·Q·# 번호)와 원본 시안(spikes/…)은 템플릿 유지관리용 maintainer 브랜치에 있습니다. 이 레포에 없어도 정상입니다.
 //   문서 처리 순서: marked 12.0.2(gfm) → 상대경로 → GitHub식 slug(PF.slugger) — 여기까지 md-blocks.js(PF.md.parse, 발표 덱과 같은 규칙) → 목차 → Mermaid 11.4.1 → highlight.js 11.9.0
 //   주소: #<제목 slug>(발표 덱·옛 project.html 조각이 이 형식으로 옴) · #sec=<절 제목>(제목을 찾아 #<slug>로 바꿈)
-//   발표 덱으로: 머리 [발표 덱 ↗](새 탭). 예전의 절 머리 칩·목차 ★(덱 장면 연결)는 없앴습니다(결정 G1)
+//   발표 덱으로: 머리 [발표 덱 ↗](같은 탭 — 포트폴리오 안 이동). 예전의 절 머리 칩·목차 ★(덱 장면 연결)는 없앴습니다(결정 G1)
 //   내용은 data/projects/<폴더>.json + src/<폴더>/<기술 문서>만 씁니다. UI 문구는 문구 표(PF.t, assets/strings.js + theme/strings.tsv)에서 옵니다.
 //   점검: PFDoc.report() — 문구 표 점검(strings)
 (async () => {
@@ -18,7 +18,7 @@
   const id = Q.get('p');
   const srcPath = (rel) => PF.srcPath(id, rel);
   const deckUrl = (sid = '') => PF.projectUrl(id, sid);
-  const back = `<p>${link({ href: 'index.html', label: '← 포트폴리오로', kind: 'page', cls: 'btn' })}</p>`;
+  const back = `<p>${link({ href: 'index.html', label: '← 포트폴리오로', kind: 'back', cls: 'btn' })}</p>`;
   const headText = new Map();                                        // 제목 요소 → 원문 제목 글자(링크 표시·각주가 붙기 전)
   const htext = (h) => headText.get(h) ?? h.textContent.trim();
   let releaseHold = null;                                            // 도착한 제목 붙잡기(hold) 해제 함수
@@ -51,12 +51,11 @@
   root.innerHTML = `
     <header class="doc-head">
       <div class="doc-head-in">
-        <p class="crumb">${link({ href: 'index.html', label: T('ui.back'), kind: 'page' })}<span aria-hidden="true">›</span><b>${esc(p.title)} — ${T('name.doc')}</b></p>
+        <p class="crumb">${link({ href: 'index.html', label: T('ui.back'), kind: 'back' })}<span aria-hidden="true">›</span><b>${esc(p.title)} — ${T('name.doc')}</b></p>
+        ${PF.modeButton('btn')}
         <nav class="head-nav" aria-label="프로젝트 링크">
           ${deckBtn}${ext.join('')}
-          <span class="newtab-note">${T('ui.newtab')}</span>
         </nav>
-        ${PF.modeButton('btn')}
       </div>
     </header>
     <div class="print-only print-urls"></div>
@@ -77,19 +76,17 @@
         <article class="md" id="doc"><p class="loading">기술 문서를 불러오는 중…</p></article>
       </main>
       <aside class="rail" aria-label="프로젝트 정보">
-        <section class="rail-card"><p class="rail-title">${T('doc.rail-project')}</p><dl class="rail-meta">${metaRows}</dl>
-          <div class="actions">${deckBtn}${ext.join('')}</div></section>
+        <section class="rail-card"><p class="rail-title">${T('doc.rail-project')}</p><dl class="rail-meta">${metaRows}</dl></section>
         <section class="rail-card" id="rail-now" aria-live="polite"><p class="rail-title">${T('doc.rail-now')}</p><p class="now-title">—</p><div class="now-body"></div></section>
         <section class="rail-card rail-misc">
           ${link({ href: srcPath(p.doc), label: T('doc.raw-md'), kind: 'file' })}
-          ${PF.isUrl(p.links?.github) ? link({ href: p.links.github, label: T('doc.raw-github'), kind: 'external' }) : ''}
           <a href="#top" class="to-top">${T('doc.top')} ↑</a>
         </section>
       </aside>
     </div>
     <div class="doc-fab" role="group" aria-label="빠른 이동"><button type="button" class="fab-toc" aria-haspopup="dialog">${T('name.toc')}</button><a class="fab-top" href="#top" aria-label="맨 위로">↑</a></div>
     <dialog class="toc-dialog" aria-label="문서 목차"><div class="toc-dialog-head"><p class="toc-title">${T('name.toc')}</p><button type="button" class="btn dlg-close">${T('ui.close')}</button></div><div class="toc-links"></div></dialog>
-    <footer class="doc-foot"><span>© ${esc(name)}</span>${link({ href: 'index.html', label: T('ui.back'), kind: 'page' })}</footer>`;
+    <footer class="doc-foot"><span>© ${esc(name)}</span>${link({ href: 'index.html', label: T('ui.back'), kind: 'back' })}</footer>`;
 
   // 좁은 화면(< 720px)에서는 "한눈에" 상자를 접어 둠
   document.getElementById('glance').open = !matchMedia('(max-width: 719.98px)').matches;
@@ -106,7 +103,7 @@
     try { md = await PF.loadText(srcPath(p.doc)); }
     catch (err) { doc.innerHTML = `<p class="error">기술 문서를 불러오지 못했습니다 (${esc(err.message)}).</p>`; return; }
     // ①② md HTML은 먼저 비활성 <template>에 넣고(그 안의 그림은 받지 않음) 상대경로·제목 id를 고친 뒤에 문서에 붙임(PF.md.parse, 발표 덱과 같은 규칙).
-    //    제목 id는 GitHub 규칙(PF.slugger), 링크 분류(숨김 "(새 탭)")·인쇄 각주([n])가 섞이기 전의 원문 제목 글자로 계산하고, 그 글자를 목차·레일에도 씀
+    //    제목 id는 GitHub 규칙(PF.slugger), 링크 분류(↗ 표시)·인쇄 각주([n])가 섞이기 전의 원문 제목 글자로 계산하고, 그 글자를 목차·레일에도 씀
     const { frag, headings: hs } = PF.md.parse(md, id);
     const { isRelative, decode } = PF.md;
     const headings = hs.map((h) => { headText.set(h.el, h.text); return h.el; });
@@ -207,7 +204,7 @@
       svg.setAttribute('aria-label', fig.dataset.label);
       svg.querySelectorAll('a[href], a[*|href]').forEach((a) => {           // Mermaid click 링크에도 같은 분류
         const h = a.getAttribute('href') || a.getAttribute('xlink:href') || '';
-        if (/^https?:/i.test(h)) { a.setAttribute('target', '_blank'); a.setAttribute('rel', 'noopener'); }
+        if (/^https?:/i.test(h)) { a.setAttribute('target', '_blank'); a.setAttribute('rel', 'noopener'); }   // 외부만 새 탭(링크 규칙)
       });
     };
     // 배포 직후 브라우저가 새 doc.js와 옛 common.js(캐시, 최대 10분)를 섞어 쓰면 PF.mermaidConfig가 없음 → 기본 색으로라도 그림(원문 글자로 남지 않게)

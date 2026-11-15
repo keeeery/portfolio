@@ -85,11 +85,11 @@ label.solution	발표 덱 · 문제 해결 칩(강조색) · 6자	해결
 label.result	발표 덱 · 문제 해결 칩(초록) · 6자	결과	
 label.lesson	발표 덱 · 문제 해결 칩 · 6자	배운 점	
 doc.glance	상세 문서 · 제목 아래 접는 상자 · 10자	한눈에 · 링크	
-doc.deck-note	상세 문서 · 한눈에 상자 안내. 조사(은/는)를 이름에 맞게 · 40자	{ui.newtab}. {name.deck}은 PC에서 보기 좋습니다.	
+doc.deck-note	상세 문서 · 한눈에 상자 안내. 조사(은/는)를 이름에 맞게 · 40자	{name.deck}은 PC에서 보기 좋습니다.	
 doc.rail-project	상세 문서 · 오른쪽 칸 제목 · 10자	이 프로젝트	
 doc.rail-now	상세 문서 · 오른쪽 칸 제목 · 10자	지금 읽는 절	
 doc.raw-md	상세 문서 · 오른쪽 칸 링크 · 10자	원문 마크다운	
-doc.raw-github	상세 문서 · 오른쪽 칸 링크 · 12자	원문 GitHub	
+doc.raw-github	(쓰지 않음 — 상단 바의 GitHub 버튼과 겹쳐서 뺌) · 12자	원문 GitHub	
 doc.top	상세 문서 · 오른쪽 칸 링크(뒤에 ↑) · 6자	맨 위로	
 doc.start	상세 문서 · 지금 읽는 절(맨 위에 있을 때) · 10자	문서 처음	
 doc.now-none	상세 문서 · 지금 읽는 절(맨 위에 있을 때) · 30자	절 제목을 지나면 여기에 지금 읽는 절이 보입니다.	
@@ -109,7 +109,7 @@ ui.pptx-pack	발표 덱 · 아래 띠 알림(슬라이드를 다 만든 뒤 파�
 ui.pptx-done	발표 덱 · 아래 띠 알림(다 만든 뒤) · 16자	PPTX 파일을 저장했습니다	
 ui.pptx-fail	발표 덱 · 아래 띠 알림(만들지 못했을 때) · 30자	PPTX를 만들지 못했습니다: {msg}	
 ui.preparing	포트폴리오 문서 · PDF 버튼을 누른 뒤 · 8자	준비 중…	
-ui.newtab	발표 덱 아래 띠 · 상세 문서 맨 위 · 16자	링크는 새 탭에서 열립니다	
+ui.newtab	(쓰지 않음 — 외부 링크만 새 탭, 포트폴리오 안은 같은 탭) · 16자	링크는 새 탭에서 열립니다	
 ui.back	상세 문서 맨 위·맨 아래 · 발표 덱 맺음 카드 · 12자	← {name.portfolio}	
 ui.skip	세 페이지 · 키보드 Tab을 처음 누르면 보이는 링크 · 12자	본문으로 건너뛰기	
 ui.prev	발표 덱 · 아래 띠 ‹ 버튼 툴팁 · 16자	이전 (←)	

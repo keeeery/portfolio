@@ -79,6 +79,7 @@ code { font-family: var(--mono); font-size: .88em; background: var(--accent-soft
 .head-nav { margin-left: auto; display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
 .newtab-note { font-size: 12.5px; color: var(--faint); }
 .doc-head .pf-mode { padding: 0; width: 34px; height: 34px; justify-content: center; cursor: pointer; background: transparent; color: var(--ink); }   /* 밝은·어두운 화면 전환 */
+.doc-head .pf-mode { margin-left: auto; } .doc-head .pf-mode + .head-nav { margin-left: 0; }   /* 화면 모드 버튼을 오른쪽 버튼 묶음의 가장 왼쪽에(포트폴리오 문서와 같은 순서). 버튼이 없으면(밝은 테마 없음) 링크 묶음이 그대로 오른쪽 끝으로 */
 @media print { .doc-head .pf-mode { display: none; } }
 
 /* ── 공통 틀 ─────────────────────────────── */

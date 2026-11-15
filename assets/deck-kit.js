@@ -413,7 +413,6 @@
       <span class="pf-hud-count" aria-hidden="true"></span>
       <span class="pf-hud-sec" aria-hidden="true"></span>
       <span class="pf-hud-prog" aria-hidden="true"><span></span></span>
-      <span class="pf-hud-note">${LH('ui.newtab')}</span>
       <button type="button" data-a="overview" aria-haspopup="dialog" title="${LH('ui.overview-tip')}"><span aria-hidden="true">▦</span> <span class="l">${LH('ui.overview')}</span></button>
       ${opts.scope && hasDoc ? '<button type="button" data-a="scope" aria-pressed="false" title="PDF에서 부록 빼기"><span class="l">요약만</span><span class="s">요약</span></button>' : ''}
       <button type="button" data-a="print" class="pf-print"><span class="l">${LH('ui.pdf')}</span><span class="s">${LH('ui.pdf-short')}</span><small></small></button>
