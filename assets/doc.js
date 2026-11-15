@@ -25,6 +25,11 @@
 
   if (!id) { PF.notice(root, '프로젝트를 고르세요', `<p>주소 끝에 <code>?p=폴더이름</code>을 붙여 주세요.</p>${back}`); return done(); }
   const [pf] = await Promise.all([PF.loadJSON('data/portfolio.json').catch(() => ({})), PF.loadStrings()]);
+  // profile.md 페이지 설정 "- 발표 덱 빼기: 폴더, …"에 이 폴더가 있으면 발표 덱 버튼·인쇄 주소를 뺌(포트폴리오 문서 카드와 같은 설정)
+  const noDeck = await fetch('profile.md', { cache: 'no-cache' }).then((r) => (r.ok ? r.text() : '')).then((md) => {
+    const m = md.replace(/<!--[\s\S]*?-->/g, '').match(/^\s*-\s*발표 덱 빼기\s*[:：](.*)$/m);
+    return !!m && m[1].split(',').map((x) => x.trim()).includes(id);
+  }).catch(() => false);
   PF.applyTheme(pf.settings?.accent);
   document.querySelector('.skip-link')?.replaceChildren(PF.t('ui.skip'));
   let p;
@@ -45,7 +50,8 @@
     PF.isUrl(p.links?.video) && link({ href: p.links.video, label: T('name.video'), kind: 'external', cls: 'btn' }),
     ...PF.otherLinks(p).map((l) => link({ href: l.url, label: esc(l.label), kind: 'external', cls: 'btn' })),
   ].filter(Boolean);
-  const deckBtn = link({ href: deckUrl(), label: T('name.deck'), kind: 'page', cls: 'btn primary' });
+  const deckBtn = noDeck ? '' : link({ href: deckUrl(), label: T('name.deck'), kind: 'page', cls: 'btn primary' });
+  if (noDeck && ext.length) ext[0] = ext[0].replace('class="btn"', 'class="btn primary"');   // 발표 덱이 없으면 첫 링크를 강조
   const tags = (p.tags || []).length ? `<ul class="tags">${p.tags.map((t) => `<li>${esc(t)}</li>`).join('')}</ul>` : '';
 
   root.innerHTML = `
@@ -271,7 +277,7 @@
     }
     const here = new URL(location.href); here.hash = '';
     const deckAbs = new URL(deckUrl(), location.href).href;
-    document.querySelector('.print-urls').innerHTML = `<p>${T('doc.print-web')}: ${esc(here.href)}</p><p>${T('name.deck')}: ${esc(deckAbs)}</p>`;
+    document.querySelector('.print-urls').innerHTML = `<p>${T('doc.print-web')}: ${esc(here.href)}</p>${noDeck ? '' : `<p>${T('name.deck')}: ${esc(deckAbs)}</p>`}`;
 
     // ⑩ 목차 현재 위치(스크롤 기준) + 레일 "지금 읽는 절"
     trackSection(headings.filter((h) => h.tagName === 'H2' || h.tagName === 'H3'));

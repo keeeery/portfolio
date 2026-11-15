@@ -405,6 +405,7 @@
     .gl-row:last-child { padding-bottom: 0; }
     .gl-row { display: grid; grid-template-columns: 112px minmax(0, 1fr); gap: 16px 20px; align-items: start; padding: 28px 0; border-top: 1px solid var(--divider); }
     .gl-thumb { display: block; border-radius: 12px; overflow: hidden; }
+    .lc-shot { margin: -1.75rem -1.75rem 1.5rem; border-bottom: 1px solid var(--line); }   /* 기타 프로젝트 카드 위의 대표 이미지(4:3): 카드 안쪽 여백(p-7)을 넘어 위쪽을 끝까지 채움, 모서리는 카드가 자름 */
     .gl-row:not(:has(.gl-thumb)) .gl-info { grid-column: 1 / -1; }
     .gl-body { grid-column: 1 / -1; }
     /* 휴대폰: 그림(112×84, 4:3) 옆 번호·제목·종류·환경을 그림 높이에 맞춤 — 사이 간격·줄 높이를 줄이고 번호는 그림 위 끝, 환경은 그림 아래 끝에 */
@@ -1799,13 +1800,13 @@
       addEventListener('resize', update);
     }
 
-    // profile.md "## 기타 프로젝트 (링크만)" 절 → [{ title, intro, info, tech[], role, url }] (기술 문서 없이 소개·링크만 있는 카드)
+    // profile.md "## 기타 프로젝트 (링크만)" 절 → [{ title, intro, info, tech[], role, url, video }] (기술 문서 없이 소개·링크만 있는 카드)
     function parseLinkCards(md) {
       const lines = md.replace(new RegExp('<' + '!--[\\s\\S]*?--' + '>', 'g'), '').split(/\r?\n/);
       const start = lines.findIndex((l) => /^##\s+기타 프로젝트\s*\(링크/.test(l.trim()));
       if (start < 0) return [];
       const cards = []; let cur = null;
-      const KEYS = { '소개': 'intro', '정보': 'info', '기술': 'tech', '맡은 역할': 'role', '링크': 'url' };
+      const KEYS = { '소개': 'intro', '정보': 'info', '기술': 'tech', '맡은 역할': 'role', '링크': 'url', '시연 영상': 'video', '이미지': 'image' };
       for (const raw of lines.slice(start + 1)) {
         const l = raw.trim();
         if (/^##\s/.test(l)) break;
@@ -1814,7 +1815,7 @@
         const m = cur && l.match(/^-\s*([^:：]+)[:：]\s*(.*)$/);
         if (m && KEYS[m[1].trim()] && m[2].trim()) cur[KEYS[m[1].trim()]] = m[2].trim();
       }
-      return cards.filter((c) => c.title).map((c) => ({ ...c, tech: (c.tech || '').split(',').map((x) => x.trim()).filter(Boolean), url: isUrl(c.url) ? c.url : '' }));
+      return cards.filter((c) => c.title).map((c) => ({ ...c, tech: (c.tech || '').split(',').map((x) => x.trim()).filter(Boolean), url: isUrl(c.url) ? c.url : '', video: isUrl(c.video) ? c.video : '' }));
     }
     // profile.md "## 써 본 도구 (태그만)" 절 → [{ label, tags[], line }] (기술 스택 카드 아래 태그 줄, 근거 문장 없음)
     //   한 줄에 ` | `로 묶음을 여럿 적으면 넓은 화면에서 그 묶음들을 한 줄에 나란히(line = 같은 줄 번호). 휴대폰에서는 묶음마다 한 줄
@@ -1841,7 +1842,8 @@
     // 기타 프로젝트 카드 한 장(링크만 있는 카드와 data/의 기타 프로젝트가 같은 형식). c: { id?, title, info, intro, role, tech[], links: [[이름, 주소]] }
     function LinkCard({ c }) {
       return (
-        <article id={c.id ? `p-${c.id}` : undefined} className="card-print reveal flex flex-col rounded-3xl border border-[var(--line)] bg-[var(--card)] p-7">
+        <article id={c.id ? `p-${c.id}` : undefined} className="card-print reveal flex flex-col overflow-hidden rounded-3xl border border-[var(--line)] bg-[var(--card)] p-7">
+          {c.image && <div className="lc-shot"><Shot src={c.image} alt={`${c.title} 대표 화면`} /></div>}   {/* 대표 이미지(4:3): data/의 cover · profile.md의 "- 이미지:" */}
           <h3 className="text-xl font-bold tracking-tight">{c.title}</h3>
           {c.info && <p className="mt-2 text-xs text-[var(--sub)]">{c.info}</p>}
           {c.intro && <p className="mt-4 text-[15px] leading-relaxed"><Inline text={c.intro} /></p>}
@@ -1858,18 +1860,24 @@
       );
     }
     // data/의 기타 프로젝트 → 카드 형식(정보 = 기간 · 인원 팀)
+    // profile.md 페이지 설정 "- 발표 덱 빼기: 폴더, 폴더" → 그 기타 프로젝트 카드에서 발표 덱 링크를 뺌(발표 덱 페이지는 그대로 있음)
+    let noDeck = new Set();
+    function parseNoDeck(md) {
+      const l = md.replace(new RegExp('<' + '!--[\\s\\S]*?--' + '>', 'g'), '').split(/\r?\n/).map((x) => x.trim()).find((x) => /^-\s*발표 덱 빼기\s*[:：]/.test(x));
+      return new Set(l ? l.replace(/^-\s*발표 덱 빼기\s*[:：]/, '').split(',').map((x) => x.trim()).filter(Boolean) : []);
+    }
     const otherCard = (p) => {
       const meta = Object.fromEntries((p.meta || []).map((m) => [m.label, m.value]));
       const who = meta['인원'] ? `${meta['인원']}${p.team?.type === 'team' ? ' 팀' : ''}` : teamLabel(p.team);
-      return { id: p.id, title: p.title, info: [meta['기간'], who].filter(Boolean).join(' · '), intro: p.tagline, role: p.team?.role,
-        tech: p.tags || [], links: projectUrlRows(p).filter(Boolean) };
+      return { id: p.id, title: p.title, info: [meta['기간'], who].filter(Boolean).join(' · '), intro: p.tagline, role: p.team?.role, image: p.cover ? img(p, p.cover) : '',
+        tech: p.tags || [], links: projectUrlRows(p).filter(Boolean).filter(([k]) => !(noDeck.has(p.id) && k === t('name.deck'))) };
     };
 
     // ⑦ 기타 프로젝트(layout.json에 없는 절) — data/의 기타 프로젝트 + profile.md의 링크만 있는 카드를 같은 형식으로, 넓은 화면에서 가로 3장
     // 기타 프로젝트 카드 목록(카드 절과 연락처 LINK가 같은 순서로 씀). data/ 쪽 카드는 p에 원래 프로젝트를 둠
     function otherCards(others, links = []) {
       const end = (c) => { const m = [...String(c.info || '').matchAll(/(\d{4})\.(\d{1,2})/g)].pop(); return m ? +m[1] * 100 + +m[2] : Infinity; };   // 정보의 마지막 "YYYY.MM" = 종료 시점(날짜가 하나면 그 달)
-      return [...others.map((p) => ({ ...otherCard(p), p })), ...links.map((c) => ({ ...c, links: c.url ? [[linkHost(c.url), c.url]] : [] }))]
+      return [...others.map((p) => ({ ...otherCard(p), p })), ...links.map((c) => ({ ...c, image: c.image ? encodePath(c.image) : '', links: [c.url && [linkHost(c.url), c.url], c.video && [t('name.video'), c.video]].filter(Boolean) }))]   // 시연 영상은 맨 끝에 '시연 영상'(문구 표 name.video)으로
         .map((c, i) => ({ c, i })).sort((a, b) => end(a.c) - end(b.c) || a.i - b.i).map((x) => x.c);   // 종료 시점 순서(날짜 없는 카드는 맨 뒤, 같으면 적은 순서)
     }
     function Others({ cards }) {
@@ -1952,12 +1960,13 @@
                 {linkAll.map((x) => {                                                       // 페이지에 나오는 순서(주력 프로젝트 → 기타 프로젝트 카드 순서)
                   const p = x.p || x;
                   if (!p.id) {                                                              // profile.md의 링크만 있는 기타 프로젝트
-                    if (!p.url) return null;
+                    const ls = [p.url && [linkHost(p.url), p.url], p.video && ['YouTube', p.video]].filter(Boolean);   // 주력 프로젝트처럼 시연 영상은 맨 끝에 YouTube로
+                    if (!ls.length) return null;
                     return (
                       <li key={p.title}>
                         <b className="font-semibold">{p.title}</b>
                         <span className="mt-1 flex flex-wrap gap-x-3 gap-y-1">
-                          <Ext className="tlink text-[var(--muted)]" href={p.url}>{linkHost(p.url)}<span className="print-only"> {shortUrl(p.url)}</span></Ext>
+                          {ls.map(([k, u]) => <Ext key={u} className="tlink text-[var(--muted)]" href={u}>{k}<span className="print-only"> {shortUrl(u)}</span></Ext>)}
                         </span>
                       </li>
                     );
@@ -1999,7 +2008,7 @@
             const load = (id) => fetch(`data/projects/${encodeURIComponent(id)}.json`, { cache: 'no-cache' }).then((r) => r.ok ? r.json() : null).catch(() => null);
             const [projects, others] = await Promise.all([Promise.all((pf.projects || []).map(load)), Promise.all((pf.others || []).map(load))]).then((a) => a.map((x) => x.filter(Boolean)));
             let links = [], tools = [];
-            try { const r = await fetch('profile.md', { cache: 'no-cache' }); if (r.ok) { const md = await r.text(); links = parseLinkCards(md); tools = parseToolRows(md); } } catch { /* 링크 카드·태그 줄 없음 */ }
+            try { const r = await fetch('profile.md', { cache: 'no-cache' }); if (r.ok) { const md = await r.text(); links = parseLinkCards(md); tools = parseToolRows(md); noDeck = parseNoDeck(md); } } catch { /* 링크 카드·태그 줄 없음 */ }
             if (/^#[0-9a-fA-F]{6}$/.test(pf.settings?.accent || '')) html.style.setProperty('--accent-profile', pf.settings.accent);
             const name = pf.profile?.name;
             document.title = `${name ? name + ' · ' : ''}${t('name.portfolio')}`;

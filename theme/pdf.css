@@ -43,7 +43,7 @@
   .sec.proj .split { grid-template-columns: 40fr 60fr !important; }
   /* 프로젝트 요약: [대표 그림 200 | 프로젝트명 220 | 본문] → 프로젝트명 칸을 줄이고 본문 칸을 넓힘 */
   .gl-row { grid-template-columns: 200px 150px minmax(0, 1fr) !important; }
-  /* 기타 프로젝트: 카드 2열(2+1) → 세로 1열, 카드 안은 화면 카드처럼 제목·기간 아래에 설명 */
+  /* 기타 프로젝트: 카드 2열(2+1) → 세로 1열(카드 안 배치는 아래 「가로 카드」 묶음) */
   #others .grid { grid-template-columns: 1fr !important; gap: 20px !important; }
   #others .card-print .mt-auto { margin-top: 0 !important; padding-top: 16px !important; }
   /* 연락처: PROJECT를 CONTACT 아래로, LINK를 오른쪽 넓은 칸으로 — 링크 이름과 주소를 한 줄에 */
@@ -92,4 +92,38 @@
   .sec.core .fe-inline > figcaption { margin-top: 1px !important; }
   /* 기능 설명을 늘 두 줄 높이로(한 줄짜리 설명도 아래 버튼이 다른 기능과 같은 자리에) — 줄 간격 1.625 × 2줄 */
   .sec.core .fe-what { min-height: 3.25em !important; }
+}
+@media print {
+  /* 기타 프로젝트: 대표 이미지가 생겨 1열 세로 카드가 3쪽 → 가로 카드(왼쪽 4:3 그림 352×264 | 오른쪽 글). 글 간격을 줄여 카드 높이를 그림 높이에 맞춤
+     그림은 4:3 그대로, 글이 더 길면 그림을 세로 가운데에(Nutrifit처럼 흰 바탕 그림은 카드와 이어져 보임) */
+  #others .card-print { display: grid !important; grid-template-columns: 352px minmax(0, 1fr); column-gap: 24px; align-content: center;
+                        min-height: 264px; padding: 14px 22px 14px 0 !important; }
+  #others .card-print > :not(.lc-shot) { grid-column: 2; }
+  #others .card-print > .lc-shot { grid-column: 1; grid-row: 1 / span 12; align-self: center; margin: -14px 0 !important; border-bottom: 0 !important; }
+  #others .card-print > .mt-2 { margin-top: 4px !important; }
+  #others .card-print > .mt-4 { margin-top: 10px !important; }
+  #others .card-print > .mt-3 { margin-top: 8px !important; }
+  #others .card-print > .mt-5 { margin-top: 12px !important; }
+  #others .card-print .mt-auto { padding-top: 10px !important; }
+  #others .card-print p { text-wrap: balance; }   /* 두세 줄짜리 소개·구현 범위의 끝줄에 낱말 한두 개만 남지 않게 */
+}
+@media print {
+  /* 기타 프로젝트: 카드 오른쪽 외곽선이 절 끝에 붙어 잘려 보임 → 카드 묶음 양옆에 2px 여유 */
+  #others .grid { padding: 0 2px !important; }
+}
+@media print {
+  /* 기타 프로젝트: 카드 본문 글씨를 조금 줄여(소개 15 → 13px · 구현 범위 14 → 12px) 카드 높이를 그림(4:3, 352×264) 높이에 맞춤 */
+  #others .card-print > .mt-4 { font-size: 13px !important; }
+  #others .card-print > .mt-3 { font-size: 12px !important; }
+}
+@media print {
+  /* 기타 프로젝트: 세 카드 높이를 같게(가장 높은 카드에 맞춤) */
+  #others .grid { grid-auto-rows: 1fr !important; }
+}
+@media print {
+  /* 기타 프로젝트 카드 안: 제목~구현 범위는 위에, 기술 태그·링크는 아래에 붙임(사이의 남는 높이는 빈 줄 하나가 가져감) */
+  #others .card-print { align-content: stretch !important; grid-template-rows: auto auto auto auto minmax(0, 1fr) auto; }
+  #others .card-print > .lc-shot { grid-row: 1 / -1 !important; }
+  #others .card-print > .mt-5 { grid-row: 5; align-self: end; }
+  #others .card-print > .mt-auto { grid-row: 6; }
 }
