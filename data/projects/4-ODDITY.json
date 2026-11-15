@@ -8,7 +8,7 @@
   "team": {
     "type": "team",
     "size": "4인",
-    "role": "염동력 시스템, 파편 생성·풀링, 시간 정지, 보스 패턴·피격·그로기, 보상, 카메라·렌더링·각종 연출, UI/UX"
+    "role": "염동력 시스템, 파편 생성·풀링, 시간 정지, 보스 투하·투척·충격파 패턴·공격 예고·피격 판정·그로기, 보상, 카메라·렌더링·각종 연출, UI/UX"
   },
   "meta": [
     {
@@ -29,15 +29,12 @@
     }
   ],
   "tags": [
-    "Unity 6000.3.15f1",
-    "URP",
-    "C#",
+    "Rigidbody",
+    "AI Navigation",
     "RendererFeature",
-    "물리 기반 염동력",
-    "오브젝트 풀",
-    "상태 머신",
     "DOTween",
-    "UI/UX"
+    "오브젝트 풀",
+    "FSM"
   ],
   "links": {
     "github": "https://github.com/keeeery/ODDITY",

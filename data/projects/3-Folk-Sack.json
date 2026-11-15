@@ -29,13 +29,11 @@
     }
   ],
   "tags": [
-    "Unity 6000.3.15f1",
-    "URP",
-    "C#",
     "ASP.NET Core",
     "WebSocket",
-    "TSV 시드 지형 생성",
-    "서버 권위 Batch"
+    "Channel<T>",
+    "async/await",
+    "CsvHelper"
   ],
   "links": {
     "github": "https://github.com/keeeery/Folk-Sack",
@@ -415,7 +413,7 @@
           {
             "kind": "mermaid",
             "n": 1,
-            "fp": "flowchart LR"
+            "fp": "flowchart TB"
           }
         ]
       },
@@ -505,7 +503,7 @@
           {
             "kind": "mermaid",
             "n": 1,
-            "fp": "flowchart LR"
+            "fp": "flowchart TB"
           },
           {
             "kind": "table",
@@ -771,7 +769,7 @@
           {
             "kind": "mermaid",
             "n": 1,
-            "fp": "flowchart LR"
+            "fp": "flowchart TB"
           }
         ]
       },
@@ -991,7 +989,7 @@
           {
             "kind": "mermaid",
             "n": 1,
-            "fp": "flowchart LR"
+            "fp": "flowchart TB"
           }
         ]
       },

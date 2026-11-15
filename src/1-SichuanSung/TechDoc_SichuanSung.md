@@ -47,7 +47,7 @@
 | 인원 | 1인 |
 | Engine | Unity `6000.3.15f1`, URP `17.3.0` |
 | Language | C# |
-| 주요 패키지 | Input System `1.19.0`, uGUI, TextMesh Pro |
+| 주요 패키지 | Input System `1.19.0`, uGUI |
 | 데이터 | PlayerPrefs의 최고 클리어 시간 |
 | GitHub | [Unity_2D_SichuanSung](https://github.com/keeeery/Unity_2D_SichuanSung) |
 | 시연 영상 | [YouTube](https://youtu.be/_bbqGfWJcZI) |
@@ -65,6 +65,7 @@
 | `UIManager` | 시작·결과·셔플 화면, 타이머·별과 텍스트 애니메이션 |
 
 ```mermaid
+%%{init: {"flowchart": {"rankSpacing": 20, "nodeSpacing": 24, "padding": 6}}}%%
 flowchart TB
     Input[마우스 클릭] --> Select[CardManager / 카드 선택]
     Select --> Match[같은 ID 확인]

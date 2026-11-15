@@ -1,7 +1,7 @@
 # ODDITY — 초능력 보스 액션 게임 기술 문서
 
 > **한 줄 소개**: 주변 물체를 들어 휘두르거나 던지고, 초능력 스킬을 조합해 보스와 싸우는 3D 액션 게임
-> **구현 범위**: 염동력 시스템, 파편 생성·풀링, 시간 정지, 보스 패턴·피격·그로기, 보상, 카메라·렌더링·각종 연출, UI/UX
+> **구현 범위**: 염동력 시스템, 파편 생성·풀링, 시간 정지, 보스 투하·투척·충격파 패턴·공격 예고·피격 판정·그로기, 보상, 카메라·렌더링·각종 연출, UI/UX
 
 | 구분 | 시스템 | 핵심 내용 | 절 |
 |---|---|---|---|
@@ -55,7 +55,7 @@ UI/UX는 공격 예고와 HUD·미니맵, 화면·UI·소리가 함께 바뀌는
 | 인원 | 4인 |
 | Engine | Unity `6000.3.15f1`, URP `17.3.0` |
 | Language | C# |
-| 주요 패키지 | Shader Graph `17.3.0`, Input System `1.19.0`, AI Navigation `2.0.12`, Cinemachine `3.1.7`, UniTask, DOTween, Odin Inspector |
+| 주요 패키지 | Shader Graph `17.3.0`, Input System `1.19.0`, AI Navigation `2.0.12`, UniTask, DOTween, Odin Inspector |
 | 데이터 | 증강 칩·보상·임무 TSV, 로컬 JSON 저장 |
 | GitHub | [https://github.com/keeeery/ODDITY](https://github.com/keeeery/ODDITY) |
 | 시연 영상 | [YouTube](https://youtu.be/PXWZMTSK4lk) |
@@ -78,9 +78,9 @@ UI/UX는 공격 예고와 HUD·미니맵, 화면·UI·소리가 함께 바뀌는
 ### 1.5 전체 구조
 
 ```mermaid
+%%{init: {"flowchart": {"rankSpacing": 20, "nodeSpacing": 24, "padding": 6}}}%%
 flowchart TB
     Title[타이틀 / 새 게임·이어하기] --> Lobby[로비 / 정비·임무]
-    Save[GameSave] --> Lobby
     Lobby --> Chips[증강 칩 배치 / 스킬 슬롯]
     Lobby --> Mission[임무 선택]
     Mission --> Scene[SceneLoadManager]
@@ -93,8 +93,9 @@ flowchart TB
     Combat --> Feedback[피격 / HUD / 카메라·연출]
     Battle --> Reward[BossChipReward / BossRewardPanel]
     Reward --> Chips
-    Reward --> Save
     Reward --> Lobby
+    Reward --> Save[GameSave]
+    Save --> Lobby
 ```
 
 ---
@@ -136,18 +137,24 @@ flowchart TB
 
 ```mermaid
 stateDiagram-v2
+    direction TB
+    state "Idle (복귀)" as IdleReturn
+    state "Held (복귀)" as HeldReturn
+    state "Idle (복귀)" as IdleNoTarget
     [*] --> Idle
     Idle --> Focused: 화면 중앙 후보 선택 / 외곽선
-    Focused --> Idle: 후보 없음
+    Focused --> IdleNoTarget: 후보 없음
     Focused --> Held: 우클릭 / 질량·스태미나 조건
     Held --> Swing: 도착 후 빠른 카메라 회전
-    Swing --> Held: 판정 시간 종료
-    Swing --> Idle: 대상 적중 / 그 속도로 놓음
+    Swing --> HeldReturn: 판정 시간 종료
+    Swing --> IdleReturn: 대상 적중 / 그 속도로 놓음
     Held --> Preparing: 좌클릭 누름 / 손 앞으로 당김
     Preparing --> Thrown: 좌클릭 뗌 / 조준점 방향 발사
-    Held --> Idle: 우클릭 뗌·스태미나 소진·거리 초과·피격
-    Thrown --> Idle: 비행·충돌
+    Held --> IdleReturn: 우클릭 뗌·스태미나 소진·거리 초과·피격
+    Thrown --> IdleReturn: 비행·충돌
 ```
+
+그림의 `Idle (복귀)`와 `Held (복귀)`는 각각 기존 `Idle`, `Held` 상태로 돌아가는 지점입니다.
 
 입력에 맞춰 캐릭터의 자세도 함께 바뀝니다.
 물체를 잡으면 조준 방향이 왼팔이 닿는 범위의 끝에 오도록 몸을 돌리고, 조준이 그 범위 안이면 팔만, 벗어나면 몸까지 돌립니다.
@@ -1809,6 +1816,7 @@ return HitTier.Weak;
 보스의 숨을 끊는 순간은 한 번뿐인 장면이라 가장 긴 연출을 붙였습니다.
 
 ```mermaid
+%%{init: {"flowchart": {"rankSpacing": 20, "nodeSpacing": 24, "padding": 6}}}%%
 flowchart TB
     Finish[마무리 일격] --> Stop[히트스톱 / 윤곽 번쩍임 / 큰 흔들림]
     Stop --> Slow[월드 슬로모션 / FOV 줌 펀치 / 큰 충격·입자]

@@ -47,7 +47,7 @@
 | 인원 | 1인 |
 | Engine | Unity `6000.3.15f1`, URP `17.3.0` |
 | Language | C# |
-| 주요 패키지 | Input System `1.19.0`(프로젝트 입력 래퍼 `SimpleInput`), Cinemachine `3.1.7`, LDtkUnity `6.12.3`, 2D Animation `13.0.4` |
+| 주요 패키지 | Input System `1.19.0`(프로젝트 입력 래퍼 `SimpleInput`), Cinemachine `3.1.7`, LDtkUnity `6.12.3`, 2D Animation `13.0.4`, DOTween |
 | GitHub | [https://github.com/keeeery/Arcanist](https://github.com/keeeery/Arcanist) |
 | 시연 영상 | [YouTube](https://youtu.be/8hEJXeohnA8) |
 
@@ -55,8 +55,13 @@
 
 ### 1.4 전체 구조
 
+**전투 판정과 저장·복원**
+
 ```mermaid
-flowchart LR
+flowchart TB
+    Save[SaveManager] --> Check[CheckPointManager]
+    Check --> Room[RoomManager]
+    Check --> Player
     Input[SimpleInput] --> Player[PlayerController]
     Player --> Hit[HitBox]
     Hit --> Tracker[HitTargetTracker]
@@ -64,23 +69,26 @@ flowchart LR
     Resolver --> Combat[CombatSystem]
     Combat --> Entity[CombatEntity.TakeDamage]
     Combat --> Observer[ICombatObserver]
+```
+
+**카드 사용과 대상 선택** — 카드 효과는 위 전투 판정의 `HitBox`로 이어집니다.
+
+```mermaid
+flowchart TB
+    Targets[ICombatTarget] --> Enemy[EnemyManager]
+    Enemy --> TargetResolver[CardTargetResolver]
     Inventory[PlayerInventory] -.OnInventoryChanged.-> Card[CardSystem]
+    TargetResolver --> Validator[CardUseValidator]
+    Card --> Validator
+    TargetResolver --> Executor[CardSkillExecutor]
+    Card --> Executor
     Card --> Deck[CardRuntimeDeck]
-    Card --> Validator[CardUseValidator]
-    Card --> Executor[CardSkillExecutor]
     Executor --> Motion[Animator]
     Motion --> Receiver[PlayerAnimationEventReceiver]
     Receiver --> Card
     Executor --> Effect[CardEffect.Execute]
     Effect --> Pool[CardEffectSpawner]
-    Pool --> Hit
-    Targets[ICombatTarget] --> Enemy[EnemyManager]
-    Enemy --> TargetResolver[CardTargetResolver]
-    TargetResolver --> Validator
-    TargetResolver --> Executor
-    Save[SaveManager] --> Check[CheckPointManager]
-    Check --> Room[RoomManager]
-    Check --> Player
+    Pool --> Hit[HitBox]
 ```
 
 전투는 `CombatSystem.To` 호출 안에서 즉시 피해를 적용하고 결과를 알리는 방식입니다.
@@ -591,18 +599,21 @@ Tooltip CanvasGroup은 raycast를 막지 않으며, 슬롯이 비활성화되거
 각 상태는 `OnEnable/OnDisable`을 진입·종료 생명주기로 사용합니다.
 
 ```mermaid
+%%{init: {"state": {"rankSpacing": 48, "nodeSpacing": 36}}}%%
 stateDiagram-v2
+    direction TB
+    state "Idle (복귀)" as IdleReturn
     [*] --> Idle
     Idle --> Melee: 대기 후 근접 범위
     Idle --> Laser: 원거리 난수 선택
     Idle --> Shoot: 원거리 난수 선택
-    Melee --> Idle: 지속시간 종료
-    Laser --> Idle: 패턴 종료
-    Shoot --> Idle: 패턴 종료
     Idle --> Death: 사망
+    Melee --> IdleReturn: 지속시간 종료
+    Laser --> IdleReturn: 패턴 종료
+    Shoot --> IdleReturn: 패턴 종료
 ```
 
-다이어그램은 주요 전이를 요약한 것입니다. 사망 진입은 Idle에만 제한되지 않고 `BossController.Dead()`에서 처리합니다.
+아래쪽의 `Idle (복귀)`는 공격 패턴이 끝난 뒤 처음의 `Idle` 상태로 돌아감을 뜻합니다. `BossController.Dead()`는 현재 상태와 관계없이 사망 진입을 처리합니다.
 Idle 기본 대기시간은 1.2초, 근접 X축 거리 기준은 3입니다.
 근접 범위 밖에서는 레이저와 팔 발사를 `Random.Range(0, 2)`로 선택합니다.
 

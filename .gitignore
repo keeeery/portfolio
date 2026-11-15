@@ -8,6 +8,9 @@ report-intake.md
 # /portfolio-image-crop 원본 스크린샷 (로컬 전용 — 크롭 결과만 images/로 올라감)
 src/*/_raw/
 
+# 다이어그램 전후 비교 이미지 (로컬 검토용)
+diagram-review/
+
 # OS·에디터
 .DS_Store
 Thumbs.db

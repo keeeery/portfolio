@@ -29,14 +29,9 @@
     }
   ],
   "tags": [
-    "Unity 6000.3.15f1",
-    "URP",
-    "C#",
-    "큐 기반 탐색",
-    "Coroutine",
     "PlayerPrefs",
-    "Input System",
-    "TextMesh Pro"
+    "Coroutine",
+    "BFS"
   ],
   "links": {
     "github": "https://github.com/keeeery/Unity_2D_SichuanSung",

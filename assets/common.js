@@ -323,6 +323,65 @@ const PF = (() => {
     return { ...base, theme: 'base', themeVariables: v };
   }
 
+  // Folk Sack의 지형 연결을 서버 상태와 방송 수신 행에 맞춘다.
+  function routeFolkSackTerrain(svg) {
+    const nodeFor = (id) => svg.querySelector(`g.node[id^="flowchart-${id}-"]`);
+    const bounds = (id) => {
+      const node = nodeFor(id);
+      const rect = node?.querySelector(':scope > rect');
+      const transform = node?.transform.baseVal.getItem(0)?.matrix;
+      if (!rect || !transform) return null;
+      const left = transform.e + rect.x.baseVal.value;
+      const top = transform.f + rect.y.baseVal.value;
+      return { node, left, top, x: transform.e, y: transform.f, right: left + rect.width.baseVal.value, bottom: top + rect.height.baseVal.value };
+    };
+    const generator = bounds('GEN'), terrain = bounds('TM'), session = bounds('GS'), receiver = bounds('Receive');
+    const exploration = bounds('EXP'), input = bounds('Input'), seed = nodeFor('TSV');
+    const lobby = bounds('Lobby'), lobbyHub = bounds('LH');
+    const seedTransform = seed?.transform.baseVal.getItem(0)?.matrix;
+    if (!generator || !terrain || !session || !receiver || !exploration || !input || !seedTransform || !lobby || !lobbyHub) return;
+
+    const edgeFor = (id) => svg.querySelector(`path[id^="L_${id}_"]`);
+    const seedEdge = edgeFor('TSV_GEN');
+    if (!seedEdge) return;
+    const seedBottom = seedEdge.getPointAtLength(0).y + input.y - seedTransform.f;
+    const moveToRow = (box, y) => {
+      const dy = y - box.y;
+      box.node.setAttribute('transform', `translate(${box.x},${y})`);
+      box.y = y;
+      box.top += dy;
+      box.bottom += dy;
+    };
+    const generatorShiftX = Math.max(0, session.right + 30 - generator.left);
+    generator.x += generatorShiftX;
+    generator.left += generatorShiftX;
+    generator.right += generatorShiftX;
+    moveToRow(generator, session.y);
+    seed.setAttribute('transform', `translate(${generator.x},${input.y})`);
+    moveToRow(terrain, receiver.y);
+
+    const draw = (id, x1, y1, x2, y2) => {
+      const length = Math.hypot(x2 - x1, y2 - y1);
+      // 화살촉의 길이만큼 선 끝을 상자 경계에서 물린다.
+      const offset = 4 / length;
+      edgeFor(id)?.setAttribute('d', `M${x1},${y1} L${x2 - (x2 - x1) * offset},${y2 - (y2 - y1) * offset}`);
+    };
+    const verticalX = (Math.max(generator.left, terrain.left) + Math.min(generator.right, terrain.right)) / 2;
+    draw('TSV_GEN', generator.x, seedBottom, generator.x, generator.top);
+    draw('GEN_TM', verticalX, generator.bottom, verticalX, terrain.top);
+    draw('GEN_GS', generator.left, generator.y, session.right, session.y);
+    draw('Receive_TM', receiver.right, receiver.y, terrain.left, terrain.y);
+    draw('TM_EXP', terrain.x, terrain.bottom, exploration.x, exploration.top);
+
+    const lobbyShift = 18;
+    for (const box of [lobby, lobbyHub]) {
+      box.node.setAttribute('transform', `translate(${box.x + lobbyShift},${box.y})`);
+    }
+    edgeFor('Lobby_LH')?.setAttribute('transform', `translate(${lobbyShift},0)`);
+    const { x, y, width, height } = svg.viewBox.baseVal;
+    svg.setAttribute('viewBox', `${x} ${y} ${width + lobbyShift} ${height}`);
+  }
+
   // ── 화면 모드 전환(어두운 ↔ 밝은) — theme/theme-light.css(:root[data-pf-mode="light"])가 있을 때만 버튼이 생김 ──
   //   처음에는 기기 설정(prefers-color-scheme)을 따르고, 버튼으로 고르면 localStorage 'pf-mode'에 남아 그 뒤로는 기기 설정보다 우선
   //   각 html <head>의 짧은 스크립트가 그리기 전에 모드를 정함(깜빡임 없음). 고른 적이 없으면 페이지를 연 채로 기기 설정이 바뀌어도 따라감
@@ -398,6 +457,6 @@ const PF = (() => {
   const { t, tab, label, load: loadStrings, report: stringsReport } = PFStr;
 
   return { esc, inline, isUrl, shortUrl, repoLinks, otherLinks, loadJSON, loadText, encodePath, srcPath, projectUrl, docUrl, siteBase, visibleUrl, metaValue, teamLabel,
-           slugger, normTitle, resolveHeading, keyOk, deckSceneFor, headingsOf, ICON, NEWTAB, link, markNewTab, topCap, themeTokens, applyTheme, mermaidConfig, contrast, hexRgb, modeButton, setMode, getMode, hasLightMode,
+           slugger, normTitle, resolveHeading, keyOk, deckSceneFor, headingsOf, ICON, NEWTAB, link, markNewTab, topCap, themeTokens, applyTheme, mermaidConfig, routeFolkSackTerrain, contrast, hexRgb, modeButton, setMode, getMode, hasLightMode,
            FILE_HELP, noDataHtml, isFile, notice, guardFileProtocol, noData, t, tab, label, loadStrings, stringsReport };
 })();

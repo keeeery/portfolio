@@ -122,7 +122,16 @@
       if (!again && svgCache.has(el)) continue;
       if (!mmdIdx.has(el)) mmdIdx.set(el, mmdIdx.size);
       const text = el.querySelector('code')?.textContent || '';
-      try { const { svg } = await mermaid.render(`dk-mmd-${mmdIdx.get(el)}${pass}`, text, mmdHost); svgCache.set(el, { svg }); }
+      try {
+        let { svg } = await mermaid.render(`dk-mmd-${mmdIdx.get(el)}${pass}`, text, mmdHost);
+        if (PF.routeFolkSackTerrain && text.includes('%% folk-sack-architecture')) {
+          mmdHost.innerHTML = svg;
+          PF.routeFolkSackTerrain(mmdHost.querySelector('svg'));
+          svg = mmdHost.innerHTML;
+          mmdHost.replaceChildren();
+        }
+        svgCache.set(el, { svg });
+      }
       catch (err) { if (again) { console.warn('[deck] 다이어그램 다시 그리기 오류:', err); continue; } svgCache.set(el, { error: String(err?.message || err).split('\n')[0].slice(0, 120) }); info.errors.push('mermaid: ' + (err?.message || err)); }
     }
     mmdHost.replaceChildren();

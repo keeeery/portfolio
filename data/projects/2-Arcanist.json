@@ -30,14 +30,12 @@
     }
   ],
   "tags": [
-    "Unity 6000.3.15f1",
-    "URP",
-    "C#",
-    "HitBox/HurtBox",
     "ScriptableObject",
+    "Cinemachine",
+    "DOTween",
+    "HitBox/HurtBox",
     "Observer",
-    "상태 머신",
-    "DOTween"
+    "FSM"
   ],
   "links": {
     "github": "https://github.com/keeeery/Arcanist",
@@ -350,7 +348,30 @@
           {
             "kind": "mermaid",
             "n": 1,
-            "fp": "flowchart LR"
+            "fp": "flowchart TB"
+          }
+        ]
+      },
+      {
+        "key": "flow-card",
+        "chapter": "overview",
+        "layout": "full",
+        "tab": "구조",
+        "title": {
+          "text": "1.4 전체 구조",
+          "verbatim": true
+        },
+        "lead": null,
+        "sectionPath": [
+          "1. 프로젝트 개요",
+          "1.4 전체 구조"
+        ],
+        "points": [],
+        "visuals": [
+          {
+            "kind": "mermaid",
+            "n": 2,
+            "fp": "flowchart TB"
           }
         ]
       },

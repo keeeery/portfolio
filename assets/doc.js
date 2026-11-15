@@ -194,6 +194,7 @@
     const finishSvg = (fig, box) => {
       const svg = box.querySelector('svg');
       if (!svg) { box.classList.add('pf-mmd-error'); return; }
+      if (fig._mmdSrc.includes('%% folk-sack-architecture')) PF.routeFolkSackTerrain?.(svg);
       const natural = svg.viewBox?.baseVal?.width || parseFloat(svg.style.maxWidth) || 0;
       if (natural) { svg.setAttribute('width', String(Math.ceil(natural))); svg.style.maxWidth = '100%'; svg.removeAttribute('height'); }
       svg.dataset.naturalWidth = String(natural);

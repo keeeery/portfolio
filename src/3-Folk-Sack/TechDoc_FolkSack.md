@@ -53,7 +53,7 @@
 | 인원 | 3인 |
 | Engine | Unity `6000.3.15f1`, URP `17.3.0` |
 | Language | C# |
-| 주요 패키지 | Input System `1.19.0`, Newtonsoft Json `3.2.2`, UniTask `2.5.11`, Cinemachine `3.1.7`, DOTween 소스 |
+| 주요 패키지 | Input System `1.19.0`, Newtonsoft Json `3.2.2`, Cinemachine `3.1.7`, DOTween 소스 |
 | 서버 | ASP.NET Core (.NET `10.0`) |
 | 통신 | `ClientWebSocket` / ASP.NET Core WebSocket, JSON 메시지 |
 | 데이터 | 클라이언트 StreamingAssets TSV, 서버 Data TSV 및 설정 |
@@ -71,22 +71,28 @@
 ### 1.5 전체 구조
 
 ```mermaid
+%%{init: {"flowchart": {"rankSpacing": 18, "nodeSpacing": 26, "padding": 6}}}%%
 flowchart TB
-    Input["PlayerInputReader / ItemController"] --> RC["RoomClient"]
-    Lobby["LobbyFlowController / LobbySocketClient"] --> LH["LobbyHub"]
+    %% folk-sack-architecture
+    Input["PlayerInputReader<br/>ItemController"] --> RC["RoomClient · 요청"]
     RC -->|JSON WebSocket 요청| Room["Room / PacketDispatcher"]
     Room --> Handler["기능별 IPacketHandler"]
     Handler --> GS["GameSession / RoomState"]
-    GS -->|확정 결과| Room
-    Room -->|방송 큐| RC
-    RC --> TM["TerrainManager / CollapseManager"]
-    RC --> INV["PlayerInventory / PlayerHp"]
+    GS -->|확정 결과| Broadcast["Room · 방송 큐"]
+    Broadcast -->|JSON WebSocket 방송| Receive["RoomClient · 방송 수신"]
+    Receive --> INV["PlayerInventory / PlayerHp"]
+    Receive --> TM["TerrainManager<br/>CollapseManager"]
     TM --> EXP["PlayerExplorationController"]
-    INV -.변경 이벤트.-> HUD["HUD Presenter / View"]
     EXP -.탐험·관측 이벤트.-> Map["미니맵 / 월드 시야"]
-    TSV[("TSV + Seed + Profile")] --> GEN["클라이언트 / 서버 지형 생성기"]
+    INV -.변경 이벤트.-> HUD["HUD Presenter / View"]
+    TSV[("TSV + Seed + Profile")] --> GEN["클라이언트 / 서버<br/>지형 생성기"]
     GEN --> TM
     GEN --> GS
+    Lobby["LobbyFlowController<br/>LobbySocketClient"] --> LH["LobbyHub"]
+    %% 시작 노드와 하단 결과 노드의 행을 맞추는 배치용 연결
+    GEN ~~~ Room
+    Input ~~~ GEN
+    INV ~~~~ HUD
 ```
 
 ---
@@ -100,7 +106,8 @@ flowchart TB
 서버에는 대응하는 `ServerTerrainGenerator`가 있습니다.
 
 ```mermaid
-flowchart LR
+%%{init: {"flowchart": {"rankSpacing": 28, "nodeSpacing": 30}}}%%
+flowchart TB
     P["SeedProfile / DepthSection"] --> Base["기본 타원 지형 / 기반암 경계"]
     Base --> Cave["동굴 생성"]
     Cave --> Variant["변칙 지형 군집"]
@@ -231,11 +238,12 @@ return false;
 **DTO는 TSV에 저장된 값, Def는 게임이 실제로 조회해 사용하는 값**으로 구분했습니다.
 
 ```mermaid
-flowchart LR
-    TSV["TSV 파일"] --> Reader["TerrainTsvReader / 헤더를 DTO 필드에 매핑"]
+%%{init: {"flowchart": {"rankSpacing": 28, "nodeSpacing": 30}}}%%
+flowchart TB
+    TSV["TSV 파일"] --> Reader["TerrainTsvReader<br/>헤더를 DTO 필드에 매핑"]
     Reader --> DTO["DTO 목록"]
     DTO --> Check{"범위·중복·참조 검사"}
-    Check -->|실패| Error["InvalidDataException / 로딩 오류"]
+    Check -->|실패| Error["InvalidDataException<br/>로딩 오류"]
     Check -->|통과| Def["Def 생성 / Dictionary 보관"]
     Def --> Use["TryGet·IReadOnlyCollection으로 조회"]
 ```
@@ -339,19 +347,20 @@ AI로 빠르게 만든 프로토타입으로 붕괴 동작을 먼저 확인하�
 | 결과 적용 | `TerrainGridData.TryApplyAuthoritativeBatch(batch, out error)` | BaseRevision 일치·증가 Revision·좌표 중복 검사 |
 
 ```mermaid
+%%{init: {"sequence": {"actorMargin": 20, "width": 140, "wrap": true}}}%%
 sequenceDiagram
     participant I as ItemController
     participant C as RoomClient
-    participant H as TerrainExcavationPacketHandler
+    participant H as TerrainExcavation<br/>PacketHandler
     participant G as GameSession
     participant T as TerrainManager
-    I->>C: RequestExcavation(targetCell, itemId)
-    C->>H: terrain excavation request + RequestId
-    H->>G: TryExcavate(playerId, request)
+    I->>C: RequestExcavation<br/>(targetCell, itemId)
+    C->>H: terrain excavation request<br/>+ RequestId
+    H->>G: TryExcavate<br/>(playerId, request)
     alt 검증 성공
-        G-->>H: TerrainChangeBatch + WorldItemSpawned
+        G-->>H: TerrainChangeBatch<br/>+ WorldItemSpawned
         H-->>C: 확정 Batch 방송
-        C->>C: Revision 확인 / 요청 대기 해제
+        C->>C: Revision 확인<br/>요청 대기 해제
         C->>T: ApplyAuthoritativeBatch()
     else 검증 실패
         H-->>C: ErrorMessage(RequestId)
@@ -536,17 +545,19 @@ foreach (GridCoord sourceCell in sourceCells)
 
 ```mermaid
 stateDiagram-v2
+    direction TB
+    state "Normal (복귀)" as NormalReturn
     [*] --> Normal
     Normal --> Contact: 낙하 청크 접촉
     Contact --> Escaping: 유효한 탈출 위치 발견
     Contact --> PendingBurial: 탈출 불가 / 정착 결과 대기
-    Escaping --> Normal: 탈출 보호 종료
-    PendingBurial --> Normal: 확정 후 빈 공간 확인
+    Escaping --> NormalReturn: 탈출 보호 종료
+    PendingBurial --> NormalReturn: 확정 후 빈 공간 확인
     PendingBurial --> Buried: 확정 후 공간 점유
-    Buried --> Normal: 채굴 후 공간 확보 / 탈출 / 초기화
+    Buried --> NormalReturn: 채굴 후 공간 확보<br/>탈출 / 초기화
 ```
 
-상태명은 `FallingTerrainInteraction`의 플래그와 처리 흐름을 요약한 논리 상태입니다.
+상태명은 `FallingTerrainInteraction`의 플래그와 처리 흐름을 요약한 논리 상태입니다. 맨 아래의 `Normal (복귀)`는 처음의 `Normal`과 같은 상태입니다.
 
 ### 4.2 핵심 API — 탈출·매몰 판정과 피해 전달
 
@@ -709,7 +720,8 @@ int damage = Mathf.CeilToInt(baseDamage * damageMultiplier);
 ### 5.1 개요와 구조
 
 ```mermaid
-flowchart LR
+%%{init: {"flowchart": {"rankSpacing": 28, "nodeSpacing": 30}}}%%
+flowchart TB
     User["획득 / 버리기 / 판매 / 구매 / 사용"] --> Req["RoomClient 요청"]
     Req --> Server["GameSession 검증·상태 변경"]
     Server --> Snapshot["InventorySnapshot / UsableItemUsed / Error"]
@@ -1128,15 +1140,18 @@ Revision 오류가 나면 오류 메시지와 전체 지형 Snapshot의 송신�
 실제 WebSocket 송신은 별도 방송 루프가 담당합니다.
 
 ```mermaid
-flowchart LR
+flowchart TB
     subgraph Before["리팩터링 전 · 지형 Gate 유지"]
+        direction LR
         A["상태 변경 / 전체 복구 생성"] --> B["모든 소켓 송신 완료 대기"]
         B --> C["Gate 해제"]
     end
     subgraph After["리팩터링 후"]
+        direction LR
         D["Gate 획득 / 상태 변경"] --> E["FIFO 큐 등록 / Gate 해제"]
         E -.-> F["별도 방송 루프 / 소켓 송신"]
     end
+    Before ~~~ After
 ```
 
 | 수정 | 변경한 처리 | 결과 구조 |
