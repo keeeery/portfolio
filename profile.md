@@ -55,10 +55,11 @@ UI·연출처럼 눈에 띄는 부분부터 입력 타이밍·시인성처럼 �
 
 > 위 기술 스택 카드 아래에 근거 문장 없이 작은 아이콘과 이름으로만, 가운데 정렬해 나옵니다. 페이지(index.html)가 이 절을 직접 읽으므로 고친 뒤 새로고침만 하면 됩니다(다시 빌드 필요 없음).
 > 한 줄에 `- 묶음 이름: 도구, 도구, 도구`(쉼표로 여러 개). 실제로 써 본 것만 적습니다. 비워 두면 나오지 않습니다.
+> 한 줄에 ` | `로 묶음을 둘 이상 적으면 넓은 화면에서 그 묶음들이 한 줄에 나란히 나옵니다. 예) `- 협업 도구: Git, Fork | AI 도구: Codex`
 > 아이콘은 이름으로 정해집니다(Java·Android·Python·three.js·WebGL·Git·Fork·Asana 등). 맞는 아이콘이 없는 이름은 체크 표시로 나옵니다.
 
 - 언어·플랫폼: Android, Java, Python, WebGL, three.js
-- 협업 도구: Git, GitHub, Fork, Asana
+- 협업 도구: Git, GitHub, Fork, Asana | AI 도구: Claude Code, Codex
 
 ## 페이지 설정
 
