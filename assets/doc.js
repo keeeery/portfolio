@@ -76,12 +76,9 @@
         <article class="md" id="doc"><p class="loading">기술 문서를 불러오는 중…</p></article>
       </main>
       <aside class="rail" aria-label="프로젝트 정보">
-        <section class="rail-card"><p class="rail-title">${T('doc.rail-project')}</p><dl class="rail-meta">${metaRows}</dl></section>
+        <section class="rail-card"><p class="rail-title">${T('doc.rail-project')}</p><dl class="rail-meta">${metaRows}</dl>
+          <p class="rail-raw">${link({ href: srcPath(p.doc), label: T('doc.raw-md'), kind: 'file' })}</p></section>
         <section class="rail-card" id="rail-now" aria-live="polite"><p class="rail-title">${T('doc.rail-now')}</p><p class="now-title">—</p><div class="now-body"></div></section>
-        <section class="rail-card rail-misc">
-          ${link({ href: srcPath(p.doc), label: T('doc.raw-md'), kind: 'file' })}
-          <a href="#top" class="to-top">${T('doc.top')} ↑</a>
-        </section>
       </aside>
     </div>
     <div class="doc-fab" role="group" aria-label="빠른 이동"><button type="button" class="fab-toc" aria-haspopup="dialog">${T('name.toc')}</button><a class="fab-top" href="#top" aria-label="맨 위로">↑</a></div>
@@ -94,6 +91,7 @@
   const zoom = lightbox();
   await renderDoc();
   ready();
+  PF.topCap(PF.t('doc.top'));
   done();
 
   // ───────────────────────────────────────────────────────────────
@@ -370,7 +368,7 @@
     const raw = hashText();
     if (raw.startsWith('sec=')) {
       const el = window.PFDoc?.resolve(raw.slice(4));
-      if (el) { history.replaceState(null, '', `#${el.id}`); arrive(el); } else console.warn('[doc] #sec= 제목을 찾지 못함 → 맨 위:', raw.slice(4));
+      if (el) { history.replaceState(history.state, '', `#${el.id}`); arrive(el); } else console.warn('[doc] #sec= 제목을 찾지 못함 → 맨 위:', raw.slice(4));
     } else if (raw) {
       const el = document.getElementById(raw);
       if (el) arrive(el); else if (raw !== 'top') console.warn('[doc] 조각에 맞는 제목이 없음 → 맨 위:', raw);

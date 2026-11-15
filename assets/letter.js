@@ -50,7 +50,6 @@
         <section class="rail-card" id="rail-now" aria-live="polite"><p class="rail-title">${T('doc.rail-now')}</p><p class="now-title">—</p><div class="now-body"></div></section>
         <section class="rail-card rail-misc">
           ${link({ href: 'index.html', label: T('ui.back'), kind: 'back' })}
-          <a href="#top" class="to-top">${T('doc.top')} ↑</a>
         </section>
       </aside>
     </div>
@@ -114,6 +113,7 @@
   // 주소 끝 #<제목>으로 왔으면 그 절로
   const hash = (() => { try { return decodeURIComponent(location.hash.slice(1)); } catch { return location.hash.slice(1); } })();
   if (hash && hash !== 'top') document.getElementById(hash)?.scrollIntoView({ block: 'start', behavior: 'instant' });
+  PF.topCap(PF.t('doc.top'));
   done();
 
   function done() { (document.fonts ? document.fonts.ready : Promise.resolve()).then(() => { html.dataset.docReady = '1'; }); }

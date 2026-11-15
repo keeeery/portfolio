@@ -132,19 +132,81 @@ const PF = (() => {
     return `<a${cls ? ` class="${cls}"` : ''} href="${esc(href)}"${ext ? ' target="_blank" rel="noopener"' : ''}${back ? ' data-pf-back' : ''}${attrs ? ' ' + attrs : ''}>${label}${ext ? ICON_EXT + NEWTAB_SR : nt ? NEWTAB : ''}</a>`;
   }
   // 돌아가기 링크(data-pf-back): 포트폴리오 문서에서 왔으면 브라우저 '뒤로'처럼 돌아가 읽던 자리로(스크롤 위치 그대로).
-  //   다른 곳(발표 덱·주소 직접 입력)에서 왔으면 그냥 href(index.html)로. 휠 클릭·Ctrl/⌘ 클릭은 브라우저 기본 동작(새 탭) 그대로
+  //   같은 페이지 안에서 목차·절 링크(#…)로 옮겨 다닌 기록은 건너뜀 — 이 페이지에 들어온 뒤 쌓인 # 이동 수(pfDepth)를 기록마다 적어 두고 그만큼 더 뒤로.
+  //   새 탭에서 열었거나(그 탭에 앞 기록이 없음 — 들어올 때 기록 수가 1이면 pfPrev = false) 다른 곳(발표 덱·주소 직접 입력)에서 왔으면 그냥 href(index.html)로 이동.
+  //   휠 클릭·Ctrl/⌘ 클릭은 브라우저 기본 동작(새 탭) 그대로
+  let pfDepth = history.state?.pfDepth ?? 0;
+  const pfPrev = history.state?.pfPrev ?? history.length > 1;
+  if (history.state?.pfDepth == null) history.replaceState({ ...(history.state || {}), pfDepth, pfPrev }, '');
+  addEventListener('popstate', (e) => { if (e.state?.pfDepth != null) pfDepth = e.state.pfDepth; });
+  addEventListener('hashchange', () => {                             // 새로 # 이동하면 기록에 깊이가 없음 → 하나 더 깊게. 뒤로·앞으로 온 기록은 적어 둔 값
+    if (history.state?.pfDepth == null) { pfDepth += 1; history.replaceState({ ...(history.state || {}), pfDepth, pfPrev }, ''); }
+    else pfDepth = history.state.pfDepth;
+  });
   document.addEventListener('click', (e) => {
     const a = e.target.closest?.('a[data-pf-back]');
     if (!a || e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
     let ref; try { ref = new URL(document.referrer); } catch { return; }
     const page = (u) => u.pathname.replace(/\/index\.html$/, '/');               // '/' 와 '/index.html'은 같은 페이지
-    if (ref.origin !== location.origin || page(ref) !== page(new URL(a.getAttribute('href'), location.href)) || history.length < 2) return;
-    e.preventDefault(); history.back();
+    if (!pfPrev || ref.origin !== location.origin || page(ref) !== page(new URL(a.getAttribute('href'), location.href))) return;
+    e.preventDefault(); history.go(-(pfDepth + 1));
   });
   function markNewTab(a) {                                           // 이미 있는 <a>(md 안 등)에 같은 규칙 적용: ↗ 표시 + 외부 주소만 새 탭
     const ext = isExternal(a.getAttribute('href'));
     if (ext) { a.target = '_blank'; a.rel = 'noopener'; } else a.removeAttribute('target');
     if (!a.querySelector('.pf-newtab-icon')) a.insertAdjacentHTML('beforeend', ext ? ICON_EXT + NEWTAB_SR : NEWTAB);
+  }
+
+  // ── 맨 위로 캡슐 + 머리 막대(상세 기술문서·자기소개서): 위로 스크롤하면 머리 막대(.doc-head)가 화면 위에 내려오고, 맨 위에서 떨어져 있으면 그 아래 가운데에 [맨 위로] 캡슐도.
+  //    아래로 스크롤하면 둘 다 위로 올라가 숨음. 맨 위 근처에서는 머리 막대는 제자리(페이지 맨 위), 캡슐은 없음.
+  //    목차·절 링크(#…)로 옮겨 가는 동안(부드러운 스크롤)은 머리 막대가 도착한 제목을 가리지 않게 숨긴 채로 둠.
+  //    캡슐 모양은 포트폴리오 문서의 캡슐 바와 같고, 펼치기 없이 제 크기로 위에서 내려옴. 규칙은 doc.css '맨 위로 캡슐' · '머리 막대'
+  function topCap(label) {
+    if (document.querySelector('.tcap')) return;
+    const head = document.querySelector('.doc-head');
+    const cap = document.createElement('div');
+    cap.className = 'tcap';
+    cap.innerHTML = `<nav class="cap-pill" aria-label="빠른 이동">
+      <div class="cap-row"><a class="btn" href="#top" tabindex="-1">${esc(label)} <span aria-hidden="true">↑</span></a></div></nav>`;
+    document.body.append(cap);
+    const btn = cap.querySelector('.btn');
+    let on = false, lastY = scrollY, pend = 0, quietUntil = 0;
+    const root = document.documentElement;
+    const headH = () => head ? head.offsetHeight : 0;
+    const measure = () => {                                            // 캡슐 자리(머리 막대 바로 아래) · 숨을 때 둘이 함께 올라갈 거리(머리 막대 + 간격 12 + 캡슐 + 그림자 여유 24)
+      root.style.setProperty('--head-h', `${headH()}px`);
+      root.style.setProperty('--hide-d', `${headH() + 12 + cap.firstElementChild.offsetHeight + 24}px`);
+    };
+    const setHead = (hidden) => {                                      // 머리 막대: 맨 위 근처가 아니면 숨김(.pf-hide) ↔ 보임
+      if (!head) return;
+      head.classList.toggle('pf-hide', hidden);
+      root.classList.toggle('pf-head-hidden', hidden);
+      root.style.setProperty('--head-shown', hidden ? '0px' : `${headH()}px`);
+    };
+    const show = () => { if (on) return; on = true; cap.classList.add('on'); btn.removeAttribute('tabindex'); };
+    const hide = () => { if (!on) return; on = false; cap.classList.remove('on'); btn.setAttribute('tabindex', '-1'); };
+    const tick = () => {
+      pend = 0;
+      const y = scrollY, dy = y - lastY;
+      const nearTop = y <= headH();
+      if (performance.now() < quietUntil) { if (!nearTop) setHead(true); hide(); lastY = y; return; }   // # 이동 중
+      if (nearTop) setHead(false);                                       // 맨 위: 머리 막대는 제자리
+      else if (dy < -6) setHead(false);                                  // 위로 스크롤: 내려옴
+      else if (dy > 6) setHead(true);                                    // 아래로 스크롤: 숨김
+      if (y < Math.min(innerHeight * .6, 480)) hide();                  // 맨 위 가까이: 캡슐은 필요 없음
+      else if (dy < -6) show();
+      else if (dy > 6) hide();
+      if (Math.abs(dy) > 6 || y < 8) lastY = y;
+    };
+    addEventListener('scroll', () => { if (!pend) pend = setTimeout(tick, 50); }, { passive: true });   // 50ms마다 한 번 판단
+    document.addEventListener('click', (e) => {                         // 목차·절 링크: 부드러운 스크롤이 끝날 때까지 머리 막대·캡슐을 숨긴 채로
+      const a = e.target.closest?.('a[href^="#"]');
+      if (!a || a === btn || a.getAttribute('href') === '#top') return;
+      quietUntil = performance.now() + 900; setHead(scrollY > headH()); hide();
+    });
+    btn.addEventListener('click', () => { btn.blur(); });
+    addEventListener('resize', measure); document.fonts?.ready.then(measure);
+    measure(); setHead(false);
   }
 
   // ── 강조색(profile.md "강조색", theme/theme.css의 --t-accent가 있으면 그 색) → 색 토큰 ──
@@ -336,6 +398,6 @@ const PF = (() => {
   const { t, tab, label, load: loadStrings, report: stringsReport } = PFStr;
 
   return { esc, inline, isUrl, shortUrl, repoLinks, otherLinks, loadJSON, loadText, encodePath, srcPath, projectUrl, docUrl, siteBase, visibleUrl, metaValue, teamLabel,
-           slugger, normTitle, resolveHeading, keyOk, deckSceneFor, headingsOf, ICON, NEWTAB, link, markNewTab, themeTokens, applyTheme, mermaidConfig, contrast, hexRgb, modeButton, setMode, getMode, hasLightMode,
+           slugger, normTitle, resolveHeading, keyOk, deckSceneFor, headingsOf, ICON, NEWTAB, link, markNewTab, topCap, themeTokens, applyTheme, mermaidConfig, contrast, hexRgb, modeButton, setMode, getMode, hasLightMode,
            FILE_HELP, noDataHtml, isFile, notice, guardFileProtocol, noData, t, tab, label, loadStrings, stringsReport };
 })();
