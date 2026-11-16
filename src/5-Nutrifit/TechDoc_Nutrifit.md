@@ -40,7 +40,7 @@ Nutrifit은 신체 정보와 식사 기록을 바탕으로 영양소 섭취 현�
 | 기간 | 2024.09 — 2025.06 |
 | 인원 | 5인 |
 | 플랫폼 | Android |
-| Language | Java (앱), Python (서버) |
+| 언어 | Java (앱), Python (서버) |
 | 주요 패키지 | OkHttp `4.10.0`, Gson `2.10`, FoodLens SDK |
 | 서버 | Flask, pandas, NumPy, scikit-learn — AWS에서 실행 |
 | GitHub | [GitHub(앱)](https://github.com/keeeery/Nutrifit), [GitHub(서버)](https://github.com/keeeery/Nutrifit_Recommendation) |

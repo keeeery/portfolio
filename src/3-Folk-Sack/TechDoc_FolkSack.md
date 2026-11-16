@@ -51,8 +51,8 @@
 | 장르 | 2D 멀티플레이 채굴 |
 | 기간 | 2026.08 — 2026.09 |
 | 인원 | 3인 |
-| Engine | Unity `6000.3.15f1`, URP `17.3.0` |
-| Language | C# |
+| 엔진 | Unity `6000.3.15f1`, URP `17.3.0` |
+| 언어 | C# |
 | 주요 패키지 | Input System `1.19.0`, Newtonsoft Json `3.2.2`, Cinemachine `3.1.7`, DOTween 소스 |
 | 서버 | ASP.NET Core (.NET `10.0`) |
 | 통신 | `ClientWebSocket` / ASP.NET Core WebSocket, JSON 메시지 |

@@ -108,7 +108,7 @@
       "src": "images/reshuffle.png",
       "w": 720,
       "h": 540,
-      "caption": "연결 가능한 쌍이 없어 Reshuffling 안내와 함께 남은 카드를 재배치하는 화면"
+      "caption": "연결 가능한 쌍이 없어 Reshuffling.. 안내와 함께 남은 카드를 재배치하는 화면"
     },
     {
       "src": "images/match-line.png",
@@ -230,7 +230,7 @@
             "w": 1372,
             "h": 1029,
             "caption": {
-              "text": "사천성 메인 화면 — 제한 시간과 게임 시작 방법 안내",
+              "text": "메인 화면 — 제한 시간과 게임 시작 방법 안내",
               "verbatim": true
             }
           }
@@ -457,7 +457,7 @@
             "w": 720,
             "h": 540,
             "caption": {
-              "text": "연결 가능한 쌍이 없어 Reshuffling 안내와 함께 남은 카드를 재배치하는 화면",
+              "text": "연결 가능한 쌍이 없어 Reshuffling.. 안내와 함께 남은 카드를 재배치하는 화면",
               "verbatim": true
             }
           }

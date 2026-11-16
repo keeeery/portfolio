@@ -17,7 +17,7 @@
 
 ### 1.1 What — 무엇을 만들었나
 
-![Arcanist 로고와, 화염구 카드로 해골 병사를 공격하는 플레이 화면](images/cover-play-logo.png)
+![Arcanist 로고와, 화염구로 적을 공격하는 플레이 화면](images/cover-play-logo.png)
 
 2D 액션에 실시간 카드 사용을 결합한 게임입니다.
 플레이어는 이동·점프·공격·패링을 하며, 충전된 게이지로 카드를 뽑아 Q/W/E 슬롯에서 사용합니다.
@@ -45,8 +45,8 @@
 | 장르 | 2D 액션 플랫포머 |
 | 기간 | 2026.06 — 2026.07 |
 | 인원 | 1인 |
-| Engine | Unity `6000.3.15f1`, URP `17.3.0` |
-| Language | C# |
+| 엔진 | Unity `6000.3.15f1`, URP `17.3.0` |
+| 언어 | C# |
 | 주요 패키지 | Input System `1.19.0`(프로젝트 입력 래퍼 `SimpleInput`), Cinemachine `3.1.7`, LDtkUnity `6.12.3`, 2D Animation `13.0.4`, DOTween |
 | GitHub | [GitHub](https://github.com/keeeery/Arcanist) |
 | 시연 영상 | [YouTube](https://youtu.be/8hEJXeohnA8) |
@@ -191,7 +191,7 @@ private void HandleDamageEvent(CombatEntity sender, CombatEntity receiver, Comba
 회복 시에는 지연 바를 현재 체력에 맞추고 녹색에서 기본색으로 돌아오는 효과를 실행합니다.
 비활성화·초기화에서 트윈을 정리하므로 리스폰 시 이전 감소 연출을 이어가지 않습니다.
 
-![피격 직후의 체력바 — 즉시 줄어든 본체(흰색)와 뒤따라 줄어드는 지연 바(회색)](images/hp-bar-delay.png)
+![피격 직후의 체력 바 — 즉시 줄어든 원본 체력 바(흰색)와 뒤따라 줄어드는 지연 바(회색)](images/hp-bar-delay.png)
 
 강의에서 익힌 DOTween을 실제 프로젝트에 적용해, 컴포넌트마다 반복되던 UI·체력바·피격·패링의 수동 시간 보간을 트윈으로 정리했습니다. 이 과정에서
 ‘새 효과가 오면 이전 효과를 끝내고 다시 시작하는가’와 ‘비활성화할 때 정리하는가’를 각 컴포넌트 생명주기에 연결했습니다.
@@ -219,7 +219,7 @@ DOTween으로 코드 반복은 줄었지만, 트윈 대상의 상태 초기화�
 소스 기본값에서는 흔들림 지연(0.07초)이 히트스톱(0.05초)보다 길어 정지가 풀린 직후에 흔들림이 시작됩니다. 실제 값은 Inspector에 저장된 설정을 따릅니다.
 같은 `ScreenEffectController`가 피격에는 `PlayDamageGlow`(빨강, 최대 알파 0.5), 일회 부활 발동에는 `PlayReviveGlow`(흰색, 최대 알파 0.6)를 제공합니다.
 
-![패링 성공 순간 — 보라색 화면 가장자리와 파티클·조명 이펙트](images/parry-effect-crop.png)
+![패링 성공 순간 — 화면 가장자리 보라색 비네트와 파티클·조명 이펙트](images/parry-effect-crop.png)
 
 #### 죽음 선고 — 시간 배율을 저장하고 되돌리는 화면 반전
 
@@ -403,7 +403,7 @@ return new CardSkillExecutionResult(CardSkillExecutionStatus.Executed, card);
 
 ![활성 버프 아이콘(좌상단)과 최근 사용 카드 목록(좌측)](images/buff-icons-crop.png)
 
-![불사의 축복 발동 — 화면 가장자리의 흰색 글로우와 버프 아이콘(좌상단)](images/undead-bless-glow-crop.png)
+![불사의 축복 발동 — 화면 가장자리 흰색 비네트와 버프 아이콘(좌상단)](images/undead-bless-glow-crop.png)
 
 소스: `BuffController.cs`, `ActiveBuff.cs`.
 
@@ -431,7 +431,7 @@ currentCell = Mathf.Min(totalCells, gaugeCells.Length);
 드로우·사용·사용 FX 보간은 각 Motion 클래스가 나눠 담당합니다.
 `ClearAllSlots`는 코루틴과 슬롯 상태를 함께 정리하는 리스폰 진입점입니다.
 
-![카드를 뽑은 뒤의 손패 — Q·W 슬롯에 카드가 들어 있음](images/card-draw-crop.png)
+![카드를 뽑은 뒤의 손패 — Q 슬롯에 카드가 들어 있고, W 슬롯에 카드가 드로우 중](images/card-draw-crop.png)
 
 #### 투사체의 생성·이동·폭발·반납
 
@@ -494,7 +494,7 @@ InventoryWindow는 선택(`InventorySelection`), 정렬(`InventoryCardSorter`), 
 | `CanCompleteDeckEdit()` | 최소 장수와 비용 범위 충족 여부 반환 |
 | `AddCard(CardData cardData, bool addToDeck = true)` | 보유 목록 추가 및 선택적 덱 편성 |
 
-![전체 카드와 플레이어 카드 덱 편성 화면(장수·마력 조건 표시)](images/deck-inventory.png)
+![전체 카드와 플레이어 카드 덱 편성 화면(최소 카드 수·마력 조건 표시)](images/deck-inventory.png)
 
 ### 4.3 핵심 기능 — 보상 추첨
 
@@ -519,7 +519,7 @@ foreach (CardData card in candidates)
 예를 들어 일반 2장과 희귀 1장만 남으면 희귀 확률은 `22 / (70 + 70 + 22)`입니다.
 이미 획득한 카드 수와 각 등급의 남은 카드 수에 따라 실제 등급 분포가 달라집니다.
 
-![방 클리어 후 등급이 다른 카드 3장 중 하나를 고르는 보상 선택 화면](images/reward-selection-zoom.png)
+![방 클리어 후 가중치에 의해 무작위로 추첨된 3장 중 하나를 고르는 보상 선택 화면](images/reward-selection-zoom.png)
 
 ### 4.4 세부 구현
 
@@ -638,9 +638,9 @@ protected override void OnDisable()
 }
 ```
 
-![골렘의 팔 발사](images/golem-arm-shoot-crop.png)
+![고대 수호 골렘의 팔 발사 패턴](images/golem-arm-shoot-crop.png)
 
-![골렘의 근접 공격](images/golem-melee-crop.png)
+![고대 수호 골렘의 근접 공격 패턴](images/golem-melee-crop.png)
 
 ### 5.4 세부 구현
 
@@ -658,9 +658,9 @@ protected override void OnDisable()
 이처럼 플레이어 조율 컴포넌트에서 계산과 연출을 분리하면 입력 차단·사망·리스폰에서 같은 초기화 진입점을 사용할 수 있습니다.
 다만 콜라이더 크기·collisionLayer·skinWidth 설정과 경사·모서리 통과 동작은 실제 맵에서 확인해야 합니다.
 
-![대시 중 이동 이펙트](images/dash-fx-crop.png)
+![플레이어 대시 이펙트](images/dash-fx-crop.png)
 
-![달리기 중 이동 이펙트](images/sprint-fx-crop.png)
+![플레이어 달리기 이펙트](images/sprint-fx-crop.png)
 
 소스: `CharacterController2D.cs`.
 
@@ -783,7 +783,7 @@ Animator를 재바인딩하고 체력을 복원하며 `ResetRuntimeCardsForRespa
 카드 시스템은 대기 스킬과 손패·드로우·버림 목록을 지우고 편성 덱으로 재구성합니다.
 따라서 위치만 옮기는 복귀가 아니라 플레이어의 전투 상태도 함께 정리합니다.
 
-![사망 창 — 위 방향키로 체크포인트에서 부활](images/death-panel.png)
+![사망 화면 — 화면이 어두워지고, 위 방향키로 체크포인트에서 부활](images/death-panel.png)
 
 ### 6.4 세부 구현
 

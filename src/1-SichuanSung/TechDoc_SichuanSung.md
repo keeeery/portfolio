@@ -17,7 +17,7 @@
 
 ### 1.1 What — 무엇을 만들었나
 
-![사천성 메인 화면 — 제한 시간과 게임 시작 방법 안내](images/cover.png)
+![메인 화면 — 제한 시간과 게임 시작 방법 안내](images/cover.png)
 
 **사천성**은 같은 그림의 카드 두 장을 연결해 제거하는 Unity 2D 퍼즐 개인 프로젝트입니다.
 10×10 보드의 카드 100장을 제한시간 안에 모두 제거하며, 다른 카드를 통과하지 않고 가로·세로로 연결할 수 있어야 합니다.
@@ -45,8 +45,8 @@
 | 장르 | 2D 퍼즐 |
 | 기간 | 2026.05 (며칠간 제작) |
 | 인원 | 1인 |
-| Engine | Unity `6000.3.15f1`, URP `17.3.0` |
-| Language | C# |
+| 엔진 | Unity `6000.3.15f1`, URP `17.3.0` |
+| 언어 | C# |
 | 주요 패키지 | Input System `1.19.0`, uGUI |
 | 데이터 | PlayerPrefs의 최고 클리어 시간 |
 | GitHub | [GitHub](https://github.com/keeeery/Unity_2D_SichuanSung) |
@@ -172,7 +172,7 @@ for (int i = 0; i < pairCount; i++)
 연결 가능한 쌍이 없으면 남은 카드의 **위치는 그대로 두고 ID만 섞습니다.**
 ID의 전체 구성은 유지되므로 기존 짝도 유지됩니다.
 
-![연결 가능한 쌍이 없어 Reshuffling 안내와 함께 남은 카드를 재배치하는 화면](images/reshuffle.png)
+![연결 가능한 쌍이 없어 Reshuffling.. 안내와 함께 남은 카드를 재배치하는 화면](images/reshuffle.png)
 
 ```csharp
 do
