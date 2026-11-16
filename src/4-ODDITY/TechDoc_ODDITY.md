@@ -57,7 +57,7 @@ UI/UX는 공격 예고와 HUD·미니맵, 화면·UI·소리가 함께 바뀌는
 | Language | C# |
 | 주요 패키지 | Shader Graph `17.3.0`, Input System `1.19.0`, AI Navigation `2.0.12`, UniTask, DOTween, Odin Inspector |
 | 데이터 | 증강 칩·보상·임무 TSV, 로컬 JSON 저장 |
-| GitHub | [https://github.com/keeeery/ODDITY](https://github.com/keeeery/ODDITY) |
+| GitHub | [GitHub](https://github.com/keeeery/ODDITY) |
 | 시연 영상 | [YouTube](https://youtu.be/PXWZMTSK4lk) |
 
 ### 1.4 담당 범위

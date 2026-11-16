@@ -48,7 +48,7 @@
 | Engine | Unity `6000.3.15f1`, URP `17.3.0` |
 | Language | C# |
 | 주요 패키지 | Input System `1.19.0`(프로젝트 입력 래퍼 `SimpleInput`), Cinemachine `3.1.7`, LDtkUnity `6.12.3`, 2D Animation `13.0.4`, DOTween |
-| GitHub | [https://github.com/keeeery/Arcanist](https://github.com/keeeery/Arcanist) |
+| GitHub | [GitHub](https://github.com/keeeery/Arcanist) |
 | 시연 영상 | [YouTube](https://youtu.be/8hEJXeohnA8) |
 
 환경 설정: `ProjectVersion.txt`, `manifest.json`.

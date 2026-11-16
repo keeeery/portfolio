@@ -49,7 +49,7 @@
 | Language | C# |
 | 주요 패키지 | Input System `1.19.0`, uGUI |
 | 데이터 | PlayerPrefs의 최고 클리어 시간 |
-| GitHub | [Unity_2D_SichuanSung](https://github.com/keeeery/Unity_2D_SichuanSung) |
+| GitHub | [GitHub](https://github.com/keeeery/Unity_2D_SichuanSung) |
 | 시연 영상 | [YouTube](https://youtu.be/_bbqGfWJcZI) |
 
 ### 1.4 전체 구조
