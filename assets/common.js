@@ -157,9 +157,9 @@ const PF = (() => {
     if (!a.querySelector('.pf-newtab-icon')) a.insertAdjacentHTML('beforeend', ext ? ICON_EXT + NEWTAB_SR : NEWTAB);
   }
 
-  // ── 맨 위로 캡슐 + 머리 막대(상세 기술문서·자기소개서): 위로 스크롤하면 머리 막대(.doc-head)가 화면 위에 내려오고, 맨 위에서 떨어져 있으면 그 아래 가운데에 [맨 위로] 캡슐도.
-  //    아래로 스크롤하면 둘 다 위로 올라가 숨음. 맨 위 근처에서는 머리 막대는 제자리(페이지 맨 위), 캡슐은 없음.
-  //    목차·절 링크(#…)로 옮겨 가는 동안(부드러운 스크롤)은 머리 막대가 도착한 제목을 가리지 않게 숨긴 채로 둠.
+  // ── 맨 위로 캡슐 + 머리 막대(상세 기술문서·자기소개서): 머리 막대(.doc-head)는 페이지 맨 위 근처에서만 보이고, 내려가면 위로 올라가 숨음.
+  //    맨 위에서 떨어진 곳에서 위로 스크롤하면 [맨 위로] 캡슐만 화면 위 가운데에 내려옴(머리 막대는 함께 내려오지 않음). 아래로 스크롤하면 캡슐도 숨음.
+  //    목차·절 링크(#…)로 옮겨 가는 동안(부드러운 스크롤)은 캡슐을 숨긴 채로 둠.
   //    캡슐 모양은 포트폴리오 문서의 캡슐 바와 같고, 펼치기 없이 제 크기로 위에서 내려옴. 규칙은 doc.css '맨 위로 캡슐' · '머리 막대'
   function topCap(label) {
     if (document.querySelector('.tcap')) return;
@@ -173,9 +173,10 @@ const PF = (() => {
     let on = false, lastY = scrollY, pend = 0, quietUntil = 0;
     const root = document.documentElement;
     const headH = () => head ? head.offsetHeight : 0;
-    const measure = () => {                                            // 캡슐 자리(머리 막대 바로 아래) · 숨을 때 둘이 함께 올라갈 거리(머리 막대 + 간격 12 + 캡슐 + 그림자 여유 24)
+    const measure = () => {                                            // 숨을 때 올라갈 거리 — 머리 막대: 제 높이 + 그림자 여유 24 · 캡슐(화면 맨 위 12px 아래): 간격 12 + 캡슐 + 그림자 여유 24
       root.style.setProperty('--head-h', `${headH()}px`);
-      root.style.setProperty('--hide-d', `${headH() + 12 + cap.firstElementChild.offsetHeight + 24}px`);
+      root.style.setProperty('--hide-d', `${headH() + 24}px`);
+      root.style.setProperty('--cap-d', `${12 + cap.firstElementChild.offsetHeight + 24}px`);
     };
     const setHead = (hidden) => {                                      // 머리 막대: 맨 위 근처가 아니면 숨김(.pf-hide) ↔ 보임
       if (!head) return;
@@ -190,9 +191,7 @@ const PF = (() => {
       const y = scrollY, dy = y - lastY;
       const nearTop = y <= headH();
       if (performance.now() < quietUntil) { if (!nearTop) setHead(true); hide(); lastY = y; return; }   // # 이동 중
-      if (nearTop) setHead(false);                                       // 맨 위: 머리 막대는 제자리
-      else if (dy < -6) setHead(false);                                  // 위로 스크롤: 내려옴
-      else if (dy > 6) setHead(true);                                    // 아래로 스크롤: 숨김
+      setHead(!nearTop);                                                 // 머리 막대는 맨 위에서만 보임(위로 스크롤해도 내려오지 않음 — 그때는 [맨 위로] 캡슐만)
       if (y < Math.min(innerHeight * .6, 480)) hide();                  // 맨 위 가까이: 캡슐은 필요 없음
       else if (dy < -6) show();
       else if (dy > 6) hide();

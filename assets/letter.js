@@ -48,6 +48,7 @@
       </main>
       <aside class="rail" aria-label="문서 정보">
         <section class="rail-card" id="rail-now" aria-live="polite"><p class="rail-title">${T('doc.rail-now')}</p><p class="now-title">—</p><div class="now-body"></div></section>
+        <section class="rail-card"><p class="rail-title">${T('doc.rail-links')}</p><nav class="rail-links" id="rail-pdf" aria-label="PDF"></nav></section>
         <section class="rail-card rail-misc">
           ${link({ href: 'index.html', label: T('ui.back'), kind: 'back' })}
         </section>
@@ -61,6 +62,7 @@
   //   파일 이름 규칙은 tools/make-letter-pdf.py의 letter_name()과 같아야 함
   const pdfFile = `${name.replace(/[\\/:*?"<>|]/g, '')}${name ? '-' : ''}자기소개서.pdf`.normalize('NFC');
   const pdfNav = document.getElementById('pdf-nav');
+  const railPdf = document.getElementById('rail-pdf');   // 오른쪽 칸(≥1800px)이 보이면 상단 바 PDF 버튼은 숨기고 여기 글자 링크로(doc.css '레일 링크')
   // 내려받기 아이콘: 포트폴리오 문서의 [PDF로 저장]과 같은 그림·크기(18px, 선 0.98). 버튼 높이가 늘지 않게 위아래 여백을 음수로
   const SAVE_ICON = '<svg class="pf-save-icon" aria-hidden="true" focusable="false" viewBox="0 0 12 12" width="18" height="18" style="flex:none;margin:-4px -4px -4px 2px" fill="none" stroke="currentColor" stroke-width="0.98" stroke-linecap="round" stroke-linejoin="round"><path d="M6.5 2.25v5.25M3.9 5 6.5 7.6 9.1 5M2.75 9.75h7.5"/></svg>';
   const hasPdf = await fetch(encodeURIComponent(pdfFile), { method: 'HEAD', cache: 'no-cache' })
@@ -69,9 +71,12 @@
     const href = encodeURIComponent(pdfFile);
     pdfNav.innerHTML = link({ href, label: 'PDF로 보기', kind: 'page', cls: 'btn' }) +
       `<a class="btn primary" href="${href}" download="${esc(pdfFile)}">PDF로 저장${SAVE_ICON}</a>`;
+    railPdf.innerHTML = link({ href, label: 'PDF로 보기', kind: 'page' }) +
+      `<a href="${href}" download="${esc(pdfFile)}">PDF로 저장${SAVE_ICON}</a>`;
   } else {
-    pdfNav.innerHTML = '<button type="button" class="btn primary" id="pdf-print">PDF로 저장' + SAVE_ICON + '</button>';
-    document.getElementById('pdf-print').addEventListener('click', () => window.print());
+    pdfNav.innerHTML = '<button type="button" class="btn primary" data-pdf-print>PDF로 저장' + SAVE_ICON + '</button>';
+    railPdf.innerHTML = '<button type="button" data-pdf-print>PDF로 저장' + SAVE_ICON + '</button>';
+    document.querySelectorAll('[data-pdf-print]').forEach((b) => b.addEventListener('click', () => window.print()));
   }
 
   // 본문 링크: 바깥 주소는 새 탭(↗), 같은 문서 안은 같은 탭

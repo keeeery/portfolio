@@ -52,6 +52,14 @@
   ].filter(Boolean);
   const deckBtn = noDeck ? '' : link({ href: deckUrl(), label: T('name.deck'), kind: 'page', cls: 'btn primary' });
   if (noDeck && ext.length) ext[0] = ext[0].replace('class="btn"', 'class="btn primary"');   // 발표 덱이 없으면 첫 링크를 강조
+  // 오른쪽 칸(≥1800px)이 보이면 상단 바 버튼(화면 모드 버튼 빼고)은 숨기고 같은 링크를 오른쪽 칸 '링크' 카드에 글자 링크로(doc.css '레일 링크')
+  const railLinks = [
+    !noDeck && link({ href: deckUrl(), label: T('name.deck'), kind: 'page' }),
+    ...PF.repoLinks(p).map((r) => link({ href: r.url, label: esc(r.label), kind: 'external' })),
+    PF.isUrl(p.links?.video) && link({ href: p.links.video, label: T('name.video'), kind: 'external' }),
+    ...PF.otherLinks(p).map((l) => link({ href: l.url, label: esc(l.label), kind: 'external' })),
+    link({ href: srcPath(p.doc), label: T('doc.raw-md'), kind: 'file' }),   // 원문 마크다운은 맨 아래
+  ].filter(Boolean);
   const tags = (p.tags || []).length ? `<ul class="tags">${p.tags.map((t) => `<li>${esc(t)}</li>`).join('')}</ul>` : '';
 
   root.innerHTML = `
@@ -82,8 +90,8 @@
         <article class="md" id="doc"><p class="loading">기술 문서를 불러오는 중…</p></article>
       </main>
       <aside class="rail" aria-label="프로젝트 정보">
-        <section class="rail-card"><p class="rail-title">${T('doc.rail-project')}</p><dl class="rail-meta">${metaRows}</dl>
-          <p class="rail-raw">${link({ href: srcPath(p.doc), label: T('doc.raw-md'), kind: 'file' })}</p></section>
+        <section class="rail-card"><p class="rail-title">${T('doc.rail-project')}</p><dl class="rail-meta">${metaRows}</dl></section>
+        <section class="rail-card"><p class="rail-title">${T('doc.rail-links')}</p><nav class="rail-links" aria-label="프로젝트 링크">${railLinks.join('')}</nav></section>
         <section class="rail-card" id="rail-now" aria-live="polite"><p class="rail-title">${T('doc.rail-now')}</p><p class="now-title">—</p><div class="now-body"></div></section>
       </aside>
     </div>
