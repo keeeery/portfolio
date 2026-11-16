@@ -437,6 +437,17 @@
       .gl-body { grid-column: auto; }
     }
     .shot img { display: block; width: 100%; height: 100%; object-fit: cover; }
+    /* 프로젝트 요약 아래 "기타 프로젝트": 프로젝트 줄 사이와 같은 구분선 뒤, 이름 없이 [작은 대표 이미지 | 이름 / 개인·팀 프로젝트 / 장르]. 넓은 화면 3열 · 휴대폰 한 열 */
+    .gl-more { margin: 28px 0 0; padding-top: 28px; border-top: 1px solid var(--divider); }   /* 위 프로젝트 줄 사이와 같은 구분선·간격 */
+    .glo { display: grid; gap: 20px; margin: 0; padding: 0; list-style: none; }
+    .glo-item { display: grid; grid-template-columns: 96px minmax(0, 1fr); gap: 16px; align-items: center; }
+    .glo-thumb { display: block; border-radius: 10px; overflow: hidden; }
+    .glo-item:not(:has(.glo-thumb)) { grid-template-columns: minmax(0, 1fr); }
+    .glo-title { display: block; font-size: 16px; font-weight: 700; letter-spacing: -.01em; line-height: 1.35; color: var(--ink); }
+    .glo-meta { margin: 4px 0 0; font-size: 12px; line-height: 1.5; color: var(--sub); }
+    .glo-meta + .glo-meta { margin-top: 0; }                            /* 개인/팀 줄과 장르 줄은 붙여서 두 줄 한 묶음 */
+    @media (min-width: 760px) { .gl-more { margin-top: 32px; padding-top: 32px; } .glo { grid-template-columns: repeat(3, minmax(0, 1fr)); column-gap: 32px; } }
+    @media print { .gl-more { break-inside: avoid; } }
     .shot.fit img { object-fit: contain; padding: 8px; }
     .reveal { opacity: 0; transform: translateY(24px); transition: opacity .7s ease, transform .7s ease; }
     .reveal.in { opacity: 1; transform: none; }
@@ -1822,7 +1833,7 @@
       const start = lines.findIndex((l) => /^##\s+기타 프로젝트\s*\(링크/.test(l.trim()));
       if (start < 0) return [];
       const cards = []; let cur = null;
-      const KEYS = { '소개': 'intro', '정보': 'info', '기술': 'tech', '맡은 역할': 'role', '링크': 'url', '시연 영상': 'video', '이미지': 'image' };
+      const KEYS = { '소개': 'intro', '정보': 'info', '기술': 'tech', '맡은 역할': 'role', '링크': 'url', '시연 영상': 'video', '이미지': 'image', '장르': 'genre' };
       for (const raw of lines.slice(start + 1)) {
         const l = raw.trim();
         if (/^##\s/.test(l)) break;
@@ -1885,7 +1896,7 @@
     const otherCard = (p) => {
       const meta = Object.fromEntries((p.meta || []).map((m) => [m.label, m.value]));
       const who = meta['인원'] ? `${meta['인원']}${p.team?.type === 'team' ? ' 팀' : ''}` : teamLabel(p.team);
-      return { id: p.id, title: p.title, info: [meta['기간'], who].filter(Boolean).join(' · '), intro: p.tagline, role: p.team?.role, image: p.cover ? img(p, p.cover) : '',
+      return { id: p.id, title: p.title, genre: meta['장르'] || '', team: teamLabel(p.team), info: [meta['기간'], who].filter(Boolean).join(' · '), intro: p.tagline, role: p.team?.role, image: p.cover ? img(p, p.cover) : '',
         tech: p.tags || [], links: projectUrlRows(p).filter(Boolean).filter(([k]) => !(noDeck.has(p.id) && k === t('name.deck'))) };
     };
 
@@ -1910,7 +1921,7 @@
 
     // ⑧ 한눈에 보기(작은 대표 이미지 + 줄 목록 · tinted — layout.json의 grid 3열 대신 사용자 요청)
     //   제목 아래: "개인/팀 프로젝트 · 장르", 그 아래 환경(정보 표의 '환경'과 같은 순서, 쉼표 → ·). 환경이 없으면 태그 앞 4개
-    function Glance({ projects }) {
+    function Glance({ projects, others = [] }) {
       if (!projects.length) return null;
       const metaOf = (p, label) => (p.meta || []).find((m) => m.label === label)?.value || '';
       const envItems = (p) => { const env = metaOf(p, '환경'); return env ? env.split(',').map((x) => x.trim()).filter(Boolean) : (p.tags || []).slice(0, 4); };
@@ -1944,8 +1955,33 @@
                 </li>
               ))}
             </ul>
+            {others.length > 0 && <OtherList cards={others} />}
           </div>
         </section>
+      );
+    }
+    // 프로젝트 요약 아래 기타 프로젝트: 대표 이미지 + 이름 + 그 아래 개인/팀 프로젝트 · 장르를 한 줄씩(두 줄)만. 누르면 기타 프로젝트 절의 그 카드로
+    //   개인/팀: data/의 기타 프로젝트는 team, 링크만 있는 카드는 profile.md "- 정보:"에 '팀'·'개인'·'1인'이 있으면. 장르: data/는 정보 표의 장르, 링크 카드는 "- 장르:"
+    const otherTeam = (c) => c.team || (/팀/.test(c.info || '') ? t('name.team') : /개인|1인/.test(c.info || '') ? t('name.solo') : '');
+    function OtherList({ cards }) {
+      return (
+        <div className="gl-more reveal">
+          <ul className="glo">
+            {cards.map((c) => {
+              const href = c.id ? `#p-${c.id}` : '#others';
+              return (
+                <li key={c.id || c.title} className="glo-item">
+                  {c.image && <a href={href} className="glo-thumb img-link" tabIndex={-1} aria-hidden="true"><Shot src={c.image} alt="" /></a>}
+                  <div>
+                    <a href={href} className="glo-title hover:underline">{c.title}</a>
+                    {otherTeam(c) && <p className="glo-meta">{otherTeam(c)}</p>}
+                    {c.genre && <p className="glo-meta">{c.genre}</p>}
+                  </div>
+                </li>
+              );
+            })}
+          </ul>
+        </div>
       );
     }
 
@@ -2116,7 +2152,7 @@
               );
             })}
             <Others cards={ocards} />
-            <Glance projects={projects} />
+            <Glance projects={projects} others={ocards} />
           </main>
           <Contact prof={prof} all={all} projects={projects} hasOthers={ocards.length > 0} linkAll={[...projects, ...ocards]} updated={pf.generatedAt} />
         </>
