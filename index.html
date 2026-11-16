@@ -342,7 +342,7 @@
       .cap-pill.al::before, .hero-pill.al::before, .cap-pill.ar::after, .hero-pill.ar::after { opacity: .7; }
     }
     @media (prefers-reduced-motion: reduce) { .cap-pill, .cb-full, .cb-ring, .cap-dot, .cap-row { transition: none !important; animation: none !important; } }
-    /* 기능 소개(목록 + 고정된 큰 그림): 넓은 화면은 트랙(.fe, 기능 수 × 40vh + 한 화면) 안에서 [목록 40 | 그림 60]이 머리 막대 아래에 붙어 있음.
+    /* 기능 소개(목록 + 고정된 큰 그림): 넓은 화면은 트랙(.fe, (기능 수 + 1) × 고정 화면 높이) 안에서 — 기능 하나 = 고정 화면 한 장만큼 스크롤 — [목록 40 | 그림 60]이 머리 막대 아래에 붙어 있음.
        현재 기능만 펼치고(.on) 나머지는 번호·제목만 흐리게. 760px 미만·인쇄는 기능마다 그림 → 글, 모두 펼침 */
     .fe-list { display: grid; gap: 56px; margin: 0; padding: 0; list-style: none; }
     .fe-inline { margin: 0 0 20px; }
@@ -362,7 +362,7 @@
     .fe-pane { display: none; }
     .fe-what { min-height: calc(3em * 1.625); }                       /* 기능 제목+설명 = '제목 1줄 + 설명 3줄' 높이를 늘 확보(제목이 2줄이면 설명 자리는 2줄). 정확한 높이는 스크립트가 제목 줄 수를 재서 맞춤 → [발표 덱에서 보기]가 같은 높이에 */
     @media screen and (min-width: 760px) {
-      .fe { height: calc(var(--fe-n) * 40vh + 100vh - var(--top-h) - var(--ext-bg)); }
+      .fe { height: calc((var(--fe-n) + 1) * (100vh - var(--top-h) - var(--ext-bg))); }
       /* 가운데 맞춤은 늘어난 머리 막대 아래 ~ 화면 아래 캡슐 바 위 사이에서(--cap-zone = 캡슐 아래 간격 20px + 캡슐 높이 50px).
          그림 레일은 이 구간보다 위아래로 더 넓게(.fe-stage 참고) */
       .fe-pin { --cap-zone: calc(70px + var(--safe-b)); box-sizing: border-box; position: sticky; top: calc(var(--top-h) + var(--ext-bg)); height: calc(100vh - var(--top-h) - var(--ext-bg)); padding-bottom: var(--cap-zone); display: flex; align-items: center; }
@@ -557,7 +557,7 @@
     /* 첫 화면(맨 위 머리)에서는 머리 막대를 숨겨 두고, 소개 절 위 끝이 머리 막대 아래 끝(화면 위 56px)에 닿으면 위에서 미끄러져 내려옴(.show).
        다시 위로 올라가면 위로 올라가 숨음. 키보드로 머리 막대 안 링크에 가면 숨어 있어도 내려옴. 화면 모드 · PDF 버튼은 머리 막대 밖(.top-tools)에 따로 떠 있어 늘 같은 자리에 보임 */
     .site-head.show, .site-head:focus-within { transform: none; transition: transform .5s cubic-bezier(.2,.7,.2,1), padding-bottom .45s cubic-bezier(.2,.7,.2,1) .05s, margin-bottom .45s cubic-bezier(.2,.7,.2,1) .05s; }
-    .site-head.instant { transition: none !important; }                 /* 처음 그릴 때(새로고침해 읽던 위치로 돌아온 때 포함)는 움직임 없이 바로 그 상태로 */
+    .site-head.instant, .site-head.instant *, .site-head.instant *::before, .site-head.instant *::after { transition: none !important; }   /* 처음 그릴 때(새로고침해 읽던 위치로 돌아온 때 포함)는 움직임 없이 바로 그 상태로 — 늘어난 막대 안의 줄(프로젝트명·바로 가기)까지 */
     .site-head.ext, .site-head.pm-open { padding-bottom: var(--ext-bg); margin-bottom: calc(-1 * var(--ext-bg)); transition-delay: 0s; }
     .top-tools { position: fixed; top: 0; left: 0; right: 0; z-index: 60; padding-top: var(--safe-t); pointer-events: none; }
     .top-tools-w { display: flex; height: 56px; align-items: center; justify-content: flex-end; }
@@ -1005,7 +1005,8 @@
     const headBottom = (head) => { const row = head.firstElementChild; return row.offsetTop + row.offsetHeight; };
 
     // ── 첫 화면에서 머리 막대 숨김 ──
-    //   소개 절(없으면 맨 위 머리 다음 절)의 위 끝이 머리 막대 아래 끝에 닿으면 .show(위에서 내려옴), 그보다 위로 돌아가면 다시 숨음.
+    //   맨 위 머리(#cover)가 절반 지나가면(아래 끝이 제 높이의 절반 위치까지 올라오면) .show(위에서 내려옴), 그보다 위로 돌아가면 다시 숨음.
+    //   맨 위 머리가 없으면 소개 절의 위 끝이 머리 막대 아래 끝에 닿을 때
     //   화면 모드 · PDF 버튼(.top-tools)은 늘 보이고, 머리 막대에는 그 폭(--tools-w)만큼 빈자리
     function bindTopBar() {
       const head = document.querySelector('.site-head'), tools = document.querySelector('.top-tools-w > div');
@@ -1015,13 +1016,23 @@
       const cover = document.getElementById('cover'), gate = document.getElementById('intro') || cover?.nextElementSibling;
       let cur = null;
       const update = () => {
-        const show = !gate || gate.getBoundingClientRect().top <= headBottom(head) + 1;
+        const show = cover ? cover.getBoundingClientRect().bottom <= cover.offsetHeight / 2 : !gate || gate.getBoundingClientRect().top <= headBottom(head) + 1;
         if (show !== cur) { head.classList.toggle('show', show); cur = show; if (show) headSeen = true; }
       };
-      head.classList.add('instant'); update();
-      setTimeout(() => head.classList.remove('instant'), 120);           // 그린 직후 읽던 위치·주소의 절로 옮겨 가는 동안도 움직임 없이
+      head.classList.add('instant'); update();                            // 움직임은 읽던 위치·주소의 절로 옮긴 뒤 settleTopBar()가 다시 켬
       addEventListener('scroll', update, { passive: true });
       addEventListener('resize', update);
+    }
+
+    // 처음 그린 뒤 읽던 위치·주소의 절로 옮기고 나서 부름: 옮긴 자리의 머리 막대 상태(숨김·늘어남·프로젝트명 줄)를 바로 맞춘 뒤,
+    //   그 상태가 움직임 없이 한 번 그려지고 나서야(두 프레임 뒤) 움직임을 켬 — 페이지 아래쪽(기타 프로젝트 등)에서 새로고침해도 막대가 펼쳐지는 모습이 보이지 않게
+    //   프로젝트 링크 캡슐도 같은 동안(html.pf-settling)은 떠오르거나 가라앉는 연출 없이 옮긴 자리의 상태로(bindCaps)
+    function settleTopBar() {
+      const head = document.querySelector('.site-head');
+      html.classList.add('pf-settling');
+      dispatchEvent(new Event('scroll'));                                 // 스크롤 이벤트를 기다리지 않고 지금 자리로 상태 맞춤
+      if (head) getComputedStyle(head).transform;                         // 움직임 없는 상태로 스타일 확정
+      requestAnimationFrame(() => requestAnimationFrame(() => { head?.classList.remove('instant'); html.classList.remove('pf-settling'); }));
     }
 
     function bindHeads() {
@@ -1473,10 +1484,11 @@
       rows.forEach((r) => r.addEventListener('scroll', () => fade(r), { passive: true }));
       capMax(); addEventListener('resize', capMax);
       document.fonts?.ready.then(capMax);
-      let lastY = scrollY;
+      let lastY = scrollY, booted = false;
       const update = () => {
         if (matchMedia('print').matches) return;
         const up = scrollY < lastY; lastY = scrollY;
+        const settling = !booted || html.classList.contains('pf-settling');   // 처음 그릴 때 · 새로고침해 읽던 위치로 옮기는 동안: 연출 없이 바로 그 상태로
         items.forEach((x, j) => {
           const { g, cap, intro } = x;
           const r = g.getBoundingClientRect();
@@ -1484,17 +1496,17 @@
           const prev = items[j - 1]?.cap;
           const gate = prev ? prev.getBoundingClientRect().bottom <= 0 : (intro || g).getBoundingClientRect().top <= (parseFloat(getComputedStyle(cap).marginBottom) || 0);
           const on = r.bottom > 0 && gate;
-          if (on && !x.on && up) cap.classList.add('still');              // 위로 스크롤해 묶음 아래 끝이 다시 들어올 때: 펼침 없이 바로 제자리
+          if (on && !x.on && (up || settling)) cap.classList.add('still');              // 위로 스크롤해 묶음 아래 끝이 다시 들어올 때: 펼침 없이 바로 제자리
           if (on) { clearTimeout(x.t); cap.classList.remove('out'); }
           else if (x.on) {                                               // 사라질 때: 접혀서 가라앉는 동안(.55초)만 .out
             cap.classList.remove('still');
-            if (motion()) { cap.classList.add('out'); clearTimeout(x.t); x.t = setTimeout(() => cap.classList.remove('out'), 600); }
+            if (motion() && !settling) { cap.classList.add('out'); clearTimeout(x.t); x.t = setTimeout(() => cap.classList.remove('out'), 600); }
           }
           x.on = on;
           cap.classList.toggle('on', x.on);
         });
       };
-      update();
+      update(); booted = true;
       addEventListener('scroll', update, { passive: true });
       addEventListener('resize', update);
     }
@@ -1793,15 +1805,16 @@
         b.dots.forEach((d, i) => d.classList.toggle('on', i === k));
         const list = b.fe.querySelector('.fe-list'); if (list && window.__fePlace) window.__fePlace(list, k);
       };
-      // 건너뛰는 중간 항목은 아예 열지 않음: 스크롤 위치가 가리키는 항목이 0.18초 그대로일 때만 바꿈(빠르게 지나간 항목은 열리지 않음).
+      // 건너뛰는 중간 항목은 아예 열지 않음: 스크롤 위치가 가리키는 항목이 0.08초 그대로일 때만 바꿈(빠르게 지나간 항목은 열리지 않음).
       //   점·흐린 항목을 눌러 이동할 때는 바로 목표 항목을 열고, 스크롤이 그 항목에 닿을 때까지 지나가는 항목은 무시
-      const WAIT = 180;
+      const WAIT = 80;
+      const FILL = 0.85;                                                 // 한 기능 몫 중 게이지가 차는 부분 — 남은 0.15는 꽉 찬 채로 조금 더 스크롤해야 넘어가는 여유
       const update = () => {
         if (matchMedia('print').matches || !wide()) return;
         const now = performance.now();
         blocks.forEach((b) => {
           const { start, step } = geo(b);
-          const n = b.items.length, pr = (scrollY - start) / step;           // 진척도(기능 단위). 정수 부분 = 가리키는 기능, 나머지 = 그 기능 안에서 채운 정도
+          const n = b.items.length, pr = (scrollY - start) / step;           // 진척도(기능 단위) — 화면이 고정된 순간 0. 정수 부분 = 가리키는 기능, 나머지 = 그 기능 안에서 스크롤한 정도
           const k = Math.max(0, Math.min(n - 1, Math.floor(pr)));
           if (b.lock && now < b.lock.until && k !== b.lock.k) { /* 눌러서 이동 중 — 지나가는 항목 무시 */ }
           else {
@@ -1811,7 +1824,7 @@
             else if (now - b.pendingAt >= WAIT) { set(b, k); b.pending = null; }
             else { clearTimeout(b.timer); b.timer = setTimeout(update, WAIT - (now - b.pendingAt) + 10); }
           }
-          b.dots[b.cur]?.style.setProperty('--fill', String(Math.max(0, Math.min(1, pr - b.cur))));
+          b.dots[b.cur]?.style.setProperty('--fill', String(Math.max(0, Math.min(1, (pr - b.cur) / FILL))));   // 한 기능 몫의 앞 FILL만큼에서 게이지가 0 → 1로 차고, 나머지는 꽉 찬 채로 머문 뒤 다음 기능으로
         });
       };
       blocks.forEach((b) => b.fe.addEventListener('click', (e) => {
@@ -1820,7 +1833,7 @@
         const k = +go.dataset.feGo, { start, step } = geo(b);
         b.lock = { k, until: performance.now() + 1500 }; b.pending = null;
         set(b, k);
-        scrollTo({ top: Math.ceil(start + step * k) + 1, behavior: 'smooth' });   // 그 항목 스크롤 구간의 맨 위(1px 안쪽)로
+        scrollTo({ top: Math.ceil(start + step * k) + 1, behavior: 'smooth' });   // 그 항목 스크롤 구간의 맨 위(1px 안쪽, 게이지 빈 상태)로
       }));
       update();
       addEventListener('scroll', update, { passive: true });
@@ -2098,6 +2111,7 @@
           if (restoreY) scrollTo({ top: restoreY, behavior: 'instant' });
         }
         heroRise(document.querySelector('#cover .hero-pill'));          // 읽던 위치·# 절로 옮긴 뒤 다시: 캡슐이 화면 밖이면 등장 연출 끔
+        settleTopBar();
         // 주소의 # 이 바뀔 때: 페이지 안의 링크(메뉴 등)로 바뀐 것이면 브라우저가 이미 그 절로 부드럽게 스크롤하므로 손대지 않음
         //   (여기서 또 순간 이동하면 브라우저의 스크롤과 부딪혀 몇 px씩 어긋난 곳에 멈춤). 예전 주소(#s=…, 번호 등)처럼 그 id의 절이 없을 때만 옮겨 줌
         const onHash = () => {
@@ -2112,10 +2126,12 @@
           if (desk) eager();                                             // 데스크톱이면 그림을 미리 받아 Ctrl+P도 빠짐없이
           await Promise.race([Promise.all([...document.querySelectorAll('img:not([loading="lazy"])')].map(loaded)), new Promise((r) => setTimeout(r, 20000))]);
           if (document.fonts) await Promise.race([document.fonts.ready, new Promise((r) => setTimeout(r, 3000))]);
-          if (!userMoved) {                                              // 글꼴·그림이 늦게 와 밀린 만큼 다시 맞춤
+          if (!userMoved && (arrived || restoreY)) {                     // 글꼴·그림이 늦게 와 밀린 만큼 다시 맞춤 — 이때도 머리 막대는 움직임 없이 옮긴 자리의 상태로
+            document.querySelector('.site-head')?.classList.add('instant');
             const el = arrived && document.getElementById(arrived);
             if (el) el.scrollIntoView({ behavior: 'instant', block: 'start' });
-            else if (restoreY) scrollTo({ top: restoreY, behavior: 'instant' });
+            else scrollTo({ top: restoreY, behavior: 'instant' });
+            settleTopBar();
           }
           html.dataset.pfReady = 'yes';
           resolveReady(report());
