@@ -52,7 +52,7 @@
   ].filter(Boolean);
   const deckBtn = noDeck ? '' : link({ href: deckUrl(), label: T('name.deck'), kind: 'page', cls: 'btn primary' });
   if (noDeck && ext.length) ext[0] = ext[0].replace('class="btn"', 'class="btn primary"');   // 발표 덱이 없으면 첫 링크를 강조
-  // 오른쪽 칸(≥1800px)이 보이면 상단 바 버튼(화면 모드 버튼 빼고)은 숨기고 같은 링크를 오른쪽 칸 '링크' 카드에 글자 링크로(doc.css '레일 링크')
+  // 프로젝트 링크: 오른쪽 칸 '링크' 카드에 글자 링크로(doc.css '레일 링크'), 오른쪽 칸이 기본으로 없는 폭은 제목 아래 [한눈에] 상자에도
   const railLinks = [
     !noDeck && link({ href: deckUrl(), label: T('name.deck'), kind: 'page' }),
     ...PF.repoLinks(p).map((r) => link({ href: r.url, label: esc(r.label), kind: 'external' })),
@@ -67,9 +67,6 @@
       <div class="doc-head-in">
         <p class="crumb">${link({ href: 'index.html', label: T('ui.back'), kind: 'back' })}<span aria-hidden="true">›</span><b>${esc(p.title)} — ${T('name.doc')}</b></p>
         ${PF.modeButton('btn')}
-        <nav class="head-nav" aria-label="프로젝트 링크">
-          ${deckBtn}${ext.join('')}
-        </nav>
       </div>
     </header>
     <div class="print-only print-urls"></div>
@@ -95,7 +92,7 @@
         <section class="rail-card" id="rail-now" aria-live="polite"><p class="rail-title">${T('doc.rail-now')}</p><p class="now-title">—</p><div class="now-body"></div></section>
       </aside>
     </div>
-    <div class="doc-fab" role="group" aria-label="빠른 이동"><button type="button" class="fab-toc" aria-haspopup="dialog">${T('name.toc')}</button><a class="fab-top" href="#top" aria-label="맨 위로">↑</a></div>
+    <div class="doc-fab" role="group" aria-label="빠른 이동"><button type="button" class="fab-toc" aria-haspopup="dialog">${T('name.toc')}</button></div>
     <dialog class="toc-dialog" aria-label="문서 목차"><div class="toc-dialog-head"><p class="toc-title">${T('name.toc')}</p><button type="button" class="btn dlg-close">${T('ui.close')}</button></div><div class="toc-links"></div></dialog>
     <footer class="doc-foot"><span>© ${esc(name)}</span>${link({ href: 'index.html', label: T('ui.back'), kind: 'back' })}</footer>`;
 
@@ -106,6 +103,7 @@
   await renderDoc();
   ready();
   PF.topCap(PF.t('doc.top'));
+  PF.railToggle();
   done();
 
   // ───────────────────────────────────────────────────────────────
@@ -328,10 +326,23 @@
     const nowBody = document.querySelector('#rail-now .now-body');
     let cur, t = 0;
     const parentH2 = (h) => { let i = list.indexOf(h); while (i >= 0 && list[i].tagName !== 'H2') i--; return list[i] || null; };
+    // 목차·본문 링크로 고른 제목: 도착해 맨 위(scroll-margin 자리)에 머무는 동안은 그 제목을 강조(바로 밑 소제목이 30% 선 안에 들어와 있어도).
+    //   손으로 스크롤해 그 자리를 벗어나면 다시 30% 선 기준. 3초 안에 도착하지 못하면(맨 아래라 더 못 내려가는 등) 고른 것을 잊음
+    let pin = null;
+    const atTop = (el) => { const y = el.getBoundingClientRect().top, m = parseFloat(getComputedStyle(el).scrollMarginTop) || 0; return y >= -2 && y <= m + 16; };
+    document.addEventListener('click', (e) => {
+      const a = e.target.closest?.('a[href^="#"]');
+      if (!a) return;
+      let id = a.hash.slice(1); try { id = decodeURIComponent(id); } catch { /* 그대로 */ }
+      const el = document.getElementById(id);
+      pin = list.includes(el) ? { el, until: performance.now() + 3000, arrived: false } : null;
+    });
     const update = () => {
       t = 0;
       let c = null;
-      for (const h of list) { if (h.getBoundingClientRect().top <= 120) c = h; else break; }
+      for (const h of list) { if (h.getBoundingClientRect().top <= innerHeight * 0.3) c = h; else break; }   // 화면 위 30% 선을 지난 마지막 제목
+      if (list.length && innerHeight + scrollY >= document.documentElement.scrollHeight - 2) c = list[list.length - 1];   // 맨 아래까지 내리면 마지막 제목(짧은 마지막 절은 30% 선에 닿지 못함)
+      if (pin) { if (atTop(pin.el)) { pin.arrived = true; c = pin.el; } else if (pin.arrived || performance.now() > pin.until) pin = null; }
       if (c === cur && cur !== undefined) return;
       cur = c;
       links.forEach((a) => { a.classList.remove('active'); a.removeAttribute('aria-current'); });
@@ -378,7 +389,7 @@
   }
 
   function ready() {
-    // 목차 서랍(< 1200px): 같은 탭, 고르면 닫힘
+    // 목차 서랍(< 1280px): 같은 탭, 고르면 닫힘
     const dlg = document.querySelector('.toc-dialog');
     document.querySelector('.fab-toc').addEventListener('click', () => dlg.showModal());
     dlg.addEventListener('click', (e) => { if (e.target === dlg || e.target.closest('.dlg-close') || e.target.closest('a')) dlg.close(); });

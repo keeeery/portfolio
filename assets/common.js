@@ -157,13 +157,102 @@ const PF = (() => {
     if (!a.querySelector('.pf-newtab-icon')) a.insertAdjacentHTML('beforeend', ext ? ICON_EXT + NEWTAB_SR : NEWTAB);
   }
 
-  // ── 맨 위로 캡슐 + 머리 막대(상세 기술문서·자기소개서): 머리 막대(.doc-head)는 페이지 맨 위 근처에서만 보이고, 내려가면 위로 올라가 숨음.
-  //    맨 위에서 떨어진 곳에서 위로 스크롤하면 [맨 위로] 캡슐만 화면 위 가운데에 내려옴(머리 막대는 함께 내려오지 않음). 아래로 스크롤하면 캡슐도 숨음.
-  //    목차·절 링크(#…)로 옮겨 가는 동안(부드러운 스크롤)은 캡슐을 숨긴 채로 둠.
-  //    캡슐 모양은 포트폴리오 문서의 캡슐 바와 같고, 펼치기 없이 제 크기로 위에서 내려옴. 규칙은 doc.css '맨 위로 캡슐' · '머리 막대'
+  // ── 상세 문서·자기소개서 오른쪽 칸(.rail) 접기·열기 — 넓은 화면은 접기(남김), 좁은 화면은 떠 있는 카드로 열기(남기지 않음). 모양은 doc.css '오른쪽 칸 접기·열기' ──
+  function railToggle() {
+    const rail = document.querySelector('.rail');
+    if (!rail) return;
+    const root = document.documentElement, KEY = 'pf-rail', wide = matchMedia('screen and (min-width: 1440px)');
+    rail.id ||= 'pf-rail';
+    const head = document.querySelector('.doc-head'), page = document.querySelector('.doc-page');
+    let raf = 0;
+    // 머리 줄은 화면 맨 위에 늘 붙어 있음(doc.css '머리 줄'). --head-h = 그 높이(목차·오른쪽 칸·제목 도착·캡슐이 그 아래로) · --head-b = 머리 줄 아래 끝 ·
+    //   --rail-y = 오른쪽 칸 맨 위 자리(머리 줄 아래 --side-gap — 처음 자리와 붙는 자리가 같음) — 열기·닫기 단추가 늘 이 자리
+    const headB = () => {
+      raf = 0;
+      const h = head ? head.offsetHeight : 0, b = Math.round(head?.getBoundingClientRect().bottom || 0);
+      root.style.setProperty('--head-h', `${h}px`);
+      root.style.setProperty('--head-b', `${Math.max(0, b)}px`);
+      const gap = parseFloat(getComputedStyle(root).getPropertyValue('--side-gap')) || 12;   // 머리 줄과 오른쪽 칸 사이(doc.css --side-gap)
+      root.style.setProperty('--rail-y', `${Math.round(Math.max(h, page?.getBoundingClientRect().top ?? h) + gap)}px`);
+    };
+    addEventListener('scroll', () => { raf ||= requestAnimationFrame(headB); }, { passive: true }); addEventListener('resize', headB); headB();
+    try { root.classList.toggle('pf-rail-off', localStorage.getItem(KEY) === 'off'); } catch { /* 저장소 막힘 */ }
+    // 열기·닫기 단추 하나: 카드와 함께 사라지지 않고 제자리에 남아 글자만 바뀜 — [카드 닫기 ›] ↔ [카드 열기 ‹](화살표는 늘 글자 오른쪽).
+    //   ≥1280px에서 오른쪽 칸 맨 위 자리에 떠 있음(.rail-fab, 카드 묶음 맨 위의 빈 줄 .rail-bar 위 — 1280~1440px은 카드가 떠서 나옴). <1280px은 이 단추 대신 아래 빠른 이동 캡슐의 [바로가기](linksPop)
+    //   문구 표 'doc.rail-close'·'doc.rail-open' — 예전 문구 표가 캐시에 남아 키가 그대로 오면 기본 글자
+    const word = (k, d) => { const s = t(k); return esc(s === k ? d : s); };
+    const label = (on) => `${on ? word('doc.rail-close', '카드 닫기') : word('doc.rail-open', '카드 열기')} <span aria-hidden="true">${on ? '›' : '‹'}</span>`;
+    const attrs = `type="button" data-rail-toggle aria-controls="${rail.id}"`;
+    rail.insertAdjacentHTML('afterbegin', '<div class="rail-bar" aria-hidden="true"></div>');
+    document.body.insertAdjacentHTML('beforeend', `<button class="rail-fab" ${attrs}></button>`);
+    const shown = () => (wide.matches ? !root.classList.contains('pf-rail-off') : root.classList.contains('pf-rail-open'));
+    const sync = () => {
+      const on = shown();
+      root.classList.toggle('pf-rail-shown', on);
+      document.querySelectorAll('[data-rail-toggle]').forEach((b) => { b.setAttribute('aria-expanded', String(on)); b.innerHTML = label(on); });
+      dispatchEvent(new Event('resize'));                              // [맨 위로] 캡슐 자리 등 다시 재기
+    };
+    const set = (on) => {
+      root.classList.add('pf-rail-anim');                              // 처음 그릴 때(남겨 둔 '접음')는 움직이지 않고, 누를 때부터 움직임
+      if (wide.matches) { root.classList.toggle('pf-rail-off', !on); try { localStorage.setItem(KEY, on ? 'on' : 'off'); } catch { /* 저장소 막힘 */ } }
+      else root.classList.toggle('pf-rail-open', on);
+      sync();
+    };
+    document.addEventListener('click', (e) => {
+      if (e.target.closest?.('[data-rail-toggle]')) { set(!shown()); return; }
+      if (!wide.matches && root.classList.contains('pf-rail-open') && !rail.contains(e.target)) set(false);   // 떠 있는 카드 바깥을 누르면 닫힘
+    });
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !wide.matches && root.classList.contains('pf-rail-open')) set(false); });
+    let wasWide = wide.matches;
+    const onWidth = () => {                                            // 넓은 ↔ 좁은 화면이 바뀌면 떠 있던 카드는 닫고 상태를 다시 맞춤(change 이벤트가 늦게 오는 경우도 resize에서)
+      if (wide.matches === wasWide) return;
+      wasWide = wide.matches; root.classList.remove('pf-rail-open'); sync();
+    };
+    wide.addEventListener('change', onWidth); addEventListener('resize', onWidth);
+    matchMedia('screen and (min-width: 1280px)').addEventListener('change', () => { root.classList.remove('pf-rail-open'); sync(); });   // <1280px은 단추가 없으니 떠 있던 카드를 닫음
+    sync();
+    linksPop(rail);
+  }
+
+  // ── 좁은 화면(<1280px) [바로가기]: 아래 빠른 이동 캡슐([목차] [바로가기], 목차가 사라지는 <1280px)이 같은 폭 그대로 위로 늘어나며 그 안 위쪽에 오른쪽 칸 '바로가기' 카드의 링크가 나타남
+  //   (누를 때마다 그때의 링크를 복사 — 자기소개서 PDF는 늦게 채워짐). 바깥 누르기·Esc·링크 누르기·넓은 화면으로 바뀌면 다시 줄어듦. 모양·움직임은 doc.css '빠른 이동 캡슐'
+  function linksPop(rail) {
+    const src = rail.querySelector('.rail-links'), fab = document.querySelector('.doc-fab');
+    if (!src || !fab) return;
+    const root = document.documentElement, narrow = matchMedia('screen and (max-width: 1279.98px)');
+    const word = ((s) => esc(s === 'doc.rail-links' ? '바로가기' : s))(t('doc.rail-links'));
+    const row = document.createElement('div');                        // 원래 단추 줄([목차]) + [바로가기]
+    row.className = 'fab-row';
+    row.append(...fab.children);
+    row.insertAdjacentHTML('beforeend', `<button type="button" class="fab-links" aria-expanded="false" aria-controls="pf-links-pop">${word}</button>`);
+    fab.innerHTML = `<div class="fab-more"><nav class="fab-more-in" id="pf-links-pop" aria-label="${word}" inert></nav></div>`;
+    fab.append(row);
+    const btn = row.querySelector('.fab-links'), pop = fab.querySelector('.fab-more-in');
+    const isOpen = () => fab.classList.contains('open');
+    const set = (on) => {
+      if (on) pop.innerHTML = `<div class="fab-list">${src.innerHTML}</div>`;
+      fab.classList.toggle('open', on); pop.inert = !on;
+      btn.setAttribute('aria-expanded', String(on)); root.classList.toggle('pf-links-open', on);
+    };
+    const fit = () => { btn.hidden = !src.textContent.trim(); };   // 링크가 없으면 단추도 없음
+    new MutationObserver(fit).observe(src, { childList: true, subtree: true }); fit();
+    btn.addEventListener('click', () => { fit(); set(!isOpen()); });
+    row.querySelector('.fab-toc')?.addEventListener('click', () => set(false));   // [목차] 서랍을 열면 늘어난 칸은 접음
+    pop.addEventListener('click', (e) => {
+      if (e.target.closest('[data-pdf-print]')) { set(false); window.print(); return; }   // 자기소개서 [PDF로 저장](복사본에는 원래 단추의 동작이 없음)
+      if (e.target.closest('a')) set(false);
+    });
+    document.addEventListener('click', (e) => { if (isOpen() && !fab.contains(e.target)) set(false); });
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && isOpen()) { set(false); btn.focus(); } });
+    narrow.addEventListener('change', () => { if (!narrow.matches) set(false); });
+  }
+
   function topCap(label) {
-    if (document.querySelector('.tcap')) return;
-    const head = document.querySelector('.doc-head');
+    // [맨 위로] 캡슐: 머리 줄([← 돌아가기 › 제목] [화면 모드])은 화면 맨 위에 늘 붙어 있고 숨거나 나오는 움직임이 없음.
+    //   캡슐은 맨 위 가까이를 벗어나 위로 스크롤하면 머리 줄 높이(줄 가운데, --cap-top)에 본문 칸 가운데로 위에서 내려옴(오른쪽 칸을 접고 펴면 함께 옮겨 감). 아래로 스크롤하면 다시 화면 위로 빠짐.
+    //   [← 돌아가기 › 제목]은 목차가 없는 좁은 화면(<1280px)에서만, 본문 글(본문 칸 첫 요소)의 위 끝이 머리 줄 아래 끝에 닿으면 숨김(.crumb-off) — 투명한 머리 줄에서 본문 글과 겹치지 않게.
+    //   화면 모드 단추도 함께 숨김(doc.css). 목차가 보이는 넓은 화면은 둘 다 늘 보임
+    const main = document.querySelector('.doc-main');
     const cap = document.createElement('div');
     cap.className = 'tcap';
     cap.innerHTML = `<nav class="cap-pill" aria-label="빠른 이동">
@@ -172,40 +261,44 @@ const PF = (() => {
     const btn = cap.querySelector('.btn');
     let on = false, lastY = scrollY, pend = 0, quietUntil = 0;
     const root = document.documentElement;
-    const headH = () => head ? head.offsetHeight : 0;
-    const measure = () => {                                            // 숨을 때 올라갈 거리 — 머리 막대: 제 높이 + 그림자 여유 24 · 캡슐(화면 맨 위 12px 아래): 간격 12 + 캡슐 + 그림자 여유 24
-      root.style.setProperty('--head-h', `${headH()}px`);
-      root.style.setProperty('--hide-d', `${headH() + 24}px`);
-      root.style.setProperty('--cap-d', `${12 + cap.firstElementChild.offsetHeight + 24}px`);
+    const head = document.querySelector('.doc-head');
+    const measure = () => {                                            // 캡슐 자리 = 화면 모드 단추 위 끝과 같은 높이 · 숨을 때 올라갈 거리 = 자리 + 캡슐 + 그림자 여유 40
+      const mode = head?.querySelector('.pf-mode'), ch = cap.firstElementChild.offsetHeight;
+      const top = mode?.offsetHeight ? Math.round(mode.getBoundingClientRect().top - head.getBoundingClientRect().top) : 11;   // 화면 모드 단추의 위 끝과 같은 높이(머리 줄 위 끝 기준 — 단추가 없으면 11px)
+      root.style.setProperty('--cap-top', `${top}px`);
+      root.style.setProperty('--cap-d', `${top + ch + 40}px`);
     };
-    const setHead = (hidden) => {                                      // 머리 막대: 맨 위 근처가 아니면 숨김(.pf-hide) ↔ 보임
-      if (!head) return;
-      head.classList.toggle('pf-hide', hidden);
-      root.classList.toggle('pf-head-hidden', hidden);
-      root.style.setProperty('--head-shown', hidden ? '0px' : `${headH()}px`);
+    const first = main?.firstElementChild;
+    let crumbOff = null;
+    const withToc = matchMedia('screen and (min-width: 1280px)');      // 목차가 보이는 넓은 화면: 머리 줄 글자는 목차 칸 위라 본문과 겹치지 않으니 늘 보임
+    const crumb = () => {                                              // (좁은 화면) 본문 글이 머리 줄에 닿으면 [← 돌아가기 › 제목] 숨김
+      if (!head || !first) return;
+      const off = !withToc.matches && first.getBoundingClientRect().top <= head.getBoundingClientRect().bottom;
+      if (off !== crumbOff) { head.classList.toggle('crumb-off', off); crumbOff = off; }
     };
+    addEventListener('scroll', crumb, { passive: true }); addEventListener('resize', crumb); withToc.addEventListener('change', crumb); crumb();
+    const place = () => { if (!main) return; const r = main.getBoundingClientRect(); if (r.width) cap.style.left = `${Math.round(r.left + r.width / 2)}px`; };
     const show = () => { if (on) return; on = true; cap.classList.add('on'); btn.removeAttribute('tabindex'); };
     const hide = () => { if (!on) return; on = false; cap.classList.remove('on'); btn.setAttribute('tabindex', '-1'); };
     const tick = () => {
       pend = 0;
       const y = scrollY, dy = y - lastY;
-      const nearTop = y <= headH();
-      if (performance.now() < quietUntil) { if (!nearTop) setHead(true); hide(); lastY = y; return; }   // # 이동 중
-      setHead(!nearTop);                                                 // 머리 막대는 맨 위에서만 보임(위로 스크롤해도 내려오지 않음 — 그때는 [맨 위로] 캡슐만)
+      if (performance.now() < quietUntil) { hide(); lastY = y; return; }   // # 이동 중
       if (y < Math.min(innerHeight * .6, 480)) hide();                  // 맨 위 가까이: 캡슐은 필요 없음
       else if (dy < -6) show();
       else if (dy > 6) hide();
       if (Math.abs(dy) > 6 || y < 8) lastY = y;
     };
     addEventListener('scroll', () => { if (!pend) pend = setTimeout(tick, 50); }, { passive: true });   // 50ms마다 한 번 판단
-    document.addEventListener('click', (e) => {                         // 목차·절 링크: 부드러운 스크롤이 끝날 때까지 머리 막대·캡슐을 숨긴 채로
+    document.addEventListener('click', (e) => {                         // 목차·절 링크: 부드러운 스크롤이 끝날 때까지 캡슐을 숨긴 채로
       const a = e.target.closest?.('a[href^="#"]');
       if (!a || a === btn || a.getAttribute('href') === '#top') return;
-      quietUntil = performance.now() + 900; setHead(scrollY > headH()); hide();
+      quietUntil = performance.now() + 900; hide();
     });
     btn.addEventListener('click', () => { btn.blur(); });
-    addEventListener('resize', measure); document.fonts?.ready.then(measure);
-    measure(); setHead(false);
+    addEventListener('resize', () => { measure(); place(); }); document.fonts?.ready.then(measure);
+    if (main && 'ResizeObserver' in window) new ResizeObserver(place).observe(main);   // 오른쪽 칸 접기·펴기 움직임 동안에도 본문 칸 가운데를 따라감
+    measure(); place();
   }
 
   // ── 강조색(profile.md "강조색", theme/theme.css의 --t-accent가 있으면 그 색) → 색 토큰 ──
@@ -456,6 +549,6 @@ const PF = (() => {
   const { t, tab, label, load: loadStrings, report: stringsReport } = PFStr;
 
   return { esc, inline, isUrl, shortUrl, repoLinks, otherLinks, loadJSON, loadText, encodePath, srcPath, projectUrl, docUrl, siteBase, visibleUrl, metaValue, teamLabel,
-           slugger, normTitle, resolveHeading, keyOk, deckSceneFor, headingsOf, ICON, NEWTAB, link, markNewTab, topCap, themeTokens, applyTheme, mermaidConfig, routeFolkSackTerrain, contrast, hexRgb, modeButton, setMode, getMode, hasLightMode,
+           slugger, normTitle, resolveHeading, keyOk, deckSceneFor, headingsOf, ICON, NEWTAB, link, markNewTab, topCap, railToggle, themeTokens, applyTheme, mermaidConfig, routeFolkSackTerrain, contrast, hexRgb, modeButton, setMode, getMode, hasLightMode,
            FILE_HELP, noDataHtml, isFile, notice, guardFileProtocol, noData, t, tab, label, loadStrings, stringsReport };
 })();
