@@ -26,6 +26,26 @@
 시작 카운트다운, 카드 선택·제거, 막힌 보드의 자동 재배치, 남은 시간 표시,
 클리어 시간에 따른 별 평가와 최고 기록 저장까지 하나의 플레이 흐름으로 연결했습니다.
 
+```mermaid
+%%{init: {"flowchart": {"padding": 8}}}%%
+flowchart TB
+    Start["게임 시작<br>카운트다운"] --> Pick["같은 그림 카드<br>두 장 선택"]
+    Pick --> Q{"두 번 이하로 꺾어<br>연결할 수 있는가"}
+    Q -->|아니오| Pick
+    Q -->|예| Remove["연결선 표시 뒤<br>두 장 제거"]
+    Remove --> Left{"남은 카드가<br>있는가"}
+    Left -->|예 · 막히면 자동 재배치| Pick
+    Left -->|아니오| Clear["클리어<br>시간에 따라 별 1~3개<br>최고 기록 저장"]
+%% 격자: Start Pick Q | Clear Left Remove
+%% 화살표 Q -> Pick: 나감=위 들어감=위
+```
+
+- **보드:** 10×10 칸에 같은 그림 50쌍, 카드 100장을 놓습니다. 처음부터 한 쌍 이상 연결할 수 있는 배치로 시작합니다.
+- **연결 규칙:** 다른 카드를 지나지 않고 가로·세로로 잇되, 최대 두 번까지 꺾을 수 있고 보드 바깥의 빈 테두리를 지나도 됩니다.
+- **재배치:** 연결할 수 있는 쌍이 하나도 없으면 "Reshuffling.." 안내와 함께 남은 카드를 섞습니다.
+- **시간과 평가:** 60초 이하 별 3개, 90초 이하 별 2개, 120초 이하 별 1개이고, 120초를 넘기면 게임 오버입니다. 남은 시간이 10초 이하면 타이머가 빨간색으로 흔들립니다.
+- **기록:** 최고 기록은 기록이 없거나 더 빨리 끝냈을 때만 바뀝니다.
+
 ### 1.2 Why — 왜 만들었나
 
 평소 좋아하던 아케이드 게임인 사천성을 간단한 과제로 만든 프로젝트입니다.
@@ -56,28 +76,37 @@
 
 게임 전용 코드는 `Assets/SichuanSung/Scripts`의 5개 클래스로 구성합니다.
 
-| 클래스 | 책임 |
-|---|---|
-| `GameManager` | 보드·카드 ID, 시작·종료·재시작, 셔플, 시간·평가·기록 |
-| `PathFinder` | 연결 가능 판정, 경로 복원, 연결 가능한 쌍 존재 여부 |
-| `CardManager` | 마우스 선택, 매칭 요청, 연결선과 제거·셔플 순서 조율 |
-| `Card` | ID·격자 좌표, 선택 표시, 흔들림·제거·시각 상태 초기화 |
-| `UIManager` | 시작·결과·셔플 화면, 타이머·별과 텍스트 애니메이션 |
-
 ```mermaid
-%%{init: {"flowchart": {"rankSpacing": 20, "nodeSpacing": 24, "padding": 6}}}%%
-flowchart TB
-    Input[마우스 클릭] --> Select[CardManager / 카드 선택]
-    Select --> Match[같은 ID 확인]
-    Match --> Path[PathFinder / 연결 탐색]
-    Path --> Line[경로 복원 / 연결선 표시]
-    Line --> Remove[GameManager·Card / 제거]
-    Remove --> Clear{남은 카드가 없는가}
-    Clear -->|예| Result[별 평가 / 최고 기록 / 결과 UI]
-    Clear -->|아니오| Deadlock[연결 가능한 쌍 검사]
-    Deadlock -->|없음| Shuffle[남은 카드 ID 셔플 / 재검사]
-    Shuffle --> Select
-    Deadlock -->|있음| Select
+classDiagram
+    direction LR
+    class CardManager {
+        +CheckMatch()
+    }
+    class PathFinder {
+        +CanConnect()
+        +IsDeadlocked()
+    }
+    class GameManager {
+        +ShuffleRemainCards()
+        +SaveBestRecord()
+    }
+    class Card {
+        +Select()
+        +Deselect()
+    }
+    class UIManager
+    CardManager --> PathFinder : 연결 판정 · 막힘 검사
+    CardManager --> GameManager : 제거 · 클리어 검사
+    CardManager --> Card : 선택 표시
+    GameManager --> PathFinder : 셔플 뒤 재검사
+    GameManager --> Card : 생성 · 제거 연출
+    GameManager --> UIManager : 화면 · 타이머 표시
+    note for CardManager "마우스 선택, 매칭 요청<br>연결선과 제거·셔플 순서 조율"
+    note for PathFinder "연결 가능 판정, 경로 복원<br>연결 가능한 쌍 존재 여부"
+    note for GameManager "보드·카드 ID, 시작·종료·재시작<br>셔플, 시간·평가·기록"
+    note for Card "ID·격자 좌표, 선택 표시<br>흔들림·제거·시각 상태 초기화"
+    note for UIManager "시작·결과·셔플 화면<br>타이머·별과 텍스트 애니메이션"
+%% 격자: CardManager PathFinder | Card GameManager | - UIManager
 ```
 
 규모가 작은 단일 씬 게임이라 세 매니저는 직접 참조와 `Instance` 접근으로 연결했습니다.
@@ -103,6 +132,7 @@ flowchart TB
 ### 2.2 핵심 기능 — 위치·방향·회전 수를 별도 상태로 관리
 
 ```csharp
+// PathFinder.CanConnect() — 위치·방향·회전 수마다 따로 두는 방문 기록과 역추적용 부모
 bool[,,,] visited = new bool[width, height, 4, 3];
 Node[,,,] parent = new Node[width, height, 4, 3];
 Queue<Node> queue = new Queue<Node>();
@@ -115,6 +145,7 @@ Queue<Node> queue = new Queue<Node>();
 꺼낸 상태의 진행 방향으로 빈 칸을 연속 검사하고, 목표 카드 외의 카드가 있으면 그 직선 탐색을 멈춥니다.
 
 ```csharp
+// PathFinder.CanConnect() — 목표 카드가 아닌 카드를 만나면 그 방향의 직선 탐색 중단
 if (card != null && !(nx == end.x && ny == end.y))
 {
     break;
@@ -158,6 +189,7 @@ if (card != null && !(nx == end.x && ny == end.y))
 50쌍의 ID를 만들어 총 100장의 카드를 생성하고, ID 목록을 섞어 배치합니다.
 
 ```csharp
+// GameManager.CreateCardIds() — 같은 ID를 두 장씩 넣어 쌍 만들기
 for (int i = 0; i < pairCount; i++)
 {
     int id = i % animalSprites.Length;
@@ -175,6 +207,7 @@ ID의 전체 구성은 유지되므로 기존 짝도 유지됩니다.
 ![연결 가능한 쌍이 없어 Reshuffling.. 안내와 함께 남은 카드를 재배치하는 화면](images/reshuffle.png)
 
 ```csharp
+// GameManager.ShuffleRemainCards() — 연결 가능한 쌍이 생길 때까지 흔들기·ID 셔플 반복
 do
 {
     for (int repeat = 0; repeat < shuffleRepeatCount; repeat++)
@@ -211,6 +244,7 @@ while (PathFinder.Instance.IsDeadlocked());
 매칭에 실패하면 첫 카드를 해제하고 두 번째 카드를 다음 첫 카드로 넘겨, 새 카드 하나만 고르면 다시 시도할 수 있습니다.
 
 ```csharp
+// CardManager.CheckMatch() — 매칭 실패 시 두 번째 카드를 다음 첫 카드로 넘김
 firstCard.Deselect();
 firstCard = secondCard;
 secondCard = null;
@@ -283,6 +317,7 @@ sequenceDiagram
 최고 기록은 기록이 없거나 더 빠르게 완료했을 때만 갱신합니다.
 
 ```csharp
+// GameManager.SaveBestRecord() — 기록이 없거나 더 빠를 때만 최고 기록 갱신
 float bestRecord = PlayerPrefs.GetFloat(BestRecordKey, 0f);
 if (bestRecord == 0f || clearTime < bestRecord)
 {

@@ -254,7 +254,7 @@
             "w": 1080,
             "h": 1339,
             "caption": {
-              "text": "음식 인식 결과 — FoodLens SDK가 사진에서 인식한 음식과 총 섭취 칼로리",
+              "text": "음식 인식 결과 — FoodLens SDK가 사진에서 인식한 음식과 양에 따른 칼로리",
               "verbatim": true
             }
           },
@@ -264,7 +264,7 @@
             "w": 1080,
             "h": 1860,
             "caption": {
-              "text": "사용자 정보 입력 — 목표 영양소 계산에 쓰는 몸무게·나이·성별·활동 수준과 선호하는 국·반찬 종류",
+              "text": "사용자 정보 입력 — 목표 영양소 계산과 추천 가중치에 사용되는 신체 정보와 선호 음식 종류",
               "verbatim": true
             },
             "sectionPath": [
@@ -419,7 +419,7 @@
           {
             "kind": "code",
             "n": 2,
-            "fp": "# server.py: recommend_foods 내부 select_top에서 발췌"
+            "fp": "# server.recommend_foods() 안의 select_top() — 가중 영양 벡터와의 cosi"
           }
         ]
       },
@@ -496,7 +496,7 @@
             "w": 1489,
             "h": 760,
             "caption": {
-              "text": "Autoencoder 실험(model_based_filtering.py) 실행 결과 — 10 epoch 학습 손실과 추천 음식",
+              "text": "model_based_filtering.py(Autoencoder 실험) 실행 결과 — 10 epoch 학습 손실과 추천 음식",
               "verbatim": true
             }
           }
@@ -530,7 +530,7 @@
           {
             "kind": "code",
             "n": 1,
-            "fp": "// RecommendFragment.java: merged는 user·foods를 담은 JSON 객체"
+            "fp": "// RecommendFragment.sendRecommendationRequest() — user·food"
           }
         ]
       },
@@ -590,7 +590,7 @@
           {
             "kind": "code",
             "n": 1,
-            "fp": "calorieChart.setData(labels, calorieData);"
+            "fp": "// StatisticsFragment.updateCharts() — 집계한 7일 목록만 차트 View에 전"
           }
         ]
       },

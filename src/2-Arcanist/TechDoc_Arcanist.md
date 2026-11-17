@@ -25,10 +25,32 @@
 방마다 전투와 보상을 진행하고, 체크포인트에 저장된 위치와 체력으로 복귀합니다.
 전투·패링·카드·인벤토리·보상·보스·저장과 복구를 하나의 플레이 흐름으로 연결했습니다.
 
+```mermaid
+%%{init: {"flowchart": {"padding": 8}}}%%
+flowchart TB
+    Fight["전투<br>이동 · 공격 · 패링"] -->|패링 성공| Gauge["카드 게이지 충전<br>카드 드로우"]
+    Gauge --> Use["카드 사용<br>공격 · 버프 · 회복"]
+    Use -->|전투 진행| Fight
+    Fight -->|방 클리어| Reward["보상 카드 선택<br>카드 덱 구성"]
+    Reward -->|다음 방| Fight
+    Fight -->|사망| Respawn["체크포인트로 복귀<br>저장된 위치 · 체력"]
+    Respawn -->|부활| Fight
+%% 격자: - Use - | Reward Fight Gauge | - Respawn -
+%% 화살표 Gauge -> Use: 나감=위 들어감=오른쪽
+```
+
+- **진행:** 타이틀 → 인트로 → 일반 방 2개 → 보스 방(고대 수호 골렘). 방의 적을 모두 쓰러뜨리면 출구의 오벨리스크가 열리고, 보상 카드 3장 중 1장을 고른 뒤 오벨리스크 안에서 덱을 편성합니다.
+- **조작:** 이동·점프(더블 점프)·대시·달리기(스태미나 소비)·공격(D, 연속 입력으로 콤보)·패링, 카드 사용은 Q/W/E.
+- **카드 게이지:** 시간이 지나면 한 칸씩 차고, 패링에 성공하면 칸이 더해집니다. 가득 차고 빈 슬롯이 있으면 덱에서 카드 1장을 뽑습니다.
+- **카드:** 공격 카드 9장·버프 카드 13장(기획한 30장 중 22장 구현). 등급은 Common·Rare·Epic·Legendary 4종이고 덱 비용은 1·2·4·6입니다.
+- **덱 편성:** 최소 6장·최대 20장, 비용 합 8~14를 지켜야 합니다(소스 기본값).
+- **사망:** 방마다 체크포인트가 2곳 있습니다. 복귀하면 손패·게이지를 비우고 편성 덱으로 다시 시작합니다.
+
 ### 1.2 Why — 왜 만들었나
 
 본격적으로 만든 첫 개인 게임 프로젝트로, 카드 덱 빌딩과 2D 액션을 결합해 **카드 조합에 따라 전투 방식이 달라지는 게임**을 만들고자 했습니다.
 그 중심에는 **패링에 성공해 카드 게이지를 얻고**, 그 게이지로 카드를 사용해 전투를 이어 가는 흐름을 두었습니다.
+처음 목표는 매번 다른 덱을 구성하며 플레이하는 로그라이트였고, 이번 빌드에서는 보상으로 얻은 카드로 덱을 바꾸며 방을 이어 가는 흐름까지 구현했습니다(§8.3).
 
 | 문제 | 구현 방향 |
 |---|---|
@@ -55,53 +77,46 @@
 
 ### 1.4 전체 구조
 
-**전투 판정과 저장·복원**
+§1.1의 게임 진행을 맡는 주요 클래스를 전투·카드·방과 저장으로 묶었습니다. 각 묶음의 세부 구조는 §2.1(전투)·§3.3(카드)·§6.1(방과 저장)에 있습니다.
 
 ```mermaid
+%%{init: {"flowchart": {"padding": 8, "subGraphTitleMargin": {"top": 0, "bottom": 10}}}}%%
 flowchart TB
-    Save[SaveManager] --> Check[CheckPointManager]
-    Check --> Room[RoomManager]
-    Check --> Player
-    Input[SimpleInput] --> Player[PlayerController]
-    Player --> Hit[HitBox]
-    Hit --> Tracker[HitTargetTracker]
-    Hit --> Resolver[HitResolver]
-    Resolver --> Combat[CombatSystem]
-    Combat --> Entity[CombatEntity.TakeDamage]
-    Combat --> Observer[ICombatObserver]
+    subgraph RoomG["방과 저장"]
+        Save["SaveManager"] --> Check["CheckPointManager"]
+        Check -->|방 로드| Room["RoomManager"]
+    end
+    Check -->|위치 · 체력 복귀| Player["PlayerController"]
+    subgraph CombatG["전투"]
+        Hit["HitBox"] --> Resolver["HitResolver"]
+        Resolver -->|피해| Combat["CombatSystem"]
+    end
+    subgraph CardG["카드"]
+        Card["CardSystem"] -->|사용 승인| Exec["CardSkillExecutor<br>CardEffect"]
+        Inv["PlayerInventory"] -.->|편성 변경| Card
+    end
+    Player -->|공격| Hit
+    Exec -->|카드 모션| Player
+    Exec -->|카드 효과| Hit
+    Resolver -->|패링 성공 → 게이지| Card
+%% 격자: Save Check Room | - Player - | - Hit Exec | Combat Resolver Card | - - Inv
+%% 화살표 Exec -> Player: 나감=위 들어감=오른쪽
 ```
-
-**카드 사용과 대상 선택** — 카드 효과는 위 전투 판정의 `HitBox`로 이어집니다.
-
-```mermaid
-flowchart TB
-    Targets[ICombatTarget] --> Enemy[EnemyManager]
-    Enemy --> TargetResolver[CardTargetResolver]
-    Inventory[PlayerInventory] -.OnInventoryChanged.-> Card[CardSystem]
-    TargetResolver --> Validator[CardUseValidator]
-    Card --> Validator
-    TargetResolver --> Executor[CardSkillExecutor]
-    Card --> Executor
-    Card --> Deck[CardRuntimeDeck]
-    Executor --> Motion[Animator]
-    Motion --> Receiver[PlayerAnimationEventReceiver]
-    Receiver --> Card
-    Executor --> Effect[CardEffect.Execute]
-    Effect --> Pool[CardEffectSpawner]
-    Pool --> Hit[HitBox]
-```
-
-전투는 `CombatSystem.To` 호출 안에서 즉시 피해를 적용하고 결과를 알리는 방식입니다.
-HitResolver는 넉백·스턴을, HitBox는 피격 FX와 타격 연출을 담당합니다. Observer는 전투 결과를 통지받습니다.
 
 ---
 
 ## 2. 기능 A — 충돌 기반 전투와 패링
 
-공격 충돌체가 감지한 대상을 검증하고, 단발·다단 공격의 중복 적용을 제어한 뒤 패링 또는 피해로 해결합니다.
-판정은 `HitBox`, 타격 기록은 `HitTargetTracker`, 전투 결과 적용은 `HitResolver`가 담당합니다.
+### 2.1 개요와 시스템 구조 — 충돌·중복 기록·결과 적용 분리
 
-### 2.1 시스템 구조 — 충돌·중복 기록·결과 적용 분리
+**게임에서는.** 플레이어는 D로 근접 공격을 하고, 공격 모션 중간에 D를 다시 누르면 다음 공격으로 이어집니다.
+적의 공격이 닿기 직전에 패링 자세를 취하면, 판정 창이 열려 있는 동안 닿은 공격은 피해를 주지 않고 패링으로 처리됩니다.
+패링에 성공하면 화면 가장자리가 보라색으로 번쩍이고 히트스톱·카메라 흔들림이 들어가며, **카드 게이지 칸이 더해져 카드를 더 빨리 뽑습니다.**
+판정 창을 놓치면 그대로 피해를 받아 체력이 줄어듭니다. 일반 적과 보스(고대 수호 골렘)의 공격 모두 같은 판정으로 패링할 수 있습니다.
+즉 패링은 방어이면서 카드를 얻는 수단이라, 기능 B의 카드 사용으로 이어집니다.
+
+**구현에서는.** 공격 충돌체가 감지한 대상을 검증하고, 단발·다단 공격의 중복 적용을 제어한 뒤 패링 또는 피해로 해결합니다.
+판정은 `HitBox`, 타격 기록은 `HitTargetTracker`, 전투 결과 적용은 `HitResolver`가 담당합니다.
 
 | 클래스 | 책임 |
 |---|---|
@@ -112,11 +127,29 @@ HitResolver는 넉백·스턴을, HitBox는 피격 FX와 타격 연출을 담당
 | `IStunnable` | 문자열 메시지 대신 스턴 적용 계약 |
 | `CombatSystem` | 피해 전달 및 Observer 통지 |
 
+```mermaid
+%%{init: {"flowchart": {"padding": 8}}}%%
+flowchart TB
+    Input[SimpleInput] --> Player[PlayerController]
+    Player --> Hit[HitBox]
+    Hit --> Tracker[HitTargetTracker]
+    Hit --> Resolver[HitResolver]
+    Resolver --> Combat[CombatSystem]
+    Combat --> Entity[CombatEntity.TakeDamage]
+    Combat --> Observer[ICombatObserver]
+%% 격자: Input Player Hit Tracker | - - Resolver - | - Entity Combat Observer
+```
+
+이 다이어그램은 입력에서 피해 적용까지 전투 판정이 이어지는 구조를 도식화한 것입니다.
+전투는 `CombatSystem.To` 호출 안에서 즉시 피해를 적용하고 결과를 알리는 방식입니다.
+HitResolver는 넉백·스턴을, HitBox는 피격 FX와 타격 연출을 담당합니다. Observer는 전투 결과를 통지받습니다.
+
 소스: `HitBox.cs`, `HitResolver.cs`, `HitTargetTracker.cs`.
 
 ### 2.2 핵심 기능 — 한 공격의 중복 타격 제어
 
 ```csharp
+// HitTargetTracker.TryRegister() — 다단 히트 여부에 따라 허용 판단과 기록을 한 번에
 if (allowMultiHit == false)
     return hitTargets.Add(hurtBox);
 
@@ -136,6 +169,7 @@ return true;
 ### 2.3 핵심 기능 — 패링을 피해 전달 전에 해결
 
 ```csharp
+// HitResolver.Resolve() — 패링 창이 열려 있으면 피해 전달 전에 패링으로 처리
 PlayerController playerController = receiver.GetComponent<PlayerController>();
 if (playerController != null && playerController.IsParryWindowOpen)
 {
@@ -167,6 +201,7 @@ Applied가 아니면 일반 피격 FX·히트스톱·카메라 흔들림·적중
 | 공격 소유자 재설정 | `HitBox.Initialize(CombatEntity owner)` | 타격 기록과 연출 상태 초기화 |
 
 ```csharp
+// CombatSystem.HandleDamageEvent() — 수신자에게 피해를 먼저 적용하고 Observer에 통지
 private void HandleDamageEvent(CombatEntity sender, CombatEntity receiver, CombatEvent @event)
 {
     receiver.TakeDamage(@event.Amount);
@@ -227,6 +262,7 @@ DOTween으로 코드 반복은 줄었지만, 트윈 대상의 상태 초기화�
 이 함수는 Shader Graph로 만든 화면 반전 머티리얼(`SG_ScreenInvert`)의 `_Blend`를 켜는 동안 `Time.timeScale`을 낮춥니다.
 
 ```csharp
+// ScreenEffectController.DeathSentenceFlashRoutine() — 화면 반전을 켜는 동안 시간 배율을 낮춤
 float previousTimeScale = Time.timeScale;
 float previousFixedDeltaTime = Time.fixedDeltaTime;
 
@@ -268,10 +304,17 @@ deathSentenceFlashRoutine = null;
 
 ## 3. 기능 B — 카드 순환과 모션 연계 스킬
 
-보유 카드·편성 덱과 전투 중 카드 위치를 나누고, 사용 조건 검증과 실제 효과 발동을 분리합니다.
-카드 데이터는 ScriptableObject로 정의하고 실행 시 플레이어·생성 위치·방향·타겟을 전달합니다.
+### 3.1 개요와 데이터·실행 책임 분리
 
-### 3.1 데이터와 실행 책임 분리
+**게임에서는.** 화면 아래의 Q/W/E 슬롯에 카드가 한 장씩 들어옵니다.
+카드 게이지는 시간이 지나면 차고 패링에 성공하면 더 빨리 차며(기능 A), 가득 차면 편성한 덱에서 카드 1장을 빈 슬롯으로 뽑습니다.
+슬롯의 키를 누르면 플레이어가 그 카드의 모션을 취하고, 모션 중 정해진 순간에 효과가 나갑니다.
+공격 카드는 앞으로 날아가거나 가장 우선순위가 높은 적의 위치에 생기고, 버프 카드는 일정 시간 능력치를 바꾸며 화면 왼쪽 위에 아이콘으로 표시됩니다.
+대상이 필요한 카드는 노릴 적이 없으면, 회복 카드는 회복할 수 없는 상태면 사용되지 않습니다.
+어떤 카드가 손에 들어오는지는 편성한 덱에 따라 달라지므로, 보상으로 얻은 카드로 덱을 바꾸면 전투 방식도 달라집니다(기능 C).
+
+**구현에서는.** 보유 카드·편성 덱과 전투 중 카드 위치를 나누고, 사용 조건 검증과 실제 효과 발동을 분리합니다.
+카드 데이터는 ScriptableObject로 정의하고 실행 시 플레이어·생성 위치·방향·타겟을 전달합니다.
 
 `CardData`는 ID·이름·아이콘·분류·등급·모션 트리거·효과 참조를 보유합니다.
 `CardEffect`는 `Execute(CardEffectContext)` 계약을 제공하는 ScriptableObject이며, 투사체와 버프 효과가 이를 상속합니다.
@@ -312,11 +355,14 @@ deathSentenceFlashRoutine = null;
 | `discardPile` | 사용한 카드 |
 
 ```mermaid
-flowchart LR
+%%{init: {"flowchart": {"padding": 8}}}%%
+flowchart TB
     Deck[편성 덱] --> Draw[drawPile]
     Draw -->|게이지 충전 + 빈 슬롯| Hand[hand]
     Hand -->|사용 승인| Discard[discardPile]
     Discard -->|드로우 더미 고갈 후 셔플| Draw
+%% 격자: Deck | Draw | Hand | Discard
+%% 화살표 Discard -> Draw: 나감=오른쪽 들어감=오른쪽 거리=84
 ```
 
 게이지 충전 외에도 덱 초기화 여부, `CardHandUI.IsBusy`, 빈 슬롯 유무를 확인합니다.
@@ -341,6 +387,31 @@ flowchart LR
 | `CardSystem.ExecutePendingCardSkill()` | 애니메이션 이벤트에서 대기 효과 실행 |
 | `CardSystem.ResetRuntimeCardsForRespawn()` | 대기 효과·덱·손패 UI·게이지 초기화 |
 
+```mermaid
+%%{init: {"flowchart": {"padding": 8}}}%%
+flowchart TB
+    Targets[ICombatTarget] --> Enemy[EnemyManager]
+    Enemy --> TargetResolver[CardTargetResolver]
+    Inventory[PlayerInventory] -.OnInventoryChanged.-> Card[CardSystem]
+    TargetResolver --> Validator[CardUseValidator]
+    Card --> Validator
+    TargetResolver --> Executor[CardSkillExecutor]
+    Card --> Executor
+    Card --> Deck[CardRuntimeDeck]
+    Executor --> Motion[Animator]
+    Motion --> Receiver["PlayerAnimation<br>EventReceiver"]
+    Receiver --> Card
+    Executor --> Effect[CardEffect.Execute]
+    Effect --> Pool[CardEffectSpawner]
+    Pool --> Hit[HitBox]
+%% 격자: Targets - Inventory - | Enemy - - Deck | TargetResolver Validator Card - | - - Executor Motion | - - Effect Receiver | - - Pool - | - - Hit -
+%% 화살표 TargetResolver -> Executor: 나감=아래 들어감=왼쪽
+%% 화살표 Receiver -> Card: 나감=오른쪽 들어감=오른쪽
+%% 화살표 Card -> Deck: 나감=오른쪽 들어감=아래
+```
+
+이 다이어그램은 카드 사용과 대상 선택의 구조를 도식화한 것입니다. 카드 효과는 §2의 `HitBox`로 이어집니다.
+
 소스: `CardRuntimeDeck.cs`, `CardSkillExecutor.cs`, `CardUseValidator.cs`.
 
 사용 시에는 회복 가능 여부·타겟 존재 여부를 검사하고 `CardSkillExecutor.pendingCard`를 저장합니다.
@@ -353,6 +424,7 @@ flowchart LR
 사소하다고 생각할 수도 있는 부분이지만, 플레이 감성을 해칠 수도 좋게 만들 수도 있는 부분이라고 보고 플레이 감성이 좋아지도록 디테일을 챙겼습니다.
 
 ```csharp
+// CardSkillExecutor.ExecutePending() — 발동 시점의 시전 위치·대상으로 카드 효과 실행
 CardEffectContext context = new(
     card, playerController, resolvedCastPoint, facingDirection, target);
 card.Effect.Execute(context);
@@ -416,6 +488,7 @@ return new CardSkillExecutionResult(CardSkillExecutionStatus.Executed, card);
 다만 이미 `isGaugeFull`이면 `AddCells`가 바로 반환하므로, 가득 찬 뒤에 받은 보상은 쌓이지 않습니다.
 
 ```csharp
+// CardGaugeController.AddCells() — 게이지 칸을 넘친 만큼 다음 주기로 넘길 초과분 기록
 int totalCells = currentCell + amount;
 overflowCells = Mathf.Max(0, totalCells - gaugeCells.Length);
 currentCell = Mathf.Min(totalCells, gaugeCells.Length);
@@ -504,6 +577,7 @@ InventoryWindow는 선택(`InventorySelection`), 정렬(`InventoryCardSorter`), 
 소스 기본 가중치는 Common 70, Rare 22, Epic 7, Legendary 1입니다.
 
 ```csharp
+// RewardCardSelector.Draw() — 카드 한 장당 등급 가중치로 누적 추첨
 int randomWeight = Random.Range(0, totalWeight);
 int accumulatedWeight = 0;
 
@@ -599,21 +673,21 @@ Tooltip CanvasGroup은 raycast를 막지 않으며, 슬롯이 비활성화되거
 각 상태는 `OnEnable/OnDisable`을 진입·종료 생명주기로 사용합니다.
 
 ```mermaid
-%%{init: {"state": {"rankSpacing": 48, "nodeSpacing": 36}}}%%
+%%{init: {"state": {"rankSpacing": 48, "nodeSpacing": 56}}}%%
 stateDiagram-v2
     direction TB
-    state "Idle (복귀)" as IdleReturn
-    [*] --> Idle
-    Idle --> Melee: 대기 후 근접 범위
-    Idle --> Laser: 원거리 난수 선택
-    Idle --> Shoot: 원거리 난수 선택
+    state "<div style=width:367px>Idle</div>" as Idle
+    state "<div style=width:258px>Idle (복귀)</div>" as IdleReturn
+    Idle --> Melee: 대기 후<br>근접 범위
+    Idle --> Laser: 원거리<br>난수 선택
+    Idle --> Shoot: 원거리<br>난수 선택
     Idle --> Death: 사망
     Melee --> IdleReturn: 지속시간 종료
     Laser --> IdleReturn: 패턴 종료
     Shoot --> IdleReturn: 패턴 종료
 ```
 
-아래쪽의 `Idle (복귀)`는 공격 패턴이 끝난 뒤 처음의 `Idle` 상태로 돌아감을 뜻합니다. `BossController.Dead()`는 현재 상태와 관계없이 사망 진입을 처리합니다.
+이 다이어그램은 골렘의 상태 전이를 도식화한 것입니다. 아래쪽의 `Idle (복귀)`는 공격 패턴이 끝난 뒤 처음의 `Idle` 상태로 돌아감을 뜻합니다. `BossController.Dead()`는 현재 상태와 관계없이 사망 진입을 처리합니다.
 Idle 기본 대기시간은 1.2초, 근접 X축 거리 기준은 3입니다.
 근접 범위 밖에서는 레이저와 팔 발사를 `Random.Range(0, 2)`로 선택합니다.
 
@@ -626,6 +700,7 @@ Idle 기본 대기시간은 1.2초, 근접 X축 거리 기준은 3입니다.
 정상 애니메이션 종료 외의 상태 이탈에서도 판정이 남는 문제를 줄이는 구조입니다.
 
 ```csharp
+// GolemMeleeState.OnDisable() — 상태 이탈 시 코루틴 정지와 근접 판정 비활성화
 protected override void OnDisable()
 {
     if (BossController == null)
@@ -761,6 +836,7 @@ sequenceDiagram
 ### 6.2 핵심 기능 — 방 클리어 상태에 따른 적 복구
 
 ```csharp
+// CheckPointManager.ReturnToCheckpointRoutine() — 방 클리어·플레이어만 복구 플래그로 적 생성 여부 결정
 bool skipEnemySpawn = data.respawnPlayerOnly && data.roomCleared;
 bool loadedRoom = roomManager.TryLoadRoomById(
     data.roomId, skipEnemySpawn, data.rewardObtained);
@@ -897,6 +973,7 @@ ID 기반 복원은 실행 중 GameObject 참조를 파일에 직접 저장하�
 다음과 같이 일반 소멸과 애플리케이션 종료의 처리를 분리했습니다.
 
 ```csharp
+// SingletonBase<T>.OnApplicationQuit()·OnDestroy() — 애플리케이션 종료와 일반 소멸 처리 분리
 protected virtual void OnApplicationQuit()
 {
     applicationIsQuitting = true;
@@ -941,6 +1018,7 @@ protected virtual void OnDestroy()
 Overlay는 복귀 작업을 관리자에 위임하고, 암전이 끝난 뒤 실행할 UI 정리 콜백을 전달합니다.
 
 ```csharp
+// OverlayController.ReturnToCheckpoint() — 복귀 작업을 관리자에 위임하고 UI 정리 콜백 전달
 public void ReturnToCheckpoint()
 {
     CheckPointManager.Instance.ReturnToCheckpoint(HideOverlayForRespawn);
@@ -950,6 +1028,7 @@ public void ReturnToCheckpoint()
 새 관리자의 초기화에는 다음 생명주기 처리가 있습니다.
 
 ```csharp
+// CheckPointManager.Awake() — 중복 인스턴스 제거와 DontDestroyOnLoad
 if (instance != null && instance != this)
 {
     Destroy(gameObject);
@@ -975,6 +1054,7 @@ Unity에서 코루틴은 실행 주체의 생명주기 영향을 받으므로, �
 다음은 보상 획득 전까지 갱신하도록 보완된 현재 코드 발췌입니다.
 
 ```csharp
+// Checkpoint.OnTriggerStay2D() — 보상 획득 전까지 방이 클리어되면 갱신 저장
 if (savedRewardObtained)
     return;
 

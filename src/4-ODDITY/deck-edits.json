@@ -17,7 +17,7 @@
         {"label": "", "text": "적용한 뒤에는 겹치거나 어긋난 곳을 다시 점검해, X 버튼 크기에까지 0.65가 곱해진 문제를 찾아 고쳤습니다.", "verbatim": true}
       ],
       "visuals": [
-        {"kind": "image", "src": "images/ui-windows.jpg", "w": 1600, "h": 1200, "caption": {"text": "같은 규칙으로 맞춘 창 — 임무 목록·임무 이동·조작 가이드·환경설정의 제목줄과 우상단 X 버튼", "verbatim": true}}
+        {"kind": "image", "src": "images/ui-windows.jpg", "w": 1600, "h": 1200, "caption": {"text": "같은 규칙으로 맞춘 창 — 임무 목록·임무 이동·조작 가이드·환경설정의 제목줄과 닫기 버튼", "verbatim": true}}
       ]
     },
     {

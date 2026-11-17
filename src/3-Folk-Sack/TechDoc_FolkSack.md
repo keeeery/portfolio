@@ -1,11 +1,11 @@
 # Folk Sack — 멀티플레이 채굴 게임 기술 문서
 
 > **한 줄 소개**: 지하에서 채굴하여 자원을 모으고, 지형 붕괴·매몰 위험 속에서 경쟁하는 멀티플레이 채굴 게임
-> **구현 범위**: 데이터 테이블 기반 지형 생성, 채굴·붕괴 서버 확정, 낙하 지형 충돌·매몰, 인벤토리·상점 연결, 탐험 지도
+> **구현 범위**: 시드 기반 절차적 맵 데이터 생성, 채굴·붕괴 서버 확정, 낙하 지형 충돌·매몰, 인벤토리·상점 연결, 탐험 지도
 
 | 구분 | 시스템 | 핵심 내용 | 절 |
 |---|---|---|---|
-| 핵심 A | 데이터 기반 지형 생성 | 깊이·동굴·광물 규칙과 시드 생성, TSV → DTO → Def 데이터 경로, 클라이언트/서버 규칙 일치 | §2 |
+| 핵심 A | 시드 기반 절차적 맵 데이터 생성 | 깊이·동굴·광물 규칙과 시드 생성, TSV → DTO → Def 데이터 경로, 클라이언트/서버 규칙 일치 | §2 |
 | 핵심 B | 채굴·붕괴 권위 동기화 | Revision, 요청별 대기, CollapseID별 소유권과 연쇄 처리 | §3 · §8.1 |
 | 핵심 C | 낙하 지형·매몰 상호작용 | 물리 충돌, 탈출·매몰 상태, Collider 재생성 시점 | §4 · §8.2 |
 | 보조 D | 인벤토리·아이템·상점 | 서버 확정 상태를 모델과 HUD로 전달하는 흐름 | §5 |
@@ -25,24 +25,54 @@
 지지 구조가 사라진 지형은 물리 청크로 낙하하고, 플레이어는 충돌 피해나 매몰 위험에 노출됩니다.
 제한 시간과 보유 골드 등 게임 진행 조건은 서버 상태를 기준으로 공유합니다.
 
-클라이언트는 입력·물리·표시를, 서버는 방과 게임 세션의 공유 상태 확정을 맡습니다.
-특히 지형 붕괴에서는 **낙하 물리 시뮬레이션과 최종 타일 배치 확정의 책임이 다릅니다.**
-소유 클라이언트가 낙하 결과를 제안하고 서버가 예약 및 배치 규칙을 검사하여 결과를 방송합니다.
+```mermaid
+%%{init: {"flowchart": {"padding": 8}}}%%
+flowchart TB
+    Mine["지하 지형 채굴<br>광물 수집"] -->|지지 구조가 사라짐| Risk["지형 붕괴<br>충돌 피해 · 매몰 위험"]
+    Mine --> Sell["지상 스폰 구역<br>자동 판매 → 골드"]
+    Sell --> Shop["상점<br>장비 · 사용 아이템 구매"]
+    Shop -->|다시 지하로| Mine
+    Sell -->|제한 시간 종료 / 목표 골드| End["게임 종료<br>실제 골드로 승자 결정"]
+%% 격자: Mine Risk | Sell End | Shop -
+%% 화살표 Shop -> Mine: 나감=왼쪽 들어감=왼쪽
+```
+
+- **진행:** 로비에서 방에 들어가 준비를 마치면 카운트다운 뒤 시작합니다. 제한 시간이 끝나거나 목표 골드에 이르면 끝나고, 실제 보유 골드로 승자를 정합니다.
+- **맵:** 같은 시드로 모든 플레이어에게 같은 맵이 생성됩니다. 깊이에 따라 Ground·Dirt·Stone·DeepStone 구간이 있고, 동굴·변칙 지형·광물 군집이 배치됩니다.
+- **채굴과 판매:** 장착한 곡괭이로 타일을 캐면 광물이 떨어집니다. 인벤토리에는 무게 제한이 있고, 지상 스폰 구역에 돌아오면 자동으로 판매됩니다.
+- **상점:** 골드로 장비와 다이너마이트 같은 사용 아이템을 삽니다.
+- **붕괴와 매몰:** 지지 구조가 사라진 지형은 덩어리째 떨어집니다. 깔리면 피해를 받거나 매몰되고, 사망하면 그 칸에 사망 보관함이 생기며 골드 절반과 아이템을 떨어뜨립니다.
+- **지도:** 미니맵과 Tab 전체 지도에서 이미 가 본 곳과 지금 보이는 곳을 나눠 보여 줍니다.
 
 ### 1.2 Why — 왜 만들었나
 
 직접 땅을 파면서 자원을 찾는 재미와, **지형 붕괴·매몰의 위험** 때문에 긴장하며 탐험하는 경험을 주고 싶었습니다.
 또한 지형을 의도적으로 무너뜨려 다른 플레이어를 매몰시키는 **간접 PvP**도 목표로 삼았습니다.
-그래서 여러 플레이어가 같은 지형을 파고 무너뜨려도 모두에게 같은 결과가 보이도록, 지형 변화를 서버가 확정하는 구조에 집중했습니다.
 
-| 문제 | 구현 방향 |
-|---|---|
-| 여러 플레이어가 동일 타일을 채굴 (공유 상태를 확정할 한 곳 필요) | 서버 검증과 Revision 기반 지형 Batch |
-| 동시에 여러 청크가 떨어짐 (청크별 소유권·완료 요청을 구분) | `CollapseID`, 요청별 대기 사전, 소유권 집합 |
-| 청크 정착 직후 다시 붕괴 검사 (서버 확정과 로컬 물리 종료를 구분) | 서버 배치 적용 이후 연쇄 재검사 |
-| 타일은 지웠지만 매몰 판정이 유지 (논리 Grid와 물리 Collider의 갱신 순서 일치) | 프레임 종료 대기·`Physics2D.SyncTransforms()` |
-| 서버가 거절했는데 아이템은 사용한 것처럼 보임 (예측 표시와 확정 상태의 경계 필요) | 요청 ID에 연결한 쿨타임 취소와 서버 스냅샷 적용 |
-| 이미 탐험한 곳과 지금 보이는 곳이 섞임 (장기 이력과 현재 시야의 데이터 분리) | `ExplorationMapData`와 `CurrentObservedCells` |
+```mermaid
+%%{init: {"flowchart": {"padding": 8}}}%%
+flowchart TB
+    Dig["<span style='background:rgba(240,150,60,.45);border-radius:4px;padding:0 4px'>플레이어 A</span>가<br><span style='background:rgba(80,150,255,.45);border-radius:4px;padding:0 4px'>플레이어 B</span> 근처 땅을 팜"] --> Fall["고립된 지형<br>붕괴 · 낙하"]
+    Fall --> Q{"<span style='background:rgba(80,150,255,.45);border-radius:4px;padding:0 4px'>플레이어 B</span> 옆에<br> 공간이 있는가"}
+    Q -->|예| Escape["<span style='background:rgba(80,150,255,.45);border-radius:4px;padding:0 4px'>플레이어 B</span>가<br>옆으로 밀려나며 탈출"]
+    Q -->|아니오| Buried["<span style='background:rgba(80,150,255,.45);border-radius:4px;padding:0 4px'>플레이어 B</span><br>매몰 · 지속 피해"]
+    Buried -->|땅을 파서 빠져나옴| Escape
+    Buried --> Dead["<span style='background:rgba(80,150,255,.45);border-radius:4px;padding:0 4px'>플레이어 B</span> 사망<br>골드 절반 · 아이템 전부 드롭"]
+%% 격자: - Dig | - Fall | Escape Q | - Buried | - Dead
+%% 화살표 Buried -> Escape: 나감=왼쪽 들어감=아래
+```
+
+이 다이어그램은 간접 PvP가 일어나는 흐름을 도식화한 것입니다.
+
+이 장면이 여러 플레이어 화면에서 똑같이 보이도록, 지형 변화는 서버가 확정하는 구조로 만들었습니다.
+그 과정에서 푼 문제는 다음과 같습니다.
+
+- **같은 칸을 여러 명이 동시에 팜** → 서버가 검증하고 순서 번호(Revision)를 붙여 확정합니다(§3).
+- **여러 덩어리가 동시에 떨어짐** → 덩어리마다 번호(`CollapseID`)와 담당 플레이어를 따로 둡니다(§3.3).
+- **떨어진 덩어리가 자리 잡자마자 다시 무너질 수 있음** → 서버가 배치를 확정한 뒤 다시 검사합니다(§3.4).
+- **땅을 파서 공간을 만들었는데 깔림이 풀리지 않음** → 물리 충돌 정보가 갱신될 때까지 기다린 뒤 다시 판정합니다(§8.2).
+- **서버가 거절한 아이템을 쓴 것처럼 보임** → 거절되면 쿨타임을 취소하고 서버 상태로 되돌립니다(§5.3).
+- **이미 가 본 곳과 지금 보이는 곳이 섞임** → 탐험 기록과 현재 시야를 따로 저장합니다(§6).
 
 ### 1.3 개발 환경
 
@@ -63,50 +93,57 @@
 ### 1.4 담당 범위
 
 지형 생성·채굴·붕괴·멀티플레이 동기화를 전담하여 설계·구현했습니다.
-데이터 기반 지형 생성부터 충돌·매몰, 서버 연결, 상태 변경·송신 분리,
+시드 기반 절차적 맵 데이터 생성부터 충돌·매몰, 서버 연결, 상태 변경·송신 분리,
 청크 소유권과 연쇄 붕괴 안정화까지 연결했습니다.
-초기 맵을 시드로 공유하는 구조와 채굴 요청 정책(요청의 Revision 대조를 없애고 Batch의 Revision으로 순서를 맞추는 방식)은 강사님과 같은 개선안을 제안했고, 구현은 강사님의 도움을 받았습니다(§8.1).
-서버는 강사님이 만들어 주신 ASP.NET Core WebSocket 기본 틀 위에 게임 로직을 구현했습니다.
+초기 맵을 시드로 공유하는 구조와 채굴 요청 정책(요청의 Revision 대조를 없애고 Batch의 Revision으로 순서를 맞추는 방식)은 강사님과 같은 개선안을 제안했고, 구현 방향은 강사님의 도움을 받았습니다(§8.1).
+서버는 수업에서 배운 ASP.NET Core WebSocket 기본 틀 위에 게임 로직을 구현했습니다.
 
 ### 1.5 전체 구조
 
+클라이언트는 입력·물리·표시를, 서버는 방과 게임 세션의 공유 상태 확정을 맡습니다.
+특히 지형 붕괴에서는 **낙하 물리 시뮬레이션과 최종 타일 배치 확정의 책임이 다릅니다.**
+소유 클라이언트가 낙하 결과를 제안하고 서버가 예약 및 배치 규칙을 검사하여 결과를 방송합니다.
+
 ```mermaid
-%%{init: {"flowchart": {"rankSpacing": 18, "nodeSpacing": 26, "padding": 6}}}%%
+%%{init: {"flowchart": {"padding": 8, "subGraphTitleMargin": {"top": 0, "bottom": 10}}}}%%
 flowchart TB
-    %% folk-sack-architecture
-    Input["PlayerInputReader<br/>ItemController"] --> RC["RoomClient · 요청"]
-    RC -->|JSON WebSocket 요청| Room["Room / PacketDispatcher"]
-    Room --> Handler["기능별 IPacketHandler"]
-    Handler --> GS["GameSession / RoomState"]
-    GS -->|확정 결과| Broadcast["Room · 방송 큐"]
-    Broadcast -->|JSON WebSocket 방송| Receive["RoomClient · 방송 수신"]
-    Receive --> INV["PlayerInventory / PlayerHp"]
-    Receive --> TM["TerrainManager<br/>CollapseManager"]
-    TM --> EXP["PlayerExplorationController"]
-    EXP -.탐험·관측 이벤트.-> Map["미니맵 / 월드 시야"]
-    INV -.변경 이벤트.-> HUD["HUD Presenter / View"]
+    subgraph Client["클라이언트"]
+        Input["PlayerInputReader<br/>ItemController"]
+        Input --> RC["RoomClient"]
+        RC --> INV["PlayerInventory<br/>PlayerHp"]
+        RC --> TM["TerrainManager<br/>CollapseManager"]
+        TM --> EXP["PlayerExplorationController"]
+        EXP -.탐험·관측 이벤트.-> Map["미니맵 / 월드 시야"]
+        INV -.변경 이벤트.-> HUD["HUD"]
+    end
+    subgraph Srv["서버"]
+        Room["Room<br/>PacketDispatcher<br/>방송 큐"] --> Handler["IPacketHandler"]
+        Handler --> GS["GameSession<br/>RoomState"]
+        GS -->|확정 결과| Room
+    end
     TSV[("TSV + Seed + Profile")] --> GEN["클라이언트 / 서버<br/>지형 생성기"]
-    GEN --> TM
-    GEN --> GS
-    Lobby["LobbyFlowController<br/>LobbySocketClient"] --> LH["LobbyHub"]
-    %% 시작 노드와 하단 결과 노드의 행을 맞추는 배치용 연결
-    GEN ~~~ Room
-    Input ~~~ GEN
-    INV ~~~~ HUD
+    RC -->|WebSocket 요청| Room
+    Room -->|WebSocket 방송| RC
+    GEN -->|초기 맵| GS
+    GEN -->|초기 맵| TM
+%% 격자: Input RC Room | INV - Handler | HUD - GS | EXP TM GEN | Map - TSV
+%% 화살표 RC -> INV: 나감=아래 들어감=오른쪽
+%% 화살표 GS -> Room: 나감=오른쪽 들어감=오른쪽
 ```
 
 ---
 
-## 2. 기능 A — 테이블 기반 지형 생성과 동일 맵 구성
+## 2. 기능 A — 시드 기반 절차적 맵 데이터 생성
 
 ### 2.1 개요와 구조
 
-맵 규칙을 시드 프로필, 깊이 구간, 동굴, 변칙 지형 군집, 광물 테이블로 나눕니다.
+같은 시드와 규칙으로 클라이언트와 서버가 같은 맵 데이터를 절차적으로 생성합니다.
+생성 규칙은 TSV 테이블 데이터로 관리하며, 시드 프로필, 깊이 구간, 동굴, 변칙 지형 군집, 광물 테이블로 나눕니다.
 `TerrainTableSeedGenerator`는 이 규칙을 적용해 `TerrainMapFile`을 생성합니다.
 서버에는 대응하는 `ServerTerrainGenerator`가 있습니다.
 
 ```mermaid
-%%{init: {"flowchart": {"rankSpacing": 28, "nodeSpacing": 30}}}%%
+%%{init: {"flowchart": {"rankSpacing": 28, "nodeSpacing": 30, "padding": 8}}}%%
 flowchart TB
     P["SeedProfile / DepthSection"] --> Base["기본 타원 지형 / 기반암 경계"]
     Base --> Cave["동굴 생성"]
@@ -155,12 +192,10 @@ Mesh는 변경된 Chunk 단위로, Collider는 별도 dirty 표시로 다시 만
 여기서 `TerrainSnapshot`은 생성한 초기 맵을 런타임 모델에 넘기는 로컬 형식으로, 예전에 서버가 보내던 전체 지형 복구 Snapshot과는 역할이 다릅니다.
 인벤토리·HP·월드 드롭은 지금도 각자의 Snapshot으로 초기화·동기화합니다.
 
-![생성된 맵의 가운데 부분 — 흙·주황 흙·회색 돌 구간의 경계와 동굴·광물 군집](images/terrain-seed-zoom.png)
-
-![에디터 씬 뷰로 본 생성된 맵 전체 — 위에서부터 밝은 흙·주황 흙·회색 돌 구간과 그 사이의 동굴·광물 군집](images/terrain-seed-map.png)
+![에디터 씬 뷰로 본 생성된 맵 전체 — 위부터 Ground·Dirt·Stone·DeepStone 구간과 변칙 지형·동굴·광물 군집](images/terrain-seed-map.png)
 
 ```csharp
-// RoomClient.Terrain.cs, HandleMapSession() 발췌
+// RoomClient.HandleMapSession() — 맵 세션의 프로필 ID·시드로 초기 맵 생성
 TerrainMapFile map = TerrainSeedGenerator.Generate(
     MapSession.ProfileID,
     MapSession.Seed);
@@ -182,7 +217,7 @@ ApplyTerrainSnapshot(TerrainNetworkAdapter.FromGeneratedMap(map));
 후보를 바로 확정하지 않고 기존 타일 종류를 백업한 뒤 비우고, 지형 연결성 검사에 실패하면 복원합니다.
 
 ```csharp
-// TerrainCaveGenerator.TryApplyCandidate() 발췌
+// TerrainCaveGenerator.TryApplyCandidate() — 기존 타일을 백업하고 비운 뒤, 연결성 검사에 실패하면 복원
 foreach (Vector2Int coord in candidateCells)
 {
     TerrainTileType previousType = map.GetTile(coord);
@@ -238,7 +273,7 @@ return false;
 **DTO는 TSV에 저장된 값, Def는 게임이 실제로 조회해 사용하는 값**으로 구분했습니다.
 
 ```mermaid
-%%{init: {"flowchart": {"rankSpacing": 28, "nodeSpacing": 30}}}%%
+%%{init: {"flowchart": {"rankSpacing": 28, "nodeSpacing": 30, "padding": 8}}}%%
 flowchart TB
     TSV["TSV 파일"] --> Reader["TerrainTsvReader<br/>헤더를 DTO 필드에 매핑"]
     Reader --> DTO["DTO 목록"]
@@ -246,6 +281,7 @@ flowchart TB
     Check -->|실패| Error["InvalidDataException<br/>로딩 오류"]
     Check -->|통과| Def["Def 생성 / Dictionary 보관"]
     Def --> Use["TryGet·IReadOnlyCollection으로 조회"]
+%% 격자: TSV - | Reader - | DTO - | Check Error | Def - | Use -
 ```
 
 | 구분 | DTO | Def |
@@ -255,7 +291,7 @@ flowchart TB
 | 사용 시점 | 테이블을 읽는 동안만 | 로딩 이후 게임 내내 |
 
 ```csharp
-// TerrainDataTables.cs, TerrainTileTable.Load() 발췌
+// TerrainTileTable.Load() — DTO를 Def로 바꾸며 잘못된 값 거르기
 foreach (TerrainTileDTO dto in rows)
 {
     if (dto.IsMineable && dto.MaxDurability <= 0)
@@ -288,7 +324,7 @@ AI로 빠르게 만든 프로토타입으로 붕괴 동작을 먼저 확인하�
 리팩터링 결과는 참고한 수업 코드와 무엇이 같고 다른지 설명을 들으며 확인했고, 그 과정에서 빠져 있던 데이터 기반 맵 생성을 찾아 추가하게 했습니다.
 처음 만든 코드에서 저와 팀원이 순환 참조 문제를 발견한 뒤에는 고칠 곳을 짚게 해 직접 고쳤습니다.
 
-![기술 검증용 프로토타입의 맵 페인터와 시험 맵 — 파낸 자리와 낙하 덩어리(짙은 초록), 맨 아래 기반암 줄](images/prototype-collapse.png)
+![기술 검증용 프로토타입의 맵 페인터와 시험 맵](images/prototype-collapse.png)
 
 | 구분 | [A] Unity Tilemap | [B] 셀마다 GameObject·Collider | [C] 32×32 Chunk Mesh + 외곽선 EdgeCollider ✓ |
 |---|---|---|---|
@@ -323,6 +359,27 @@ AI로 빠르게 만든 프로토타입으로 붕괴 동작을 먼저 확인하�
 채굴과 낙하 배치의 공유 결과는 서버에서 확정하고, 클라이언트가 순서대로 런타임 지형에 적용합니다.
 물리 청크가 정착한 시점과 서버 배치가 확정된 시점을 나누어 다중 청크와 연쇄 붕괴를 처리합니다.
 
+```mermaid
+%%{init: {"flowchart": {"padding": 8, "subGraphTitleMargin": {"top": 0, "bottom": 10}}}}%%
+flowchart TB
+    subgraph Client["클라이언트"]
+        Req["요청 ID 포함 채굴 요청"]
+        Fail["해당 요청 대기 해제"]
+        Apply["순서(Revision) 확인 후<br>지형에 적용"]
+    end
+    subgraph Server["서버"]
+        Check["채굴 검증"]
+        Ok{"검증 통과"}
+        Commit["지형 변경 확정<br>+ 아이템 드롭"]
+    end
+    Req --> Check
+    Check --> Ok
+    Ok -->|예| Commit
+    Ok -->|아니오<br>오류 응답| Fail
+    Commit -->|확정 결과 방송| Apply
+    %% 격자: Req Check | Fail Ok | Apply Commit
+```
+
 | 계층 | 역할 |
 |---|---|
 | `TerrainManager` | 좌표 조회·굴착 접근, 권위 Batch 적용, 지형 변경 이벤트 |
@@ -336,7 +393,7 @@ AI로 빠르게 만든 프로토타입으로 붕괴 동작을 먼저 확인하�
 
 ### 3.2 핵심 API와 채굴 변경 순서
 
-![HJ가 파란 광물 타일을 캐서 타일이 사라지고 파편 효과가 남은 화면](images/mining-crystal-break.png)
+![플레이어가 사파이어 타일을 채굴하여 사파이어가 드롭된 장면](images/mining-crystal-break.png)
 
 | 사용 목적 | API 또는 메시지 | 주의점 |
 |---|---|---|
@@ -374,7 +431,7 @@ Batch는 `BaseRevision`, `ResultRevision`, 셀 변경 목록을 가집니다.
 앞선 Batch가 영구히 오지 않으면 버퍼만으로는 진행을 복구할 수 없습니다.
 
 ```csharp
-// RoomClient.cs, DrainBufferedTerrainBatches() 발췌
+// RoomClient.DrainBufferedTerrainBatches() — 현재 지형 Revision에서 바로 이어지는 Batch만 꺼내 적용
 while (bufferedTerrainBatches.TryGetValue(
            terrainManager.Revision,
            out TerrainChangeBatchMessage next))
@@ -396,10 +453,10 @@ while (bufferedTerrainBatches.TryGetValue(
 그래서 `pendingCollapsePlacementIds`에 `RequestId → CollapseID`를 저장해,
 같은 청크의 중복 요청만 막고 다른 청크는 독립적으로 보냅니다.
 
-![두 플레이어 바로 위에 받침 없이 떠 있는 세로 지형 덩어리](images/falling-chunk.png)
+![다른 지형으로부터 고립되어 붕괴·낙하 중인 지형 덩어리](images/falling-chunk.png)
 
 ```csharp
-// RoomClient.cs, HandlePlacementProposed() 발췌
+// RoomClient.HandlePlacementProposed() — 배치 담당일 때 같은 청크의 중복 요청만 막고 전송
 if (proposal == null || IsAuthoritativeTerrainMode == false) return;
 if (proposal.IsPlacementOwner == false) return;
 if (pendingCollapsePlacementIds.ContainsValue(proposal.CollapseId))
@@ -424,7 +481,7 @@ if (pendingCollapsePlacementIds.ContainsValue(proposal.CollapseId))
 연쇄 단계마다 카운터를 초기화하지 않아 `maximumChainCount` 제한이 실제로 누적됩니다.
 
 ```csharp
-// TerrainCollapseCoordinator.cs, HandleTerrainChanged() 발췌
+// TerrainCollapseCoordinator.HandleTerrainChanged() — 내가 맡은 배치가 반영되면 연쇄 붕괴 이어 가기
 if (reason == TerrainChangeReason.CollapsePlacement)
 {
     if (isLocallyOwnedPlacementApplied)
@@ -466,7 +523,7 @@ if (reason == TerrainChangeReason.CollapsePlacement)
 그 결과 전체가 하나의 Revision 전이와 Batch로 방송됩니다.
 
 ```csharp
-// GameSession.TryPlaceCollapse() 발췌: 원본 삭제 상태 구성
+// GameSession.TryPlaceCollapse() — 원본 삭제 상태 구성
 Dictionary<GridCoord, TerrainCellChangeDto> finalChanges = new();
 foreach (GridCoord sourceCell in sourceCells)
 {
@@ -541,23 +598,28 @@ foreach (GridCoord sourceCell in sourceCells)
 `FallingTerrainContracts`의 계약과 이벤트를 통해 캐릭터 이동·피해 계층에 연결됩니다.
 `PlayerController` 하나에 지형 판정과 피해 로직을 모두 넣지 않는 방향으로 분리했습니다.
 
-![빨갛게 표시된 칸 안에 HJ가 쓰러져 있고, 옆에서 굴착 기계가 움직이는 화면](images/burial-death.png)
+![낙하 지형에 매몰되어 사망한 플레이어 — 해당 칸에 사망 보관함 타일이 생김](images/burial-death.png)
 
 ```mermaid
 stateDiagram-v2
     direction TB
-    state "Normal (복귀)" as NormalReturn
-    [*] --> Normal
-    Normal --> Contact: 낙하 청크 접촉
-    Contact --> Escaping: 유효한 탈출 위치 발견
+    state "접촉" as Contact
+    state "탈출" as Escaping
+    state "매몰 대기" as PendingBurial
+    state "매몰" as Buried
+    [*] --> Contact: 낙하 청크 접촉
+    Contact --> Escaping: 탈출 위치 발견
     Contact --> PendingBurial: 탈출 불가 / 정착 결과 대기
-    Escaping --> NormalReturn: 탈출 보호 종료
-    PendingBurial --> NormalReturn: 확정 후 빈 공간 확인
-    PendingBurial --> Buried: 확정 후 공간 점유
-    Buried --> NormalReturn: 채굴 후 공간 확보<br/>탈출 / 초기화
+    Escaping --> [*]: 탈출 보호 종료
+    PendingBurial --> [*]: 빈 공간 확인
+    PendingBurial --> Buried: 공간 점유
+    Buried --> [*]: 채굴 후 공간 확보<br/>탈출 / 초기화
+%% 격자: - root_start | Escaping Contact | - PendingBurial | - Buried | - root_end
+%% 화살표 Escaping -> root_end: 나감=아래 들어감=왼쪽
+%% 화살표 PendingBurial -> root_end: 나감=오른쪽 들어감=오른쪽 거리=56
 ```
 
-상태명은 `FallingTerrainInteraction`의 플래그와 처리 흐름을 요약한 논리 상태입니다. 맨 아래의 `Normal (복귀)`는 처음의 `Normal`과 같은 상태입니다.
+이 다이어그램은 `FallingTerrainInteraction`이 여러 값과 처리 순서로 나타내는 상황과 흐름을 도식화한 것입니다. 맨 아래의 끝 점은 다시 평소 상태로 돌아감을 뜻합니다.
 
 ### 4.2 핵심 API — 탈출·매몰 판정과 피해 전달
 
@@ -604,12 +666,20 @@ stateDiagram-v2
 | 5 | 충돌 셀 수 |
 
 ```csharp
-// TerrainSampler.IsBetterPlacement() 발췌
-if (placementClass != bestPlacementClass) return placementClass > bestPlacementClass;
-if (hitCount != bestHitCount) return hitCount > bestHitCount;
+// TerrainSampler.IsBetterPlacement() — 배치 종류 → 닿는 수 → 정렬 오차 순으로 후보 비교
+// 1. 기존 지형과 충돌하지 않는 후보
+if (placementClass != bestPlacementClass) 
+    return placementClass > bestPlacementClass;
+// 2. 목적지 셀 중심이 실제 청크 Collider 안에 들어가는 수가 많은 후보
+if (hitCount != bestHitCount) 
+    return hitCount > bestHitCount;
+// 3. 원래 물리 셀 중심과 Grid 중심의 평균 제곱 정렬 오차가 작은 후보
 if (Mathf.Approximately(alignmentError, bestAlignmentError) == false)
     return alignmentError < bestAlignmentError;
-if (connectionCount != bestConnectionCount) return connectionCount > bestConnectionCount;
+// 4. 기존 지형과 인접하는 셀 수가 많은 후보
+if (connectionCount != bestConnectionCount) 
+    return connectionCount > bestConnectionCount;
+// 5. 충돌 셀 수가 적은 후보
 return collisionCount < bestCollisionCount;
 ```
 
@@ -657,7 +727,7 @@ Dynamic·Kinematic 낙하 청크는 이 보정 대상에서 제외해,
 등반 해제 시점은 새 낙하 시작 높이로 기록합니다.
 
 ```csharp
-// FallDamageDetector.ApplyFallDamage() 발췌
+// FallDamageDetector.ApplyFallDamage() — 안전 높이를 넘은 칸 수만큼 낙하 피해 계산
 float fallenTileCount = Mathf.Max(0f, startY - landingY) / cellSize;
 if (fallenTileCount <= safeFallDistanceInTiles) return;
 int baseDamage = Mathf.CeilToInt(
@@ -676,7 +746,7 @@ int damage = Mathf.CeilToInt(baseDamage * damageMultiplier);
 `RespawnController`는 지연 후 온라인에서는 리스폰 요청을 보내고,
 서버 응답에서 위치·지형 상태·체력을 복구합니다.
 
-![HJ가 쓰러진 칸이 빨갛게 표시되고, 채팅창에 요청 거절과 'HJ님이 사망했습니다' 시스템 메시지](images/fall-death-chat.png)
+![사망 후 처리 — 서버의 'HJ님이 사망했습니다' 채팅창 시스템 메시지](images/fall-death-chat.png)
 
 소스: `PlayerController.cs`, `PlayerCollisionMove.cs`, `PlayerTerrainState.cs`, `FallDamageDetector.cs`, `PlayerHp.cs`.
 
@@ -688,7 +758,7 @@ int damage = Mathf.CeilToInt(baseDamage * damageMultiplier);
 
 균열은 손상률 20·40·60·80% 중 통과한 가장 높은 단계로 표시합니다. `TerrainCrackOverlayManager`는 손상 셀만 `SpriteRenderer`를 가지며, 회복·제거되어 표시가 필요 없으면 비활성화해 Stack에 반환합니다. 기본 지형 Mesh와 달리 광물 자원과 균열은 별도 View를 사용합니다.
 
-![HJ가 선택한 파란 광물 타일을 타격하는 화면, 아래 흙 타일에 균열 표시](images/mining-hit-crack.png)
+![사파이어를 채굴 중인 플레이어와 타일 내구도가 소모되어 표시된 균열](images/mining-hit-crack.png)
 
 #### 필드 아이템도 붕괴에서 탈출시키기
 
@@ -720,7 +790,7 @@ int damage = Mathf.CeilToInt(baseDamage * damageMultiplier);
 ### 5.1 개요와 구조
 
 ```mermaid
-%%{init: {"flowchart": {"rankSpacing": 28, "nodeSpacing": 30}}}%%
+%%{init: {"flowchart": {"rankSpacing": 28, "nodeSpacing": 30, "padding": 8}}}%%
 flowchart TB
     User["획득 / 버리기 / 판매 / 구매 / 사용"] --> Req["RoomClient 요청"]
     Req --> Server["GameSession 검증·상태 변경"]
@@ -738,7 +808,7 @@ flowchart TB
 ### 5.2 핵심 기능 — 권위 스냅샷을 UI 모델로 변환
 
 ```csharp
-// RoomClient.cs, HandleInventorySnapshot() 발췌
+// RoomClient.HandleInventorySnapshot() — 권위 스냅샷으로 인벤토리 모델 교체
 playerInventory.ReplaceWithSnapshot(
     quantities,
     message.CurrentWeight,
@@ -759,7 +829,7 @@ HUD Presenter는 `ItemChanged`를 구독해 표시 데이터를 정렬하고 `In
 `RequestFailed`는 대응하는 아이템의 예상 쿨타임을 제거합니다.
 
 ```csharp
-// ItemController.cs, HandleRequestFailed() 발췌
+// ItemController.HandleRequestFailed() — 실패한 요청의 예상 쿨타임 제거
 if (message == null || string.IsNullOrEmpty(message.RequestId) ||
     pendingCooldowns.Remove(message.RequestId, out PendingCooldown pending) == false)
     return;
@@ -819,7 +889,7 @@ UI의 구매 취소 표시와 서버가 허용하는 범위를 함께 맞출 필
 궤적 계산에 지형 충돌 반사나 첫 충돌 위치 검사가 없으므로,
 강조점은 실제 착탄점이 아니라 표시 시간 구간의 끝점입니다.
 
-![두 플레이어 옆으로 던진 다이너마이트가 날아가는 화면](images/dynamite-throw.png)
+![다이너마이트로부터 도망치는 두 플레이어](images/dynamite-throw.png)
 
 `Detector`는 서버 확정 응답마다 별도 파동 코루틴을 시작합니다.
 오프라인 프리뷰용 코루틴 슬롯을 공유하지 않아,
@@ -882,7 +952,7 @@ UI의 구매 취소 표시와 서버가 허용하는 범위를 함께 맞출 필
 ### 6.2 핵심 기능 — 이동 셀과 지형 변경을 기준으로 갱신
 
 ```csharp
-// PlayerExplorationController.cs, RefreshPlayerVision() 발췌
+// PlayerExplorationController.RefreshPlayerVision() — 같은 셀이고 갱신 요청이 없으면 계산 생략
 if (hasLastExplorationCell &&
     playerCell == lastExplorationCell &&
     needsVisionRefresh == false) return;
@@ -931,7 +1001,7 @@ ExploreVisionRadius(playerCell);
 
 Tab 전체 지도는 프레임 Mask와 지도 콘텐츠의 RectTransform을 구분하고, 원래 앵커·피벗·위치를 보관했다가 복원합니다. 확대 시 커서 아래 지점이 유지되도록 줌 전후 배율로 pan을 보정하며, 이동 범위는 확대된 콘텐츠 크기로 제한합니다. 전체 지도는 원격 플레이어 마커를 탐험 여부와 별개로 표시하고, 결과 화면의 어둡게 표시 상태도 Tab 개폐와 별도로 관리합니다.
 
-![Tab 전체 지도에 탐험한 굴 경로와 플레이어 위치 점이 표시된 화면](images/full-map.png)
+![전체 지도(Tab)에 탐험한 구역과 플레이어 위치 마커가 표시된 화면](images/full-map.png)
 
 소스: `ExplorationForWorldView.cs`, `TerrainMinimapPresenter.cs`, `MinimapView.cs`.
 
@@ -998,7 +1068,7 @@ Tab 전체 지도는 프레임 Mask와 지도 콘텐츠의 RectTransform을 구�
 준비 지연과 카운트다운을 더한 미래 시작 시각을 확정합니다.
 끝나는 시각은 시작 시각에 게임 길이를 더해 정합니다.
 
-!['게임 시작 대기중' 타이머와 네 플레이어가 지상에 모인 화면, 채팅창에 '모든 플레이어가 준비되었습니다' 시스템 메시지](images/lobby-ready-wait.png)
+!['게임 시작 대기중' 타이머와 네 플레이어가 지상에 모인 화면, '모든 플레이어가 준비되었습니다' 채팅창 시스템 메시지](images/lobby-ready-wait.png)
 
 같은 준비 통지가 다시 와도 집합이므로 인원 수가 중복 증가하지 않습니다.
 
@@ -1009,7 +1079,7 @@ Tab 전체 지도는 프레임 Mask와 지도 콘텐츠의 RectTransform을 구�
 리스폰처럼 순간 이동이 필요한 경로는 `Teleport()`로 즉시 위치를 맞춥니다.
 
 ```csharp
-// RemotePlayerView.Update() 발췌
+// RemotePlayerView.Update() — 목표 위치로 지수 보간
 float t = smooth <= 0f ? 1f : 1f - Mathf.Exp(-smooth * Time.deltaTime);
 Vector2 next = Vector2.Lerp(new Vector2(current.x, current.y), targetPosition, t);
 transform.position = new Vector3(next.x, next.y, current.z);
@@ -1062,11 +1132,11 @@ PlayerPrefs 키에는 `Application.dataPath`의 Hash128을 접두어로 넣습�
 
 채팅은 로비·인게임 연결을 선택해 보내며 입력을 200자로 제한합니다. `ChatPanelView`는 최근 100개 메시지를 Queue로 보관하고 닉네임·본문의 꺾쇠를 이스케이프해 텍스트 마크업으로 해석되는 것을 막습니다. 입력 중·포인터가 올라간 상태는 화면 페이드 및 게임 입력 차단에 별도로 연결됩니다.
 
-![대기실(4/4) 화면 — 네 플레이어 슬롯의 아바타와 오른쪽 채팅창, '호스트가 게임을 시작할 때까지 기다리는 중입니다' 안내](images/lobby-room-chat.png)
+![대기실 화면 — 네 플레이어 슬롯의 아바타와 오른쪽 채팅창, '호스트가 게임을 시작할 때까지 기다리는 중입니다' 안내](images/lobby-room-chat.png)
 
 시간 종료 승자는 판매되지 않은 광물의 평가액을 포함하지 않고 실제 골드로 결정합니다. 최고 골드가 같으면 해당 플레이어를 모두 승자로 지정합니다. 결과 UI의 순위도 같은 골드에는 같은 순위를 주고 다음 순위를 건너뛰는 방식으로 표시합니다. 목표 골드 종료 역시 골드 아이템 수량을 기준으로 합니다.
 
-!['게임 종료!' 결과 창에 '1. 다이아만캠 824 G (YOU)' 순위와 로비 화면·메인 화면 버튼](images/game-result.png)
+![게임 종료 결과 창](images/game-result.png)
 
 소스: `LobbyPlayerSlotView.cs`, `ChatPanelView.cs`, `GameTimerBarView.cs`.
 
@@ -1110,7 +1180,7 @@ PlayerPrefs 키에는 `Application.dataPath`의 Hash128을 접두어로 넣습�
 | `Room.gate`의 `SemaphoreSlim` | 입장 시 welcome·맵·전체 지형·아이템·인벤토리 메시지 송신과 Join 방송 | 초기 동기화 송신이 입퇴장 처리의 잠금 유지 시간에 포함 |
 
 ```csharp
-// 리팩터링 전 Room.ExecuteTerrainCommandAsync() 발췌
+// Room.ExecuteTerrainCommandAsync() — 리팩터링 전, 지형 명령을 게이트로 하나씩 실행
 await terrainPipelineGate.WaitAsync();
 try
 {
@@ -1140,8 +1210,9 @@ Revision 오류가 나면 오류 메시지와 전체 지형 Snapshot의 송신�
 실제 WebSocket 송신은 별도 방송 루프가 담당합니다.
 
 ```mermaid
+%%{init: {"flowchart": {"padding": 8, "subGraphTitleMargin": {"top": 0, "bottom": 10}}}}%%
 flowchart TB
-    subgraph Before["리팩터링 전 · 지형 Gate 유지"]
+    subgraph Before["<div style=width:777px>리팩터링 전 · 지형 Gate 유지"]
         direction LR
         A["상태 변경 / 전체 복구 생성"] --> B["모든 소켓 송신 완료 대기"]
         B --> C["Gate 해제"]
@@ -1213,7 +1284,7 @@ Snapshot 생성의 상태 복사는 여전히 잠금이 필요하고, 방송 큐
 그래서 프레임 종료까지 기다린 뒤 물리 Transform을 동기화하고 매몰 판정을 이어 갑니다.
 
 ```csharp
-// FallingTerrainInteraction.cs, ResolvePendingBurialsAfterTerrainSettled() 발췌
+// FallingTerrainInteraction.ResolvePendingBurialsAfterTerrainSettled() — 프레임 끝까지 기다린 뒤 물리 동기화하고 매몰 판정
 yield return new WaitForEndOfFrame();
 Physics2D.SyncTransforms();
 

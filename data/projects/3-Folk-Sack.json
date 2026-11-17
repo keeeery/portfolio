@@ -8,7 +8,7 @@
   "team": {
     "type": "team",
     "size": "3인",
-    "role": "데이터 테이블 기반 지형 생성, 채굴·붕괴 서버 확정, 낙하 지형 충돌·매몰, 인벤토리·상점 연결, 탐험 지도"
+    "role": "시드 기반 절차적 맵 데이터 생성, 채굴·붕괴 서버 확정, 낙하 지형 충돌·매몰, 인벤토리·상점 연결, 탐험 지도"
   },
   "meta": [
     {
@@ -53,8 +53,8 @@
   },
   "highlights": [
     {
-      "title": "테이블 기반 지형 생성과 동일 맵 구성",
-      "what": "시드 프로필·깊이 구간·동굴·변칙 지형 군집·광물 데이터 테이블 규칙으로 지형을 생성하고, 클라이언트와 서버가 같은 초기 맵을 구성합니다.",
+      "title": "시드 기반 절차적 맵 데이터 생성",
+      "what": "같은 시드와 규칙으로 클라이언트와 서버가 같은 맵 데이터를 절차적으로 생성합니다. 생성 규칙은 TSV 테이블 데이터로 관리합니다.",
       "how": "클라이언트가 `map_session`의 프로필·시드와 테이블 버전을 확인해 초기 맵을 재생성하고, `TerrainNetworkAdapter.FromGeneratedMap()`으로 Revision 0 런타임 스냅샷으로 변환합니다. 이후 채굴·재배치 변경은 서버 Batch로 적용합니다.",
       "why": "시드와 프로필로 초기 맵을 재생성해 초기 전체 맵 전송 부담을 줄입니다. 대신 생성기·난수 순서·데이터를 양쪽에서 동기화해야 합니다.",
       "section": "2.3 핵심 기능 — 초기 맵을 공유하는 계약",
@@ -62,7 +62,8 @@
         "src": "images/terrain-seed-zoom.png",
         "w": 768,
         "h": 576,
-        "caption": "데이터 테이블로 정의된 시드 생성 규칙에 따라 무작위로 생성된 지형 시드"
+        "caption": "데이터 테이블로 정의된 시드 생성 규칙에 따라 무작위로 생성된 지형 시드",
+        "pinned": true
       }
     },
     {
@@ -217,9 +218,9 @@
       },
       {
         "key": "terrain-gen",
-        "title": "기능 A — 테이블 기반 지형 생성과 동일 맵 구성",
+        "title": "기능 A — 시드 기반 절차적 맵 데이터 생성",
         "sectionPath": [
-          "2. 기능 A — 테이블 기반 지형 생성과 동일 맵 구성"
+          "2. 기능 A — 시드 기반 절차적 맵 데이터 생성"
         ]
       },
       {
@@ -314,13 +315,9 @@
         ],
         "visuals": [
           {
-            "kind": "table",
+            "kind": "mermaid",
             "n": 1,
-            "fp": "항목|내용",
-            "sectionPath": [
-              "1. 프로젝트 개요",
-              "1.3 개발 환경"
-            ]
+            "fp": "flowchart TB"
           }
         ]
       },
@@ -341,9 +338,9 @@
         "points": [],
         "visuals": [
           {
-            "kind": "table",
+            "kind": "mermaid",
             "n": 1,
-            "fp": "문제|구현 방향"
+            "fp": "flowchart TB"
           }
         ]
       },
@@ -380,11 +377,11 @@
           "verbatim": true
         },
         "lead": {
-          "text": "맵 규칙을 시드 프로필, 깊이 구간, 동굴, 변칙 지형 군집, 광물 테이블로 나눕니다.",
+          "text": "생성 규칙은 TSV 테이블 데이터로 관리하며, 시드 프로필, 깊이 구간, 동굴, 변칙 지형 군집, 광물 테이블로 나눕니다.",
           "verbatim": true
         },
         "sectionPath": [
-          "2. 기능 A — 테이블 기반 지형 생성과 동일 맵 구성",
+          "2. 기능 A — 시드 기반 절차적 맵 데이터 생성",
           "2.1 개요와 구조"
         ],
         "points": [
@@ -431,7 +428,7 @@
           "verbatim": true
         },
         "sectionPath": [
-          "2. 기능 A — 테이블 기반 지형 생성과 동일 맵 구성",
+          "2. 기능 A — 시드 기반 절차적 맵 데이터 생성",
           "2.3 핵심 기능 — 초기 맵을 공유하는 계약"
         ],
         "points": [
@@ -460,15 +457,15 @@
           {
             "kind": "code",
             "n": 1,
-            "fp": "// RoomClient.Terrain.cs, HandleMapSession() 발췌"
+            "fp": "// RoomClient.HandleMapSession() — 맵 세션의 프로필 ID·시드로 초기 맵 생성"
           },
           {
             "kind": "image",
-            "src": "images/terrain-seed-zoom.png",
-            "w": 768,
-            "h": 576,
+            "src": "images/terrain-seed-map.png",
+            "w": 1447,
+            "h": 1085,
             "caption": {
-              "text": "생성된 맵의 가운데 부분 — 흙·주황 흙·회색 돌 구간의 경계와 동굴·광물 군집",
+              "text": "에디터 씬 뷰로 본 생성된 맵 전체 — 위부터 Ground·Dirt·Stone·DeepStone 구간과 변칙 지형·동굴·광물 군집",
               "verbatim": true
             }
           }
@@ -488,7 +485,7 @@
           "verbatim": true
         },
         "sectionPath": [
-          "2. 기능 A — 테이블 기반 지형 생성과 동일 맵 구성",
+          "2. 기능 A — 시드 기반 절차적 맵 데이터 생성",
           "2.5 결정적 생성의 데이터 검증과 난수 경계",
           "TSV에 저장된 값(DTO)과 조회해 쓰는 값(Def)의 분리"
         ],
@@ -526,7 +523,7 @@
           "verbatim": true
         },
         "sectionPath": [
-          "2. 기능 A — 테이블 기반 지형 생성과 동일 맵 구성",
+          "2. 기능 A — 시드 기반 절차적 맵 데이터 생성",
           "2.6 고민과 선택"
         ],
         "points": [
@@ -560,7 +557,7 @@
         },
         "lead": null,
         "sectionPath": [
-          "2. 기능 A — 테이블 기반 지형 생성과 동일 맵 구성",
+          "2. 기능 A — 시드 기반 절차적 맵 데이터 생성",
           "2.6 고민과 선택"
         ],
         "points": [],
@@ -652,7 +649,7 @@
           {
             "kind": "code",
             "n": 1,
-            "fp": "// RoomClient.cs, HandlePlacementProposed() 발췌"
+            "fp": "// RoomClient.HandlePlacementProposed() — 배치 담당일 때 같은 청크의 중복"
           }
         ]
       },
@@ -725,7 +722,7 @@
             "w": 968,
             "h": 726,
             "caption": {
-              "text": "빨갛게 표시된 칸 안에 HJ가 쓰러져 있고, 옆에서 굴착 기계가 움직이는 화면",
+              "text": "낙하 지형에 매몰되어 사망한 플레이어 — 해당 칸에 사망 보관함 타일이 생김",
               "verbatim": true
             }
           }
@@ -811,7 +808,7 @@
           {
             "kind": "code",
             "n": 1,
-            "fp": "// PlayerExplorationController.cs, RefreshPlayerVision() 발췌"
+            "fp": "// PlayerExplorationController.RefreshPlayerVision() — 같은 셀이"
           }
         ]
       },
@@ -849,7 +846,7 @@
           {
             "kind": "code",
             "n": 1,
-            "fp": "// RemotePlayerView.Update() 발췌"
+            "fp": "// RemotePlayerView.Update() — 목표 위치로 지수 보간"
           }
         ]
       },
@@ -876,7 +873,7 @@
             "w": 2328,
             "h": 1746,
             "caption": {
-              "text": "대기실(4/4) 화면 — 네 플레이어 슬롯의 아바타와 오른쪽 채팅창, '호스트가 게임을 시작할 때까지 기다리는 중입니다' 안내",
+              "text": "대기실 화면 — 네 플레이어 슬롯의 아바타와 오른쪽 채팅창, '호스트가 게임을 시작할 때까지 기다리는 중입니다' 안내",
               "verbatim": true
             }
           },
@@ -886,7 +883,7 @@
             "w": 1067,
             "h": 800,
             "caption": {
-              "text": "'게임 종료!' 결과 창에 '1. 다이아만캠 824 G (YOU)' 순위와 로비 화면·메인 화면 버튼",
+              "text": "게임 종료 결과 창",
               "verbatim": true
             }
           }
@@ -936,7 +933,7 @@
           {
             "kind": "code",
             "n": 1,
-            "fp": "// 리팩터링 전 Room.ExecuteTerrainCommandAsync() 발췌",
+            "fp": "// Room.ExecuteTerrainCommandAsync() — 리팩터링 전, 지형 명령을 게이트로 하",
             "sectionPath": [
               "8. 트러블슈팅",
               "8.1 큰 스냅샷과 긴 잠금 구간으로 멈추던 멀티플레이",
@@ -1028,7 +1025,11 @@
           {
             "kind": "code",
             "n": 1,
-            "fp": "// FallingTerrainInteraction.cs, ResolvePendingBurialsAfterT"
+            "lines": [
+              1,
+              8
+            ],
+            "fp": "// FallingTerrainInteraction.ResolvePendingBurialsAfterTerra"
           }
         ]
       },
@@ -1149,7 +1150,7 @@
             "w": 760,
             "h": 570,
             "caption": {
-              "text": "두 플레이어 옆으로 던진 다이너마이트가 날아가는 화면",
+              "text": "다이너마이트로부터 도망치는 두 플레이어",
               "verbatim": true
             },
             "sectionPath": [
@@ -1164,7 +1165,7 @@
             "w": 988,
             "h": 741,
             "caption": {
-              "text": "Tab 전체 지도에 탐험한 굴 경로와 플레이어 위치 점이 표시된 화면",
+              "text": "전체 지도(Tab)에 탐험한 구역과 플레이어 위치 마커가 표시된 화면",
               "verbatim": true
             },
             "sectionPath": [
@@ -1179,7 +1180,7 @@
             "w": 2690,
             "h": 2018,
             "caption": {
-              "text": "'게임 시작 대기중' 타이머와 네 플레이어가 지상에 모인 화면, 채팅창에 '모든 플레이어가 준비되었습니다' 시스템 메시지",
+              "text": "'게임 시작 대기중' 타이머와 네 플레이어가 지상에 모인 화면, '모든 플레이어가 준비되었습니다' 채팅창 시스템 메시지",
               "verbatim": true
             },
             "sectionPath": [

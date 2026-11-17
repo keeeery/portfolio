@@ -20,7 +20,7 @@
 
 ### 1.1 What — 무엇을 만들었나
 
-![타이틀 시네마틱에서 날아온 컨테이너를 받아치는 휴머노이드와 ODDITY 제목](images/cover.jpg)
+![ODDITY 로고와, 타이틀 시네마틱 화면](images/cover.jpg)
 
 **ODDITY**는 염동력과 초능력 스킬을 사용해 보스와 싸우는 Unity 3D 액션 팀 프로젝트입니다.
 플레이어는 주변 물체를 들어 휘두르거나 던지고, 시간 정지와 여러 스킬을 조합해 전투합니다.
@@ -29,6 +29,33 @@
 임무는 차르카로사우루스, 페르데로스, 휴머노이드 보스의 전투 씬으로 연결됩니다.
 대형 보스의 투하·투척·충격파와 휴머노이드의 검격·반격 등 서로 다른 패턴에 대응하면서,
 주변 물체와 파편을 공격 자원으로 활용하는 구조입니다.
+
+```mermaid
+%%{init: {"flowchart": {"rankSpacing": 20, "nodeSpacing": 24, "padding": 8, "subGraphTitleMargin": {"top": 0, "bottom": 10}}}}%%
+flowchart TB
+    Title[타이틀 / 새 게임·이어하기] --> LobbyOuter
+
+    subgraph LobbyOuter["<div style='width:665px;'>로비</div>"]
+    direction LR
+    Mission[임무 선택 / 수락] ~~~ Chips[증강 칩 장착 / 스킬 배치] ~~~ Train[훈련장]
+    end
+
+    LobbyOuter -->|임무 수락 · 씬 전환| Outer
+
+    subgraph Outer["<div style='width:657px;'>보스 전투</div>"]
+    direction LR
+    Psy[염동력 / 잡기·휘두르기·투척] ~~~ Skills[초능력 스킬 / 시간 정지] ~~~ Boss[보스 공격 패턴 대응]
+    end
+
+    Outer -->|보스 처치| Reward[처치 보상 / 새 증강 칩 획득]
+    Reward --> Back[진행 저장 / 로비로 복귀]
+```
+
+- **염동력 조작:** 우클릭으로 화면 중앙의 물체를 잡고, 좌클릭으로 기본 공격(염동파)을 하거나 들고 있는 물체를 조준점 방향으로 던집니다. 카메라를 빠르게 돌리면 들고 있는 물체를 휘두릅니다. 플레이어의 최대 염동 질량 이하인 물체만 잡을 수 있고, 들고 있는 동안 스태미나를 씁니다.
+- **시간 정지:** 게임 전체가 아니라 정지 가능한 물체만 멈추므로, 플레이어는 움직이면서 멈춘 물체를 잡거나 공격할 수 있습니다.
+- **보스:** 대형 보스는 투하·투척·충격파, 휴머노이드는 검격·반격 패턴을 씁니다. 피해와 별도인 무력화 게이지를 모두 깎으면 그로기에 빠집니다.
+- **증강 칩:** 격자에 칩을 배치해 장착하면 최대 염동 질량·기본 공격 사거리 같은 스탯이 오르고, 칩에 딸린 스킬이 스킬 슬롯 5칸에 들어갑니다.
+- **사망과 저장:** 사망하면 사망 화면 뒤 로비로 돌아갑니다. 보유 칩·장착 배치·수락한 임무는 로컬에 저장되어 이어하기로 복원됩니다.
 
 ### 1.2 Why — 왜 만들었나
 
@@ -77,25 +104,26 @@ UI/UX는 공격 예고와 HUD·미니맵, 화면·UI·소리가 함께 바뀌는
 
 ### 1.5 전체 구조
 
+§1.1의 게임 진행을 실제로 맡는 주요 클래스와 그 사이의 흐름입니다. 각 기능의 세부 구조는 §2~§7에 있습니다.
+
 ```mermaid
-%%{init: {"flowchart": {"rankSpacing": 20, "nodeSpacing": 24, "padding": 6}}}%%
+%%{init: {"flowchart": {"padding": 8}}}%%
 flowchart TB
-    Title[타이틀 / 새 게임·이어하기] --> Lobby[로비 / 정비·임무]
-    Lobby --> Chips[증강 칩 배치 / 스킬 슬롯]
-    Lobby --> Mission[임무 선택]
-    Mission --> Scene[SceneLoadManager]
-    Scene --> Battle[보스전]
-    Chips --> Skills[SkillCaster / SuperpowerSkill]
-    Battle --> Psy[염동력 / 물리 물체·파편]
-    Skills --> Combat[CombatManager / 전투 이벤트]
-    Psy --> Combat
-    Boss[보스 판단 / 상태·패턴] --> Combat
-    Combat --> Feedback[피격 / HUD / 카메라·연출]
-    Battle --> Reward[BossChipReward / BossRewardPanel]
-    Reward --> Chips
-    Reward --> Lobby
-    Reward --> Save[GameSave]
-    Save --> Lobby
+    Save["GameSave"] -->|칩 복원| Chip["AugmentationChipInventory"]
+    Chip -->|스탯 보너스| PC["PsychokinesisController"]
+    Chip -->|스킬 슬롯| Skill["SkillCaster<br>SuperpowerSkill"]
+    PC -->|잡기 · 투척| Obj["PsychokinesisObject<br>WallFragmentSpawner"]
+    Skill -->|시간 정지| Obj
+    Boss["BossIdleState<br>BossMeleePattern"] -->|투하 · 투척| Obj
+    Obj -->|충돌 피해| Combat["CombatManager"]
+    Combat -.->|처리 결과 → 파편화| Obj
+    Boss -->|타격 판정| Combat
+    Combat --> Entity["CombatEntity"]
+    Entity -->|보스 사망| Reward["BossChipReward"]
+    Reward -->|로비 복귀| Scene["SceneLoadManager"]
+%% 격자: - Chip Save | - PC - | Skill Obj Boss | - Combat - | - Entity Reward | - - Scene
+%% 화살표 Chip -> Skill: 나감=왼쪽 들어감=위
+%% 화살표 Boss -> Combat: 나감=아래 들어감=오른쪽
 ```
 
 ---
@@ -136,25 +164,25 @@ flowchart TB
 들고 있는 동안에는 매 프레임 스태미나를 소모하고, 스태미나가 바닥나거나 물체가 플레이어에게서 일정 거리 이상 멀어지면 놓습니다.
 
 ```mermaid
-stateDiagram-v2
-    direction TB
-    state "Idle (복귀)" as IdleReturn
-    state "Held (복귀)" as HeldReturn
-    state "Idle (복귀)" as IdleNoTarget
-    [*] --> Idle
-    Idle --> Focused: 화면 중앙 후보 선택 / 외곽선
-    Focused --> IdleNoTarget: 후보 없음
-    Focused --> Held: 우클릭 / 질량·스태미나 조건
-    Held --> Swing: 도착 후 빠른 카메라 회전
-    Swing --> HeldReturn: 판정 시간 종료
-    Swing --> IdleReturn: 대상 적중 / 그 속도로 놓음
-    Held --> Preparing: 좌클릭 누름 / 손 앞으로 당김
-    Preparing --> Thrown: 좌클릭 뗌 / 조준점 방향 발사
-    Held --> IdleReturn: 우클릭 뗌·스태미나 소진·거리 초과·피격
-    Thrown --> IdleReturn: 비행·충돌
+%%{init: {"flowchart": {"rankSpacing": 48, "nodeSpacing": 60, "padding": 8}}}%%
+flowchart TB
+    Idle(대기) -->|화면 중앙 후보 선택 / 외곽선| Focused(선택됨)
+    Focused -->|후보 없음| Idle
+    Focused -->|우클릭 / 질량·스태미나 조건| Held(홀딩)
+    Held <-->|"도착 후 빠른 카메라 회전<br>⇄ 판정 시간 종료"| Swing(휘두르기)
+    Held -->|좌클릭 누름 / 손 앞으로 당김| Preparing(투척 준비)
+    Preparing -->|좌클릭 뗌 / 조준점 방향 발사| Thrown(투척)
+    Swing -->|대상 적중 / 그 속도로 놓음| End("대기 (복귀)")
+    Thrown -->|날아가 충돌| End
+    Held -->|"우클릭 뗌·스태미나 소진<br>거리 초과·피격"| End
+    %% 화살표 Held -> Swing: 나감=왼쪽
+    %% 화살표 Swing -> End: 들어감=왼쪽
+    %% 화살표 Held -> End: 나감=오른쪽 들어감=오른쪽
 ```
 
-그림의 `Idle (복귀)`와 `Held (복귀)`는 각각 기존 `Idle`, `Held` 상태로 돌아가는 지점입니다.
+이 다이어그램은 염동력 조작 입력에 따라 물체 상태가 바뀌는 흐름을 도식화한 것입니다.
+맨 아래 "대기 (복귀)"는 맨 위의 "대기" 상태로 돌아가는 지점입니다.
+"들고 있음"과 "휘두르기" 사이의 양방향 화살표는 휘두르기 판정이 켜졌다가 판정 시간이 끝나면 "들고 있음"으로 돌아오는 것을 나타냅니다.
 
 입력에 맞춰 캐릭터의 자세도 함께 바뀝니다.
 물체를 잡으면 조준 방향이 왼팔이 닿는 범위의 끝에 오도록 몸을 돌리고, 조준이 그 범위 안이면 팔만, 벗어나면 몸까지 돌립니다.
@@ -185,6 +213,7 @@ stateDiagram-v2
 홀딩 위치와 현재 위치의 차이로 가속도를 만들고, 목표 속도와 물체 속도의 차이로 감쇠를 적용합니다.
 
 ```csharp
+// PsychokinesisController.FixedUpdate() — 위치 오차로 가속도를 만들고 목표 속도와의 차이로 감쇠, 가속도·속도 상한 적용
 Vector3 acceleration = offset * (followStrength * pullMultiplier)
     - (body.linearVelocity - targetVelocity) * followDamping;
 acceleration = Vector3.ClampMagnitude(acceleration, maxAcceleration * pullMultiplier);
@@ -200,7 +229,7 @@ body.AddForce(
 휘두르기 판정은 잡은 직후 바로 허용하지 않고, 목표 위치에 도착한 상태와 카메라 회전·물체의 상대 속도를 함께 사용합니다.
 이를 통해 플레이어가 단순히 이동한 것을 강한 휘두르기로 오인하는 상황을 줄입니다.
 
-![훈련 공간에서 염동력으로 통(초록 외곽선)을 들고 있는 플레이어](images/psychokinesis-hold.png)
+![염동력으로 물체를 잡아 조종하는 플레이어](images/psychokinesis-hold.png)
 
 #### 물체를 조준점 위에 두는 홀딩 위치
 
@@ -210,7 +239,7 @@ body.AddForce(
 이렇게 하면 물체는 늘 조준점 위에 보이면서 플레이어와의 거리도 일정하게 유지됩니다.
 
 ```csharp
-// PsychokinesisController.GetCameraAlignedDirection — 홀딩 기준점 중심 구와 카메라 중앙 광선의 먼 쪽 교점
+// PsychokinesisController.GetCameraAlignedDirection() — 홀딩 기준점 중심 구와 카메라 중앙 광선의 먼 쪽 교점
 Vector3 toRayOrigin = cameraRay.origin - origin;
 float b = Vector3.Dot(toRayOrigin, cameraRay.direction);
 float c = toRayOrigin.sqrMagnitude - radius * radius;
@@ -245,7 +274,7 @@ return (cameraRay.GetPoint(distance) - origin).normalized;
 카메라와 물체 사이의 가까운 장애물을 조준해 방향이 카메라 반대쪽이 되면, 카메라 방향을 그대로 써서 물체가 뒤로 날아가지 않게 합니다.
 
 ```csharp
-// PsychokinesisController.ReleaseHeld — 투척 방향 결정
+// PsychokinesisController.ReleaseHeld() — 투척 방향 결정
 Vector3 direction = ray.GetPoint(distance) - heldObject.Body.worldCenterOfMass;
 // 카메라와 물체 사이의 가까운 장애물을 조준해 역방향 발사 방지
 if (Vector3.Dot(direction, ray.direction) <= 0f) direction = ray.direction;
@@ -256,19 +285,38 @@ velocity = direction.normalized * throwSpeed;
 트리거 판정은 물리 스텝이 끝난 뒤에 오므로, 물체가 매 `FixedUpdate`에서 스텝 직전 속도를 기록해 두고 그 속도와 대상 속도의 차이로 피해를 계산합니다.
 시간 정지로 멈춘 동안에는 속도가 0이 되므로 멈추기 전 속도를 유지합니다.
 
+![염동력으로 잡은 물체를 던져 훈련용 더미에 맞히는 장면](images/psychokinesis-demo.gif)
+
 ### 2.6 핵심 기능 — 잡는 동안의 물리 상태 저장과 복원
 
 잡은 물체는 손 앞을 따라다니는 동안 플레이어·중력·시간 정지와 다르게 반응해야 합니다.
 잡는 순간 바꾼 값은 모두 원래 값을 저장해 두고, 놓을 때 되돌립니다.
 
-| 항목 | 잡을 때 | 놓을 때 |
-|---|---|---|
-| 시간 정지 | 전체 정지에서 제외 | 정지 중에 던졌으면 정지가 끝날 때까지 예외 유지 |
-| 중력·회전 | 중력 끔, 각감쇠를 높여 손 앞에서 덜 흔들림, 속도 0 | 원래 중력·각감쇠 복원, 투척 속도 적용 |
-| 플레이어와의 충돌 | 물체·플레이어 콜라이더 쌍마다 원래 무시 여부를 저장하고 충돌 무시 | 쌍별로 원래 상태 복원 |
-| 충돌 레이어 | Rigidbody `excludeLayers`에 홀딩 중 제외 레이어 추가 | 원래 `excludeLayers` 복원 |
-| 피격 트리거 | 휘두르기 여유 범위만큼 확장 | 원래 크기 |
-| 피해 | 투척 피해·벽 파편화 끔 | 던졌을 때만 투척 피해 허용 |
+```mermaid
+%%{init: {"sequence": {"width": 140, "actorMargin": 40, "messageMargin": 30, "noteMargin": 8, "boxMargin": 6}}}%%
+sequenceDiagram
+    participant C as Psychokinesis<br/>Controller
+    participant O as Psychokinesis<br/>Object
+    participant R as Rigidbody
+    participant T as TimeFreezable
+
+    Note over C,T: 잡을 때
+    C->>O: BeginHold()
+    O->>R: 원래 값 저장
+    O->>R: 중력 끔 · 각감쇠 높임<br/>제외 레이어 추가
+    O->>T: 시간 정지에서 제외
+    Note over O: 플레이어와 충돌 무시<br/>피격 트리거 확장<br/>투척 피해 끔
+
+    Note over C,T: 놓을 때
+    C->>O: Release()
+    O->>R: 저장한 값 복원<br/>투척 속도 적용
+    O->>T: 시간 정지 예외 해제<br/>(정지 중이면 끝난 뒤)
+    Note over O: 플레이어와 충돌 복원<br/>피격 트리거 원래 크기<br/>던졌을 때만 투척 피해
+```
+
+잡는 순간 속도를 0으로 만들고 각감쇠를 높여 물체가 손 앞에서 덜 흔들리게 하며, Rigidbody `excludeLayers`에는 홀딩 중 제외 레이어를 더합니다.
+플레이어와의 충돌은 물체·플레이어 콜라이더 쌍마다 원래 무시 여부를 저장해 두었다가 쌍별로 되돌립니다.
+피격 트리거는 휘두르기 여유 범위만큼 넓히고, 잡고 있는 동안에는 투척 피해와 벽 파편화를 모두 끕니다.
 
 물체의 피격 판정은 몸체 콜라이더가 아니라 별도 레이어(`PsychokinesisHit`)의 트리거로 합니다.
 보스 Rigidbody는 염동력 물체 레이어와 물리 충돌하지 않으므로, 이 트리거는 몬스터 레이어하고만 반응하도록 두었습니다.
@@ -281,6 +329,7 @@ velocity = direction.normalized * throwSpeed;
 자신이 요청한 이벤트의 결과를 확인한 뒤 파편화합니다.
 
 ```csharp
+// PsychokinesisObject.HandleDamageExecuted() — 자신이 요청한 피해 이벤트의 결과를 확인한 뒤 파편화
 if (ReferenceEquals(damageEvent, pendingDamage) == false) return;
 ClearPendingDamage();
 if (receivedDamage <= 0) return;
@@ -326,10 +375,10 @@ Shatter();
 로비 훈련 공간도 보스전과 같은 공격력 기반 물체 피해 경로를 사용하도록 씬 설정을 맞췄습니다.
 
 ```csharp
-// PsychokinesisObject: 현재 질량에서 원래 질량을 복원해 등급 계산 요청
+// PsychokinesisObject.CalculateDamage() — 현재 질량에서 원래 질량을 복원해 등급 계산 요청
 controller.TryCalculateObjectDamage(body.mass / sizeFactor, sizeFactor,
     out int overriddenDamage, out groggy);
-// PsychokinesisController: 등급별 atkScale을 고른 뒤 현재 공격력과 크기 배율 반영
+// PsychokinesisController.TryCalculateObjectDamage() — 등급별 atkScale을 고른 뒤 현재 공격력과 크기 배율 반영
 damage = Mathf.Max(1, Mathf.RoundToInt(combatEntity.CurrentStats.Atk * atkScale * sizeFactor));
 groggy = Mathf.RoundToInt(damage * objectGroggyScale);
 ```
@@ -412,12 +461,49 @@ UI 진입·피격·조작 잠금 시에는 예약 입력과 공격 준비를 취
 부서진 물체의 일부는 다시 염동력으로 사용할 수 있고, 작은 조각은 시각 효과를 담당합니다.
 보스가 만든 파편과 플레이어가 던지는 물체가 같은 전투 공간에서 상호작용하도록 구성했습니다.
 
-| 구성 | 역할 |
-|---|---|
-| `WallFragmentSpawner` | 크기별 파편 선택, 공간 확인, 배치와 초기 힘 |
-| `WallFragment` | 풀 객체의 형태 적용과 물리 상태 초기화·반납 |
-| `WallFragmentDebris` | 작은 파편의 지지·속도 안정 판정, 축소 후 반환 |
-| `ObjectPoolManager` | 키별 풀과 비활성 객체 보관 |
+```mermaid
+classDiagram
+    direction LR
+    class WallFragmentSpawner {
+        -largeFragmentPool
+        -mediumFragmentPool
+        -smallFragmentPool
+        -spawnRadius
+        +Spawn()
+        +SpawnFragment()
+        +SpawnImpactDebris()
+    }
+    class WallFragment {
+        -poolKey
+        -body
+        -isInPool
+        +ApplyVariant()
+        +ReturnToPool()
+    }
+    class WallFragmentDebris {
+        -fragment
+        -supports
+        -stableTime
+        -shrinkProgress
+        -UpdateSupport()
+        -BeginDespawn()
+    }
+    class ObjectPoolManager {
+        -objectPoolDic
+        +CreatePool()
+        +GetObjectOrNull()
+        +ReturnToPool()
+    }
+    WallFragmentSpawner --> ObjectPoolManager : 풀에서 꺼냄
+    WallFragmentSpawner --> WallFragment : 형태 적용·배치
+    WallFragment --> ObjectPoolManager : 반납
+    WallFragmentDebris --> WallFragment : 멈추면 반환 요청
+    note for WallFragmentSpawner "크기별 파편 선택, 공간 확인<br>배치와 초기 힘"
+    note for WallFragment "풀 객체의 형태 적용과<br>물리 상태 초기화·반납"
+    note for WallFragmentDebris "작은 파편의 지지·속도 안정 판정<br>축소 후 반환"
+    note for ObjectPoolManager "키별 풀과 비활성 객체 보관"
+    %% 격자: WallFragmentSpawner ObjectPoolManager | WallFragmentDebris WallFragment
+```
 
 실시간으로 원본 메시를 절단하는 방식이 아니라, 미리 만든 파편 형태를 조합해 생성합니다.
 기본 생성 요청은 큰 파편 1개·중간 5개·작은 9개이며, 배치 공간을 찾지 못하면 일부가 생략될 수 있습니다.
@@ -427,6 +513,7 @@ UI 진입·피격·조작 잠금 시에는 예약 입력과 공격 준비를 취
 풀은 `Dictionary<string, ObjectPool>`로 찾고, 내부에서는 `Stack<IObjectPoolItem>`로 객체를 꺼내고 돌려받습니다.
 
 ```csharp
+// ObjectPool.Get() — 비어 있으면 확장 수량만큼 늘린 뒤 꺼냄
 public IObjectPoolItem Get()
 {
     if (pool.Count == 0) Expand(expandSize);
@@ -448,12 +535,17 @@ public IObjectPoolItem Get()
 
 ```mermaid
 stateDiagram-v2
-    [*] --> InPool
+    state "풀에서 대기" as InPool
+    state "활성 상태" as Active
+    state "안정화 확인" as Settling
+    state "축소" as Shrinking
     InPool --> Active: 형태·위치 적용 후 활성화
     Active --> Settling: 바닥 지지 / 낮은 속도
     Settling --> Active: 다시 움직임
     Settling --> Shrinking: 안정 시간 충족
     Shrinking --> InPool: 축소 완료 / 반환
+%% 격자: InPool | Active | Settling | Shrinking
+%% 화살표 Shrinking -> InPool: 나감=오른쪽 들어감=오른쪽 거리=104
 ```
 
 활성화 시 속도와 관련 상태를 초기화하며, 파편의 중복 반납은 `WallFragment`의 상태로 방지합니다.
@@ -492,12 +584,41 @@ stateDiagram-v2
 정지 가능한 객체에 `TimeFreezable`을 붙여 적용합니다.
 플레이어는 움직이면서 멈춘 물체를 잡거나 공격할 수 있습니다.
 
-| 구성 | 책임 |
-|---|---|
-| `TimeFreezeManager` | 일정 시간 동안 전체 또는 개별 대상 정지 요청 |
-| `TimeFreezable` | 객체별 정지·감속, 로컬 시간, 물리·애니메이션 상태 복원 |
-| `TimeFreezeOverlayFeature` | 정지 전환 구간의 홀로그램 오버레이 |
-| `TimeStopSkill` | 스킬 사용 조건과 전체 정지 요청 연결 |
+```mermaid
+classDiagram
+    direction LR
+    class TimeStopSkill {
+        -duration
+        #Execute()
+    }
+    class TimeFreezeManager {
+        +FreezeWorld()
+        +Freeze()
+    }
+    class TimeFreezable {
+        -freezeCount
+        -isWorldExempt
+        -appliedTimeScale
+        +IsFrozen
+        +LocalDeltaTime
+        +Freeze()
+        +Unfreeze()
+        +SetWorldExempt()
+    }
+    class TimeFreezeOverlayFeature {
+        -overlayMaterial
+        -pass
+        +AddRenderPasses()
+    }
+    TimeStopSkill --> TimeFreezeManager : 전체 정지 요청
+    TimeFreezeManager --> TimeFreezable : 전체·개별 정지와 해제
+    TimeFreezeOverlayFeature --> TimeFreezable : 전환 중인 대상 조회
+    note for TimeStopSkill "스킬 사용 조건과<br>전체 정지 요청 연결"
+    note for TimeFreezeManager "일정 시간 동안 전체 또는<br>개별 대상 정지 요청"
+    note for TimeFreezable "객체별 정지·감속, 로컬 시간<br>물리·애니메이션 상태 복원"
+    note for TimeFreezeOverlayFeature "정지 전환 구간의<br>홀로그램 오버레이"
+    %% 격자: TimeStopSkill TimeFreezeManager | TimeFreezeOverlayFeature TimeFreezable
+```
 
 개별 정지와 전체 정지는 중첩해서 적용합니다.
 개별 정지 횟수가 남아 있으면 정지하고, 전체 시간 효과가 여러 개라면 가장 낮은 배율을 사용합니다.
@@ -508,6 +629,7 @@ stateDiagram-v2
 객체는 정지·감속 동안 누적된 시간 차이를 반영해 자신의 시간을 계산합니다.
 
 ```csharp
+// TimeFreezable.LocalTime·LocalDeltaTime·LocalFixedDeltaTime — 정지·감속 동안의 시간 차이를 반영한 객체별 시간
 public float LocalTime => Time.time - pausedDuration
     - (Time.time - pauseStartTime) * (1f - appliedTimeScale);
 public float LocalDeltaTime => Time.deltaTime * appliedTimeScale;
@@ -522,7 +644,7 @@ Animator의 원래 속도와 Rigidbody의 운동 상태를 저장하고,
 감속 중에는 속도를 배율에 맞추고 추가 중력을 적용합니다.
 이는 기존 궤적을 느리게 표현하기 위한 보정입니다.
 
-![시간 정지 중 홀로그램으로 멈춘 페르데로스와 바위·상자 사이를 걷는 플레이어](images/time-freeze.png)
+![시간이 정지된 보스·물체들과 움직이는 플레이어](images/time-freeze.png)
 
 ### 4.3 핵심 기능 — 염동력과 정지 세계의 예외
 
@@ -535,7 +657,7 @@ Animator의 원래 속도와 Rigidbody의 운동 상태를 저장하고,
 해제할 때는 원래 재질을 복구한 뒤 오버레이가 걷히는 연출을 적용합니다.
 홀로그램 셰이더는 도입한 외부 셰이더를 바탕으로 높이 마스크·물결·글리치 표현을 확장했습니다.
 
-![시간 정지 중 잡아 든 바위(초록 외곽선)와 홀로그램으로 멈춘 페르데로스](images/freeze-hold.png)
+![시간 정지 중 잡아서 정지가 풀린 물체와, 아직 멈춰 있는 페르데로스 보스](images/freeze-hold.png)
 
 #### 시간 정지 막 셰이더 — 높이로 쓸어 올리는 마스크와 정지 순간 글리치
 
@@ -574,7 +696,7 @@ clip( sweepMask - 0.001 );
 완료 시 저장된 운동 상태를 버리고 정지를 풀어, 들어 올리기 전 속도가 내려찍기 뒤 다시 적용되는 것을 막습니다.
 `finally`는 플레이어 홀딩·행동 잠금·카메라·임시 목표를 정리합니다.
 
-![염동 내려찍기로 들어 올려져 홀로그램으로 멈춘 휴머노이드](images/psycho-slam.png)
+![염동 내려찍기 스킬 ― 홀로그램으로 멈춘 휴머노이드 보스](images/psycho-slam.png)
 
 #### 전체 히트스톱과 선택적 시간 정지의 분리
 
@@ -602,7 +724,7 @@ clip( sweepMask - 0.001 );
 
 ---
 
-## 5. 기능 D — 보스 패턴·전투 판정과 시각 피드백
+## 5. 기능 D — 보스 패턴과 전투 판정
 
 ### 5.1 개요와 전체 구조
 
@@ -657,6 +779,7 @@ sequenceDiagram
 공격의 시작·판정·종료를 애니메이션 신호에 연결하고, 상태 이탈 시 남은 예고와 구독을 정리합니다.
 
 ```csharp
+// BossMeleePattern.OnExit() — 상태를 벗어날 때 애니메이션 구독·루트 모션·트리거와 남은 타격 예고를 정리하고 패턴별 정리 호출
 root.AnimEventListener.OnOccursAnimStateEvent -= OnOccursAnimEvent;
 Animator.applyRootMotion = false;
 Animator.ResetTrigger(trigger);
@@ -669,7 +792,7 @@ for (int index = 0; index < hits.Length; index++)
 OnPatternExit();
 ```
 
-![페르데로스의 투하 — 바닥의 원형 예고와 초록 외곽선이 생긴 바위](images/boss-drop-pattern.png)
+![페르데로스 보스의 투하 패턴 — 바닥의 원형 공격 범위 예고](images/boss-drop-pattern.png)
 
 ### 5.3 핵심 기능 — 환경 물체를 공유하는 보스 공격
 
@@ -684,67 +807,22 @@ OnPatternExit();
 각 물체는 자기 시간 상태에 따라 대기하고, 예상 착지 시점의 활성·홀딩 상태를 확인해 판정합니다.
 보스가 만들어 낸 파편도 플레이어의 잡기·투척 대상으로 연결되므로 공격 연출과 전투 자원이 겹칩니다.
 
-![벽에 돌진한 페르데로스와 벽에서 튀어나온 파편, 쓰러진 플레이어](images/charge-wall-hit.png) ![벽에 머리를 박은 페르데로스와 왼쪽 벽 쪽으로 튀는 파편](images/charge-wall-debris.png)
+![벽에 돌진하여 충돌한 페르데로스 보스와 벽에서 튀어나온 파편](images/charge-wall-hit.png) ![벽에 돌진하여 충돌한 페르데로스 보스와 왼쪽 벽 쪽으로 튀는 파편](images/charge-wall-debris.png)
 
-### 5.4 핵심 기능 — 공격 예고와 그로기
+#### 투하·투척 판정의 경로
+
+투하 패턴의 착지 판정은 실제 Collision 콜백이 아니라 예상 낙하시간을 기다린 뒤 실행하는 면적 판정이고, 투척 패턴은 탄도 속도로 발사한 뒤 비행 중 겹침으로 검사합니다.
+보스 투척물은 타격을 요청한 직후 `ShatterAt`으로 파편화해, 피해 결과를 기다린 뒤 파편화하는 플레이어 물체(§2.7)와 경로를 나눕니다.
+
+소스: `BossPsychokinesisDropPattern.cs`, `BossPsychokinesisThrowPattern.cs`.
+
+### 5.4 핵심 기능 — 공격 판정과 그로기
 
 공격 범위는 지면에 투영하는 예고로 표시합니다.
 같은 `TelegraphShape`를 표시와 `OnHit` 순간의 `Contains` 판정에 사용하며, 근접 공격을 지속 Trigger 접촉으로 판정하는 방식과 구분합니다.
 콤보 패턴에서도 예고 흐름을 공유하고 Ground 레이어를 기준으로 표시 범위를 제한합니다.
+범위가 차오르는 박자와 바닥에만 붙는 표시 방법은 §9.4에서 다룹니다.
 큰 보스에서는 중심점만으로 타격 위치를 계산하지 않고, 부위 판정과 몸체 기준 보정을 사용합니다.
-
-공격 피해와 무력화량은 구분하며, 스킬의 무력화는 피해에 대한 `GroggyRate` 비율로 연결했습니다.
-돌진 중 벽 충돌 등 특정 상황의 그로기와 피격 연출도 추가했습니다.
-
-`BossGroggy`는 살아 있는 보스에 실제 피해가 전달되고 무력화량이 있을 때 현재 무력화 수치를 차감합니다.
-수치가 0이 되면 Broken을 알리고, 상태 계층이 그로기 진입과 회복 후 복귀를 처리합니다.
-
-돌진의 벽 충돌로 발생하는 기절과 `BossGroggy` 게이지 소진에 의한 그로기는 진입 조건이 다른 경로입니다.
-
-### 5.5 팀 기반 확장 — 휴머노이드의 페이즈·반응·분신
-
-휴머노이드는 공통 보스 구조 위에 HP 비율에 따른 2페이즈 전환, 플레이어가 잡았던 물체의 투척 위협을 감시해 회피·파괴·가드 반사로 대응하는 반응 패턴, 분신 소환을 결합한 팀 구현입니다.
-여러 검격 클래스는 공통 `BossMeleePattern`을 그대로 상속하고 Animator와 타격 데이터로 차이를 만듭니다.
-직접 연결한 부분은 공통 패턴·시간 제어와의 연동, 반사 투사체의 파편화 연출, 차원 가르기의 순간이동 홀로그램(§9.3), 분신 정리 시의 플레이어 수명 처리(§7.4)입니다.
-
-### 5.6 핵심 기능 — 카메라·HUD·렌더링
-
-기본 이동·카메라 위에 일반·홀딩·질주·보스 근접 시점을 구분하고, 오프셋·거리·FOV를 보간합니다.
-보스 근접 판단은 큰 몸체의 Collider 경계까지의 수평 거리를 사용하며,
-진입·이탈 거리를 다르게 두어 경계에서 시점이 반복 전환되는 현상을 줄입니다.
-
-카메라의 벽 충돌은 SphereCast로 검사해 즉시 거리를 당기고, 벽에서 벗어나면 보간해 복구합니다.
-어깨 쪽 공간이 부족하면 반대쪽이나 중앙으로 이동하도록 시점도 조정합니다.
-보스 조우 연출은 별도 카메라 시점과 HUD 표시를 조율하고, 종료 후 추적 시점으로 돌아갑니다.
-
-염동력 대상과 NPC 외곽선은 URP RendererFeature로 실루엣 마스크를 만든 뒤 합성합니다.
-MSAA 마스크로 가장자리 표현을 보완하며, 시간 정지 오버레이와 미니맵 카메라의 표시 범위는 따로 처리합니다.
-HUD에는 체력·보호막, 스태미나, 스킬 슬롯·쿨타임, 보스 상태와 시스템 메시지를 연결했습니다.
-
-### 5.7 핵심 기능 — 물리 검사로 만드는 미니맵 이동 영역
-
-미니맵은 위에서 본 장면만 표시하지 않고, `MinimapWalkableBaker`로 플레이어가 설 수 있는 영역의 마스크를 만듭니다.
-
-```mermaid
-flowchart TB
-    Bounds[대상 Collider 범위 / 격자] --> Floor[배치 Spherecast / 바닥 높이]
-    Floor --> Space[배치 OverlapCapsule / 몸체 공간]
-    Space --> Reach[선택적으로 연결 영역 탐색]
-    Reach --> Expand[플레이어 반경만큼 확장]
-    Expand --> Mask[R8 텍스처 / 미니맵 표시]
-```
-
-구의 반경으로 작은 틈을 처리하고, 캡슐이 들어갈 공간을 검사해 벽 안쪽이나 머리 공간이 없는 칸을 제외합니다.
-연결 영역 옵션이 켜져 있으면 플레이어 시작 지점에서 상하좌우로 탐색하고, 허용 높이 차를 넘는 이웃은 연결하지 않습니다.
-마지막으로 플레이어 반경만큼 영역을 넓혀 몸체가 닿을 수 있는 가장자리를 표시합니다.
-
-물리 검사는 `SpherecastCommand`·`OverlapCapsuleCommand`의 배치 Job을 사용하지만,
-각 단계에서 `Complete`로 완료를 기다립니다. 마스크는 씬 시작 시 한 번 생성합니다.
-`MinimapGround`와 전용 셰이더가 결과 텍스처를 표시하고, 활성 물체·보스 등의 표시는 미니맵 계층에서 별도로 처리합니다.
-
-![원형 미니맵 — 회색 영역 위에 보스와 물체가 점으로 표시됨](images/minimap.png)
-
-소스: `BossPsychokinesisDropPattern.cs`, `BossPsychokinesisThrowPattern.cs`, `HumanoidProjectileWatcher.cs`, `HumanoidPhaseController.cs`, `HumanoidCloneSummon.cs`, `MinimapWalkableBaker.cs`, `MinimapGround.cs`.
 
 #### 몸체 기준 타격 지점과 효과의 역할 분리
 
@@ -760,96 +838,39 @@ flowchart TB
 대표 Collider와 이미 등록된 Collider는 제외해 중복 등록을 피합니다.
 따라서 타격 위치는 부위별로 얻으면서 HP·방어·그로기 대상은 같은 보스로 묶을 수 있습니다.
 
-#### 렌더 패스별 마스크와 합성 책임
+#### 피해와 무력화량을 나눈 그로기
 
-| RendererFeature | 별도 처리 |
-|---|---|
-| `PsychokinesisOutlineFeature` | 후처리 전에 4× MSAA 실루엣을 만들고 해석된 마스크를 화면 외곽선으로 합성 |
-| `BossOcclusionOutlineFeature` | 보스 깊이와 플레이어 실루엣을 따로 준비해 보스에 가려진 플레이어의 외곽선, 다른 물체에 가려진 보스의 반투명 실루엣을 합성 |
-| `TelegraphMaskFeature` | 불투명 렌더 뒤 Ground 외 물체와 등록 렌더러에 스텐실 128을 기록해 예고가 몸·소품 위에 묻는 현상 제한 |
-| `HitFlashFeature` | 투명 렌더 뒤 활성 피격 대상의 서브메시를 덧그리고 대상별 강도를 전달 |
+공격 피해와 무력화량은 구분하며, 스킬의 무력화는 피해에 대한 `GroggyRate` 비율로 연결했습니다.
+돌진 중 벽 충돌 등 특정 상황의 그로기와 피격 연출도 추가했습니다.
 
-화면 효과 하나로 모든 표시를 처리하는 대신 필요한 색·깊이·마스크를 RenderGraph의 읽기·쓰기 대상으로 선언합니다.
-직접 `DrawRenderer`하는 경로는 카메라 컬링 마스크만으로 제외되지 않으므로, 대상 카메라를 별도로 거르는 API가 있습니다.
-효과가 없을 때는 패스 등록을 생략합니다.
-시간 정지 위에 피격 번쩍임을 보이게 하려면 RendererFeature의 순서도 설정해야 합니다.
+`BossGroggy`는 살아 있는 보스에 실제 피해가 전달되고 무력화량이 있을 때 현재 무력화 수치를 차감합니다.
+수치가 0이 되면 Broken을 알리고, 상태 계층이 그로기 진입과 회복 후 복귀를 처리합니다.
 
-외곽선 셰이더(`PsychokinesisOutline.shader`)는 원본 픽셀은 칠하지 않고 마스크의 바깥 경계만 합성합니다.
-MSAA로 그린 마스크가 Resolve되면 r 채널에 픽셀 커버리지가 남으므로, 이웃 픽셀 중심에서 (0.5 − 커버리지)만큼 떨어진 곳을 실제 경계로 근사해 픽셀 단위 계단을 없앱니다.
-바깥 경계는 이 거리로, 안쪽 경계는 오브젝트가 덮지 않은 비율만큼만 칠해 양쪽을 모두 부드럽게 합니다.
-피격 번쩍임(`HitFlash.shader`)은 피격 대상의 메시 위에 가산 림을 덧그리고, 세기는 대상마다 전역 값으로 받습니다.
+돌진의 벽 충돌로 발생하는 기절과 `BossGroggy` 게이지 소진에 의한 그로기는 진입 조건이 다른 경로입니다.
 
-공격 예고 셰이더는 깊이로 월드 위치를 복원하고 화면 미분으로 표면 방향을 구합니다.
-높이 범위와 표면 조건을 검사한 뒤 원·부채꼴·상자의 거리 함수로 예고 모양을 만들고, `fwidth`로 경계를 완화합니다.
-별도의 스텐실 마스크는 보스 몸체·소품 위로 표시가 번지는 것을 추가로 제한합니다.
+소스: `HitPoint.cs`, `MonsterRegistry.cs`, `BossHitboxRegistrar.cs`.
 
-#### 서로 가리는 보스와 플레이어 — 가려진 쪽을 드러내는 두 가지 표현
+### 5.5 팀 기반 확장 — 휴머노이드의 페이즈·반응·분신
 
-큰 보스와 싸우면 두 가지 가림이 생깁니다.
-보스가 플레이어를 가리면 내 캐릭터의 위치를 놓치고, 염동력으로 들고 있는 물체나 기둥·잔해가 보스를 가리면 보스의 자세와 공격 준비를 읽지 못합니다.
-1차 시연에서 강사·동료 수강생·지인 모두에게 "들고 있는 물체가 시야를 가려 보스의 움직임을 볼 수 없다"는 피드백을 받았습니다(§11.2).
-처음에는 보스에 가려진 플레이어의 외곽선만 그렸고, 이후 같은 RendererFeature에 **다른 물체에 가려진 보스 부분을 반투명 실루엣으로 채우는 패스**를 추가했습니다.
+휴머노이드는 공통 보스 구조 위에 HP 비율에 따른 2페이즈 전환, 플레이어가 잡았던 물체의 투척 위협을 감시해 회피·파괴·가드 반사로 대응하는 반응 패턴, 분신 소환을 결합한 팀 구현입니다.
+여러 검격 클래스는 공통 `BossMeleePattern`을 그대로 상속하고 Animator와 타격 데이터로 차이를 만듭니다.
+직접 연결한 부분은 공통 패턴·시간 제어와의 연동, 반사 투사체의 파편화 연출, 차원 가르기의 순간이동 홀로그램(§9.3), 분신 정리 시의 플레이어 수명 처리(§7.4)입니다.
 
-| 상황 | 표시 | 그리는 조건 |
-|---|---|---|
-| 보스가 플레이어를 가림 | 가려진 부분에만 플레이어 외곽선 | 보스·플레이어의 화면 사각형이 겹칠 때만 플레이어 마스크를 만듦 |
-| 다른 물체가 보스를 가림 | 가려진 보스 부분을 채우기 색으로 덮음 | 보스가 화면 안에 있고 채우기 색의 알파가 0보다 클 때 |
+소스: `HumanoidProjectileWatcher.cs`, `HumanoidPhaseController.cs`, `HumanoidCloneSummon.cs`.
 
-![들고 있는 물체(초록 외곽선)에 가려진 훈련용 더미가 붉은 실루엣으로 보이는 화면](images/occlusion-silhouette.png)
+### 5.6 핵심 기능 — 카메라 시점
 
-```mermaid
-flowchart TB
-    Boss[보스 불투명 서브메시 / 커버리지·깊이] --> Player{플레이어와 화면에서 겹침?}
-    Player -->|예| PMask[플레이어 마스크 / 보스에 가려짐·맨 앞에 보임]
-    Player -->|아니오| Black[검은 텍스처로 대체]
-    Boss --> Ignore[무시할 레이어 깊이 / 수련장 벽]
-    PMask --> Outline[가려진 플레이어 외곽선]
-    PMask --> Fill[가려진 보스 실루엣 채우기]
-    Black --> Fill
-    Ignore --> Fill
-```
+기본 이동·카메라 위에 일반·홀딩·질주·보스 근접 시점을 구분하고, 오프셋·거리·FOV를 보간합니다.
+보스 근접 판단은 큰 몸체의 Collider 경계까지의 수평 거리를 사용하며,
+진입·이탈 거리를 다르게 두어 경계에서 시점이 반복 전환되는 현상을 줄입니다.
 
-채우기 패스는 보스 전용 깊이 텍스처와 카메라 깊이를 비교합니다.
-보스 앞면보다 다른 물체가 `_FillMinGap`(기본 0.3m) 이상 앞에 있을 때부터 0.4m에 걸쳐 진해지게 해,
-땅에 살짝 묻힌 발처럼 맞닿은 부분이 깜빡이며 칠해지는 현상을 줄였습니다.
+카메라의 벽 충돌은 SphereCast로 검사해 즉시 거리를 당기고, 벽에서 벗어나면 보간해 복구합니다.
+어깨 쪽 공간이 부족하면 반대쪽이나 중앙으로 이동하도록 시점도 조정합니다.
+보스 조우 연출은 별도 카메라 시점과 HUD 표시를 조율하고, 종료 후 추적 시점으로 돌아갑니다.
 
-```hlsl
-// BossOcclusionOutline.shader — Screen Fill 패스의 일부
-half hidden = saturate((bossDepth - sceneDepth - _FillMinGap) / FILL_FADE_DISTANCE);
-half player = SAMPLE_TEXTURE2D_X(_BossOcclusionPlayerMask, sampler_PointClamp, uv).b;
-half alpha = boss.r * hidden * (1.0 - player) * (1.0 - behindIgnored);
-return half4(_FillColor.rgb, _FillColor.a * alpha);
-```
+소스: `CameraController.cs`.
 
-플레이어 마스크의 `b` 채널은 "화면 맨 앞에 보이는 플레이어 면"이며, 이 부분은 채우기에서 빼서 실루엣이 플레이어 위를 덮지 않게 합니다.
-플레이어가 보스와 겹치지 않는 프레임에는 플레이어 마스크를 그리지 않고 검은 텍스처를 넘겨 패스 하나를 줄입니다.
-보스의 효과·공격 예고처럼 반투명한 서브메시는 깊이에 남지 않아 엉뚱한 곳이 채워지므로, `renderQueue`로 불투명 서브메시만 골라 마스크를 그립니다.
-
-`BossHUD`는 대상에 맞게 채우기 설정을 넘깁니다.
-쓰러진 보스는 채우지 않고, 수련장 허수아비는 `Wall` 레이어를 무시할 가림으로 넘겨 훈련 공간의 벽 뒤에 있을 때는 칠하지 않습니다.
-무시할 레이어의 불투명 물체는 `RendererList`로 따로 깊이를 그려, 그 물체가 보스 앞을 막는 부분만 채우기에서 뺍니다.
-
-| 선택 | 이점 | 비용·제약 |
-|---|---|---|
-| 기존 외곽선 Feature에 채우기 패스 추가 | 보스 깊이 마스크를 외곽선과 실루엣이 같이 사용 | 한 Feature의 분기·텍스처 수명 관리가 늘어남 |
-| 거리 간격 + 페이드로 가림 판정 | 맞닿은 부위의 깜빡임 감소 | 아주 가까이 붙은 얇은 물체 뒤는 덜 칠해질 수 있음 |
-| 무시할 레이어를 별도 깊이로 그림 | 수련장 벽처럼 의도된 가림은 그대로 둠 | 채우기를 켠 프레임마다 해당 레이어를 한 번 더 그림 |
-
-소스: `BossOcclusionOutlineFeature.cs`, `BossOcclusionOutline.shader`, `BossHUD.cs`.
-
-#### 이동 제한과 이탈 복구를 분리한 보스 이동
-
-`BossMovement`는 `BossPathfinder`의 경로 코너를 실제 이동으로 바꾸며, 벽 SphereCast와 지면 탐침으로 진행을 보정합니다.
-크게 이탈한 보스는 팀 구현인 `BossNavMeshGuard`가 일정 간격으로 발밑 NavMesh를 검사해 가까운 NavMesh 위치로 복구하므로, 정상 이동의 제한과 예외적인 이탈 복구가 나뉩니다.
-
-#### 투하·투척 판정의 경로
-
-투하 패턴의 착지 판정은 실제 Collision 콜백이 아니라 예상 낙하시간을 기다린 뒤 실행하는 면적 판정이고, 투척 패턴은 탄도 속도로 발사한 뒤 비행 중 겹침으로 검사합니다.
-보스 투척물은 타격을 요청한 직후 `ShatterAt`으로 파편화해, 피해 결과를 기다린 뒤 파편화하는 플레이어 물체(§2.7)와 경로를 나눕니다.
-
-소스: `BossMovement.cs`, `BossNavMeshGuard.cs`, `BossPsychokinesisDropPattern.cs`, `BossPsychokinesisThrowPattern.cs`.
-
-### 5.8 연동 구현 — 큰 보스 몸체와 겹칠 때의 이동 보정
+### 5.7 연동 구현 — 큰 보스 몸체와 겹칠 때의 이동 보정
 
 플레이어는 보스 몸체 위에 올라서면 수평 방향으로 미끄러지게 하고,
 몸체가 플레이어 안으로 들어오는 상황은 부위별 충돌 무시·분리 후 복구로 다룹니다.
@@ -867,7 +888,14 @@ return half4(_FillColor.rgb, _FillColor.a * alpha);
 
 소스: `PlayerController.cs`, `PlayerCombatIdle.cs`.
 
-### 5.9 고민과 선택
+#### 이동 제한과 이탈 복구를 분리한 보스 이동
+
+`BossMovement`는 `BossPathfinder`의 경로 코너를 실제 이동으로 바꾸며, 벽 SphereCast와 지면 탐침으로 진행을 보정합니다.
+크게 이탈한 보스는 팀 구현인 `BossNavMeshGuard`가 일정 간격으로 발밑 NavMesh를 검사해 가까운 NavMesh 위치로 복구하므로, 정상 이동의 제한과 예외적인 이탈 복구가 나뉩니다.
+
+소스: `BossMovement.cs`, `BossNavMeshGuard.cs`.
+
+### 5.8 고민과 선택
 
 공용 전투 이벤트를 유지하면서 염동력·스킬·보스가 같은 결과 경로를 사용하도록 연결했습니다.
 
@@ -877,7 +905,7 @@ return half4(_FillColor.rgb, _FillColor.a * alpha);
 대형 보스와 휴머노이드는 몸체·이동·패턴이 달라 공통 요소와 전용 처리를 함께 유지합니다.
 공통 패턴을 재사용하되 예외를 한 상태 안에 모두 넣지 않는 구성이 필요합니다.
 
-소스: `BossMeleePattern.cs`, `CombatManager.cs`, `BossMonster.cs`, `CameraController.cs`, `PsychokinesisOutlineFeature.cs`.
+소스: `BossMeleePattern.cs`, `CombatManager.cs`, `BossMonster.cs`.
 
 ---
 
@@ -900,7 +928,7 @@ return half4(_FillColor.rgb, _FillColor.a * alpha);
 
 그리드의 경계·점유 검사는 UI 배치 계층이 담당하며, 스킬 슬롯과 스탯 적용은 인벤토리 계층에 연결합니다.
 
-![증강 칩 관리 창 — 장착 칩 배치와 보유 칩 목록, 아래에 스킬 슬롯 5개](images/chip-window.jpg)
+![증강 칩 관리 창 — 장착 칩 배치와 보유 칩 목록, 스킬 슬롯](images/chip-window.jpg)
 
 ### 6.2 팀 기반 — 칩별 상태와 스킬 실행 규칙
 
@@ -922,7 +950,7 @@ return half4(_FillColor.rgb, _FillColor.a * alpha);
 이동·구르기·염동력·마우스 카메라 회전도 각 입력 경로에서 같은 행동 잠금을 확인합니다.
 
 ```csharp
-// TimeReverseRecorder.SetRewinding의 일부
+// TimeReverseRecorder.SetRewinding() — 되감기 중 무적·애니메이터 정지·행동 잠금
 owner.IsInvincible = rewinding;
 if (rewinding) prevAnimatorSpeed = animator.speed;
 animator.speed = rewinding ? 0f : prevAnimatorSpeed;
@@ -952,7 +980,7 @@ IK 코드도 `IsRewinding`을 확인해 기록 포즈와 현재 조작 자세가
 임무 창의 보상 안내와 실제 보상도 같은 테이블을 사용하도록 연결했습니다.
 보상 확인 버튼을 누르면 해당 임무를 목록에서 제거하고 로비로 이동합니다.
 
-![휴머노이드 처치 뒤 임무 완료 — 증강 칩 12개 지급](images/boss-reward.jpg)
+![임무 완료 화면 — 획득한 증강 칩이 한 줄로 표시됨](images/boss-reward.jpg)
 
 임무 이동에는 `MissionUI.RegisterAndMove`의 수락 후 즉시 이동과 `StageMoveUI.MoveToStage`의 수락 목록에서 이동하는 두 진입점이 있습니다.
 두 경로 모두 선택한 임무의 `BossName`을 영속 `UIManager.CurrentBossName`에 전달합니다.
@@ -990,14 +1018,14 @@ IK 코드도 `IsRewinding`을 확인해 기록 포즈와 현재 조작 자세가
 이어하기 시 이미 초기화가 끝난 플레이어가 있는 경우에도 장착을 반영하도록 연결했습니다.
 
 ```csharp
-// 저장 목록을 복원할 때
+// AugmentationChipInventory.Restore() — 저장 목록을 복원할 때 장착할 칩은 대기 목록에 보관
 chips.Add(chip);
 if (equipped)
     pendingEquips.Add((chip, skillSlot));
 ```
 
 ```csharp
-// 플레이어 초기화·씬 로드 후 대기 장착 반영
+// AugmentationChipInventory.ApplyPendingEquips() — 플레이어 초기화·씬 로드 후 대기 장착 반영
 foreach ((OwnedChip chip, int slot) in pendingEquips)
     Equip(chip, chip.Origin, chip.Rotation, slot);
 pendingEquips.Clear();
@@ -1077,6 +1105,7 @@ sequenceDiagram
 타이틀의 새 게임·이어하기와 보상·사망 후 로비 복귀가 이 경로를 사용합니다.
 
 ```mermaid
+%%{init: {"flowchart": {"padding": 8}}}%%
 flowchart TB
     Start[전환 요청 / 중복 차단] --> Off[화면·UI 접기 / 소리 페이드]
     Off --> Load[암전 / 로딩 아이콘 / 비동기 로드]
@@ -1100,6 +1129,7 @@ flowchart TB
 최소 암전 시간과 연속 안정 프레임, BGM 준비 조건을 확인한 뒤 화면을 켭니다.
 
 ```csharp
+// SceneLoadManager.WaitUntilSettled() — 최소 암전·연속 안정 프레임·BGM 준비를 확인한 뒤 화면 켜기
 stableFrames = Time.unscaledDeltaTime <= stableFrameTime ? stableFrames + 1 : 0;
 bool bgmReady = SoundManager.IsInitialized == false
     || SoundManager.Instance.IsBGMLoading == false;
@@ -1118,7 +1148,7 @@ if (elapsed >= maxSettleWait)
 
 씬 로드 후 이벤트 구독자의 예외 때문에 화면이 계속 꺼져 있지 않도록 해당 호출도 별도로 처리했습니다.
 
-![로비로 돌아온 직후 — 화면은 켜졌고 체력 바·스킬 슬롯은 아직 반투명](images/scene-reveal.jpg)
+![로비로 돌아온 직후 — 씬 로드 완료 이후 화면이 먼저 켜지고 UI는 아직 페이드 중](images/scene-reveal.jpg)
 
 #### UI 입력 제한 기준의 통일
 
@@ -1140,7 +1170,7 @@ if (elapsed >= maxSettleWait)
 `SceneLoadManager.ShowCanvas`에서 오브젝트까지 활성화해 셰이더 값 하나에만 의존하지 않고 검은 화면이 새 씬을 가리도록 했습니다.
 
 ```csharp
-// DeathScreen: 씬 전환 중이면 전환이 쓰는 화면 꺼짐은 남기고 자신의 효과만 되돌림
+// DeathScreen.OnDestroy() — 씬 전환 중이면 전환이 쓰는 화면 꺼짐은 남기고 자신의 효과만 되돌림
 if (SceneLoadManager.IsInitialized && SceneLoadManager.Instance.IsLoading)
 {
     ScreenGlitch.Desaturate = 0f;
@@ -1206,7 +1236,7 @@ UI 조작 시점의 `LockCursor`는 캐시가 비어 있으면 플레이어·카
 `HumanoidClone.OnDestroy`도 먼저 `Player.IsInitialized`를 검사해, 통과 몸체 등록을 해제하려고 새 플레이어를 찾거나 만드는 경로를 피합니다.
 
 ```csharp
-// SingletonBase<T>.Instance: 기존 객체 검색 직후, 자동 생성 직전
+// SingletonBase<T>.Instance — 기존 객체 검색 직후, 자동 생성 직전
 instance = FindAnyObjectByType<T>();
 if (instance == null && createIfMissing == false)
     return null;
@@ -1248,16 +1278,14 @@ if (instance == null && createIfMissing == false)
 | 반복 조작 줄이기 | 칩 정리·설정처럼 자주 하는 조작을 짧게 함 | 칩 검색·전체 해제·툴팁, 환경설정·일시정지 메뉴 | §8.5·§8.6 |
 | 전투 피드백 | 맞혔는지·맞았는지·얼마나 셌는지를 전달 | `DamageVignette`, `PlayerHUD`, `BossHitFeedback`, `BossDizzy`, `BossDeathState` | §9.2·§9.3 |
 | 예고와 박자 | 보스 공격의 범위와 타이밍을 미리 읽게 함 | `AttackTelegraph`, `BossTelegraph.shader` | §9.4 |
-| 연출과 소리 | 타이틀·보스 등장 장면, 그 밖의 시각 효과, 효과음·BGM | `TitleCinematicDirector`, `BossIntroCinematic`, `AnimStateSoundSender`, `SoundManager` | §9.5~§9.7 |
+| 가려진 대상 드러내기 | 잡을 대상, 보스에 가려진 플레이어, 물체에 가려진 보스가 보이게 함 | `PsychokinesisOutlineFeature`, `BossOcclusionOutlineFeature` | §9.5 |
+| 연출과 소리 | 타이틀·보스 등장 장면, 그 밖의 시각 효과, 효과음·BGM | `TitleCinematicDirector`, `BossIntroCinematic`, `AnimStateSoundSender`, `SoundManager` | §9.6~§9.8 |
 
 UI 전반에 같은 규칙 세 가지를 적용했습니다.
 
 - **연출은 실제 시간으로 진행합니다.** 히트스톱·시간 정지·일시정지 메뉴로 게임 시간이 멈춰도 메시지·창·HUD 연출은 멈추지 않습니다.
 - **크기는 1920×1080 기준입니다.** 캔버스는 Scale With Screen Size(Expand)로 두고, 테두리 두께·가장자리 부드럽게 하기 같은 값은 화면 픽셀을 캔버스 단위로 바꿔 씁니다.
 - **같은 정보는 같은 생김새로 보입니다.** 키 안내는 모두 같은 키캡, 패널·슬롯·게이지는 모두 같은 그림자·1px 테두리·반투명 트랙입니다.
-
-앞 장에서 다룬 UX 요소는 해당 절에 있습니다.
-미니맵 이동 영역과 보스·플레이어 가림 실루엣은 §5.7, 카메라 시점 전환은 §5.6, 화면·UI·소리가 함께 바뀌는 씬 전환은 §7입니다.
 
 ### 8.2 조작 안내 — 조준점·키 안내·시스템 메시지
 
@@ -1273,10 +1301,10 @@ UI 전반에 같은 규칙 세 가지를 적용했습니다.
 | + (상하좌우 짧은 선) | 기본 공격 사거리 안에서 화면 중앙에 처음 닿는 대상이 살아 있는 적일 때 | 지금 쏘면 맞음 |
 | × (대각선 짧은 선) | 플레이어의 기본 공격·투척·휘두르기가 실제 피해를 줬을 때 | 적중 확인, 짧게 퍼지며 사라짐 |
 
-![보스를 조준한 순간의 조준점 — 링과 +·× 표시가 함께 보임](images/crosshair-hit.png)
+![조준점 — 링과 +·× 표시가 동시에 표시됨](images/crosshair-hit.png)
 
 ```csharp
-// Crosshair.Update — 조준점 링·사거리 표시 조건
+// Crosshair.Update() — 조준점 링·사거리 표시 조건
 PsychokinesisObject focused = PsychokinesisObject.OutlinedObject;
 // 염동력 대상이 없으면 말을 걸 수 있는 NPC에도 같은 링을 띄운다 (외곽선과 같은 우선순위)
 MissionNPC npc = focused == null ? MissionNPC.OutlinedNPC : null;
@@ -1371,10 +1399,34 @@ TextMeshPro의 외곽선·그림자는 셰이더 키워드라, 실행 중에 켜
 - 슬롯 바탕색은 칩 칸 스프라이트와 짝지은 색이라, 칩 창의 색과 HUD 슬롯의 색이 이어집니다.
 - 넉다운 뒤 빠른 기상의 쿨타임이 도는 동안에만 슬롯 줄 위에 같은 모양의 기상기 슬롯을 띄웁니다.
 
+#### 물리 검사로 굽는 미니맵 이동 영역
+
+미니맵은 위에서 본 장면만 표시하지 않고, `MinimapWalkableBaker`로 플레이어가 설 수 있는 영역의 마스크를 만듭니다.
+
+```mermaid
+%%{init: {"flowchart": {"padding": 8}}}%%
+flowchart TB
+    Bounds[대상 Collider 범위 / 격자] --> Floor[배치 Spherecast / 바닥 높이]
+    Floor --> Space[배치 OverlapCapsule / 몸체 공간]
+    Space --> Reach[선택적으로 연결 영역 탐색]
+    Reach --> Expand[플레이어 반경만큼 확장]
+    Expand --> Mask[R8 텍스처 / 미니맵 표시]
+```
+
+구의 반경으로 작은 틈을 처리하고, 캡슐이 들어갈 공간을 검사해 벽 안쪽이나 머리 공간이 없는 칸을 제외합니다.
+연결 영역 옵션이 켜져 있으면 플레이어 시작 지점에서 상하좌우로 탐색하고, 허용 높이 차를 넘는 이웃은 연결하지 않습니다.
+마지막으로 플레이어 반경만큼 영역을 넓혀 몸체가 닿을 수 있는 가장자리를 표시합니다.
+
+물리 검사는 `SpherecastCommand`·`OverlapCapsuleCommand`의 배치 Job을 사용하지만,
+각 단계에서 `Complete`로 완료를 기다립니다. 마스크는 씬 시작 시 한 번 생성합니다.
+`MinimapGround`와 전용 셰이더가 결과 텍스처를 표시하고, 활성 물체·보스 등의 표시는 미니맵 계층에서 별도로 처리합니다.
+
+![미니맵 — 플레이어가 갈 수 있는 회색 영역 위에 보스와 물체가 마커로 표시됨](images/minimap.png)
+
 #### 회전하는 원형 미니맵
 
 `Minimap`은 플레이어를 중심으로 카메라 Yaw에 맞춰 회전하는 원형 지도입니다.
-바닥은 씬 시작 시 구운 이동 가능 영역(§5.7)을 단색 실루엣과 외곽선으로만 그리고, 보스와 염동력 물체는 점, 플레이어는 바라보는 방향이 뾰족한 점으로 그립니다.
+바닥은 씬 시작 시 구운 이동 가능 영역(위 「물리 검사로 굽는 미니맵 이동 영역」)을 단색 실루엣과 외곽선으로만 그리고, 보스와 염동력 물체는 점, 플레이어는 바라보는 방향이 뾰족한 점으로 그립니다.
 범위 밖의 대상은 외곽선 위의 테두리 원과 바깥쪽 화살표로 방향을 알려 줍니다.
 모든 마커에 테두리와 부드러운 그림자를 깔아 바닥 색과 상관없이 눈에 띄게 했습니다.
 메인 카메라가 `LateUpdate`에서 회전을 마친 뒤에 지도가 따라 돌도록 실행 순서를 늦췄습니다.
@@ -1404,7 +1456,7 @@ TextMeshPro의 외곽선·그림자는 셰이더 키워드라, 실행 중에 켜
 슬롯 스킬이 바뀌면 기존 `CooldownReduced` 구독을 해제하고 새 스킬의 이벤트에 연결해 강조 연출을 실행합니다.
 전투당 한 번만 발동하는 스킬은 사용 후 덮개를 유지하되 긴 내부 쿨타임을 초 단위로 표시하지 않습니다.
 
-소스: `VectorBar.cs`, `SkillSlotGraphic.cs`, `SkillSlotHUD.cs`, `Minimap.cs`, `BossHUD.cs`, `PlayerHUD.cs`.
+소스: `VectorBar.cs`, `SkillSlotGraphic.cs`, `SkillSlotHUD.cs`, `MinimapWalkableBaker.cs`, `MinimapGround.cs`, `Minimap.cs`, `BossHUD.cs`, `PlayerHUD.cs`.
 
 ### 8.4 UI 연출 부품과 스타일 통일
 
@@ -1453,7 +1505,7 @@ HUD 프리팹을 기준 스타일로 삼고, 해상도가 바뀌어도 UI 크기
 | `WindowCloseButtonInstaller` · `WindowTitleBarUnifier` | 환경설정·임무·증강 칩 창에 같은 X 버튼을 두고 제목줄을 맞춤 |
 | `ResultScreenEnhancer` | 임무 성공·실패 화면에 `ResultBanner` 강조와 보상 칸을 붙임 |
 
-![같은 규칙으로 맞춘 창 — 임무 목록·임무 이동·조작 가이드·환경설정의 제목줄과 우상단 X 버튼](images/ui-windows.jpg)
+![같은 규칙으로 맞춘 창 — 임무 목록·임무 이동·조작 가이드·환경설정의 제목줄과 닫기 버튼](images/ui-windows.jpg)
 
 `UICanvasScaleBaker`는 문제를 고치기 위해 만든 도구입니다.
 배율이 걸린 창은 같은 글자 크기를 써도 다른 창보다 작게 보였고, `VectorPanel` 테두리가 화면 1px보다 얇게 그려져 흐렸습니다.
@@ -1528,7 +1580,7 @@ AI가 "컴파일 오류 없음"이라고 보고한 첫 버전은 Unity 콘솔에
 | `상` | 사이 | 다음 글자의 초성(ㅇ)이 잠깐 받침으로 붙음 |
 
 ```csharp
-// KoreanSearch.IsTypingToward — 조합 중인 글자 q가 계속 치면 n이 되는지
+// KoreanSearch.IsTypingToward() — 조합 중인 글자 q가 계속 치면 n이 되는지
 if (Cho(q) != Cho(n)) return false;
 int qv = Jung(q), nv = Jung(n);   // 중성 번호
 int qj = Jong(q), nj = Jong(n);   // 종성 번호 (0 = 받침 없음)
@@ -1548,7 +1600,7 @@ return IsSyllable(next) && Choseong[Cho(next)] == Jongseong[qj]; // 다음 글�
 `ChipPanelHotkey`·`PauseMenuUI`·`MissionNPC`가 이 값을 먼저 확인합니다.
 
 ```csharp
-// TextInputFocus — 입력 칸이 Esc로 입력을 끝낸 프레임도 입력 중으로 본다
+// TextInputFocus.IsTyping — 입력 칸이 Esc로 입력을 끝낸 프레임도 입력 중으로 봄
 public static bool IsTyping
 {
     get
@@ -1592,9 +1644,9 @@ public static bool IsTyping
 카메라 속도는 Inspector의 `mouseSensitivity`를 덮어쓰지 않고 입력 회전량에 배율로 곱합니다.
 
 ```csharp
-// GameSettings: 저장된 0~1 값을 배율로 변환
+// GameSettings.CameraRotationScale — 저장된 0~1 값을 배율로 변환
 public static float CameraRotationScale => Mathf.Pow(4f, Data.cameraRotationSpeed * 2f - 1f);
-// CameraController.UpdateRotation: 일반 마우스 회전 경로의 일부
+// CameraController.UpdateRotation() — 일반 마우스 회전 경로의 일부
 float sensitivity = mouseSensitivity * GameSettings.CameraRotationScale;
 yaw += delta.x * sensitivity;
 pitch -= delta.y * sensitivity;
@@ -1644,10 +1696,11 @@ BGM 소스는 현재 `SoundManager`의 비공개 필드를 Reflection으로 찾�
 |---|---|
 | §9.2 플레이어 전투 피드백 | 피격 강도별 비네트·체력바·카메라 흔들림·히트스톱, 밀려남과 빠른 기상 |
 | §9.3 보스 전투 피드백 | 피해 구간별 연출, 기절·그로기 자세, 포효·발밑 먼지, 절차적 타격 효과, 마무리 일격과 사망 |
-| §9.4 공격 예고의 박자 | 차오르는 범위 표시와 시간 정지 연동 |
-| §9.5 타이틀·보스 등장 연출 | 타이틀 시네마틱·홀로그램, 보스 등장 카메라 |
-| §9.6 그 밖의 시각 효과 | 생성 파편 텍스처, 보호막 해제 |
-| §9.7 소리 연출 | 애니메이션 효과음, BGM 전환, 볼륨·음소거 |
+| §9.4 공격 예고 | 차오르는 범위 표시와 시간 정지 연동, 바닥에만 붙는 데칼과 스텐실 마스크 |
+| §9.5 외곽선과 가림 | 염동력 대상 외곽선, 렌더 패스 구성, 피격 번쩍임, 보스·플레이어 가림 실루엣 |
+| §9.6 타이틀·보스 등장 연출 | 타이틀 시네마틱·홀로그램, 보스 등장 카메라 |
+| §9.7 그 밖의 시각 효과 | 생성 파편 텍스처, 보호막 해제 |
+| §9.8 소리 연출 | 애니메이션 효과음, BGM 전환, 볼륨·음소거 |
 
 §8.1의 규칙대로 대부분의 연출은 실제 시간으로 진행해 히트스톱 중에도 보입니다.
 마무리 일격의 충격과 사망 홀로그램처럼 슬로모션에 맞춰 느려져야 하는 연출만 게임 시간으로 진행합니다.
@@ -1659,17 +1712,17 @@ BGM 소스는 현재 `SoundManager`의 비공개 필드를 Reflection으로 찾�
 | 셰이더 | 쓰는 연출 | 핵심 기법 | 본문 |
 |---|---|---|---|
 | `TimeFreezeHologram` | 시간 정지 막 | 도입한 홀로그램 셰이더에 높이로 쓸어 올리는 마스크와 정지 순간 정점 글리치를 더함 | §4.3 |
-| `PsychokinesisOutline` | 염동력 대상·NPC 외곽선 | 4× MSAA 마스크의 커버리지로 경계 거리를 근사해 계단 없는 외곽선 | §5.7 |
-| `BossOcclusionOutline` | 가려진 플레이어 외곽선, 가려진 보스 실루엣 | 보스 전용 깊이와 장면 깊이를 비교하고, 거리 간격과 페이드로 맞닿은 부위의 깜빡임을 줄임 | §5.7 |
-| `BossTelegraph` | 보스 공격 범위 예고 | 깊이로 표면 위치를 되살리는 화면 공간 데칼, 거리 함수 도형, 차오르는 진행도 | §5.7 · §9.4 |
-| `TelegraphMask` | 예고가 몸·소품에 묻지 않게 | 바닥 외 물체에 스텐실 비트(128)를 표시, 색·깊이는 그대로 | §5.7 |
-| `HitFlash` | 피격 번쩍임 | 대상 메시 위에 가산 림을 덧그림, 대상별 세기 | §5.7 |
+| `PsychokinesisOutline` | 염동력 대상·NPC 외곽선 | 4× MSAA 마스크의 커버리지로 경계 거리를 근사해 계단 없는 외곽선 | §9.5 |
+| `BossOcclusionOutline` | 가려진 플레이어 외곽선, 가려진 보스 실루엣 | 보스 전용 깊이와 장면 깊이를 비교하고, 거리 간격과 페이드로 맞닿은 부위의 깜빡임을 줄임 | §9.5 |
+| `BossTelegraph` | 보스 공격 범위 예고 | 깊이로 표면 위치를 되살리는 화면 공간 데칼, 거리 함수 도형, 차오르는 진행도 | §9.4 |
+| `TelegraphMask` | 예고가 몸·소품에 묻지 않게 | 바닥 외 물체에 스텐실 비트(128)를 표시, 색·깊이는 그대로 | §9.4 |
+| `HitFlash` | 피격 번쩍임 | 대상 메시 위에 가산 림을 덧그림, 대상별 세기 | §9.5 |
 | `ScreenGlitch` | 사망·씬 전환의 화면 꺼짐 | 후처리 뒤 화면을 접어 점으로 줄임, 가로 띠 밀림·RGB 분리, 값이 0이면 패스 생략 | §7.3 |
 | `HitImpact` | 타격 섬광 | 시드별 빛줄기·중심 섬광·베기 형태를 절차적으로 합성, 깊이로 가려진 빛줄기를 약하게 | §9.3 |
 | `HitDebris` | 강한 피격의 빛 입자 | 늘어난 빌보드 안의 빛줄기, 미리 곱한 알파로 밝은 배경에서도 보임 | §9.3 |
 | `ForceRipple` | 염동파 고리, 보스 포효 음파 | 불투명 텍스처를 UV 오프셋으로 굴절시키는 고리와 볼록 렌즈 | §9.3 |
 | `GroundDust` | 흙먼지·바닥 충격파 | 입자별 난수와 수명, 노이즈 침식, 빛 방향 밀도 차이로 입체감 | §9.3 |
-| `TriplanarRock` | UV 없는 생성 파편 | 오브젝트 공간 트라이플래너, URP Lit과 같은 조명 | §9.6 |
+| `TriplanarRock` | UV 없는 생성 파편 | 오브젝트 공간 트라이플래너, URP Lit과 같은 조명 | §9.7 |
 
 보스 사망과 휴머노이드 순간이동의 홀로그램은 도입한 홀로그램 셰이더의 머티리얼을 그대로 쓰고, 지금 자세를 굽는 처리와 진행을 코드로 맡습니다(§9.3).
 
@@ -1699,13 +1752,13 @@ BGM 소스는 현재 `SoundManager`의 비공개 필드를 Reflection으로 찾�
 플레이어 피격, 보스 피격 구간, 보스 그로기·사망이 모두 같은 `AddTrauma(양, 사라지는 시간)`를 부릅니다.
 
 ```csharp
-// CameraController — 충격을 trauma로 쌓고, 세기는 trauma²
+// CameraController.AddTrauma() — 충격을 trauma로 쌓고 사라지는 속도 설정
 public void AddTrauma(float amount, float fadeTime = 0f)
 {
     trauma = Mathf.Clamp01(trauma + amount);
     currentDecay = fadeTime > 0f ? trauma / fadeTime : traumaDecay;
 }
-// UpdateTrauma 중 일부
+// CameraController.UpdateTrauma() — 일부: 세기는 trauma², 노이즈 시간은 실제 시간으로 진행
 float power = trauma * trauma;
 noiseTime += Time.unscaledDeltaTime * shakeFrequency;
 ```
@@ -1736,9 +1789,9 @@ noiseTime += Time.unscaledDeltaTime * shakeFrequency;
 | 강 | 6배 이상 또는 넉다운 반응 | 가장 큰 충격·밝은 점광원·긴 히트스톱·센 흔들림, 카메라 FOV 줌 펀치 |
 | 마무리 일격 | 숨을 끊는 피격 | 가장 큰 충격과 많은 입자를 슬로모션 배율대로 느리게 퍼뜨림 |
 
-![약 구간 — 훈련용 더미에 작은 충격](images/hit-effect-s.png) ![중 구간 — 더 큰 충격과 빛줄기](images/hit-effect-m.png) ![강 구간 — 가장 큰 충격과 긴 빛줄기](images/hit-effect-l.png)
+![약 구간 피격 연출 — 작은 섬광과 빛줄기 파티클](images/hit-effect-s.png) ![중 구간 피격 연출 — 더 큰 섬광과 빛줄기 파티클](images/hit-effect-m.png) ![강 구간 — 큰 섬광과 긴 빛줄기 파티클](images/hit-effect-l.png)
 
-![페르데로스에게 마무리 일격이 들어가는 순간의 큰 섬광과 빛줄기](images/finishing-blow.png)
+![마무리 일격 연출 — 가장 큰 섬광과 빛줄기 파티클](images/finishing-blow.png)
 
 구간은 받은 피해를 고정 수치가 아니라 **공격자의 현재 공격력**과 비교해 정합니다.
 공격력 칩을 끼우거나 보스가 달라져도 같은 종류의 공격은 같은 구간에 들어가도록 하기 위해서입니다.
@@ -1747,7 +1800,7 @@ noiseTime += Time.unscaledDeltaTime * shakeFrequency;
 약한 피격은 기본 공격처럼 자주 들어오므로 히트스톱을 걸지 않아 조작 흐름을 끊지 않습니다.
 
 ```csharp
-// BossHitFeedback.GetTier
+// BossHitFeedback.GetTier() — 받은 피해를 공격력 배율과 비교해 피격 단계 결정
 if (damageEvent.Info.Reaction == HitReaction.Knockdown) return HitTier.Strong;
 int atk = damageEvent.Sender is CombatEntity attacker && attacker != null ? attacker.CurrentStats.Atk : 0;
 if (atk <= 0) atk = fallbackAtk;
@@ -1757,7 +1810,7 @@ return HitTier.Weak;
 ```
 
 충격 효과는 히트스톱 중에도 보이도록 실제 시간으로 진행하고, 마무리 일격만 슬로모션에 맞춰 게임 시간으로 퍼지게 합니다.
-루트 캡슐 기준으로 맞은 지점은 허공일 수 있어, 카메라에서 몸 중심을 바라봤을 때 처음 닿는 부위 표면으로 옮겨 터뜨립니다(§5.7 몸체 기준 타격 지점).
+루트 캡슐 기준으로 맞은 지점은 허공일 수 있어, 카메라에서 몸 중심을 바라봤을 때 처음 닿는 부위 표면으로 옮겨 터뜨립니다(§5.4 몸체 기준 타격 지점).
 강한 피격의 빛 입자는 `HitDebris.shader`로 끝이 둥글게 흐려지는 빛줄기처럼 그리고, 미리 곱한 알파로 배경을 눌러 밝은 곳에서도 보이게 합니다.
 
 #### 무력화·기절을 자세로 보여 줌
@@ -1816,7 +1869,7 @@ return HitTier.Weak;
 보스의 숨을 끊는 순간은 한 번뿐인 장면이라 가장 긴 연출을 붙였습니다.
 
 ```mermaid
-%%{init: {"flowchart": {"rankSpacing": 20, "nodeSpacing": 24, "padding": 6}}}%%
+%%{init: {"flowchart": {"rankSpacing": 20, "nodeSpacing": 24, "padding": 8}}}%%
 flowchart TB
     Finish[마무리 일격] --> Stop[히트스톱 / 윤곽 번쩍임 / 큰 흔들림]
     Stop --> Slow[월드 슬로모션 / FOV 줌 펀치 / 큰 충격·입자]
@@ -1832,11 +1885,11 @@ flowchart TB
 홀로그램이 다 나타나면 원본을 끄고 몸 콜라이더를 트리거로 바꿔, 보이지 않는 몸에 플레이어가 막히지 않으면서 사망 잔재 입자(`BossDeathResidue`)는 부위 표면에서 계속 나오게 합니다.
 같은 홀로그램 굽기는 공용 클래스(`HologramShell`)로 분리해 휴머노이드의 순간이동 연출(`HumanoidHologramWarp`)에서도 재사용합니다.
 
-![사망 연출 — 쓰러진 페르데로스가 홀로그램으로 바뀌는 모습](images/boss-death.png)
+![사망 연출 — 쓰러진 페르데로스 보스가 홀로그램으로 바뀌어 사라지는 모습](images/boss-death.png)
 
 소스: `BossHitFeedback.cs`, `HitImpact.cs`, `HitDebris.shader`, `BossDizzy.cs`, `BossDizzyStars.cs`, `BossDizzyBreath.cs`, `BossGroggyState.cs`, `BossLyingGroundFit.cs`, `BossRoarWave.cs`, `BossFootDust.cs`, `BossDeathState.cs`, `SlowMotion.cs`, `BossDeathShed.cs`, `BossDeathResidue.cs`, `HologramShell.cs`.
 
-### 9.4 공격 예고의 박자 — 차오르는 범위 표시
+### 9.4 공격 예고 — 범위·박자·바닥에 붙는 표시
 
 공격 예고는 범위만이 아니라 **언제 맞는지**도 보여 줍니다.
 `AttackTelegraph`는 바닥에 범위 외곽선을 그린 뒤 안쪽을 정해진 시간 동안 차오르게 하고, 공격이 들어가는 순간 가득 채운 뒤 사라집니다.
@@ -1854,16 +1907,110 @@ flowchart TB
 `Show`에 보스나 물체의 시계를 넘기면 그 시계가 멈춘 동안 차오름과 사라짐도 멈춥니다.
 시간 정지로 보스를 멈춰 두면 예고도 그 진행도에서 멈춰, 정지가 풀린 뒤 남은 시간을 그대로 읽을 수 있습니다.
 
-![차르카로사우루스의 공격 예고 — 바닥의 사각형 범위가 차오르는 중](images/telegraph-fill.png)
+![차르카로사우루스 보스의 공격 예고 — 바닥의 사각형 범위가 차오르는 중](images/telegraph-fill.png)
+
+#### 바닥에만 붙는 표시 — 화면 공간 데칼과 스텐실 마스크
 
 표시는 바닥 높이 근처를 덮는 상자 하나에 `BossTelegraph.shader`로 그리는 화면 공간 데칼입니다.
-장면 깊이로 픽셀의 표면 위치를 되살려 상자 안에 있고 위를 향한 면에만 모양을 그리므로, 단차 위에도 틈 없이 붙고 벽 옆면·구멍 아래에는 그리지 않습니다.
+장면 깊이로 픽셀의 월드 위치를 되살리고 화면 미분으로 표면 방향을 구해, 상자 안에 있고 위를 향한 면에만 모양을 그립니다.
+그래서 단차 위에도 틈 없이 붙고 벽 옆면·구멍 아래에는 그리지 않습니다.
+모양은 원·부채꼴·상자의 거리 함수로 만들고, `fwidth`로 경계를 완화합니다.
 플레이어 발바닥 위 원기둥 영역은 그리지 않되 발바닥과 같은 높이의 바닥은 남겨, 몸에는 예고가 묻지 않으면서 발밑의 예고는 보이게 합니다.
-보스·소품 몸에 묻는 것을 막는 스텐실 마스크와 도형 판정은 §5.4·§5.7에서 다룹니다.
+
+보스 몸체·소품 위로 표시가 번지는 것은 `TelegraphMaskFeature`가 따로 막습니다.
+불투명 렌더 뒤 Ground 외 물체와 등록한 렌더러에 스텐실 비트 128을 기록하고(색·깊이는 그대로), 예고가 그 위에 묻지 않게 합니다.
+표시와 판정이 같은 `TelegraphShape`를 쓰는 구조는 §5.4에 있습니다.
 
 소스: `AttackTelegraph.cs`, `BossTelegraph.shader`.
 
-### 9.5 타이틀·보스 등장 연출
+### 9.5 외곽선과 가림 — 안 보이는 대상을 드러내기
+
+염동력 대상과 NPC 외곽선은 URP RendererFeature로 실루엣 마스크를 만든 뒤 합성합니다.
+MSAA 마스크로 가장자리 표현을 보완하며, 시간 정지 오버레이와 미니맵 카메라의 표시 범위는 따로 처리합니다.
+
+#### 렌더 패스별 마스크와 합성 책임
+
+| RendererFeature | 별도 처리 |
+|---|---|
+| `PsychokinesisOutlineFeature` | 후처리 전에 4× MSAA 실루엣을 만들고 해석된 마스크를 화면 외곽선으로 합성 |
+| `BossOcclusionOutlineFeature` | 보스 깊이와 플레이어 실루엣을 따로 준비해 보스에 가려진 플레이어의 외곽선, 다른 물체에 가려진 보스의 반투명 실루엣을 합성 |
+| `TelegraphMaskFeature` | 불투명 렌더 뒤 Ground 외 물체와 등록 렌더러에 스텐실 128을 기록해 예고가 몸·소품 위에 묻는 현상 제한 (§9.4) |
+| `HitFlashFeature` | 투명 렌더 뒤 활성 피격 대상의 서브메시를 덧그리고 대상별 강도를 전달 |
+
+화면 효과 하나로 모든 표시를 처리하는 대신 필요한 색·깊이·마스크를 RenderGraph의 읽기·쓰기 대상으로 선언합니다.
+직접 `DrawRenderer`하는 경로는 카메라 컬링 마스크만으로 제외되지 않으므로, 대상 카메라를 별도로 거르는 API가 있습니다.
+효과가 없을 때는 패스 등록을 생략합니다.
+시간 정지 위에 피격 번쩍임을 보이게 하려면 RendererFeature의 순서도 설정해야 합니다.
+
+#### 계단 없는 외곽선과 피격 번쩍임
+
+외곽선 셰이더(`PsychokinesisOutline.shader`)는 원본 픽셀은 칠하지 않고 마스크의 바깥 경계만 합성합니다.
+MSAA로 그린 마스크가 Resolve되면 r 채널에 픽셀 커버리지가 남으므로, 이웃 픽셀 중심에서 (0.5 − 커버리지)만큼 떨어진 곳을 실제 경계로 근사해 픽셀 단위 계단을 없앱니다.
+바깥 경계는 이 거리로, 안쪽 경계는 오브젝트가 덮지 않은 비율만큼만 칠해 양쪽을 모두 부드럽게 합니다.
+피격 번쩍임(`HitFlash.shader`)은 피격 대상의 메시 위에 가산 림을 덧그리고, 세기는 대상마다 전역 값으로 받습니다.
+
+소스: `PsychokinesisOutlineFeature.cs`, `PsychokinesisOutline.shader`, `HitFlash.shader`.
+
+#### 서로 가리는 보스와 플레이어 — 가려진 쪽을 드러내는 두 가지 표현
+
+큰 보스와 싸우면 두 가지 가림이 생깁니다.
+보스가 플레이어를 가리면 내 캐릭터의 위치를 놓치고, 염동력으로 들고 있는 물체나 기둥·잔해가 보스를 가리면 보스의 자세와 공격 준비를 읽지 못합니다.
+1차 시연에서 강사·동료 수강생·지인 모두에게 "들고 있는 물체가 시야를 가려 보스의 움직임을 볼 수 없다"는 피드백을 받았습니다(§11.2).
+처음에는 보스에 가려진 플레이어의 외곽선만 그렸고, 이후 같은 RendererFeature에 **다른 물체에 가려진 보스 부분을 반투명 실루엣으로 채우는 패스**를 추가했습니다.
+
+| 상황 | 표시 | 그리는 조건 |
+|---|---|---|
+| 보스가 플레이어를 가림 | 가려진 부분에만 플레이어 외곽선 | 보스·플레이어의 화면 사각형이 겹칠 때만 플레이어 마스크를 만듦 |
+| 다른 물체가 보스를 가림 | 가려진 보스 부분을 채우기 색으로 덮음 | 보스가 화면 안에 있고 채우기 색의 알파가 0보다 클 때 |
+
+![들고 있는 물체(초록 외곽선)에 가려진 훈련용 더미가 붉은 실루엣으로 보이는 화면](images/occlusion-silhouette.png)
+
+```mermaid
+%%{init: {"flowchart": {"padding": 8}}}%%
+flowchart TB
+    Boss[보스 불투명 서브메시 /<br>커버리지·깊이] --> Player{플레이어와<br>화면에서 겹침?}
+    Player -->|예| PMask[플레이어 마스크 /<br>보스에 가려짐·<br>맨 앞에 보임]
+    Player -->|아니오| Black[검은 텍스처로<br>대체]
+    Boss --> Ignore[무시할 레이어 깊이 /<br>수련장 벽]
+    PMask --> Outline[가려진 플레이어<br>외곽선]
+    PMask --> Fill[가려진 보스<br>실루엣 채우기]
+    Black --> Fill
+    Ignore --> Fill
+%% 격자: Boss Player - - | Ignore Black PMask Outline | - Fill - -
+%% 화살표 Player -> PMask: 나감=오른쪽 들어감=위
+%% 화살표 PMask -> Fill: 나감=아래 들어감=오른쪽
+%% 화살표 Ignore -> Fill: 나감=아래 들어감=왼쪽
+```
+
+채우기 패스는 보스 전용 깊이 텍스처와 카메라 깊이를 비교합니다.
+보스 앞면보다 다른 물체가 `_FillMinGap`(기본 0.3m) 이상 앞에 있을 때부터 0.4m에 걸쳐 진해지게 해,
+땅에 살짝 묻힌 발처럼 맞닿은 부분이 깜빡이며 칠해지는 현상을 줄였습니다.
+
+```hlsl
+// BossOcclusionOutline.shader — Screen Fill 패스의 일부
+half hidden = saturate((bossDepth - sceneDepth - _FillMinGap) / FILL_FADE_DISTANCE);
+half player = SAMPLE_TEXTURE2D_X(_BossOcclusionPlayerMask, sampler_PointClamp, uv).b;
+half alpha = boss.r * hidden * (1.0 - player) * (1.0 - behindIgnored);
+return half4(_FillColor.rgb, _FillColor.a * alpha);
+```
+
+플레이어 마스크의 `b` 채널은 "화면 맨 앞에 보이는 플레이어 면"이며, 이 부분은 채우기에서 빼서 실루엣이 플레이어 위를 덮지 않게 합니다.
+플레이어가 보스와 겹치지 않는 프레임에는 플레이어 마스크를 그리지 않고 검은 텍스처를 넘겨 패스 하나를 줄입니다.
+보스의 효과·공격 예고처럼 반투명한 서브메시는 깊이에 남지 않아 엉뚱한 곳이 채워지므로, `renderQueue`로 불투명 서브메시만 골라 마스크를 그립니다.
+
+`BossHUD`는 대상에 맞게 채우기 설정을 넘깁니다.
+쓰러진 보스는 채우지 않고, 수련장 허수아비는 `Wall` 레이어를 무시할 가림으로 넘겨 훈련 공간의 벽 뒤에 있을 때는 칠하지 않습니다.
+무시할 레이어의 불투명 물체는 `RendererList`로 따로 깊이를 그려, 그 물체가 보스 앞을 막는 부분만 채우기에서 뺍니다.
+
+| 선택 | 이점 | 비용·제약 |
+|---|---|---|
+| 기존 외곽선 Feature에 채우기 패스 추가 | 보스 깊이 마스크를 외곽선과 실루엣이 같이 사용 | 한 Feature의 분기·텍스처 수명 관리가 늘어남 |
+| 거리 간격 + 페이드로 가림 판정 | 맞닿은 부위의 깜빡임 감소 | 아주 가까이 붙은 얇은 물체 뒤는 덜 칠해질 수 있음 |
+| 무시할 레이어를 별도 깊이로 그림 | 수련장 벽처럼 의도된 가림은 그대로 둠 | 채우기를 켠 프레임마다 해당 레이어를 한 번 더 그림 |
+
+소스: `BossOcclusionOutlineFeature.cs`, `BossOcclusionOutline.shader`, `BossHUD.cs`.
+
+### 9.6 타이틀·보스 등장 연출
 
 #### 타이틀 전용 시네마틱 구성
 
@@ -1873,7 +2020,7 @@ flowchart TB
 
 타이틀 내부의 짧은 정지는 전투용 `HitStop`과 별개로 시간 배율을 잠시 매우 낮추는 연출입니다.
 
-![타이틀 시네마틱 — 날아온 컨테이너를 받아치는 휴머노이드](images/title-cinematic.jpg)
+![타이틀 시네마틱 — 날아온 물체를 받아치는 휴머노이드](images/title-cinematic.jpg)
 
 #### 타이틀 홀로그램의 박동과 교체
 
@@ -1891,11 +2038,11 @@ flowchart TB
 카메라 거리는 보스 메시를 지금 자세로 구워 화면 세로의 정해진 비율을 채우도록 계산하므로, 크기가 다른 보스도 비슷한 구도로 잡힙니다.
 카메라가 플레이어 추적 시점으로 돌아온 뒤에 보스 상태 머신을 시작하고 조작을 풀어 줍니다.
 
-![보스 등장 연출 — 검을 든 휴머노이드와 「최심부 인간 병기 휴머노이드」 이름 표시](images/boss-intro.jpg)
+![보스 등장 연출 — 보스별 대표 패턴 1종의 애니메이션 재생과 수식어·이름 표시](images/boss-intro.jpg)
 
 소스: `TitleCinematicDirector.cs`, `TitleHologramPulse.cs`, `BossIntroCinematic.cs`, `BossIntroTitle.cs`.
 
-### 9.6 그 밖의 시각 효과 — 생성 파편 텍스처와 보호막 해제
+### 9.7 그 밖의 시각 효과 — 생성 파편 텍스처와 보호막 해제
 
 UV가 없는 생성 콘크리트 파편에는 `TriplanarRock.shader`가 오브젝트 공간의 세 방향 투영으로 텍스처를 적용합니다.
 이는 메시 생성·공유 머티리얼과 함께 사용하는 렌더링 구성입니다.
@@ -1912,7 +2059,7 @@ UV가 없는 생성 콘크리트 파편에는 `TriplanarRock.shader`가 오브�
 
 소스: `TriplanarRock.shader`, `BarrierEffect.cs`.
 
-### 9.7 소리 연출
+### 9.8 소리 연출
 
 애니메이션·시간 제어와 오디오의 동작을 연결합니다.
 `AnimStateSoundSender`는 애니메이션 진행률에 맞는 효과음과 중복 재생 제한을 담당합니다.
@@ -1946,7 +2093,7 @@ UV가 없는 생성 콘크리트 파편에는 `TriplanarRock.shader`가 오브�
 
 저주파 필터는 AudioListener에 연결해 SoundManager 외부에서 재생한 환경음에도 적용합니다.
 
-### 9.8 고민과 선택
+### 9.9 고민과 선택
 
 | 선택 | 이점 | 비용·제약 |
 |---|---|---|
@@ -1956,7 +2103,7 @@ UV가 없는 생성 콘크리트 파편에는 `TriplanarRock.shader`가 오브�
 월드의 시간 정지·히트스톱, 실제 시간으로 진행할 화면 전환·소리, 대상별 UI 갱신은 시간 기준이 다릅니다.
 각 연출이 사용하는 시간과 상태 소유자를 구분해 연결하고, 종료·비활성화 때 남은 효과를 정리합니다.
 
-추가 소스: `PsychoSlamSkill.cs`, `HitStop.cs`, `HitPoint.cs`, `MonsterRegistry.cs`, `BossHitboxRegistrar.cs`, `SoundManager.cs`.
+추가 소스: `PsychoSlamSkill.cs`, `HitStop.cs`, `SoundManager.cs`.
 
 ---
 
@@ -1970,7 +2117,7 @@ UV가 없는 생성 콘크리트 파편에는 `TriplanarRock.shader`가 오브�
 - 겹칠 때 무작정 밀어내도록 하면 물리적으로 말이 안 되는 움직임이 나옴
 - 대형 보스의 배 아래쪽으로 들어가면 무적이 됨
 
-이 문제들을 자연스럽게 풀기 위해 많이 고민했고, §5.8의 부위별 충돌 무시·측면 이동·16방향 탈출 검사 구조로 구현했습니다. 다만 지금 방식도 정답은 아니라고 생각합니다.
+이 문제들을 자연스럽게 풀기 위해 많이 고민했고, §5.7의 부위별 충돌 무시·측면 이동·16방향 탈출 검사 구조로 구현했습니다. 다만 지금 방식도 정답은 아니라고 생각합니다.
 2D에서는 고려할 필요도 없던 문제였지만, 3D에서는 생각보다 고려할 문제가 많았습니다.
 
 플레이어 자세도 오래 걸린 부분입니다. 플레이어 모델링과 애니메이션을 모두 상용 에셋으로 사용해 수동으로 맞춰야 하는 부분이 많았습니다.
@@ -2035,7 +2182,7 @@ UV가 없는 생성 콘크리트 파편에는 `TriplanarRock.shader`가 오브�
 
 | 받은 피드백 | 준 사람 | 반영 | 본문 |
 |---|---|---|---|
-| 들고 있는 물체가 시야를 가려 보스의 움직임을 볼 수 없어 불편함 | 강사·동료 수강생·지인 | 다른 물체에 가려진 보스 부분을 반투명 실루엣으로 채워 표시 | §5.7 |
+| 들고 있는 물체가 시야를 가려 보스의 움직임을 볼 수 없어 불편함 | 강사·동료 수강생·지인 | 다른 물체에 가려진 보스 부분을 반투명 실루엣으로 채워 표시 | §9.5 |
 | 보스 전투에서 로비로 넘어오면 플레이어가 로비에 없어, 시점이 씬 카메라의 초기 위치에 고정됨 | 동료 수강생 | 씬 정리 중 조회가 빈 Player를 만들던 경로를 막고 Player를 씬 배치 객체로만 허용 | §7.4 |
 | PC의 마우스 감도에 따라 카메라 회전이 너무 빠르거나 느림 | 동료 수강생·지인 | 환경설정에 카메라 회전 속도(0.25~4배) 추가. 환경설정을 넓히며 편의 기능으로 음소거 토글도 추가 | §8.6 환경설정 |
 | 필터가 있어도 원하는 증강 칩을 찾기 어려움 | 지인 | 초성·조합 중인 글자까지 맞추는 이름 검색과 자동 완성 | §8.5 칩 이름 검색 |
@@ -2078,7 +2225,7 @@ UV가 없는 생성 콘크리트 파편에는 `TriplanarRock.shader`가 오브�
 반면 보스 수와 콘텐츠 양이 적었고, 데미지 밸런스가 다소 맞지 않은 점이 아쉬움으로 남았습니다.
 
 가장 오래 붙잡았던 문제는 **플레이어 IK를 튜닝해 자세를 자연스럽게 만드는 일**과 **큰 보스 몸과 겹쳤을 때 자연스럽게 비켜서는 회피 로직**이었습니다.
-부위별 충돌 무시와 측면 이동, 끼었을 때의 수평 방향 탈출 검사, 대기 자세의 발·골반 보정(§5.8)을 거쳐 지금 소스의 방식으로 어느 정도 해결했습니다.
+부위별 충돌 무시와 측면 이동, 끼었을 때의 수평 방향 탈출 검사, 대기 자세의 발·골반 보정(§5.7)을 거쳐 지금 소스의 방식으로 어느 정도 해결했습니다.
 
 협업에서는 UI를 처음부터 정형화하지 않고 나중에 한 번에 통일하다 보니 손이 많이 갔습니다.
 기준 해상도와 배율이 서로 다른 창을 맞추기 위해 에디터 도구를 따로 만들어야 했습니다(§8.4).
@@ -2095,12 +2242,12 @@ UI/UX에 공을 들인 것은 제 개발 모토가 **"플레이하기 편한 경
 | 경험 | 배운 점 |
 |---|---|
 | 보스 상태 머신 설계 | 3D에서는 공격을 고를 때 거리뿐 아니라 시야각·회전까지 고려할 것이 2D보다 훨씬 많음(§5.2의 Chase·Turn) |
-| 히트박스와 몸체 충돌 | 플레이어·보스 히트박스 판정, 보스가 플레이어를 막거나 지나칠 때 Collider를 세분화하고 추가 처리를 해야 함(§5.8, §5.7) |
+| 히트박스와 몸체 충돌 | 플레이어·보스 히트박스 판정, 보스가 플레이어를 막거나 지나칠 때 Collider를 세분화하고 추가 처리를 해야 함(§5.7, §5.4) |
 | 3인칭 카메라 | 어깨 시점에서는 조준점과 물체 위치를 맞추는 계산(§2.4)과 벽 충돌·보스 근접 시점 처리(§5.6)가 따로 필요함 |
-| 렌더 파이프라인 | 외곽선·가림 실루엣·공격 예고 마스크처럼 화면 효과 하나로 안 되는 표시는 URP RendererFeature로 직접 그려야 함(§5.7) |
-| 여러 시간 기준 | 히트스톱·시간 정지·슬로모션과 실제 시간으로 진행할 UI를 구분해 연결해야 함(§4, §9.8) |
+| 렌더 파이프라인 | 외곽선·가림 실루엣·공격 예고 마스크처럼 화면 효과 하나로 안 되는 표시는 URP RendererFeature로 직접 그려야 함(§9.4, §9.5) |
+| 여러 시간 기준 | 히트스톱·시간 정지·슬로모션과 실제 시간으로 진행할 UI를 구분해 연결해야 함(§4, §9.9) |
 
 특히 **여러 셰이더를 활용해 연출을 직접 만들어 본 경험**이 인상 깊었습니다.
-시간 정지 홀로그램(§4.3), 염동력 대상 외곽선과 보스·플레이어 가림 실루엣(§5.7), 바닥에 붙는 공격 예고(§9.4), 타격 섬광·빛 입자·흙먼지와 화면 굴절 고리(§9.3)처럼 연출마다 필요한 표현을 셰이더로 만들었습니다.
+시간 정지 홀로그램(§4.3), 염동력 대상 외곽선과 보스·플레이어 가림 실루엣(§9.5), 바닥에 붙는 공격 예고(§9.4), 타격 섬광·빛 입자·흙먼지와 화면 굴절 고리(§9.3)처럼 연출마다 필요한 표현을 셰이더로 만들었습니다.
 
 다음에는 맵 기믹, 휴머노이드 보스와 분신의 합동 패턴·페이즈, 세분화된 데미지 밸런싱을 더하고 싶습니다.

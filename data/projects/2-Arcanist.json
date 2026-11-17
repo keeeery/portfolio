@@ -413,7 +413,7 @@
           {
             "kind": "code",
             "n": 1,
-            "fp": "if (allowMultiHit == false)"
+            "fp": "// HitTargetTracker.TryRegister() — 다단 히트 여부에 따라 허용 판단과 기록을 "
           }
         ]
       },
@@ -460,7 +460,7 @@
           {
             "kind": "code",
             "n": 1,
-            "fp": "PlayerController playerController = receiver.GetComponent<Pl"
+            "fp": "// HitResolver.Resolve() — 패링 창이 열려 있으면 피해 전달 전에 패링으로 처리"
           },
           {
             "kind": "image",
@@ -834,7 +834,7 @@
           {
             "kind": "code",
             "n": 1,
-            "fp": "int randomWeight = Random.Range(0, totalWeight);"
+            "fp": "// RewardCardSelector.Draw() — 카드 한 장당 등급 가중치로 누적 추첨"
           },
           {
             "kind": "image",
@@ -1092,7 +1092,7 @@
           {
             "kind": "code",
             "n": 1,
-            "fp": "if (savedRewardObtained)"
+            "fp": "// Checkpoint.OnTriggerStay2D() — 보상 획득 전까지 방이 클리어되면 갱신 저장"
           }
         ]
       },

@@ -150,48 +150,12 @@
   },
   "deck": {
     "chapters": [
-      {
-        "key": "overview",
-        "title": "프로젝트 개요",
-        "sectionPath": [
-          "1. 프로젝트 개요"
-        ]
-      },
-      {
-        "key": "pathfind",
-        "title": "기능 A — 방향과 회전 횟수를 고려한 연결 탐색",
-        "sectionPath": [
-          "2. 기능 A — 방향과 회전 횟수를 고려한 연결 탐색"
-        ]
-      },
-      {
-        "key": "board",
-        "title": "기능 B — 짝을 유지하는 보드 생성과 자동 재배치",
-        "sectionPath": [
-          "3. 기능 B — 짝을 유지하는 보드 생성과 자동 재배치"
-        ]
-      },
-      {
-        "key": "select",
-        "title": "기능 C — 선택·연결선·제거 연출의 순서 제어",
-        "sectionPath": [
-          "4. 기능 C — 선택·연결선·제거 연출의 순서 제어"
-        ]
-      },
-      {
-        "key": "progress",
-        "title": "기능 D — 한 판의 진행·시간 평가와 최고 기록",
-        "sectionPath": [
-          "5. 기능 D — 한 판의 진행·시간 평가와 최고 기록"
-        ]
-      },
-      {
-        "key": "result",
-        "title": "결과와 배운 점",
-        "sectionPath": [
-          "6. 결과와 배운 점"
-        ]
-      }
+      {"key": "overview", "title": "프로젝트 개요", "sectionPath": ["1. 프로젝트 개요"]},
+      {"key": "pathfind", "title": "기능 A — 방향과 회전 횟수를 고려한 연결 탐색", "sectionPath": ["2. 기능 A — 방향과 회전 횟수를 고려한 연결 탐색"]},
+      {"key": "board", "title": "기능 B — 짝을 유지하는 보드 생성과 자동 재배치", "sectionPath": ["3. 기능 B — 짝을 유지하는 보드 생성과 자동 재배치"]},
+      {"key": "select", "title": "기능 C — 선택·연결선·제거 연출의 순서 제어", "sectionPath": ["4. 기능 C — 선택·연결선·제거 연출의 순서 제어"]},
+      {"key": "progress", "title": "기능 D — 한 판의 진행·시간 평가와 최고 기록", "sectionPath": ["5. 기능 D — 한 판의 진행·시간 평가와 최고 기록"]},
+      {"key": "result", "title": "결과와 배운 점", "sectionPath": ["6. 결과와 배운 점"]}
     ],
     "slides": [
       {
@@ -199,29 +163,16 @@
         "chapter": "overview",
         "layout": "overview",
         "tab": "개요",
-        "title": {
-          "text": "1.1 What — 무엇을 만들었나",
-          "verbatim": true
-        },
-        "lead": {
-          "text": "사천성은 같은 그림의 카드 두 장을 연결해 제거하는 Unity 2D 퍼즐 개인 프로젝트입니다.",
-          "verbatim": true
-        },
-        "sectionPath": [
-          "1. 프로젝트 개요",
-          "1.1 What — 무엇을 만들었나"
-        ],
+        "title": {"text": "1.1 What — 무엇을 만들었나", "verbatim": true},
+        "lead": {"text": "사천성은 같은 그림의 카드 두 장을 연결해 제거하는 Unity 2D 퍼즐 개인 프로젝트입니다.", "verbatim": true},
+        "sectionPath": ["1. 프로젝트 개요", "1.1 What — 무엇을 만들었나"],
         "points": [
           {
             "label": "기능",
             "text": "10×10 보드의 카드 100장을 제한시간 안에 모두 제거하며, 다른 카드를 통과하지 않고 가로·세로로 연결할 수 있어야 합니다.",
             "verbatim": true
           },
-          {
-            "label": "기능",
-            "text": "연결선은 최대 두 번까지 방향을 바꿀 수 있고, 보드 바깥의 빈 테두리를 경유할 수도 있습니다.",
-            "verbatim": true
-          }
+          {"label": "기능", "text": "연결선은 최대 두 번까지 방향을 바꿀 수 있고, 보드 바깥의 빈 테두리를 경유할 수도 있습니다.", "verbatim": true}
         ],
         "visuals": [
           {
@@ -229,10 +180,7 @@
             "src": "images/cover.png",
             "w": 1372,
             "h": 1029,
-            "caption": {
-              "text": "메인 화면 — 제한 시간과 게임 시작 방법 안내",
-              "verbatim": true
-            }
+            "caption": {"text": "메인 화면 — 제한 시간과 게임 시작 방법 안내", "verbatim": true}
           }
         ]
       },
@@ -241,108 +189,46 @@
         "chapter": "overview",
         "layout": "full",
         "tab": "개요",
-        "title": {
-          "text": "1.2 Why — 왜 만들었나",
-          "verbatim": true
-        },
+        "title": {"text": "1.2 Why — 왜 만들었나", "verbatim": true},
         "lead": null,
-        "sectionPath": [
-          "1. 프로젝트 개요",
-          "1.2 Why — 왜 만들었나"
-        ],
+        "sectionPath": ["1. 프로젝트 개요", "1.2 Why — 왜 만들었나"],
         "points": [],
-        "visuals": [
-          {
-            "kind": "table",
-            "n": 1,
-            "fp": "문제|구현 방향"
-          }
-        ]
+        "visuals": [{"kind": "table", "n": 1, "fp": "문제|구현 방향"}]
       },
       {
         "key": "env",
         "chapter": "overview",
         "layout": "full",
         "tab": "개요",
-        "title": {
-          "text": "1.3 개발 환경",
-          "verbatim": true
-        },
+        "title": {"text": "1.3 개발 환경", "verbatim": true},
         "lead": null,
-        "sectionPath": [
-          "1. 프로젝트 개요",
-          "1.3 개발 환경"
-        ],
+        "sectionPath": ["1. 프로젝트 개요", "1.3 개발 환경"],
         "points": [],
-        "visuals": [
-          {
-            "kind": "table",
-            "n": 1,
-            "fp": "항목|내용"
-          }
-        ]
+        "visuals": [{"kind": "table", "n": 1, "fp": "항목|내용"}]
       },
       {
         "key": "arch",
         "chapter": "overview",
         "layout": "visual",
         "tab": "구조",
-        "title": {
-          "text": "1.4 전체 구조",
-          "verbatim": true
-        },
-        "lead": {
-          "text": "게임 전용 코드는 `Assets/SichuanSung/Scripts`의 5개 클래스로 구성합니다.",
-          "verbatim": true
-        },
-        "sectionPath": [
-          "1. 프로젝트 개요",
-          "1.4 전체 구조"
-        ],
+        "title": {"text": "1.4 전체 구조", "verbatim": true},
+        "lead": {"text": "게임 전용 코드는 `Assets/SichuanSung/Scripts`의 5개 클래스로 구성합니다.", "verbatim": true},
+        "sectionPath": ["1. 프로젝트 개요", "1.4 전체 구조"],
         "points": [],
-        "visuals": [
-          {
-            "kind": "mermaid",
-            "n": 1,
-            "fp": "flowchart TB"
-          }
-        ]
+        "visuals": [{"kind": "mermaid", "n": 1, "fp": "flowchart TB"}]
       },
       {
         "key": "path-state",
         "chapter": "pathfind",
         "layout": "code",
         "tab": "구현",
-        "title": {
-          "text": "2.2 핵심 기능 — 위치·방향·회전 수를 별도 상태로 관리",
-          "verbatim": true
-        },
-        "lead": {
-          "text": "같은 칸이라도 어느 방향으로 들어왔는지, 이미 몇 번 꺾었는지에 따라 이후 연결 가능성이 다릅니다.",
-          "verbatim": true
-        },
-        "sectionPath": [
-          "2. 기능 A — 방향과 회전 횟수를 고려한 연결 탐색",
-          "2.2 핵심 기능 — 위치·방향·회전 수를 별도 상태로 관리"
-        ],
-        "points": [
-          {
-            "label": "구현",
-            "text": "직선 진행은 회전 수를 유지하고, 회전 수가 2 미만일 때만 다른 방향 상태를 turn + 1로 추가합니다.",
-            "verbatim": true
-          }
-        ],
+        "title": {"text": "2.2 핵심 기능 — 위치·방향·회전 수를 별도 상태로 관리", "verbatim": true},
+        "lead": {"text": "같은 칸이라도 어느 방향으로 들어왔는지, 이미 몇 번 꺾었는지에 따라 이후 연결 가능성이 다릅니다.", "verbatim": true},
+        "sectionPath": ["2. 기능 A — 방향과 회전 횟수를 고려한 연결 탐색", "2.2 핵심 기능 — 위치·방향·회전 수를 별도 상태로 관리"],
+        "points": [{"label": "구현", "text": "직선 진행은 회전 수를 유지하고, 회전 수가 2 미만일 때만 다른 방향 상태를 turn + 1로 추가합니다.", "verbatim": true}],
         "visuals": [
-          {
-            "kind": "code",
-            "n": 1,
-            "fp": "bool[,,,] visited = new bool[width, height, 4, 3];"
-          },
-          {
-            "kind": "code",
-            "n": 2,
-            "fp": "if (card != null && !(nx == end.x && ny == end.y))"
-          }
+          {"kind": "code", "n": 1, "fp": "// PathFinder.CanConnect() — 위치·방향·회전 수마다 따로 두는 방문 기록과 역추적용 "},
+          {"kind": "code", "n": 2, "fp": "// PathFinder.CanConnect() — 목표 카드가 아닌 카드를 만나면 그 방향의 직선 탐색 중"}
         ]
       },
       {
@@ -350,31 +236,17 @@
         "chapter": "pathfind",
         "layout": "visual",
         "tab": "구현",
-        "title": {
-          "text": "2.3 핵심 기능 — 판정 경로 복원과 연결선 표시",
-          "verbatim": true
-        },
+        "title": {"text": "2.3 핵심 기능 — 판정 경로 복원과 연결선 표시", "verbatim": true},
         "lead": null,
-        "sectionPath": [
-          "2. 기능 A — 방향과 회전 횟수를 고려한 연결 탐색",
-          "2.3 핵심 기능 — 판정 경로 복원과 연결선 표시"
-        ],
+        "sectionPath": ["2. 기능 A — 방향과 회전 횟수를 고려한 연결 탐색", "2.3 핵심 기능 — 판정 경로 복원과 연결선 표시"],
         "points": [
           {
             "label": "구현",
             "text": "SavePath는 부모 상태를 역으로 따라간 뒤 순서를 뒤집고, CompressPath는 방향이 바뀌는 지점을 남겨 표시 목록을 줄입니다.",
             "verbatim": true
           },
-          {
-            "label": "구현",
-            "text": "연결선은 LineRenderer 대신 흰 텍스처 Sprite를 늘려 표현합니다.",
-            "verbatim": true
-          },
-          {
-            "label": "이유",
-            "text": "판정용 탐색과 선을 그리는 책임은 나누되, 표시에는 탐색에서 얻은 경로를 그대로 사용합니다.",
-            "verbatim": true
-          }
+          {"label": "구현", "text": "연결선은 LineRenderer 대신 흰 텍스처 Sprite를 늘려 표현합니다.", "verbatim": true},
+          {"label": "이유", "text": "판정용 탐색과 선을 그리는 책임은 나누되, 표시에는 탐색에서 얻은 경로를 그대로 사용합니다.", "verbatim": true}
         ],
         "visuals": [
           {
@@ -382,14 +254,8 @@
             "src": "images/path-border.png",
             "w": 367,
             "h": 275,
-            "caption": {
-              "text": "보드 위쪽 영역을 통해 연결된 두 카드",
-              "verbatim": true
-            },
-            "sectionPath": [
-              "2. 기능 A — 방향과 회전 횟수를 고려한 연결 탐색",
-              "2.2 핵심 기능 — 위치·방향·회전 수를 별도 상태로 관리"
-            ]
+            "caption": {"text": "보드 위쪽 영역을 통해 연결된 두 카드", "verbatim": true},
+            "sectionPath": ["2. 기능 A — 방향과 회전 횟수를 고려한 연결 탐색", "2.2 핵심 기능 — 위치·방향·회전 수를 별도 상태로 관리"]
           }
         ]
       },
@@ -398,68 +264,36 @@
         "chapter": "pathfind",
         "layout": "full",
         "tab": "선택",
-        "title": {
-          "text": "2.4 고민과 선택",
-          "verbatim": true
-        },
+        "title": {"text": "2.4 고민과 선택", "verbatim": true},
         "lead": null,
-        "sectionPath": [
-          "2. 기능 A — 방향과 회전 횟수를 고려한 연결 탐색",
-          "2.4 고민과 선택"
-        ],
+        "sectionPath": ["2. 기능 A — 방향과 회전 횟수를 고려한 연결 탐색", "2.4 고민과 선택"],
         "points": [],
-        "visuals": [
-          {
-            "kind": "table",
-            "n": 1,
-            "fp": "고민|대안|선택과 이유|비용"
-          }
-        ]
+        "visuals": [{"kind": "table", "n": 1, "fp": "고민|대안|선택과 이유|비용"}]
       },
       {
         "key": "shuffle",
         "chapter": "board",
         "layout": "code",
         "tab": "구현",
-        "title": {
-          "text": "3.2 핵심 기능 — 연결 가능한 쌍 검사와 ID 셔플",
-          "verbatim": true
-        },
-        "lead": {
-          "text": "연결 가능한 쌍이 없으면 남은 카드의 위치는 그대로 두고 ID만 섞습니다.",
-          "verbatim": true
-        },
-        "sectionPath": [
-          "3. 기능 B — 짝을 유지하는 보드 생성과 자동 재배치",
-          "3.2 핵심 기능 — 연결 가능한 쌍 검사와 ID 셔플"
-        ],
+        "title": {"text": "3.2 핵심 기능 — 연결 가능한 쌍 검사와 ID 셔플", "verbatim": true},
+        "lead": {"text": "연결 가능한 쌍이 없으면 남은 카드의 위치는 그대로 두고 ID만 섞습니다.", "verbatim": true},
+        "sectionPath": ["3. 기능 B — 짝을 유지하는 보드 생성과 자동 재배치", "3.2 핵심 기능 — 연결 가능한 쌍 검사와 ID 셔플"],
         "points": [
           {
             "label": "구현",
             "text": "IsDeadlocked는 남은 카드에서 같은 ID의 쌍만 골라 CanConnect를 호출하고, 한 쌍이라도 연결되면 즉시 끝냅니다.",
             "verbatim": true
           },
-          {
-            "label": "결과",
-            "text": "초기 보드도 이 과정을 거치므로 처음부터 한 수 이상 둘 수 있는 배치에서 플레이가 시작됩니다.",
-            "verbatim": true
-          }
+          {"label": "결과", "text": "초기 보드도 이 과정을 거치므로 처음부터 한 수 이상 둘 수 있는 배치에서 플레이가 시작됩니다.", "verbatim": true}
         ],
         "visuals": [
-          {
-            "kind": "code",
-            "n": 1,
-            "fp": "do"
-          },
+          {"kind": "code", "n": 1, "fp": "// GameManager.ShuffleRemainCards() — 연결 가능한 쌍이 생길 때까지 흔들기·I"},
           {
             "kind": "image",
             "src": "images/reshuffle.png",
             "w": 720,
             "h": 540,
-            "caption": {
-              "text": "연결 가능한 쌍이 없어 Reshuffling.. 안내와 함께 남은 카드를 재배치하는 화면",
-              "verbatim": true
-            }
+            "caption": {"text": "연결 가능한 쌍이 없어 Reshuffling.. 안내와 함께 남은 카드를 재배치하는 화면", "verbatim": true}
           }
         ]
       },
@@ -468,147 +302,68 @@
         "chapter": "board",
         "layout": "full",
         "tab": "선택",
-        "title": {
-          "text": "3.3 고민과 선택",
-          "verbatim": true
-        },
+        "title": {"text": "3.3 고민과 선택", "verbatim": true},
         "lead": null,
-        "sectionPath": [
-          "3. 기능 B — 짝을 유지하는 보드 생성과 자동 재배치",
-          "3.3 고민과 선택"
-        ],
+        "sectionPath": ["3. 기능 B — 짝을 유지하는 보드 생성과 자동 재배치", "3.3 고민과 선택"],
         "points": [],
-        "visuals": [
-          {
-            "kind": "table",
-            "n": 1,
-            "fp": "고민|대안|선택과 이유"
-          }
-        ]
+        "visuals": [{"kind": "table", "n": 1, "fp": "고민|대안|선택과 이유"}]
       },
       {
         "key": "input-boundary",
         "chapter": "select",
-        "layout": "code",
+        "layout": "screens",
         "tab": "구현",
-        "title": {
-          "text": "4.1 선택 흐름",
-          "verbatim": true
-        },
-        "lead": {
-          "text": "매칭에 실패하면 첫 카드를 해제하고 두 번째 카드를 다음 첫 카드로 넘겨, 새 카드 하나만 고르면 다시 시도할 수 있습니다.",
-          "verbatim": true
-        },
-        "sectionPath": [
-          "4. 기능 C — 선택·연결선·제거 연출의 순서 제어",
-          "4.1 선택 흐름"
-        ],
+        "title": {"text": "4.1 선택 흐름", "verbatim": true},
+        "lead": {"text": "매칭에 실패하면 첫 카드를 해제하고 두 번째 카드를 다음 첫 카드로 넘겨, 새 카드 하나만 고르면 다시 시도할 수 있습니다.", "verbatim": true},
+        "sectionPath": ["4. 기능 C — 선택·연결선·제거 연출의 순서 제어", "4.1 선택 흐름"],
         "points": [],
         "visuals": [
-          {
-            "kind": "code",
-            "n": 1,
-            "fp": "firstCard.Deselect();"
-          },
+          {"kind": "code", "n": 1, "fp": "// CardManager.CheckMatch() — 매칭 실패 시 두 번째 카드를 다음 첫 카드로 넘김"},
           {
             "kind": "image",
             "src": "images/match-line.png",
             "w": 673,
             "h": 505,
-            "caption": {
-              "text": "선택 외곽선이 표시된 두 카드 사이에 연결선이 그려진 순간",
-              "verbatim": true
-            },
-            "sectionPath": [
-              "4. 기능 C — 선택·연결선·제거 연출의 순서 제어",
-              "4.2 핵심 기능 — 연결선을 먼저 보여준 뒤 제거"
-            ]
+            "caption": {"text": "선택 외곽선이 표시된 두 카드 사이에 연결선이 그려진 순간", "verbatim": true},
+            "sectionPath": ["4. 기능 C — 선택·연결선·제거 연출의 순서 제어", "4.2 핵심 기능 — 연결선을 먼저 보여준 뒤 제거"]
           }
-        ]
+        ],
+        "edited": true
       },
       {
         "key": "remove-seq",
         "chapter": "select",
         "layout": "visual",
         "tab": "흐름",
-        "title": {
-          "text": "4.2 핵심 기능 — 연결선을 먼저 보여준 뒤 제거",
-          "verbatim": true
-        },
-        "lead": {
-          "text": "논리 보드는 제거 애니메이션 시작 시 먼저 비우고, 시각 오브젝트는 축소·투명도 변화가 끝난 뒤 제거합니다.",
-          "verbatim": true
-        },
-        "sectionPath": [
-          "4. 기능 C — 선택·연결선·제거 연출의 순서 제어",
-          "4.2 핵심 기능 — 연결선을 먼저 보여준 뒤 제거"
-        ],
-        "points": [
-          {
-            "label": "이유",
-            "text": "다음 막힘 검사에서 사라질 카드를 장애물로 쓰지 않기 위한 순서입니다.",
-            "verbatim": true
-          }
-        ],
-        "visuals": [
-          {
-            "kind": "mermaid",
-            "n": 1,
-            "fp": "sequenceDiagram"
-          }
-        ]
+        "title": {"text": "4.2 핵심 기능 — 연결선을 먼저 보여준 뒤 제거", "verbatim": true},
+        "lead": {"text": "논리 보드는 제거 애니메이션 시작 시 먼저 비우고, 시각 오브젝트는 축소·투명도 변화가 끝난 뒤 제거합니다.", "verbatim": true},
+        "sectionPath": ["4. 기능 C — 선택·연결선·제거 연출의 순서 제어", "4.2 핵심 기능 — 연결선을 먼저 보여준 뒤 제거"],
+        "points": [{"label": "이유", "text": "다음 막힘 검사에서 사라질 카드를 장애물로 쓰지 않기 위한 순서입니다.", "verbatim": true}],
+        "visuals": [{"kind": "mermaid", "n": 1, "fp": "sequenceDiagram"}]
       },
       {
         "key": "remove-choice",
         "chapter": "select",
         "layout": "full",
         "tab": "선택",
-        "title": {
-          "text": "4.3 고민과 선택",
-          "verbatim": true
-        },
+        "title": {"text": "4.3 고민과 선택", "verbatim": true},
         "lead": null,
-        "sectionPath": [
-          "4. 기능 C — 선택·연결선·제거 연출의 순서 제어",
-          "4.3 고민과 선택"
-        ],
+        "sectionPath": ["4. 기능 C — 선택·연결선·제거 연출의 순서 제어", "4.3 고민과 선택"],
         "points": [],
-        "visuals": [
-          {
-            "kind": "table",
-            "n": 1,
-            "fp": "고민|대안|선택과 이유|비용"
-          }
-        ]
+        "visuals": [{"kind": "table", "n": 1, "fp": "고민|대안|선택과 이유|비용"}]
       },
       {
         "key": "best-record",
         "chapter": "progress",
         "layout": "code",
         "tab": "구현",
-        "title": {
-          "text": "5. 기능 D — 한 판의 진행·시간 평가와 최고 기록",
-          "verbatim": true
-        },
-        "lead": {
-          "text": "최고 기록은 기록이 없거나 더 빠르게 완료했을 때만 갱신합니다.",
-          "verbatim": true
-        },
-        "sectionPath": [
-          "5. 기능 D — 한 판의 진행·시간 평가와 최고 기록"
-        ],
+        "title": {"text": "5. 기능 D — 한 판의 진행·시간 평가와 최고 기록", "verbatim": true},
+        "lead": {"text": "최고 기록은 기록이 없거나 더 빠르게 완료했을 때만 갱신합니다.", "verbatim": true},
+        "sectionPath": ["5. 기능 D — 한 판의 진행·시간 평가와 최고 기록"],
         "points": [],
         "visuals": [
-          {
-            "kind": "table",
-            "n": 1,
-            "fp": "경과 시간|평가"
-          },
-          {
-            "kind": "code",
-            "n": 1,
-            "fp": "float bestRecord = PlayerPrefs.GetFloat(BestRecordKey, 0f);"
-          }
+          {"kind": "table", "n": 1, "fp": "경과 시간|평가"},
+          {"kind": "code", "n": 1, "fp": "// GameManager.SaveBestRecord() — 기록이 없거나 더 빠를 때만 최고 기록 갱신"}
         ]
       },
       {
@@ -616,14 +371,9 @@
         "chapter": "progress",
         "layout": "screens",
         "tab": "결과",
-        "title": {
-          "text": "5. 기능 D — 한 판의 진행·시간 평가와 최고 기록",
-          "verbatim": true
-        },
+        "title": {"text": "5. 기능 D — 한 판의 진행·시간 평가와 최고 기록", "verbatim": true},
         "lead": null,
-        "sectionPath": [
-          "5. 기능 D — 한 판의 진행·시간 평가와 최고 기록"
-        ],
+        "sectionPath": ["5. 기능 D — 한 판의 진행·시간 평가와 최고 기록"],
         "points": [],
         "visuals": [
           {
@@ -631,20 +381,14 @@
             "src": "images/timer-warning.png",
             "w": 1072,
             "h": 804,
-            "caption": {
-              "text": "남은 시간이 10초 미만이 되어 타이머가 빨간색으로 바뀐 화면",
-              "verbatim": true
-            }
+            "caption": {"text": "남은 시간이 10초 미만이 되어 타이머가 빨간색으로 바뀐 화면", "verbatim": true}
           },
           {
             "kind": "image",
             "src": "images/result-clear.png",
             "w": 920,
             "h": 690,
-            "caption": {
-              "text": "클리어 결과 화면 — 클리어 기록에 따른 별 등급과 이번 기록·최고 기록",
-              "verbatim": true
-            }
+            "caption": {"text": "클리어 결과 화면 — 클리어 기록에 따른 별 등급과 이번 기록·최고 기록", "verbatim": true}
           }
         ]
       },
@@ -653,24 +397,11 @@
         "chapter": "progress",
         "layout": "overview",
         "tab": "선택",
-        "title": {
-          "text": "고민과 선택 — 진행 흐름을 상태 머신 대신 bool과 코루틴으로",
-          "verbatim": true
-        },
-        "lead": {
-          "text": "여섯 단계의 진행을 `GameManager`의 bool 네 개와 진행 코루틴으로 조율합니다.",
-          "verbatim": false
-        },
-        "sectionPath": [
-          "5. 기능 D — 한 판의 진행·시간 평가와 최고 기록",
-          "고민과 선택 — 진행 흐름을 상태 머신 대신 bool과 코루틴으로"
-        ],
+        "title": {"text": "고민과 선택 — 진행 흐름을 상태 머신 대신 bool과 코루틴으로", "verbatim": true},
+        "lead": {"text": "여섯 단계의 진행을 `GameManager`의 bool 네 개와 진행 코루틴으로 조율합니다.", "verbatim": false},
+        "sectionPath": ["5. 기능 D — 한 판의 진행·시간 평가와 최고 기록", "고민과 선택 — 진행 흐름을 상태 머신 대신 bool과 코루틴으로"],
         "points": [
-          {
-            "label": "이유",
-            "text": "처음 끝까지 만들어 본 게임이었기 때문에, 당시 다룰 수 있던 bool과 코루틴으로 진행 흐름을 구성했습니다.",
-            "verbatim": true
-          },
+          {"label": "이유", "text": "처음 끝까지 만들어 본 게임이었기 때문에, 당시 다룰 수 있던 bool과 코루틴으로 진행 흐름을 구성했습니다.", "verbatim": true},
           {
             "label": "이유",
             "text": "지금 돌아봐도, 단계가 여섯 개뿐이고 씬도 하나인 게임에 상태 머신을 따로 두는 것은 규모에 비해 과하다고 판단합니다.",
@@ -689,24 +420,282 @@
         "chapter": "result",
         "layout": "full",
         "tab": "결과",
-        "title": {
-          "text": "6.1 구현 결과",
-          "verbatim": true
-        },
+        "title": {"text": "6.1 구현 결과", "verbatim": true},
         "lead": null,
-        "sectionPath": [
-          "6. 결과와 배운 점",
-          "6.1 구현 결과"
+        "sectionPath": ["6. 결과와 배운 점", "6.1 구현 결과"],
+        "points": [],
+        "visuals": [{"kind": "table", "n": 1, "fp": "구현 결과|기술적으로 다룬 내용"}]
+      }
+    ],
+    "base": [
+      {
+        "key": "intro",
+        "chapter": "overview",
+        "layout": "overview",
+        "tab": "개요",
+        "title": {"text": "1.1 What — 무엇을 만들었나", "verbatim": true},
+        "lead": {"text": "사천성은 같은 그림의 카드 두 장을 연결해 제거하는 Unity 2D 퍼즐 개인 프로젝트입니다.", "verbatim": true},
+        "sectionPath": ["1. 프로젝트 개요", "1.1 What — 무엇을 만들었나"],
+        "points": [
+          {
+            "label": "기능",
+            "text": "10×10 보드의 카드 100장을 제한시간 안에 모두 제거하며, 다른 카드를 통과하지 않고 가로·세로로 연결할 수 있어야 합니다.",
+            "verbatim": true
+          },
+          {"label": "기능", "text": "연결선은 최대 두 번까지 방향을 바꿀 수 있고, 보드 바깥의 빈 테두리를 경유할 수도 있습니다.", "verbatim": true}
         ],
+        "visuals": [
+          {
+            "kind": "image",
+            "src": "images/cover.png",
+            "w": 1372,
+            "h": 1029,
+            "caption": {"text": "메인 화면 — 제한 시간과 게임 시작 방법 안내", "verbatim": true}
+          }
+        ]
+      },
+      {
+        "key": "why",
+        "chapter": "overview",
+        "layout": "full",
+        "tab": "개요",
+        "title": {"text": "1.2 Why — 왜 만들었나", "verbatim": true},
+        "lead": null,
+        "sectionPath": ["1. 프로젝트 개요", "1.2 Why — 왜 만들었나"],
+        "points": [],
+        "visuals": [{"kind": "table", "n": 1, "fp": "문제|구현 방향"}]
+      },
+      {
+        "key": "env",
+        "chapter": "overview",
+        "layout": "full",
+        "tab": "개요",
+        "title": {"text": "1.3 개발 환경", "verbatim": true},
+        "lead": null,
+        "sectionPath": ["1. 프로젝트 개요", "1.3 개발 환경"],
+        "points": [],
+        "visuals": [{"kind": "table", "n": 1, "fp": "항목|내용"}]
+      },
+      {
+        "key": "arch",
+        "chapter": "overview",
+        "layout": "visual",
+        "tab": "구조",
+        "title": {"text": "1.4 전체 구조", "verbatim": true},
+        "lead": {"text": "게임 전용 코드는 `Assets/SichuanSung/Scripts`의 5개 클래스로 구성합니다.", "verbatim": true},
+        "sectionPath": ["1. 프로젝트 개요", "1.4 전체 구조"],
+        "points": [],
+        "visuals": [{"kind": "mermaid", "n": 1, "fp": "flowchart TB"}]
+      },
+      {
+        "key": "path-state",
+        "chapter": "pathfind",
+        "layout": "code",
+        "tab": "구현",
+        "title": {"text": "2.2 핵심 기능 — 위치·방향·회전 수를 별도 상태로 관리", "verbatim": true},
+        "lead": {"text": "같은 칸이라도 어느 방향으로 들어왔는지, 이미 몇 번 꺾었는지에 따라 이후 연결 가능성이 다릅니다.", "verbatim": true},
+        "sectionPath": ["2. 기능 A — 방향과 회전 횟수를 고려한 연결 탐색", "2.2 핵심 기능 — 위치·방향·회전 수를 별도 상태로 관리"],
+        "points": [{"label": "구현", "text": "직선 진행은 회전 수를 유지하고, 회전 수가 2 미만일 때만 다른 방향 상태를 turn + 1로 추가합니다.", "verbatim": true}],
+        "visuals": [
+          {"kind": "code", "n": 1, "fp": "// PathFinder.CanConnect() — 위치·방향·회전 수마다 따로 두는 방문 기록과 역추적용 "},
+          {"kind": "code", "n": 2, "fp": "// PathFinder.CanConnect() — 목표 카드가 아닌 카드를 만나면 그 방향의 직선 탐색 중"}
+        ]
+      },
+      {
+        "key": "path-restore",
+        "chapter": "pathfind",
+        "layout": "visual",
+        "tab": "구현",
+        "title": {"text": "2.3 핵심 기능 — 판정 경로 복원과 연결선 표시", "verbatim": true},
+        "lead": null,
+        "sectionPath": ["2. 기능 A — 방향과 회전 횟수를 고려한 연결 탐색", "2.3 핵심 기능 — 판정 경로 복원과 연결선 표시"],
+        "points": [
+          {
+            "label": "구현",
+            "text": "SavePath는 부모 상태를 역으로 따라간 뒤 순서를 뒤집고, CompressPath는 방향이 바뀌는 지점을 남겨 표시 목록을 줄입니다.",
+            "verbatim": true
+          },
+          {"label": "구현", "text": "연결선은 LineRenderer 대신 흰 텍스처 Sprite를 늘려 표현합니다.", "verbatim": true},
+          {"label": "이유", "text": "판정용 탐색과 선을 그리는 책임은 나누되, 표시에는 탐색에서 얻은 경로를 그대로 사용합니다.", "verbatim": true}
+        ],
+        "visuals": [
+          {
+            "kind": "image",
+            "src": "images/path-border.png",
+            "w": 367,
+            "h": 275,
+            "caption": {"text": "보드 위쪽 영역을 통해 연결된 두 카드", "verbatim": true},
+            "sectionPath": ["2. 기능 A — 방향과 회전 횟수를 고려한 연결 탐색", "2.2 핵심 기능 — 위치·방향·회전 수를 별도 상태로 관리"]
+          }
+        ]
+      },
+      {
+        "key": "path-choice",
+        "chapter": "pathfind",
+        "layout": "full",
+        "tab": "선택",
+        "title": {"text": "2.4 고민과 선택", "verbatim": true},
+        "lead": null,
+        "sectionPath": ["2. 기능 A — 방향과 회전 횟수를 고려한 연결 탐색", "2.4 고민과 선택"],
+        "points": [],
+        "visuals": [{"kind": "table", "n": 1, "fp": "고민|대안|선택과 이유|비용"}]
+      },
+      {
+        "key": "shuffle",
+        "chapter": "board",
+        "layout": "code",
+        "tab": "구현",
+        "title": {"text": "3.2 핵심 기능 — 연결 가능한 쌍 검사와 ID 셔플", "verbatim": true},
+        "lead": {"text": "연결 가능한 쌍이 없으면 남은 카드의 위치는 그대로 두고 ID만 섞습니다.", "verbatim": true},
+        "sectionPath": ["3. 기능 B — 짝을 유지하는 보드 생성과 자동 재배치", "3.2 핵심 기능 — 연결 가능한 쌍 검사와 ID 셔플"],
+        "points": [
+          {
+            "label": "구현",
+            "text": "IsDeadlocked는 남은 카드에서 같은 ID의 쌍만 골라 CanConnect를 호출하고, 한 쌍이라도 연결되면 즉시 끝냅니다.",
+            "verbatim": true
+          },
+          {"label": "결과", "text": "초기 보드도 이 과정을 거치므로 처음부터 한 수 이상 둘 수 있는 배치에서 플레이가 시작됩니다.", "verbatim": true}
+        ],
+        "visuals": [
+          {"kind": "code", "n": 1, "fp": "// GameManager.ShuffleRemainCards() — 연결 가능한 쌍이 생길 때까지 흔들기·I"},
+          {
+            "kind": "image",
+            "src": "images/reshuffle.png",
+            "w": 720,
+            "h": 540,
+            "caption": {"text": "연결 가능한 쌍이 없어 Reshuffling.. 안내와 함께 남은 카드를 재배치하는 화면", "verbatim": true}
+          }
+        ]
+      },
+      {
+        "key": "shuffle-choice",
+        "chapter": "board",
+        "layout": "full",
+        "tab": "선택",
+        "title": {"text": "3.3 고민과 선택", "verbatim": true},
+        "lead": null,
+        "sectionPath": ["3. 기능 B — 짝을 유지하는 보드 생성과 자동 재배치", "3.3 고민과 선택"],
+        "points": [],
+        "visuals": [{"kind": "table", "n": 1, "fp": "고민|대안|선택과 이유"}]
+      },
+      {
+        "key": "input-boundary",
+        "chapter": "select",
+        "layout": "code",
+        "tab": "구현",
+        "title": {"text": "4.1 선택 흐름", "verbatim": true},
+        "lead": {"text": "매칭에 실패하면 첫 카드를 해제하고 두 번째 카드를 다음 첫 카드로 넘겨, 새 카드 하나만 고르면 다시 시도할 수 있습니다.", "verbatim": true},
+        "sectionPath": ["4. 기능 C — 선택·연결선·제거 연출의 순서 제어", "4.1 선택 흐름"],
+        "points": [],
+        "visuals": [
+          {"kind": "code", "n": 1, "fp": "// CardManager.CheckMatch() — 매칭 실패 시 두 번째 카드를 다음 첫 카드로 넘김"},
+          {
+            "kind": "image",
+            "src": "images/match-line.png",
+            "w": 673,
+            "h": 505,
+            "caption": {"text": "선택 외곽선이 표시된 두 카드 사이에 연결선이 그려진 순간", "verbatim": true},
+            "sectionPath": ["4. 기능 C — 선택·연결선·제거 연출의 순서 제어", "4.2 핵심 기능 — 연결선을 먼저 보여준 뒤 제거"]
+          }
+        ]
+      },
+      {
+        "key": "remove-seq",
+        "chapter": "select",
+        "layout": "visual",
+        "tab": "흐름",
+        "title": {"text": "4.2 핵심 기능 — 연결선을 먼저 보여준 뒤 제거", "verbatim": true},
+        "lead": {"text": "논리 보드는 제거 애니메이션 시작 시 먼저 비우고, 시각 오브젝트는 축소·투명도 변화가 끝난 뒤 제거합니다.", "verbatim": true},
+        "sectionPath": ["4. 기능 C — 선택·연결선·제거 연출의 순서 제어", "4.2 핵심 기능 — 연결선을 먼저 보여준 뒤 제거"],
+        "points": [{"label": "이유", "text": "다음 막힘 검사에서 사라질 카드를 장애물로 쓰지 않기 위한 순서입니다.", "verbatim": true}],
+        "visuals": [{"kind": "mermaid", "n": 1, "fp": "sequenceDiagram"}]
+      },
+      {
+        "key": "remove-choice",
+        "chapter": "select",
+        "layout": "full",
+        "tab": "선택",
+        "title": {"text": "4.3 고민과 선택", "verbatim": true},
+        "lead": null,
+        "sectionPath": ["4. 기능 C — 선택·연결선·제거 연출의 순서 제어", "4.3 고민과 선택"],
+        "points": [],
+        "visuals": [{"kind": "table", "n": 1, "fp": "고민|대안|선택과 이유|비용"}]
+      },
+      {
+        "key": "best-record",
+        "chapter": "progress",
+        "layout": "code",
+        "tab": "구현",
+        "title": {"text": "5. 기능 D — 한 판의 진행·시간 평가와 최고 기록", "verbatim": true},
+        "lead": {"text": "최고 기록은 기록이 없거나 더 빠르게 완료했을 때만 갱신합니다.", "verbatim": true},
+        "sectionPath": ["5. 기능 D — 한 판의 진행·시간 평가와 최고 기록"],
+        "points": [],
+        "visuals": [
+          {"kind": "table", "n": 1, "fp": "경과 시간|평가"},
+          {"kind": "code", "n": 1, "fp": "// GameManager.SaveBestRecord() — 기록이 없거나 더 빠를 때만 최고 기록 갱신"}
+        ]
+      },
+      {
+        "key": "progress-screens",
+        "chapter": "progress",
+        "layout": "screens",
+        "tab": "결과",
+        "title": {"text": "5. 기능 D — 한 판의 진행·시간 평가와 최고 기록", "verbatim": true},
+        "lead": null,
+        "sectionPath": ["5. 기능 D — 한 판의 진행·시간 평가와 최고 기록"],
         "points": [],
         "visuals": [
           {
-            "kind": "table",
-            "n": 1,
-            "fp": "구현 결과|기술적으로 다룬 내용"
+            "kind": "image",
+            "src": "images/timer-warning.png",
+            "w": 1072,
+            "h": 804,
+            "caption": {"text": "남은 시간이 10초 미만이 되어 타이머가 빨간색으로 바뀐 화면", "verbatim": true}
+          },
+          {
+            "kind": "image",
+            "src": "images/result-clear.png",
+            "w": 920,
+            "h": 690,
+            "caption": {"text": "클리어 결과 화면 — 클리어 기록에 따른 별 등급과 이번 기록·최고 기록", "verbatim": true}
           }
         ]
+      },
+      {
+        "key": "flow-choice",
+        "chapter": "progress",
+        "layout": "overview",
+        "tab": "선택",
+        "title": {"text": "고민과 선택 — 진행 흐름을 상태 머신 대신 bool과 코루틴으로", "verbatim": true},
+        "lead": {"text": "여섯 단계의 진행을 `GameManager`의 bool 네 개와 진행 코루틴으로 조율합니다.", "verbatim": false},
+        "sectionPath": ["5. 기능 D — 한 판의 진행·시간 평가와 최고 기록", "고민과 선택 — 진행 흐름을 상태 머신 대신 bool과 코루틴으로"],
+        "points": [
+          {"label": "이유", "text": "처음 끝까지 만들어 본 게임이었기 때문에, 당시 다룰 수 있던 bool과 코루틴으로 진행 흐름을 구성했습니다.", "verbatim": true},
+          {
+            "label": "이유",
+            "text": "지금 돌아봐도, 단계가 여섯 개뿐이고 씬도 하나인 게임에 상태 머신을 따로 두는 것은 규모에 비해 과하다고 판단합니다.",
+            "verbatim": true
+          },
+          {
+            "label": "문제",
+            "text": "다만 bool 조합으로 상태를 나타내다 보니, 게임 오버 뒤에도 재시작 입력을 받으려고 `isGameClear`를 `true`로 두는 것처럼 값 하나가 클리어와 게임 오버를 함께 나타내게 되었습니다.",
+            "verbatim": true
+          }
+        ],
+        "visuals": []
+      },
+      {
+        "key": "result-table",
+        "chapter": "result",
+        "layout": "full",
+        "tab": "결과",
+        "title": {"text": "6.1 구현 결과", "verbatim": true},
+        "lead": null,
+        "sectionPath": ["6. 결과와 배운 점", "6.1 구현 결과"],
+        "points": [],
+        "visuals": [{"kind": "table", "n": 1, "fp": "구현 결과|기술적으로 다룬 내용"}]
       }
-    ]
+    ],
+    "applied": "a053f38c61655f77"
   }
 }

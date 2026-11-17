@@ -14,12 +14,28 @@
 
 ### 1.1 What — 무엇을 만들었나
 
-![홈 화면 — 일일 권장·섭취·잔여 칼로리, 3대 영양소 섭취량과 식사 기록](images/home.png) ![음식 인식 결과 — FoodLens SDK가 사진에서 인식한 음식과 총 섭취 칼로리](images/photo-analysis.png)
+![홈 화면 — 일일 권장·섭취·잔여 칼로리, 3대 영양소 섭취량과 식사 기록](images/home.png) ![음식 인식 결과 — FoodLens SDK가 사진에서 인식한 음식과 양에 따른 칼로리](images/photo-analysis.png)
 
 Nutrifit은 신체 정보와 식사 기록을 바탕으로 영양소 섭취 현황과 다음 식사의 후보를 제공하는 Android 프로젝트입니다.
 앱은 FoodLens SDK를 이용한 음식 사진 분석과 수동 입력을 제공하며, 기록을 JSON 파일로 저장합니다.
 별도 Python 서버는 공공데이터포털의 「전국통합식품영양성분정보(음식) 표준데이터」 CSV와 앱에서 받은 사용자·식사 정보를 이용해 추천을 계산합니다.
 이름은 Nutrition(영양)과 Fit(맞추다)을 합친 말로, 사용자에게 맞춘 식단을 제안한다는 뜻을 담았습니다.
+
+```mermaid
+%%{init: {"flowchart": {"padding": 8}}}%%
+flowchart TB
+    Profile["사용자 정보 입력<br>신체 정보 · 활동량 · 선호 음식"] --> Record["식사 기록<br>사진 인식 · 수동 입력"]
+    Record --> Home["홈 화면<br>권장 · 섭취 · 잔여 칼로리"]
+    Home --> Recommend["다음 식사 추천<br>남은 영양소에 맞는 음식 후보"]
+    Recommend -->|다음 식사| Record
+%% 격자: Profile Record Home | - - Recommend
+%% 화살표 Recommend -> Record: 나감=왼쪽 들어감=아래
+```
+
+- **사용자 정보:** 키·몸무게·나이·성별·활동량으로 하루 영양소 목표를 계산하고, 선호 음식 종류는 추천 가중치에 씁니다.
+- **식사 기록:** 사진을 찍으면 FoodLens SDK가 음식 종류와 양을 인식하고, 수동 입력은 앱의 음식 목록에서 골라 중량과 아침·점심·저녁을 입력합니다.
+- **홈과 통계:** 홈에서 일일 권장·섭취·잔여 칼로리와 3대 영양소 섭취량을 보고, 주간 통계 페이지에서 날짜별 기록을 차트로 봅니다.
+- **추천:** 목표에서 오늘 섭취량을 뺀 남은 영양소와 음식별 영양소의 코사인 유사도로 후보를 고르고, 두 식단으로 나눠 보여 줍니다.
 
 ### 1.2 Why — 왜 만들었나
 
@@ -56,7 +72,7 @@ Nutrifit은 신체 정보와 식사 기록을 바탕으로 영양소 섭취 현�
 ### 1.5 전체 구조
 
 ```mermaid
-%%{init: {"flowchart": {"rankSpacing": 28, "nodeSpacing": 30}}}%%
+%%{init: {"flowchart": {"rankSpacing": 28, "nodeSpacing": 30, "padding": 8}}}%%
 flowchart TB
     Record["Android 식사 기록 · 사용자 정보"] --> Local["앱 내부 JSON"]
     Local -->|user 배열 · foods 배열| Request["OkHttp POST /recommend"]
@@ -70,7 +86,7 @@ flowchart TB
 앱은 사진 인식과 수동 입력을 모두 내부 저장소의 식사 파일에 기록합니다. 사진 인식은 `CameraActivity`가 FoodLens SDK에서 결과를 받아 파일에 저장한 뒤 `CameraResultActivity`를 엽니다. 수동 입력은 `UserFoodCalculate`가 앱의 SQLite 음식 목록을 조회해 입력한 중량에 맞게 영양소를 계산합니다. 사용자 정보는 `UserInformActivity`가 SQLite에 저장한 뒤 `user_data.json`으로 내보냅니다.
 
 ```mermaid
-%%{init: {"flowchart": {"rankSpacing": 24, "nodeSpacing": 20, "subGraphTitleMargin": {"bottom": 14}}}}%%
+%%{init: {"flowchart": {"rankSpacing": 24, "nodeSpacing": 20, "subGraphTitleMargin": {"top": 0, "bottom": 10}, "padding": 8}}}%%
 flowchart TB
     Lens["FoodLens 음식 인식"]
     subgraph App["Android 앱"]
@@ -95,7 +111,7 @@ flowchart TB
 
 `CameraResultActivity`는 화면에 최근 수정된 식사 파일을 표시하고, 추천을 요청할 때는 오늘 날짜의 식사 파일을 모두 합칩니다. `RecommendFragment`는 오늘 날짜로 검색된 첫 파일의 배열만 전송하며, 응답 JSON에 음식이 10개 이상 있으면 두 식단으로 나눠 표시합니다. 공개 서버의 응답 형식과 후보 수는 §4.2에 정리했습니다.
 
-아래 그림은 앱 내부 JSON과 추천 요청의 구조입니다. 식사 파일은 저장 시각을 넣은 `food_data_yyyyMMdd_HHmmss.json` 이름을 사용하며, 최상위 값은 음식 배열입니다. `foodID`는 사진 인식 항목에, `servingSize`와 `mealType`은 수동 입력 항목에 들어갑니다. 수동 입력의 `mealType` 값은 아침·점심·저녁입니다.
+식사 파일은 저장 시각을 넣은 `food_data_yyyyMMdd_HHmmss.json` 이름을 사용하며, 최상위 값은 음식 배열입니다. `foodID`는 사진 인식 항목에, `servingSize`와 `mealType`은 수동 입력 항목에 들어갑니다. 수동 입력의 `mealType` 값은 아침·점심·저녁입니다.
 
 ```mermaid
 %%{init: {"class": {"nodeSpacing": 22, "rankSpacing": 40, "padding": 6}}}%%
@@ -130,7 +146,7 @@ classDiagram
     FoodItem --> Request : foods 배열
 ```
 
-`nutrition`은 음식 항목 안의 객체입니다. 사진 인식은 FoodLens 응답의 키를 유지하고 수동 입력은 `carbohydrate`, `fiber`, `vitaminA`, `vitaminC` 등을 사용합니다. Flask는 `user[0]`과 `foods`를 읽고 `nutrition`과 `eatAmount`로 섭취량을 차감합니다.
+이 다이어그램은 앱 내부 JSON과 추천 요청의 구조를 도식화한 것입니다. `nutrition`은 음식 항목 안의 객체입니다. 사진 인식은 FoodLens 응답의 키를 유지하고 수동 입력은 `carbohydrate`, `fiber`, `vitaminA`, `vitaminC` 등을 사용합니다. Flask는 `user[0]`과 `foods`를 읽고 `nutrition`과 `eatAmount`로 섭취량을 차감합니다.
 
 소스는 [CameraActivity.java](https://github.com/keeeery/Nutrifit/blob/21991464c454283cf069188a4f5b7351b37b458e/app/src/main/java/com/nutrifit/CameraActivity.java#L183-L269), [UserFoodCalculate.java](https://github.com/keeeery/Nutrifit/blob/21991464c454283cf069188a4f5b7351b37b458e/app/src/main/java/com/nutrifit/UserFoodCalculate.java#L72-L119), [UserInformActivity.java](https://github.com/keeeery/Nutrifit/blob/21991464c454283cf069188a4f5b7351b37b458e/app/src/main/java/com/nutrifit/UserInformActivity.java#L193-L237), [CameraResultActivity.java](https://github.com/keeeery/Nutrifit/blob/21991464c454283cf069188a4f5b7351b37b458e/app/src/main/java/com/nutrifit/CameraResultActivity.java#L126-L188), [RecommendFragment.java](https://github.com/keeeery/Nutrifit/blob/21991464c454283cf069188a4f5b7351b37b458e/app/src/main/java/com/nutrifit/RecommendFragment.java#L57-L133), [server.py](https://github.com/keeeery/Nutrifit_Recommendation/blob/5b5e78c33435370b8980b64656b5418ba254b184/server.py#L110-L155)에서 확인할 수 있습니다.
 
@@ -145,7 +161,7 @@ classDiagram
 요청이 오면 사용자 정보로 목표 영양소를 계산하고, 섭취량을 차감한 남은 영양소와 각 음식의 코사인 유사도를 비교합니다.
 
 ```mermaid
-%%{init: {"flowchart": {"rankSpacing": 28, "nodeSpacing": 30}}}%%
+%%{init: {"flowchart": {"rankSpacing": 28, "nodeSpacing": 30, "padding": 8}}}%%
 flowchart TB
     User[신체 정보·활동량] --> Target[11개 영양소 목표]
     Food[섭취 영양소 × eatAmount] --> Remain[목표에서 차감·0 이상 제한]
@@ -156,6 +172,7 @@ flowchart TB
 ```
 
 ```python
+# server.py — 서버 시작 때 영양 데이터를 대표식품명·식품대분류명별 평균으로 묶기
 nutrition_data = data[selected_columns].dropna()
 nutrition_data_grouped = nutrition_data.groupby(
     ["대표식품명", "식품대분류명"], as_index=False
@@ -171,9 +188,10 @@ nutrition_data_grouped = nutrition_data.groupby(
 
 에너지 목표는 기초대사량에 활동계수를 곱해 계산하고, 단백질·탄수화물 등은 체중·에너지 비율로 정합니다.
 
-![사용자 정보 입력 — 목표 영양소 계산에 쓰는 몸무게·나이·성별·활동 수준과 선호하는 국·반찬 종류](images/user-info.png)
+![사용자 정보 입력 — 목표 영양소 계산과 추천 가중치에 사용되는 신체 정보와 선호 음식 종류](images/user-info.png)
 
 ```python
+# server.calculate_daily_intake() — 기초대사량(BMR)에 활동계수를 곱해 하루 에너지 목표 계산
 bmr = 10 * weight + 6.25 * height - 5 * age + (5 if gender == "1" else -161)
 tdee = bmr * (1.0 + 0.2 * (activity - 1))
 ```
@@ -182,7 +200,7 @@ tdee = bmr * (1.0 + 0.2 * (activity - 1))
 성분별 가중치(단백질·식이섬유 1.5, 철 1.4, 칼슘 1.3, 나트륨 0.7 등)를 곱한 잔여 벡터와 음식 벡터의 유사도를 점수로 씁니다.
 
 ```python
-# server.py: recommend_foods 내부 select_top에서 발췌
+# server.recommend_foods() 안의 select_top() — 가중 영양 벡터와의 cosine similarity로 점수를 매겨 가장 높은 1개 선택
 features = df.drop(columns=["대표식품명", "식품대분류명"]).values
 scores = cosine_similarity(features, weighted_vector.reshape(1, -1)).flatten() * boost
 df = df.copy()
@@ -203,7 +221,7 @@ return df.sort_values(by="추천점수", ascending=False).head(1)
 | 모델을 쓸까 | Autoencoder로 음식 특징 학습 (별도 실험 작성) | 수치 벡터 유사도를 API 경로로 사용 — 실험의 인코더 출력은 추천에 연결하지 않음 | 추천 품질은 미측정 |
 | 식사를 어떻게 구성할까 | 식사 전체의 중량·열량을 제약식으로 최적화 | 음식군별 1개 선택 — 밥·국·반찬 형태로 구성 | 다섯 음식 합의 영양소 총합은 최적화하지 않음 |
 
-![Autoencoder 실험(model_based_filtering.py) 실행 결과 — 10 epoch 학습 손실과 추천 음식](images/console-autoencoder.png)
+![model_based_filtering.py(Autoencoder 실험) 실행 결과 — 10 epoch 학습 손실과 추천 음식](images/console-autoencoder.png)
 
 소스: [server.py](https://github.com/keeeery/Nutrifit_Recommendation/blob/main/server.py).
 
@@ -217,7 +235,7 @@ return df.sort_values(by="추천점수", ascending=False).head(1)
 Flask의 `POST /recommend`는 `user[0]`과 `foods`로 추천을 계산합니다. 공개 코드의 응답 형식은 요청의 `Content-Type`에 따라 JSON 배열 또는 HTML 표로 달라집니다(§4.2).
 
 ```java
-// RecommendFragment.java: merged는 user·foods를 담은 JSON 객체
+// RecommendFragment.sendRecommendationRequest() — user·foods를 담은 JSON(merged)을 서버에 POST
 RequestBody body = RequestBody.create(
         merged.toString(),
         MediaType.get("application/json; charset=utf-8")
@@ -239,6 +257,7 @@ Request request = new Request.Builder()
 `StatisticsFragment`는 6일 전부터 오늘까지 7일을 순회해 날짜별 기록을 집계하고, 차트 View에는 목록만 전달합니다.
 
 ```java
+// StatisticsFragment.updateCharts() — 집계한 7일 목록만 차트 View에 전달
 calorieChart.setData(labels, calorieData);
 nutritionChart.setData(labels, nutritionData);
 ```
