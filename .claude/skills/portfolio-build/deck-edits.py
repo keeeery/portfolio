@@ -457,8 +457,8 @@ def validate(p, chapters, doc):
             errs.append('visuals[%d]의 sectionPath는 제목 글자 배열' % i)
     if lay in ('visual', 'code', 'full') and not vis:
         errs.append('layout "%s"에는 시각 자료가 1개 이상 있어야 함' % lay)
-    if lay == 'screens' and not (2 <= len(vis) <= 3 and all(isinstance(v, dict) and v.get('kind') == 'image' for v in vis)):
-        errs.append('layout "screens"에는 그림이 2~3개 있어야 함')
+    if lay == 'screens' and not (2 <= len(vis) <= 3 and all(isinstance(v, dict) for v in vis)):   # 직접 수정: 코드·표도 나란히 허용(원래는 그림만)
+        errs.append('layout "screens"에는 시각 자료가 2~3개 있어야 함')
     if errs or doc is None:
         return errs, warns, pieces, cross
 
