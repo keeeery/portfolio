@@ -45,6 +45,7 @@ import zlib
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 PDF_CSS = os.path.join(ROOT, "theme", "pdf.css")
+PDF_FONT_CSS = os.path.join(ROOT, "theme", "pdf-font.css")   # PDF 전용 글꼴(웹은 그대로) — 포트폴리오·자기소개서 PDF에만 덧씌움
 SKILL_DIR = os.path.join(ROOT, ".claude", "skills", "portfolio-make-pdf")
 IS_WIN, IS_MAC = os.name == "nt", sys.platform == "darwin"
 A4_W_MM, A4_H_MM = 210, 297
@@ -939,7 +940,7 @@ def main():
     if args.pages and args.src:                                         # 그림만 그리기
         print(rasterize(env, chrome, os.path.abspath(args.src), os.path.abspath(args.pages), args.pages_scale)); return
 
-    css_text = read_text(args.css) if args.css else read_text(PDF_CSS)
+    css_text = (read_text(args.css) if args.css else read_text(PDF_CSS)) + "\n" + read_text(PDF_FONT_CSS)
     cfg = config_from(css_text)
     layout_px = args.layout_px or int(num_directive(css_text, "layout-px", REF_LAYOUT_PX))
     base = args.base or guess_base()

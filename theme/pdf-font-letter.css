@@ -1,0 +1,5 @@
+/* 자기소개서 PDF 전용 글꼴 손질(theme/pdf-font.css 뒤에 덧씌움) — 글만 빽빽한 문서라 제목·강조가 더 굵어 보여 한 단계 낮춤.
+   제목 800 → ExtraBold(포트폴리오는 Heavy) · 강조 700 → Bold(포트폴리오는 ExtraBold). 본문(400 → Medium)은 그대로.
+   tools/make-letter-pdf.py만 읽음. 되돌리기: 이 파일을 지우면 포트폴리오와 같은 매핑으로 돌아갑니다. */
+@font-face { font-family: 'Apple SD Gothic Neo Fit'; font-weight: 700; src: local('AppleSDGothicNeo-Bold'); ascent-override: 95%; descent-override: 24%; line-gap-override: 0%; }
+@font-face { font-family: 'Apple SD Gothic Neo Fit'; font-weight: 800; src: local('AppleSDGothicNeo-ExtraBold'); ascent-override: 95%; descent-override: 24%; line-gap-override: 0%; }

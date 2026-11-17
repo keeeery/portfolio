@@ -1,0 +1,14 @@
+/* PDF 전용 글꼴 — 웹페이지는 Pretendard 그대로, PDF(포트폴리오·자기소개서)만 Apple SD Gothic Neo(산돌고딕 Neo).
+   tools/make-pdf.py · tools/make-letter-pdf.py가 PDF를 만들 때만 페이지에 덧씌웁니다(페이지가 이 파일을 불러오지 않음).
+   Apple SD Gothic Neo는 글자가 줄 안에서 위로 떠 보여 Pretendard와 같은 세로 기준(위 95% · 아래 24%)으로 맞춥니다.
+   본문 굵기: PDF에서 가늘어 보여 모든 굵기를 한 단계 굵은 글꼴로 씁니다(300→Regular · 400→Medium · 600→Bold · 700→ExtraBold · 800→Heavy).
+   맥에서 만들어야 합니다(Apple SD Gothic Neo가 PC에 없으면 Pretendard로 만들어짐). PDF에는 글꼴이 들어가 어느 기기에서 열어도 같게 보입니다.
+   되돌리기: 이 파일을 비우거나 지우면 PDF도 Pretendard로 만들어집니다. */
+@font-face { font-family: 'Apple SD Gothic Neo Fit'; font-weight: 300; src: local('AppleSDGothicNeo-Regular'); ascent-override: 95%; descent-override: 24%; line-gap-override: 0%; }
+@font-face { font-family: 'Apple SD Gothic Neo Fit'; font-weight: 400; src: local('AppleSDGothicNeo-Medium'); ascent-override: 95%; descent-override: 24%; line-gap-override: 0%; }
+@font-face { font-family: 'Apple SD Gothic Neo Fit'; font-weight: 500; src: local('AppleSDGothicNeo-Medium'); ascent-override: 95%; descent-override: 24%; line-gap-override: 0%; }
+@font-face { font-family: 'Apple SD Gothic Neo Fit'; font-weight: 600; src: local('AppleSDGothicNeo-Bold'); ascent-override: 95%; descent-override: 24%; line-gap-override: 0%; }
+@font-face { font-family: 'Apple SD Gothic Neo Fit'; font-weight: 700; src: local('AppleSDGothicNeo-ExtraBold'); ascent-override: 95%; descent-override: 24%; line-gap-override: 0%; }
+@font-face { font-family: 'Apple SD Gothic Neo Fit'; font-weight: 800; src: local('AppleSDGothicNeo-Heavy'); ascent-override: 95%; descent-override: 24%; line-gap-override: 0%; }
+:root { --sans: 'Apple SD Gothic Neo Fit', 'Pretendard', 'Noto Sans KR', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+body { font-family: 'Apple SD Gothic Neo Fit', Pretendard, -apple-system, 'Malgun Gothic', sans-serif; letter-spacing: -.01em; }   /* 자간 약간 좁게(본문) — 제목·영문 라벨처럼 자기 자간이 있는 글은 그대로 */

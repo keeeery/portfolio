@@ -65,6 +65,10 @@ def main():
         info = json.loads(cdp.eval(sid, WAIT_JS))
         if not info["ready"]:
             sys.exit("페이지가 준비되지 않았습니다(자기소개서.md를 읽지 못했을 수 있음).")
+        font_css = mp.read_text(os.path.join(ROOT, "theme", "pdf-font.css")) + "\n" + mp.read_text(os.path.join(ROOT, "theme", "pdf-font-letter.css"))   # PDF 전용 글꼴(웹은 그대로) + 자소서만 제목·강조 한 단계 낮춤
+        if font_css:
+            cdp.eval(sid, "(async()=>{const s=document.createElement('style');s.textContent=" + json.dumps(font_css) + ";document.head.appendChild(s);"
+                          "try{await Promise.race([Promise.all([document.fonts.load('400 16px \"Apple SD Gothic Neo Fit\"','한A'),document.fonts.load('700 16px \"Apple SD Gothic Neo Fit\"','한A')]),new Promise(r=>setTimeout(r,3000))]);}catch(e){} await new Promise(r=>setTimeout(r,300));})()")
         cdp.send("Emulation.setEmulatedMedia", {"media": "print"}, sid)
         pdf = cdp.send("Page.printToPDF", {"printBackground": True, "preferCSSPageSize": True,
                                            "displayHeaderFooter": False, "generateTaggedPDF": True}, sid)
