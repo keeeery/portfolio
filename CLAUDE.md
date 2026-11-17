@@ -25,7 +25,7 @@
 ├── classic.html             # 🖥 예전 고정 렌더러 배치(백업 주소). custom/index.html은 기본 주소로 넘기는 이동 페이지
 ├── project.html             # 🖥 고정 렌더러 — 발표 덱 (?p=<폴더 이름>, data/의 deck이 가리키는 기술 문서 원문 블록을 그대로 그림)
 ├── doc.html                 # 🖥 고정 렌더러 — 상세 기술문서 (?p=<폴더 이름>, src/의 기술 문서 md를 직접 읽음)
-├── assets/                  # 🖥 렌더러 CSS·JS (포트폴리오 문서·덱 키트·장면 키트·상세 문서·md-blocks.js = 기술 문서 md 해석과 원문 블록 찾기, 발표 덱·상세 문서 공용 · strings.js = UI 문구 기본값과 문구 표 읽기 · deck-pptx.js = 발표 덱 [PPTX로 저장], 그린 장면을 재서 PowerPoint 개체로)
+├── assets/                  # 🖥 렌더러 CSS·JS (diagram-tidy.js = 다이어그램 직각 화살표·격자 엔진, /portfolio-diagram · 포트폴리오 문서·덱 키트·장면 키트·상세 문서·md-blocks.js = 기술 문서 md 해석과 원문 블록 찾기, 발표 덱·상세 문서 공용 · strings.js = UI 문구 기본값과 문구 표 읽기 · deck-pptx.js = 발표 덱 [PPTX로 저장], 그린 장면을 재서 PowerPoint 개체로)
 ├── theme/theme.css          # 🎨 /portfolio-theme 결과 — 색·모양·영문 글꼴 손잡이(--t-*). 세 페이지가 마지막에 싣음. 비어 있으면 기본 테마, /portfolio-update가 건드리지 않음
 ├── theme/strings.tsv        # ✍ 문구 표(스트링 테이블) — 절 이름·버튼·라벨 문구. 수강생이 맨 끝 "내 문구" 칸을 직접 고침(빈 칸 = 기본 문구). /portfolio-update는 없을 때만 만듦
 ├── theme/pdf.css            # 🎨 /portfolio-make-pdf 결과 — PDF 전용 배치 손질(인쇄에서만, 배치 폭 /* layout-px: N */ 포함). 확인받은 것만 씀
@@ -75,6 +75,7 @@ flowchart LR
 | `/portfolio-update [되돌리기]` | 템플릿 원본에서 렌더러·스킬·`format/`·`CLAUDE.md`만 받아 반영(`src/`·`profile.md`·`data/`·`custom/`은 안 건드림). **사용자가 직접 입력했을 때만** 실행 |
 | `/portfolio-intake <레포 주소\|폴더\|발표.pptx>` | GitHub 레포에서 핵심 `.cs`·재료집(사실 + 질문)·촬영 목록을 `src/<NN>/`에 만듦. `.pptx`면 슬라이드 글·표·노트·그림을 그대로 `_intake/발표자료.md`·`_intake/pptx/`로 꺼냄(`pptx-extract.py`, 표준 라이브러리만). 기술 문서는 만들지 않음. **사용자가 직접 입력했을 때만** 실행 |
 | `/portfolio-make-pdf [미리보기\|다시\|배치 유지\|준비]` | (직접 만든 스킬, 공유용) `tools/make-pdf.py`로 포트폴리오 문서를 A4 PDF(`<이름>-포트폴리오.pdf`)로 — 화면 배치를 줄여 인쇄, 미리 만들어 자동·눈 점검, 글씨·빈 곳·줄바꿈이 기준에 못 미치면 PDF 전용 배치 후보를 시험해 **확인받고** `theme/pdf.css`에 반영, 통과한 파일만 확정. mac·Windows 모두(환경에 맞춰 방식을 고름). 사용·공유 안내: `.claude/skills/portfolio-make-pdf/README.md` |
+| `/portfolio-diagram [전체\|폴더\|폴더 절\|훑기\|준비]` | (직접 만든 스킬, 공유용) 전체·한 프로젝트·그림 하나 범위로 기술 문서의 Mermaid 그림을 규칙(한 방향 줄기·`%% 격자`·`%% 화살표`·칸 위 메모·같은 폭 묶음·시작/끝 점 기준·"이 다이어그램은 ~ 도식화한 것입니다.")으로 다시 배치하고, `diagram-tool.py`로 겹침을 재고 전후 비교 이미지를 보여 줌. 엔진은 `assets/diagram-tidy.js`(렌더러). 칸·문장을 바꾸는 건 확인받고. 문서에 없는 관계는 같은 PC의 원본 저장소 → 원격 저장소 코드에서 근거를 찾아 확인받고 보충(없으면 비워 둠). 사용·공유 안내: `.claude/skills/portfolio-diagram/README.md` |
 | `/portfolio-image-crop <폴더>` | (직접 만든 스킬) `src/<폴더>/_raw/`의 원본 스크린샷을 기술 문서의 절에 맞춰 4:3으로 초안 크롭 → 번호별 요청으로 다시 다듬기 → **확인받은 뒤에만** `images/`·기술 문서·data에 반영. 원본은 건드리지 않음 |
 
 ---
