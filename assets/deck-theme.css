@@ -243,6 +243,17 @@ table.kv td.role { color: var(--accent-ink); font-weight: 800; }
 .fit-in { transform-origin: 0 0; }
 .fit-in pre { margin: 0 !important; padding: 14px 18px !important; background: transparent !important; }
 .fit-in pre code, .fit-in pre code.hljs { display: block; padding: 0; background: transparent; color: #E6E8F5; font-family: var(--mono); font-size: 14px; line-height: 1.5; white-space: pre; tab-size: 4; border-radius: 0; overflow: visible; }
+/* 코드 색: Rider 구성표 "Visual Studio Dark"와 비슷하게(메서드는 VS 2019 이후 색) — 이름 종류는 PF.hlMore가 글자 모양으로 나눔(common.js) */
+pre code.hljs { color: #DCDCDC; }
+pre code.hljs :is(.hljs-keyword, .hljs-built_in, .hljs-literal, .hljs-type) { color: #569CD6; }
+pre code.hljs :is(.hljs-string, .hljs-char, .hljs-regexp) { color: #D69D85; }
+pre code.hljs .hljs-number { color: #B5CEA8; }
+pre code.hljs :is(.hljs-comment, .hljs-doctag) { color: #57A64A; font-style: normal; }
+pre code.hljs .hljs-meta { color: #9B9B9B; }
+pre code.hljs :is(.hljs-title.class_, .pf-t-type) { color: #4EC9B0; }
+pre code.hljs :is(.hljs-title.function_, .pf-t-method) { color: #DCDCAA; }
+pre code.hljs .pf-t-member { color: #DCDCDC; }
+pre code.hljs :is(.hljs-params, .hljs-variable, .hljs-attr, .hljs-property) { color: inherit; }
 .vbox .cap { font-size: 13px; line-height: 1.4; color: var(--muted); text-align: center; }
 .vbox .cap .ix { font-family: var(--mono); font-size: 12px; color: var(--accent-ink); margin-right: 6px; }
 table.md-table { border-collapse: collapse; width: 100%; font-size: 15px; line-height: 1.5; background: var(--paper); table-layout: auto; }

@@ -44,6 +44,11 @@
           <h1>${esc(title)}</h1>
         </div>
         <article class="md" id="doc"></article>
+        <footer class="doc-foot">
+          ${name ? `<p>© ${esc(name)}</p>` : ''}
+          <p>${T('page.browser-note')}</p>
+          ${pf.generatedAt ? `<p>${T('page.last-updated', { date: esc(pf.generatedAt) })}</p>` : ''}
+        </footer>
       </main>
       <aside class="rail" aria-label="문서 정보">
         <section class="rail-card" id="rail-now" aria-live="polite"><p class="rail-title">${T('doc.rail-now')}</p><p class="now-title">—</p><div class="now-body"></div></section>
@@ -51,8 +56,7 @@
       </aside>
     </div>
     <div class="doc-fab" role="group" aria-label="빠른 이동"><button type="button" class="fab-toc" aria-haspopup="dialog">${T('name.toc')}</button></div>
-    <dialog class="toc-dialog" aria-label="문서 목차"><div class="toc-dialog-head"><p class="toc-title">${T('name.toc')}</p><button type="button" class="btn dlg-close">${T('ui.close')}</button></div><div class="toc-links"></div></dialog>
-    <footer class="doc-foot"><span>© ${esc(name)}</span>${link({ href: 'index.html', label: T('ui.back'), kind: 'back' })}</footer>`;
+    <dialog class="toc-dialog" aria-label="문서 목차"><div class="toc-dialog-head"><p class="toc-title">${T('name.toc')}</p><button type="button" class="btn dlg-close">${T('ui.close')}</button></div><div class="toc-links"></div></dialog>`;
 
   // PDF: 미리 만든 <이름>-자기소개서.pdf(tools/make-letter-pdf.py)가 있으면 [PDF로 보기 ↗] · [PDF로 저장](내려받기), 없으면 [PDF로 저장](인쇄 창 — doc.css 인쇄 규칙)
   //   파일 이름 규칙은 tools/make-letter-pdf.py의 letter_name()과 같아야 함
@@ -78,6 +82,7 @@
   const toc = headings.filter((h) => h.level === 2 || h.level === 3);
   const tocHtml = toc.map((h) => `<a class="h${h.level}" href="#${esc(h.id)}">${esc(h.text)}</a>`).join('');
   document.querySelectorAll('.toc-links').forEach((el) => { el.innerHTML = tocHtml; });
+  PF.fitSides?.();                                                      // 페이지 끝에서 목차·오른쪽 칸이 머리 줄과 겹치지 않게
 
   // 목차 서랍(< 1280px): 고르면 닫힘
   const dlg = document.querySelector('.toc-dialog');

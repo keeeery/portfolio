@@ -123,10 +123,14 @@
       if (!mmdIdx.has(el)) mmdIdx.set(el, mmdIdx.size);
       const text = el.querySelector('code')?.textContent || '';
       try {
-        let { svg } = await mermaid.render(`dk-mmd-${mmdIdx.get(el)}${pass}`, text, mmdHost);
-        if (PF.routeFolkSackTerrain && text.includes('%% folk-sack-architecture')) {
+        let { svg } = await mermaid.render(`dk-mmd-${mmdIdx.get(el)}${pass}`, PF.mmdText ? PF.mmdText(text) : text, mmdHost);   // note for 줄은 빼고(칸 위 메모는 orthoEdges가)
+        const folk = PF.routeFolkSackTerrain && text.includes('%% folk-sack-architecture');
+        if (folk || PF.gatherFanIn || PF.orthoEdges) {                                    // 그린 SVG 손질: Folk Sack 지형 연결 · 한 상자로 모이는 화살표를 한 변으로
           mmdHost.innerHTML = svg;
-          PF.routeFolkSackTerrain(mmdHost.querySelector('svg'));
+          const s = mmdHost.querySelector('svg');
+          const ortho = PF.orthoEdges?.(s, text);                         // 화살표를 수직·수평 직선 + 둥근 모서리로
+          if (folk) PF.routeFolkSackTerrain(s);
+          if (!ortho) PF.gatherFanIn?.(s);
           svg = mmdHost.innerHTML;
           mmdHost.replaceChildren();
         }
@@ -168,13 +172,14 @@
 
   // ── 시각 자료 HTML(.vbox). 코드는 줄 범위를 잘라 조각마다 강조 ──
   const LANG = { csharp: 'C#', cs: 'C#', js: 'JavaScript', javascript: 'JavaScript', ts: 'TypeScript', json: 'JSON', yaml: 'YAML', yml: 'YAML', xml: 'XML', html: 'HTML', css: 'CSS', python: 'Python', py: 'Python', bash: 'Shell', sh: 'Shell', powershell: 'PowerShell', hlsl: 'HLSL', shader: 'Shader', cpp: 'C++', c: 'C', lua: 'Lua' };
+  if (window.hljs && !hljs.getLanguage('hlsl')) { try { hljs.registerAliases('hlsl', { languageName: 'cpp' }); } catch { /* */ } }  // HLSL은 C 계열이라 C++ 색을 빌림
   const codeLines = (el) => { const t = (el.querySelector('code')?.textContent || '').replace(/\n$/, ''); return t.split('\n'); };
   const langOf = (el) => /language-([\w+#-]+)/.exec(el.querySelector('code')?.className || '')?.[1]?.toLowerCase() || '';
   function codeHtml(el, a, b) {
     const lang = langOf(el), text = codeLines(el).slice(a - 1, b).join('\n');
     const code = document.createElement('code');
     code.textContent = text;
-    if (lang && window.hljs && hljs.getLanguage(lang)) { code.className = `language-${lang}`; try { hljs.highlightElement(code); } catch { /* 강조 없이 */ } }
+    if (lang && window.hljs && hljs.getLanguage(lang)) { code.className = `language-${lang}`; try { hljs.highlightElement(code); PF.hlMore?.(code); } catch { /* 강조 없이 */ } }   // 타입·메서드 호출도 색
     return code.outerHTML;
   }
   function vboxHtml(v, chunk) {

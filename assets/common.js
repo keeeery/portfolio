@@ -393,6 +393,7 @@ const PF = (() => {
     const border = reach(L2, 1.6);
     const group = mix(P, INK, dark ? 0.06 : 0.035);
     const group2 = mix(P, INK, dark ? 0.1 : 0.06);
+    const labelBg = mix(P, INK, dark ? 0.16 : 0.09);                     // 선 위 글자 뒤 배경 — 판과 구분되는 옅은 회색
     const h = (c) => rgbHex(c);
     const v = {
       darkMode: dark, background: h(P), fontFamily: base.fontFamily, fontSize: '16px',
@@ -400,7 +401,7 @@ const PF = (() => {
       secondaryColor: h(group2), secondaryTextColor: h(INK), secondaryBorderColor: h(border),
       tertiaryColor: h(group), tertiaryTextColor: h(INK), tertiaryBorderColor: h(border),
       mainBkg: h(node), nodeBorder: h(nodeBorder), nodeTextColor: h(INK), textColor: h(INK), titleColor: h(INK),
-      lineColor: h(line), defaultLinkColor: h(line), edgeLabelBackground: h(P),
+      lineColor: h(line), defaultLinkColor: h(line), edgeLabelBackground: h(labelBg),
       clusterBkg: h(group), clusterBorder: h(border),
       noteBkgColor: h(group2), noteTextColor: h(INK), noteBorderColor: h(border),
       // 시퀀스 다이어그램
@@ -413,6 +414,153 @@ const PF = (() => {
       specialStateColor: h(line), innerEndBackground: h(nodeBorder), labelColor: h(INK),
     };
     return { ...base, theme: 'base', themeVariables: v };
+  }
+
+  // ── highlight.js 다음 손질: IDE처럼 이름의 종류를 나눠 칠함(색은 CSS의 Visual Studio 색표 — doc.css·deck-theme.css) ──
+  //   highlight.js는 키워드·숫자·문자열·주석만 칠함. IDE처럼 코드 전체를 분석할 수는 없어서 글자 모양으로 나눔:
+  //     이름 바로 뒤에 '(' → 메서드(pf-t-method) · '.' 바로 뒤 → 멤버(속성·필드·enum 값, pf-t-member)
+  //     그 밖에 대문자로 시작(소문자 포함) → 타입(pf-t-type) · 나머지(지역 변수·매개변수) → 기본색
+  //   이미 칠한 조각(주석·문자열·숫자·키워드·선언 이름) 안은 건드리지 않고, 매개변수 묶음 같은 감싸는 조각 안은 칠함
+  const HL_LEAF = /hljs-(comment|string|number|keyword|built_in|literal|title|meta|doctag|regexp|symbol|attr|variable)/;
+  function hlMore(code) {
+    if (!code || code.dataset.pfHl) return;
+    code.dataset.pfHl = '1';
+    const RE = /[A-Za-z_]\w*/g;
+    const walker = document.createTreeWalker(code, NodeFilter.SHOW_TEXT);
+    const texts = [];
+    for (let n = walker.nextNode(); n; n = walker.nextNode()) texts.push(n);
+    let prev = '';                                                            // 바로 앞의 공백 아닌 글자(조각 경계를 넘어)
+    texts.forEach((n) => {
+      const t = n.nodeValue;
+      let leaf = false;
+      for (let e = n.parentElement; e && e !== code; e = e.parentElement) if (HL_LEAF.test(e.className)) { leaf = true; break; }
+      if (leaf) { const tt = t.trimEnd(); if (tt) prev = tt.at(-1); return; }
+      const frag = document.createDocumentFragment();
+      let last = 0, made = false;
+      for (const m of t.matchAll(RE)) {
+        const before = t.slice(last, m.index), back = (t.slice(0, m.index).trimEnd().at(-1)) ?? prev;
+        const after = t.slice(m.index + m[0].length).match(/^\s*(.)/)?.[1] ?? '';
+        const call = after === '(' || (after === '<' && /^\s*<[^<>()]*>\s*\(/.test(t.slice(m.index + m[0].length)));   // Foo<T>(…)도 메서드
+        const kind = /^\d/.test(m[0]) ? '' : call ? 'method' : back === '.' ? 'member' : /^[A-Z]\w*[a-z]/.test(m[0]) ? 'type' : '';
+        if (!kind) continue;
+        if (before) frag.append(before);
+        const sp = document.createElement('span');
+        sp.className = `pf-t-${kind}`;
+        sp.textContent = m[0];
+        frag.append(sp);
+        last = m.index + m[0].length;
+        made = true;
+      }
+      const tt = t.trimEnd(); if (tt) prev = tt.at(-1);
+      if (!made) return;
+      if (last < t.length) frag.append(t.slice(last));
+      n.replaceWith(frag);
+    });
+  }
+  // ── 흐름도(flowchart)에서 여러 화살표가 한 상자로 들어오면(fan-in) 화살촉을 그 상자의 한 변 가운데로 모은다 ──
+  //   보내는 상자가 모두 받는 상자의 같은 쪽(왼·오른·위·아래)에 있을 때만. 선 위 글자가 있는 화살표는 글자 자리가 어긋나므로 그대로 둠.
+  //   레이아웃(getBBox) 없이 속성·transform만으로 계산 → 숨겨진 인쇄용 상자에서도 같음.
+  function gatherFanIn(svg) {
+    if (!svg || !/flowchart/.test(svg.getAttribute('aria-roledescription') || svg.getAttribute('class') || '')) return;
+    const toRoot = (el) => {                                              // el의 좌표 → svg 루트 좌표
+      let m = svg.createSVGMatrix();
+      for (let e = el; e && e !== svg; e = e.parentNode) {
+        const t = e.transform?.baseVal?.consolidate?.();
+        if (t) m = t.matrix.multiply(m);
+      }
+      return m;
+    };
+    const boxes = [];
+    svg.querySelectorAll('g.node').forEach((g) => {
+      const r = g.querySelector(':scope > rect, :scope > g > rect');
+      if (!r) return;
+      const w = r.width.baseVal.value, h = r.height.baseVal.value;
+      if (!w || !h) return;
+      const m = toRoot(r), x = m.e + r.x.baseVal.value, y = m.f + r.y.baseVal.value;
+      boxes.push({ left: x, top: y, right: x + w, bottom: y + h, cx: x + w / 2, cy: y + h / 2 });
+    });
+    const near = (p, pad = 12) => boxes.find((b) => p.x >= b.left - pad && p.x <= b.right + pad && p.y >= b.top - pad && p.y <= b.bottom + pad);
+    // 선 위 글자: Mermaid는 같은 묶음(.root)의 .edgePaths와 .edgeLabels에 화살표를 같은 순서로 넣음(11.4는 글자에 화살표 id가 없음)
+    const labeled = (p) => {
+      const ep = p.parentNode, el = ep?.parentNode?.querySelector(':scope > .edgeLabels');
+      if (!el || el.children.length !== ep.children.length) return true;   // 짝을 못 지으면 건드리지 않음
+      return !!el.children[[...ep.children].indexOf(p)]?.textContent.trim();
+    };
+    const groups = new Map();
+    svg.querySelectorAll('.edgePaths > path').forEach((p) => {
+      if (!p.getAttribute('marker-end')) return;                          // 화살촉 없는 선(~~~ 등)은 제외
+      if (labeled(p)) return;
+      const nums = (p.getAttribute('d') || '').match(/-?\d*\.?\d+(?:e-?\d+)?/gi)?.map(Number);
+      if (!nums || nums.length < 4) return;
+      const m = toRoot(p), pt = (x, y) => ({ x: m.a * x + m.c * y + m.e, y: m.b * x + m.d * y + m.f });
+      const s = pt(nums[0], nums[1]), e = pt(nums[nums.length - 2], nums[nums.length - 1]);
+      const from = near(s, 4), to = near(e);
+      if (!from || !to || from === to) return;
+      if (!groups.has(to)) groups.set(to, []);
+      groups.get(to).push({ p, m, s, e, from });
+    });
+    for (const [to, edges] of groups) {
+      if (edges.length < 2) continue;
+      const sides = [
+        ['left', edges.every((g) => g.from.right <= to.left), to.left - Math.max(...edges.map((g) => g.from.right))],
+        ['right', edges.every((g) => g.from.left >= to.right), Math.min(...edges.map((g) => g.from.left)) - to.right],
+        ['top', edges.every((g) => g.from.bottom <= to.top), to.top - Math.max(...edges.map((g) => g.from.bottom))],
+        ['bottom', edges.every((g) => g.from.top >= to.bottom), Math.min(...edges.map((g) => g.from.top)) - to.bottom],
+      ].filter((x) => x[1]).sort((a, b) => b[2] - a[2]);
+      if (!sides.length) continue;
+      const side = sides[0][0], horiz = side === 'left' || side === 'right', sign = side === 'left' || side === 'top' ? -1 : 1;
+      // 화살촉 몫의 틈: 이미 그 변 가운데로 들어오는 화살표의 끝에서 잼(없으면 기본값)
+      const gaps = edges.map((g) => (horiz ? Math.abs(g.e.x - (sign < 0 ? to.left : to.right)) : Math.abs(g.e.y - (sign < 0 ? to.top : to.bottom))));
+      const gap = Math.min(Math.max(Math.min(...gaps), 0), 10);
+      const ex = horiz ? (sign < 0 ? to.left : to.right) + sign * gap : to.cx;
+      const ey = horiz ? to.cy : (sign < 0 ? to.top : to.bottom) + sign * gap;
+      const curves = edges.map((g) => {
+        // 보내는 상자 쪽 시작점: 받는 상자를 향한 변의 가운데
+        const sx = horiz ? (sign < 0 ? g.from.right : g.from.left) : g.from.cx;
+        const sy = horiz ? g.from.cy : (sign < 0 ? g.from.bottom : g.from.top);
+        const k = horiz ? (ex - sx) / 2 : (ey - sy) / 2;
+        return { g, pts: [[sx, sy], horiz ? [sx + k, sy] : [sx, sy + k], horiz ? [ex - k, ey] : [ex, ey - k], [ex, ey]] };
+      });
+      // 새 곡선이 다른 상자를 지나가면(Mermaid가 돌려 그린 긴 화살표) 이 묶음은 원래대로 둠
+      const hits = ({ g, pts: [a, b, c, d] }) => {
+        for (let i = 1; i < 24; i++) {
+          const t = i / 24, u = 1 - t;
+          const x = u * u * u * a[0] + 3 * u * u * t * b[0] + 3 * u * t * t * c[0] + t * t * t * d[0];
+          const y = u * u * u * a[1] + 3 * u * u * t * b[1] + 3 * u * t * t * c[1] + t * t * t * d[1];
+          if (boxes.some((bx) => bx !== g.from && bx !== to && x > bx.left - 2 && x < bx.right + 2 && y > bx.top - 2 && y < bx.bottom + 2)) return true;
+        }
+        return false;
+      };
+      if (curves.some(hits)) continue;
+      for (const { g, pts } of curves) {
+        const inv = g.m.inverse(), loc = ([x, y]) => `${(inv.a * x + inv.c * y + inv.e).toFixed(2)},${(inv.b * x + inv.d * y + inv.f).toFixed(2)}`;
+        g.p.setAttribute('d', `M${loc(pts[0])} C${loc(pts[1])} ${loc(pts[2])} ${loc(pts[3])}`);
+      }
+    }
+  }
+
+  // 상세 문서·자기소개서: 페이지 끝에서 목차·오른쪽 칸이 밀려 올라가 머리 줄([← 돌아가기 › 제목])과 겹치지 않게:
+  //   sticky 칸은 틀(.doc-page)의 아래 끝을 넘지 못해 위로 밀려남 → 붙는 자리부터 틀 아래 끝까지 남은 높이(--side-room)로 칸을 줄이고 칸 안에서 스크롤
+  function fitSides() {
+    const page = document.querySelector('.doc-page'), toc = document.getElementById('toc');
+    if (!page) return;
+    const root = document.documentElement;
+    let raf = 0;
+    const run = () => {
+      raf = 0;
+      const cs = getComputedStyle(root);
+      const top = (parseFloat(cs.getPropertyValue('--head-h')) || 56) + (parseFloat(cs.getPropertyValue('--side-gap')) || 12);
+      const room = Math.max(120, Math.floor(page.getBoundingClientRect().bottom - top));
+      if (room >= innerHeight) { root.style.removeProperty('--side-room'); return; }
+      root.style.setProperty('--side-room', `${room}px`);
+      const a = toc?.querySelector('a.active');                         // 줄어든 목차에서도 지금 읽는 절이 보이게
+      if (a && toc.scrollHeight > toc.clientHeight && a.offsetTop + a.offsetHeight > toc.scrollTop + toc.clientHeight - 24) toc.scrollTop = a.offsetTop + a.offsetHeight - toc.clientHeight + 24;
+    };
+    const ask = () => { if (!raf) raf = requestAnimationFrame(run); };
+    addEventListener('scroll', ask, { passive: true });
+    addEventListener('resize', ask);
+    new ResizeObserver(ask).observe(page);
+    run();
   }
 
   // Folk Sack의 지형 연결을 서버 상태와 방송 수신 행에 맞춘다.
@@ -549,6 +697,6 @@ const PF = (() => {
   const { t, tab, label, load: loadStrings, report: stringsReport } = PFStr;
 
   return { esc, inline, isUrl, shortUrl, repoLinks, otherLinks, loadJSON, loadText, encodePath, srcPath, projectUrl, docUrl, siteBase, visibleUrl, metaValue, teamLabel,
-           slugger, normTitle, resolveHeading, keyOk, deckSceneFor, headingsOf, ICON, NEWTAB, link, markNewTab, topCap, railToggle, themeTokens, applyTheme, mermaidConfig, routeFolkSackTerrain, contrast, hexRgb, modeButton, setMode, getMode, hasLightMode,
+           slugger, normTitle, resolveHeading, keyOk, deckSceneFor, headingsOf, ICON, NEWTAB, link, markNewTab, topCap, railToggle, themeTokens, applyTheme, mermaidConfig, hlMore, routeFolkSackTerrain, gatherFanIn, fitSides, contrast, hexRgb, modeButton, setMode, getMode, hasLightMode,
            FILE_HELP, noDataHtml, isFile, notice, guardFileProtocol, noData, t, tab, label, loadStrings, stringsReport };
 })();

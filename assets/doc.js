@@ -1,11 +1,14 @@
 // 상세 기술문서 — doc.html?p=<폴더>  (portfolio-structure §4, 링크 §5, 결정 F2·F3·F6·F10)
 //   흐르는 읽기 문서. 레이아웃 ① 가운데 정렬(spikes/doc-layout/doc.html?layout=1). 출처: spikes/doc-layout/doc.js
 //   주석의 설계 근거(docs/design/…의 portfolio-structure·deck-vs-scroll·01 §, R0, 결정 F·Q·# 번호)와 원본 시안(spikes/…)은 템플릿 유지관리용 maintainer 브랜치에 있습니다. 이 레포에 없어도 정상입니다.
-//   문서 처리 순서: marked 12.0.2(gfm) → 상대경로 → GitHub식 slug(PF.slugger) — 여기까지 md-blocks.js(PF.md.parse, 발표 덱과 같은 규칙) → 목차 → Mermaid 11.4.1 → highlight.js 11.9.0
+//   문서 처리 순서: marked 12.0.2(gfm) → 상대경로 → GitHub식 slug(PF.slugger) — 여기까지 md-blocks.js(PF.md.parse, 발표 덱과 같은 규칙) → 목차 → Mermaid 11.12.0 → highlight.js 11.9.0
 //   주소: #<제목 slug>(발표 덱·옛 project.html 조각이 이 형식으로 옴) · #sec=<절 제목>(제목을 찾아 #<slug>로 바꿈)
 //   발표 덱으로: 머리 [발표 덱 ↗](같은 탭 — 포트폴리오 안 이동). 예전의 절 머리 칩·목차 ★(덱 장면 연결)는 없앴습니다(결정 G1)
 //   내용은 data/projects/<폴더>.json + src/<폴더>/<기술 문서>만 씁니다. UI 문구는 문구 표(PF.t, assets/strings.js + theme/strings.tsv)에서 옵니다.
 //   점검: PFDoc.report() — 문구 표 점검(strings)
+// Mermaid는 불러오자마자 window load 때 자동 run(기본 startOnLoad: true)을 걸어 둠. 아래 ⑦이 .mermaid 상자를 만든 뒤 글꼴을 기다리는 사이에
+//   load가 오면 그 자동 run이 상자를 먼저 집어(data-processed) 그리다 실패해 원문 글자로 남음 → load 전에(지금, 동기로) 꺼 둠
+try { window.mermaid?.initialize({ startOnLoad: false }); } catch (_) { /* */ }
 (async () => {
   const root = document.getElementById('app');
   window.PFDoc = Object.assign(window.PFDoc || {}, { report: () => ({ page: 'doc', ready: document.documentElement.dataset.docReady === '1', strings: PF.stringsReport() }) });
@@ -22,6 +25,137 @@
   const headText = new Map();                                        // 제목 요소 → 원문 제목 글자(링크 표시·각주가 붙기 전)
   const htext = (h) => headText.get(h) ?? h.textContent.trim();
   let releaseHold = null;                                            // 도착한 제목 붙잡기(hold) 해제 함수
+
+  // 표 칸 폭 맞추기(화면만) — 직접 고친 부분.
+  //   브라우저 기본 표 배치는 긴 칸에 폭을 몰아 줘서 짧은 칸이 '핵심|A', '§3 ·|§8.1'처럼 한두 글자만 다음 줄로 넘어가는 일이 생김.
+  //   칸마다 폭을 바꿔 가며(화면 밖 복제 표, table-layout:fixed) 칸 안 줄 수와 외톨이 줄(마지막 줄이 2.6em 이하이거나 칸 폭의 20% 미만)을 재고,
+  //   표 폭 안에서 '줄 수 + 외톨이 벌점'이 가장 작은 폭 나눔을 고름(동점이면 브라우저 기본 나눔에 가까운 쪽). 고른 폭은 <colgroup class="pf-cols">의 --pf-w로,
+  //   CSS(doc.css table.pf-fit)는 화면에서만 적용 — 인쇄는 원래 자동 배치(⑥-2 .print-wide)를 그대로 씀. 표 칸 폭이 바뀌면(창 크기) 다시 나눔.
+  //   그림·코드 블록·칸 합치기가 있는 표, 표 폭에 다 들어가거나(줄바꿈 없음) 최소 폭도 넘치는(가로 스크롤) 표는 건드리지 않음
+  function fitTables(scope) {
+    const ORPHAN_EM = 2.6, ORPHAN_RATIO = 0.2, ORPHAN_COST = 3, MAX_STEPS = 120;
+    const tables = [...scope.querySelectorAll('.table-wrap > table')].filter((tb) =>
+      !tb.querySelector('img, video, iframe, pre, table, .mmd') && tb.rows.length &&
+      [...tb.rows].every((r) => r.cells.length === tb.rows[0].cells.length && [...r.cells].every((c) => c.colSpan === 1 && c.rowSpan === 1)) &&
+      tb.rows[0].cells.length >= 2);
+    if (!tables.length) return;
+    const lineInfo = (cell) => {                                      // 칸 안 줄 수·마지막 줄 폭(px)
+      const fs = parseFloat(getComputedStyle(cell).fontSize) || 14;
+      const r = document.createRange(); r.selectNodeContents(cell);
+      const lines = [];
+      for (const q of [...r.getClientRects()].sort((a, b) => a.top - b.top)) {
+        if (q.width < 0.5 || q.height < 0.5 || q.height > fs * 2.2) continue;   // 여러 줄을 감싸는 블록 상자는 빼고 줄 조각만
+        const cy = (q.top + q.bottom) / 2;
+        const L = lines.find((l) => Math.abs(l.cy - cy) < fs * 0.6);
+        if (L) { L.l = Math.min(L.l, q.left); L.r = Math.max(L.r, q.right); } else lines.push({ cy, l: q.left, r: q.right });
+      }
+      if (lines.length < 2) return { n: lines.length, orphan: false };
+      const cs = getComputedStyle(cell);
+      const inner = cell.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight);
+      const last = lines.reduce((a, b) => (b.cy > a.cy ? b : a));
+      const w = last.r - last.l;
+      return { n: lines.length, orphan: w <= fs * ORPHAN_EM || w < inner * ORPHAN_RATIO };
+    };
+    const measure = (tb, box) => {                                    // 칸마다 폭(4px 남짓 간격)별 비용표
+      const t = tb.cloneNode(true);
+      t.classList.remove('pf-fit'); t.querySelector(':scope > colgroup.pf-cols')?.remove();
+      t.style.cssText = 'min-width:0 !important;width:auto;table-layout:auto';
+      box.replaceChildren(t);
+      const n = t.rows[0].cells.length;
+      const widths = () => [...t.rows[0].cells].map((c) => c.getBoundingClientRect().width);
+      box.style.width = '1px'; const minC = widths();               // 최소 폭(낱말 단위 줄바꿈, 머리 칸은 한 줄)
+      box.style.width = '100000px'; const maxC = widths();          // 한 줄 폭
+      const range = Math.max(...maxC.map((m, i) => m - minC[i]));
+      if (range < 1) return null;
+      const u = Math.max(4, Math.ceil(range / MAX_STEPS));
+      const K = maxC.map((m, i) => Math.ceil((m - minC[i]) / u));
+      const cg = document.createElement('colgroup');
+      const cols = Array.from({ length: n }, () => cg.appendChild(document.createElement('col')));
+      t.prepend(cg); t.style.tableLayout = 'fixed';
+      // 고정 배치에서 col 폭과 실제 칸 폭의 차이(안쪽 여백·테두리 계산 방식)를 한 번 재서 맞춤
+      cols.forEach((c, i) => { c.style.width = `${minC[i]}px`; });
+      t.style.width = `${minC.reduce((a, b) => a + b, 0)}px`;
+      const adj = widths().map((w, i) => minC[i] - w);
+      const cost = minC.map(() => []);
+      for (let s = 0; s <= Math.max(...K); s++) {
+        const ws = minC.map((m, i) => m + Math.min(s, K[i]) * u);
+        cols.forEach((c, i) => { c.style.width = `${ws[i] + adj[i]}px`; });
+        t.style.width = `${ws.reduce((a, b) => a + b, 0)}px`;
+        for (let i = 0; i < n; i++) if (s <= K[i]) cost[i][s] = 0;
+        for (const row of t.rows) [...row.cells].forEach((cell, i) => {
+          if (s > K[i]) return;
+          const { n: ln, orphan } = lineInfo(cell);
+          cost[i][s] += ln + (orphan ? ORPHAN_COST : 0);
+        });
+      }
+      return { n, minC, maxC, u, K, cost, adj };
+    };
+    const solve = (m, T) => {                                         // 표 폭 T를 칸에 나눔(동적 계획법)
+      const sum = (a) => a.reduce((x, y) => x + y, 0);
+      const R = T - sum(m.minC);
+      if (R < 0 || R >= sum(m.maxC) - sum(m.minC) - 0.5) return null;
+      const B = Math.floor(R / m.u);
+      const share = R / (sum(m.maxC) - sum(m.minC));                  // 브라우저 기본 나눔 어림(최소 폭 + 남는 폭을 칸의 여유만큼)
+      const cAt = (i, k) => m.cost[i][Math.min(k, m.K[i])];
+      let dp = new Array(B + 1).fill(Infinity); dp[0] = 0;
+      const pick = [];
+      for (let i = 0; i < m.n; i++) {
+        const nd = new Array(B + 1).fill(Infinity), pk = new Array(B + 1).fill(0);
+        const ideal = (m.maxC[i] - m.minC[i]) * share / m.u;
+        for (let b = 0; b <= B; b++) {
+          if (dp[b] === Infinity) continue;
+          for (let k = 0; b + k <= B; k++) {
+            const v = dp[b] + cAt(i, k) * 1e5 + Math.abs(k - ideal);
+            if (v < nd[b + k]) { nd[b + k] = v; pk[b + k] = k; }
+          }
+        }
+        dp = nd; pick.push(pk);
+      }
+      const ks = []; let b = B;
+      for (let i = m.n - 1; i >= 0; i--) { ks[i] = pick[i][b]; b -= ks[i]; }
+      const ws = m.minC.map((v, i) => v + ks[i] * m.u);
+      const big = ws.indexOf(Math.max(...ws));
+      ws[big] += T - sum(ws);                                         // 4px 미만 나머지는 가장 넓은 칸에
+      return ws;
+    };
+    const apply = (tb) => {
+      const m = tb._pfFit, T = tb.parentElement.clientWidth;
+      if (!m || !T || T === tb._pfFitW) return;
+      tb._pfFitW = T;
+      const ws = solve(m, T);
+      if (!ws) { tb.classList.remove('pf-fit'); return; }
+      let cg = tb.querySelector(':scope > colgroup.pf-cols');
+      if (!cg) {
+        cg = document.createElement('colgroup'); cg.className = 'pf-cols';
+        for (let i = 0; i < m.n; i++) cg.appendChild(document.createElement('col'));
+        tb.prepend(cg);
+      }
+      const set = () => [...cg.children].forEach((c, i) => c.style.setProperty('--pf-w', `${ws[i] + m.adj[i]}px`));
+      set(); tb.classList.add('pf-fit');
+      const over = tb.getBoundingClientRect().width - tb.parentElement.clientWidth;   // 겹친 테두리 반쪽만큼 넘치면(가로 스크롤 막대가 생김) 가장 넓은 칸에서 뺌
+      if (over > 0) { const big = ws.indexOf(Math.max(...ws)); ws[big] -= Math.ceil(over); set(); }
+    };
+    const ro = new ResizeObserver((es) => es.forEach((e) => apply(e.target.querySelector(':scope > table'))));
+    let gen = 0;
+    const run = async () => {
+      const my = ++gen;
+      const probe = document.createElement('div');
+      probe.className = 'md pf-fit-probe'; probe.setAttribute('aria-hidden', 'true');
+      probe.style.cssText = 'position:absolute;left:-200000px;top:0;visibility:hidden;max-width:none;width:auto';
+      probe.innerHTML = '<div class="table-wrap" style="min-width:0 !important;max-width:none !important;margin:0 !important;overflow:visible"></div>';
+      document.body.appendChild(probe);
+      for (const tb of tables) {
+        if (my !== gen) break;
+        try { tb._pfFit = measure(tb, probe.firstChild); } catch (err) { tb._pfFit = null; console.warn('[doc] 표 칸 폭 재기 오류:', err); }
+        tb._pfFitW = 0;
+        apply(tb); ro.observe(tb.parentElement);
+        await new Promise((ok) => setTimeout(ok, 0));                // 표 사이에 잠깐 쉬어 화면이 멈추지 않게(탭이 뒤에 있어도 진행)
+      }
+      probe.remove();
+    };
+    run();
+    document.fonts?.addEventListener('loadingdone', run);             // 글꼴이 늦게 들어오면 다시 잼
+  }
 
   if (!id) { PF.notice(root, '프로젝트를 고르세요', `<p>주소 끝에 <code>?p=폴더이름</code>을 붙여 주세요.</p>${back}`); return done(); }
   const [pf] = await Promise.all([PF.loadJSON('data/portfolio.json').catch(() => ({})), PF.loadStrings()]);
@@ -85,6 +219,11 @@
           </details>
         </div>
         <article class="md" id="doc"><p class="loading">기술 문서를 불러오는 중…</p></article>
+        <footer class="doc-foot">
+          ${name ? `<p>© ${esc(name)}</p>` : ''}
+          <p>${T('page.browser-note')}</p>
+          ${pf.generatedAt ? `<p>${T('page.last-updated', { date: esc(pf.generatedAt) })}</p>` : ''}
+        </footer>
       </main>
       <aside class="rail" aria-label="프로젝트 정보">
         <section class="rail-card"><p class="rail-title">${T('doc.rail-project')}</p><dl class="rail-meta">${metaRows}</dl></section>
@@ -93,8 +232,7 @@
       </aside>
     </div>
     <div class="doc-fab" role="group" aria-label="빠른 이동"><button type="button" class="fab-toc" aria-haspopup="dialog">${T('name.toc')}</button></div>
-    <dialog class="toc-dialog" aria-label="문서 목차"><div class="toc-dialog-head"><p class="toc-title">${T('name.toc')}</p><button type="button" class="btn dlg-close">${T('ui.close')}</button></div><div class="toc-links"></div></dialog>
-    <footer class="doc-foot"><span>© ${esc(name)}</span>${link({ href: 'index.html', label: T('ui.back'), kind: 'back' })}</footer>`;
+    <dialog class="toc-dialog" aria-label="문서 목차"><div class="toc-dialog-head"><p class="toc-title">${T('name.toc')}</p><button type="button" class="btn dlg-close">${T('ui.close')}</button></div><div class="toc-links"></div></dialog>`;
 
   // 좁은 화면(< 720px)에서는 "한눈에" 상자를 접어 둠
   document.getElementById('glance').open = !matchMedia('(max-width: 719.98px)').matches;
@@ -169,7 +307,7 @@
       const div = document.createElement('div');
       div.className = 'mermaid mmd-screen';
       div.id = `mmd-${n}`;
-      div.textContent = code.textContent;
+      div.textContent = PF.mmdText ? PF.mmdText(code.textContent) : code.textContent;   // note for 줄은 빼고 그림(칸 위 메모는 orthoEdges가)
       const pdiv = document.createElement('div');
       pdiv.className = 'mermaid mmd-print';
       pdiv.dataset.svgId = `mmd-p-${n++}`;
@@ -213,10 +351,13 @@
     };
     markPrintWide();
     document.fonts?.addEventListener('loadingdone', markPrintWide);
+    fitTables(doc);
     const finishSvg = (fig, box) => {
       const svg = box.querySelector('svg');
       if (!svg) { box.classList.add('pf-mmd-error'); return; }
+      const ortho = PF.orthoEdges?.(svg, fig._mmdSrc);                    // 화살표를 수직·수평 직선 + 둥근 모서리로(원문 %% 화살표 줄로 고르기)
       if (fig._mmdSrc.includes('%% folk-sack-architecture')) PF.routeFolkSackTerrain?.(svg);
+      if (!ortho) PF.gatherFanIn?.(svg);                                  // 곡선 그대로인 그림: 한 상자로 모이는 화살표를 한 변 가운데로
       const natural = svg.viewBox?.baseVal?.width || parseFloat(svg.style.maxWidth) || 0;
       if (natural) { svg.setAttribute('width', String(Math.ceil(natural))); svg.style.maxWidth = '100%'; svg.removeAttribute('height'); }
       svg.dataset.naturalWidth = String(natural);
@@ -240,7 +381,7 @@
       mermaid.initialize({ ...mmdCfg({ print: true }), suppressErrorRendering: true });
       for (const fig of figs) {
         const box = fig.querySelector('.mmd-print');
-        try { box.innerHTML = (await mermaid.render(box.dataset.svgId, fig._mmdSrc)).svg; } catch { box.replaceChildren(); }
+        try { box.innerHTML = (await mermaid.render(box.dataset.svgId, PF.mmdText ? PF.mmdText(fig._mmdSrc) : fig._mmdSrc)).svg; } catch { box.replaceChildren(); }
       }
       await runMermaid('.mmd-screen', mmdCfg());
     }
@@ -252,7 +393,7 @@
         figs.forEach((fig) => {
           const box = fig.querySelector('.mmd-screen');
           box.removeAttribute('data-processed'); box.classList.remove('pf-mmd-error');
-          box.textContent = fig._mmdSrc;
+          box.textContent = PF.mmdText ? PF.mmdText(fig._mmdSrc) : fig._mmdSrc;
         });
         await runMermaid('.mmd-screen', mmdCfg());
         figs.forEach((fig) => finishSvg(fig, fig.querySelector('.mmd-screen')));
@@ -260,10 +401,11 @@
     });
 
     // ⑧ 코드 하이라이트 + 접근성 (다이어그램 원문 pre는 제외)
+    if (window.hljs && !hljs.getLanguage('hlsl')) { try { hljs.registerAliases('hlsl', { languageName: 'cpp' }); } catch (_) { /* */ } }  // HLSL은 C 계열이라 C++ 색을 빌림
     const LANG = { csharp: 'C#', cs: 'C#', js: 'JavaScript', javascript: 'JavaScript', ts: 'TypeScript', json: 'JSON', yaml: 'YAML', yml: 'YAML', xml: 'XML', html: 'HTML', css: 'CSS', python: 'Python', py: 'Python', bash: 'Shell', sh: 'Shell', powershell: 'PowerShell', hlsl: 'HLSL', shader: 'Shader', cpp: 'C++', c: 'C', lua: 'Lua' };
     doc.querySelectorAll('pre > code').forEach((el) => {
       if (el.closest('.mmd-src')) return;
-      if (window.hljs) { try { hljs.highlightElement(el); } catch (_) { /* */ } }
+      if (window.hljs) { try { hljs.highlightElement(el); PF.hlMore?.(el); } catch (_) { /* */ } }   // 타입·메서드 호출도 색
       const lang = /language-([\w+#-]+)/.exec(el.className)?.[1]?.toLowerCase();
       const pre = el.parentElement;
       pre.tabIndex = 0; pre.setAttribute('role', 'region');
@@ -287,6 +429,7 @@
 
     // ⑩ 목차 현재 위치(스크롤 기준) + 레일 "지금 읽는 절"
     trackSection(headings.filter((h) => h.tagName === 'H2' || h.tagName === 'H3'));
+    PF.fitSides();
 
     // ⑪ 이미지 크게 보기, 다이어그램 크게 보기(같은 페이지 dialog) — 다이어그램은 그림을 누르거나 [크게 보기] 단추로(단추는 키보드용)
     doc.addEventListener('click', (e) => {

@@ -98,7 +98,7 @@ code { font-family: var(--mono); font-size: .88em; background: var(--accent-soft
 .doc-main { grid-area: main; min-width: 0; padding: 36px 0 96px; outline: none; }
 .rail { grid-area: rail; }
 :root { --side-gap: 12px; }   /* 머리 줄과 목차·오른쪽 칸 사이(스크립트도 이 값을 읽음 — --rail-y) */
-.toc, .rail { position: sticky; top: calc(var(--head-h, 56px) + var(--side-gap)); max-height: calc(100vh - var(--head-h, 56px) - var(--side-gap) - 24px);   /* 붙는 자리 = 처음 자리(머리 줄 아래 --side-gap) — 스크롤을 시작해도 올라가지 않고 그대로 */ overflow-y: auto; margin-top: var(--side-gap); overscroll-behavior: contain; }
+.toc, .rail { position: sticky; top: calc(var(--head-h, 56px) + var(--side-gap)); max-height: min(calc(100vh - var(--head-h, 56px) - var(--side-gap) - 24px), var(--side-room, 100vh));   /* --side-room = 페이지 끝에서 틀 아래 끝까지 남은 높이(doc.js fitSides) — 칸이 위로 밀려 머리 줄과 겹치지 않고 줄어듦 · 붙는 자리 = 처음 자리(머리 줄 아래 --side-gap) — 스크롤을 시작해도 올라가지 않고 그대로 */ overflow-y: auto; margin-top: var(--side-gap); overscroll-behavior: contain; }
 
 /* 목차 */
 .toc { font-size: 13.5px; padding: 0 6px 24px 0; scrollbar-width: thin; }
@@ -112,7 +112,7 @@ code { font-family: var(--mono); font-size: .88em; background: var(--accent-soft
 /* 레일 (≥1440px) */
 .rail { display: grid; gap: 14px; align-content: start; padding: 0 var(--rail-bleed) 32px; scrollbar-width: thin; }   /* 좌우·아래 여백(--rail-bleed) = 카드 그림자 자리 — 스크롤 칸(overflow)이 그림자를 네모로 잘라 먹지 않게. 그만큼 칸을 넓히고 바깥으로 당겨 카드 자리는 그대로 */
 .rail-card { border: 1px solid var(--float-line); border-radius: calc(var(--r) * .8); padding: 14px 16px;   /* [맨 위로] 캡슐과 같은 반투명 + 흐림 + 그림자('떠 있는 단추·카드') */
-              background: var(--float-bg); -webkit-backdrop-filter: var(--float-blur); backdrop-filter: var(--float-blur); box-shadow: var(--float-shadow); }
+              background: var(--float-bg); -webkit-backdrop-filter: var(--float-blur); backdrop-filter: var(--float-blur); }   /* 그림자는 중간 폭(1280~1440px, 떠서 나오는 카드)에서만 — 아래 미디어 쿼리 */
 .rail-title { font-size: 12px; font-weight: 800; letter-spacing: .06em; color: var(--muted); margin-bottom: 8px; }
 .rail-meta div { display: grid; grid-template-columns: 64px 1fr;   /* 직접 수정: 44 → 64px(「구현 범위」 한 줄) */ gap: 10px; padding: 5px 0; font-size: 13px; }
 .rail-meta div + div { border-top: 1px solid var(--line); }
@@ -170,13 +170,25 @@ code { font-family: var(--mono); font-size: .88em; background: var(--accent-soft
 .md blockquote p { color: var(--ink); margin: 6px 0; }
 
 .md pre { margin: 16px 0; border-radius: calc(var(--r) * .7); overflow: auto; background: var(--code-bg); border: 1px solid var(--line); }
-.md pre code, .md pre code.hljs { display: block; width: max-content; min-width: 100%; padding: 18px 20px; font-size: 13.5px; line-height: 1.65;
-                                  background: transparent; color: #E6E6E6; word-break: normal; white-space: pre; overflow: visible; border-radius: 0; }
+.md pre code, .md pre code.hljs { display: block; width: auto; min-width: 0; padding: 18px 20px; font-size: 13.5px; line-height: 1.65;
+                                  background: transparent; color: #E6E6E6; word-break: normal; white-space: pre-wrap; overflow-wrap: anywhere; overflow: visible; border-radius: 0; }   /* 긴 줄은 칸 안에서 줄바꿈 — 가로 스크롤 없음(들여쓰기는 그대로 유지) */
+/* 코드 색: Rider 구성표 "Visual Studio Dark"와 비슷하게(메서드는 VS 2019 이후 색) — 이름 종류는 PF.hlMore가 글자 모양으로 나눔(common.js) */
+.md pre code.hljs { color: #DCDCDC; }
+.md pre code.hljs :is(.hljs-keyword, .hljs-built_in, .hljs-literal, .hljs-type) { color: #569CD6; }
+.md pre code.hljs :is(.hljs-string, .hljs-char, .hljs-regexp) { color: #D69D85; }
+.md pre code.hljs .hljs-number { color: #B5CEA8; }
+.md pre code.hljs :is(.hljs-comment, .hljs-doctag) { color: #57A64A; font-style: normal; }
+.md pre code.hljs .hljs-meta { color: #9B9B9B; }
+.md pre code.hljs :is(.hljs-title.class_, .pf-t-type) { color: #4EC9B0; }
+.md pre code.hljs :is(.hljs-title.function_, .pf-t-method) { color: #DCDCAA; }
+.md pre code.hljs .pf-t-member { color: #DCDCDC; }
+.md pre code.hljs :is(.hljs-params, .hljs-variable, .hljs-attr, .hljs-property) { color: inherit; }
 .md pre.fade-r { -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 56px), rgba(0,0,0,.25)); mask-image: linear-gradient(to right, #000 calc(100% - 56px), rgba(0,0,0,.25)); }
 
 .table-wrap { margin: 18px 0; overflow-x: auto; }
 .md table { display: table; border-collapse: collapse; font-size: 14.5px; }
-.md th { text-align: left; background: var(--th); color: var(--ink); font-weight: 700; padding: 10px 14px; border: 1px solid var(--line); white-space: nowrap; }
+.md :is(th, td) { overflow-wrap: anywhere; }   /* 긴 영문·코드 이름도 칸 안에서 줄바꿈 — 표가 칸보다 넓어져 가로 스크롤이 생기지 않게 */
+.md th { text-align: left; background: var(--th); color: var(--ink); font-weight: 700; padding: 10px 14px; border: 1px solid var(--line); }
 .md td { padding: 10px 14px; border: 1px solid var(--line); vertical-align: top; color: var(--body); }
 .md td img { display: block; margin: 0; border-radius: 8px; border: 1px solid var(--line); cursor: zoom-in; height: auto; }
 /* 한 줄에 그림만 여러 장 → 같은 폭으로 나란히(doc.js의 .pf-figure-row) — 직접 고친 부분 */
@@ -256,19 +268,23 @@ dialog.lightbox::backdrop { background: rgba(10, 11, 14, .82); }
 .lb-cap { color: #fff; text-align: center; font-size: 14px; margin-top: 10px; }
 .lb-close { display: block; margin: 10px auto 0; }
 
-.doc-foot { max-width: var(--page-max); margin: 0 auto; padding: 28px var(--pad) 48px; border-top: 1px solid var(--line);
-            display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px 20px; color: var(--faint); font-size: 13px; }
-.doc-foot a { color: var(--muted); text-decoration: none; }
+.doc-foot { margin-top: 120px; display: grid; gap: 4px; color: var(--faint); font-size: 12px; line-height: 1.6; }   /* 본문 맨 아래 세 줄(© 이름 · 브라우저 안내 · 마지막 업데이트) — 바·선 없이, 포트폴리오 문서 맨 아래와 같은 글 */
+.doc-foot p { margin: 0; }
 
 /* ── ① 가운데 정렬 폭 규칙 (직접 수정: 한 칸 정렬) — 글줄 45rem(720px)을 본문 칸 가운데에, 코드·표·도식·그림도 같은 칸 안에.
    코드·표는 칸 폭을 꽉 채우고(넘치면 상자 안 가로 스크롤), 도식·그림은 칸 폭까지 줄어 가운데(클릭하면 크게) ── */
-.doc-intro, .md > * { max-width: min(var(--measure), 100%); }
+.doc-intro, .md > *, .doc-foot { max-width: min(var(--measure), 100%); }
 .md > :is(pre, .table-wrap) { width: min(var(--measure), 100%); overflow-x: auto; }
 .md > :is(.mmd, .pf-figure) { width: fit-content; }
 .md > .print-only { max-width: none; }
-.doc-intro, .md > :not(pre, .table-wrap, .mmd, .pf-figure) { margin-inline: auto; }
+.doc-intro, .doc-foot, .md > :not(pre, .table-wrap, .mmd, .pf-figure) { margin-inline: auto; }
 .md > :is(pre, .table-wrap, .mmd, .pf-figure) { margin-inline: auto; }
 @media screen { .md > .table-wrap > table { min-width: 100%; } }   /* 표 테두리가 칸 끝까지(화면만 — 인쇄 폭 재기 .print-probe에 영향 없게) */
+/* 표 칸 폭 맞추기(doc.js fitTables — 외톨이 글자가 덜 생기게 고른 칸 폭). 화면만, 인쇄는 자동 배치 그대로 — 직접 고친 부분 */
+@media screen {
+  .md:not(.print-probe, .pf-fit-probe) .table-wrap > table.pf-fit { table-layout: fixed; width: 100%; }
+  .md:not(.print-probe, .pf-fit-probe) .table-wrap > table.pf-fit > colgroup.pf-cols > col { width: var(--pf-w); }
+}
 
 /* ── 반응형 (화면에만; 인쇄 폭에서 켜지지 않게 screen으로 한정) ── */
 @media screen and (max-width: 1439.98px) {          /* 중간 폭: 목차 + 본문 두 칸, 오른쪽 칸은 [카드 열기 ‹]로 떠서 나옴(아래 '오른쪽 칸 열기·닫기') */
@@ -293,7 +309,6 @@ dialog.lightbox::backdrop { background: rgba(10, 11, 14, .82); }
   .md h3 { font-size: 17.5px; }
   .md pre code, .md pre code.hljs { font-size: 12.5px; padding: 14px 16px; }
   .md table { font-size: 14px; }
-  .doc-foot { padding-bottom: 88px; }
 }
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
@@ -335,6 +350,16 @@ dialog.lightbox::backdrop { background: rgba(10, 11, 14, .82); }
   /* .fade-r(화면용 흐림 mask)이 인쇄에 남으면 코드가 그림으로 바뀌고 글자가 두 번 들어감(시안 검증에서 발견) → 인쇄에서 mask를 끔 */
   .md pre, .md pre.fade-r { white-space: pre-wrap; overflow: visible; background: #F6F8FA; border: 1px solid #D8DEE4; -webkit-mask-image: none; mask-image: none; }
   .md pre code, .md pre code.hljs { white-space: pre-wrap; word-break: break-all; width: auto; min-width: 0; font-size: 8.5pt; color: #24292E; padding: 8pt 10pt; }
+  /* 코드 색(인쇄): "Visual Studio Light"와 비슷하게 */
+  .md pre code.hljs :is(.hljs-keyword, .hljs-built_in, .hljs-literal, .hljs-type) { color: #0000FF; }
+  .md pre code.hljs :is(.hljs-string, .hljs-char, .hljs-regexp) { color: #A31515; }
+  .md pre code.hljs .hljs-number { color: #098658; }
+  .md pre code.hljs :is(.hljs-comment, .hljs-doctag) { color: #008000; font-style: normal; }
+  .md pre code.hljs .hljs-meta { color: #808080; }
+  .md pre code.hljs :is(.hljs-title.class_, .pf-t-type) { color: #2B91AF; }
+  .md pre code.hljs :is(.hljs-title.function_, .pf-t-method) { color: #74531F; }
+  .md pre code.hljs .pf-t-member { color: #1F1F1F; }
+  .md pre code.hljs :is(.hljs-params, .hljs-variable, .hljs-attr, .hljs-property) { color: inherit; }
   /* 화면 규칙(.md > :is(pre, .table-wrap)·.table-wrap의 overflow-x:auto)과 구체성이 같거나 높고 뒤에 와서 이김 — 목록·인용 안의 표도 */
   .md > :is(pre, .table-wrap), .md .table-wrap { overflow: visible; }
   .md table { font-size: 9pt; }
@@ -401,21 +426,22 @@ dialog.lightbox::backdrop { background: rgba(10, 11, 14, .82); }
   .toc { margin-right: var(--gap); }
   .rail { width: calc(var(--rail-w) + 2 * var(--rail-bleed)); margin-left: calc(var(--gap) - var(--rail-bleed)); justify-self: start; }
   html.pf-rail-off .doc-page { grid-template-columns: calc(var(--toc-w) + var(--gap)) minmax(0, 1fr) 0px; }
-  html.pf-rail-off .rail { opacity: 0; translate: 24px 0; visibility: hidden; pointer-events: none; }
+  html.pf-rail-off .rail { translate: 24px 0; visibility: hidden; pointer-events: none; }
   html.pf-rail-anim .doc-page { transition: grid-template-columns var(--rail-dur) var(--rail-ease); }
-  html.pf-rail-anim .rail { transition: opacity var(--rail-dur) var(--rail-ease), translate var(--rail-dur) var(--rail-ease), visibility 0s; }
-  html.pf-rail-anim.pf-rail-off .rail { transition: opacity var(--rail-dur) var(--rail-ease), translate var(--rail-dur) var(--rail-ease), visibility 0s var(--rail-dur); }
+  html.pf-rail-anim .rail { transition: translate var(--rail-dur) var(--rail-ease), visibility 0s; }
+  html.pf-rail-anim.pf-rail-off .rail { transition: translate var(--rail-dur) var(--rail-ease), visibility 0s var(--rail-dur); }
 }
 @media (prefers-reduced-motion: reduce) { html.pf-rail-anim :is(.doc-page, .rail) { transition: none !important; } }
 /* 중간 폭(1280~1440px): 목차는 그대로, 오른쪽 칸은 늘 접힌 채로 시작(넓은 화면에서 열어 두었어도 이 폭으로 줄면 닫힘).
    [카드 열기 ‹] 단추는 넓은 화면과 같은 자리(오른쪽 칸 맨 위). 누르면 카드들만(뒷판 없음) 화면 오른쪽 밖에서 넓은 화면과 같은 움직임으로 밀려 들어와 떠 있음.
    단추·Esc·바깥 누르기로 닫힘. 1280px 미만은 카드 대신 아래 캡슐의 [바로가기] */
 @media screen and (min-width: 1280px) and (max-width: 1439.98px) {
+  .rail-card { box-shadow: var(--float-shadow); }   /* 라이트·다크 모두(--float-shadow가 모드별 값) */
   .rail-fab { display: block; }                    /* 넓은 화면과 같은 자리(오른쪽 칸 맨 위) — 카드가 열리면 카드 묶음 맨 위 빈 줄(.rail-bar)이 이 자리를 비워 둠 */
   .rail { display: grid; position: fixed; z-index: 40; right: calc(var(--pad) - var(--rail-bleed)); top: var(--rail-y, 92px); margin: 0; width: calc(var(--rail-w) + 2 * var(--rail-bleed)); max-height: calc(100vh - var(--rail-y, 92px) - 12px);
-          opacity: 0; translate: calc(100% + var(--pad)) 0; visibility: hidden; pointer-events: none;
-          transition: opacity var(--rail-dur) var(--rail-ease), translate var(--rail-dur) var(--rail-ease), visibility 0s var(--rail-dur); }
-  html.pf-rail-open .rail { opacity: 1; translate: 0 0; visibility: visible; pointer-events: auto;
-          transition: opacity var(--rail-dur) var(--rail-ease), translate var(--rail-dur) var(--rail-ease), visibility 0s; }
+          translate: calc(100% + var(--pad)) 0; visibility: hidden; pointer-events: none;
+          transition: translate var(--rail-dur) var(--rail-ease), visibility 0s var(--rail-dur); }
+  html.pf-rail-open .rail { translate: 0 0; visibility: visible; pointer-events: auto;
+          transition: translate var(--rail-dur) var(--rail-ease), visibility 0s; }
 }
 @media print { .rail-fab, .rail-bar { display: none !important; } }
