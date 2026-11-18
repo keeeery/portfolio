@@ -1,11 +1,11 @@
 /* ─────────────────────────────────────────────────────────────
-   상세 기술문서 — doc.html 전용 (portfolio-structure §4, 결정 F2·F3·F6)
+   프로젝트 상세 문서 — doc.html 전용 (portfolio-structure §4, 결정 F2·F3·F6)
    주석의 설계 근거(docs/design/…의 portfolio-structure·deck-vs-scroll·01 §, R0, 결정 F·Q·# 번호)와 원본 시안(spikes/…)은 템플릿 유지관리용 maintainer 브랜치에 있습니다. 이 레포에 없어도 정상입니다.
    레이아웃 ① 가운데 정렬(spikes/doc-layout/doc.html?layout=1 그대로): 최대 폭 1840 · 목차 260 · 본문 칸 · 레일 300(1440px 이상),
    본문 글줄 40rem을 본문 칸 가운데에, 코드·표는 글줄 왼쪽에서 오른쪽으로 넓힘, 도식·그림은 가운데 최대 1200.
    1440px 미만은 오른쪽 칸을 떠 있는 카드로([카드 열기 ‹]), 1280px 미만은 목차를 [목차] 서랍으로, 720px 미만은 휴대폰 한 열. 인쇄는 A4(코드·그림이 쪽 사이에서 잘리지 않게만, 빈칸 0은 보장 안 함).
    장면 키트 CSS는 싣지 않습니다(결정 #14의 인쇄 규칙이 흐르는 문서를 빈 쪽으로 만들기 때문, §4-8).
-   화면은 어두운 테마(포트폴리오 문서·발표 덱과 같은 검은 바탕 · 한 단 밝은 카드 · 강조색 → 보랏빛 그러데이션). 인쇄는 맨 아래 @media print에서 흰 종이용 밝은 색으로 되돌림.
+   화면은 어두운 테마(포트폴리오 페이지·와 같은 검은 바탕 · 한 단 밝은 카드 · 강조색 → 보랏빛 그러데이션). 인쇄는 맨 아래 @media print에서 흰 종이용 밝은 색으로 되돌림.
    다이어그램은 페이지 색을 따릅니다(PF.mermaidConfig: 판 --diagram-bg = 카드 색 · 글자 · 선 · 강조색, 밝은/어두운 화면을 바꾸면 다시 그림). 인쇄는 흰 종이용 그림(.mmd-print)으로 바꿔 보임.
    테마 손잡이(--t-*)는 theme/theme.css(/portfolio-theme가 씀)에서 받습니다. 비어 있으면 아래 기본값 = 어두운 기본 테마
    ───────────────────────────────────────────────────────────── */
@@ -53,7 +53,7 @@ code { font-family: var(--mono); font-size: .88em; background: var(--accent-soft
 .notice .pf-note-err { color: var(--faint); font-size: 13px; margin-top: 14px; }
 
 /* 새 탭 표시 ↗ (F10) */
-.pf-newtab-icon { display: inline-block; width: 11px; height: 11px; margin-left: 3px; vertical-align: -1px; flex: none; opacity: .8; }   /* 포트폴리오 문서(index.html .nt-icon)와 같은 11px 고정 — 글자 크기와 상관없이 */
+.pf-newtab-icon { display: inline-block; width: 11px; height: 11px; margin-left: 3px; vertical-align: -1px; flex: none; opacity: .8; }   /* 포트폴리오 페이지(index.html .nt-icon)와 같은 11px 고정 — 글자 크기와 상관없이 */
 
 /* 건너뛰기 링크 (같은 탭) */
 .skip-link { position: absolute; left: 12px; top: -60px; z-index: 50; padding: 10px 14px; border-radius: var(--pill);
@@ -72,19 +72,19 @@ code { font-family: var(--mono); font-size: .88em; background: var(--accent-soft
 /* 화면 맨 위에 늘 붙어 있는 한 줄: [← 돌아가기 › 문서 이름] … [화면 모드]. 바탕·아래 선 없이 투명(본문이 그 밑으로 지나감), 숨거나 나오는 움직임 없음.
    투명한 줄이 본문을 덮어도 그 자리의 본문 글을 고르고 누를 수 있게 줄 자체는 마우스를 통과시키고(pointer-events: none) 링크·단추만 받음.
    높이(--head-h, 스크립트가 잼)만큼 목차·오른쪽 칸·제목 도착 자리·[맨 위로] 캡슐이 그 아래로 비켜남.
-   링크(발표 덱·GitHub·원문 등)는 오른쪽 칸 '링크' 카드, 오른쪽 칸이 기본으로 없는 폭(<1440px)은 제목 아래 [한눈에] 상자에도 */
+   링크(슬라이드·GitHub·원문 등)는 오른쪽 칸 '링크' 카드, 오른쪽 칸이 기본으로 없는 폭(<1440px)은 제목 아래 [한눈에] 상자에도 */
 .doc-head { position: sticky; top: 0; z-index: 35; pointer-events: none; }
 .doc-head :is(a, button) { pointer-events: auto; }
 .doc-head :is(.crumb, .pf-mode) { transition: opacity .18s, visibility 0s; }
 .doc-head.crumb-off :is(.crumb, .pf-mode) { opacity: 0; visibility: hidden; transition: opacity .18s, visibility 0s .18s; }   /* 좁은 화면(<1280px, 목차 없음)에서 본문 글이 머리 줄에 닿으면 [← 돌아가기 › 제목]과 화면 모드 단추를 함께 숨김(PF.topCap). 목차가 보이면 늘 보임 */
-.doc-head-in { max-width: var(--page-max); margin: 0 auto; padding: 0 var(--pad); min-height: 56px;   /* 높이는 포트폴리오 문서 머리 막대와 같은 56px(아래 선 1px은 따로) */
+.doc-head-in { max-width: var(--page-max); margin: 0 auto; padding: 0 var(--pad); min-height: 56px;   /* 높이는 포트폴리오 페이지 머리 막대와 같은 56px(아래 선 1px은 따로) */
                display: flex; flex-wrap: wrap; align-items: center; gap: 8px 18px; }
 .crumb { display: flex; align-items: center; gap: 10px; font-size: 14px; font-weight: 600; color: var(--muted); min-width: 0; }
 .crumb a { text-decoration: none; color: var(--muted); white-space: nowrap; }
 .crumb a:hover { color: var(--accent-ink); }
 .crumb b { color: var(--ink); font-weight: 800; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .newtab-note { font-size: 12.5px; color: var(--faint); }
-.doc-head .pf-mode { margin-left: auto; padding: 0; width: 34px; height: 34px; justify-content: center; cursor: pointer; background-color: var(--paper); }   /* 밝은·어두운 화면 전환 — 포트폴리오 문서처럼 불투명한 바탕색(투명한 머리 줄 밑으로 지나가는 본문에 묻히지 않게) */
+.doc-head .pf-mode { margin-left: auto; padding: 0; width: 34px; height: 34px; justify-content: center; cursor: pointer; background-color: var(--paper); }   /* 밝은·어두운 화면 전환 — 포트폴리오 페이지처럼 불투명한 바탕색(투명한 머리 줄 밑으로 지나가는 본문에 묻히지 않게) */
 .doc-head .pf-mode:hover { background: linear-gradient(var(--accent-soft), var(--accent-soft)) var(--paper); }   /* 마우스를 올려도 불투명 바탕 위에 옅은 강조색 */
 
 @media print { .doc-head .pf-mode { display: none; } }
@@ -268,7 +268,7 @@ dialog.lightbox::backdrop { background: rgba(10, 11, 14, .82); }
 .lb-cap { color: #fff; text-align: center; font-size: 14px; margin-top: 10px; }
 .lb-close { display: block; margin: 10px auto 0; }
 
-.doc-foot { margin-top: 120px; display: grid; gap: 4px; color: var(--faint); font-size: 12px; line-height: 1.6; }   /* 본문 맨 아래 세 줄(© 이름 · 브라우저 안내 · 마지막 업데이트) — 바·선 없이, 포트폴리오 문서 맨 아래와 같은 글 */
+.doc-foot { margin-top: 120px; display: grid; gap: 4px; color: var(--faint); font-size: 12px; line-height: 1.6; }   /* 본문 맨 아래 세 줄(© 이름 · 브라우저 안내 · 마지막 업데이트) — 바·선 없이, 포트폴리오 페이지 맨 아래와 같은 글 */
 .doc-foot p { margin: 0; }
 
 /* ── ① 가운데 정렬 폭 규칙 (직접 수정: 한 칸 정렬) — 글줄 45rem(720px)을 본문 칸 가운데에, 코드·표·도식·그림도 같은 칸 안에.
@@ -386,7 +386,7 @@ dialog.lightbox::backdrop { background: rgba(10, 11, 14, .82); }
 .md.print-probe :is(th, td) { padding: 4pt 6pt; white-space: normal; overflow-wrap: break-word; }
 .md.print-probe :is(th, td) a { overflow-wrap: anywhere; }
 
-/* ── 맨 위로 캡슐(PF.topCap — 상세 기술문서·자기소개서) ──
+/* ── 맨 위로 캡슐(PF.topCap — 프로젝트 상세 문서·자기소개서) ──
    맨 위에서 떨어진 곳에서 위로 스크롤하면 화면 위 가운데(12px 아래)에 캡슐만 나타나고(머리 막대는 맨 위에서만), 아래로 스크롤하거나 맨 위 가까이 가면 사라짐.
    모양은 오른쪽 칸 카드와 같은 카드색·외곽선을 반투명 + 흐림으로, 그림자, 완전히 둥근 모서리('떠 있는 단추·카드'), 버튼은 일반 버튼(캡슐 바의 글자 버튼처럼 바탕·테두리 없음, 마우스를 올리면 옅은 회색).
    움직임: 펼치기·튀기 없이 처음부터 제 크기로 — 머리 막대와 같은 시간·곡선으로 위에서 미끄러져 내려오고 올라감(--cap-d = 간격 + 캡슐 + 그림자, 스크립트가 잼) */

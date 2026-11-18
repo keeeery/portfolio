@@ -1,12 +1,12 @@
-// 포트폴리오 렌더러 공통 유틸 — index.html(포트폴리오 문서) · project.html(발표 덱) · doc.html(상세 문서)가 함께 씁니다.
-// 데이터: data/portfolio.json, data/projects/<폴더 이름>.json(/portfolio-build가 생성), src/<폴더>/<기술 문서>.md
+// 포트폴리오 렌더러 공통 유틸 — index.html(포트폴리오 페이지) · project.html(슬라이드) · doc.html(상세 문서)가 함께 씁니다.
+// 데이터: data/portfolio.json, data/projects/<폴더 이름>.json(/portfolio-build가 생성), src/<폴더>/<프로젝트 문서>.md
 // 이 파일은 글을 만들지 않습니다. 화면에 나오는 내용은 모두 위 데이터에서 오고, UI 문구(절 이름·버튼·라벨)는 assets/strings.js의 문구 표(PF.t)에서 옵니다.
 // 주석의 설계 근거(docs/design/…의 portfolio-structure·deck-vs-scroll·01 §, R0, 결정 F·Q·# 번호)와 원본 시안(spikes/…)은 템플릿 유지관리용 maintainer 브랜치에 있습니다. 이 레포에 없어도 정상입니다.
 
 // 취소선은 물결 두 개(~~글~~)일 때만. marked의 GFM 규칙은 물결 하나(~글~)도 취소선으로 쳐서, 한국어 문서의 범위 표기
 // ("0~100 정수로 … 0~1로")가 한 문단에 두 번 나오면 그 사이가 지워진 것처럼 보입니다. 물결 하나는 글자 그대로 둡니다.
 // del 토크나이저가 false가 아닌 값(undefined)을 돌려주면 marked 기본 규칙으로 넘어가지 않고, 물결은 일반 글자로 읽힙니다.
-// 상세 문서(doc.html)·발표 덱(project.html)의 원문 해석(md-blocks.js·PF.headingsOf)이 모두 이 설정을 씁니다. marked가 없는 페이지(index.html)는 건너뜀.
+// 상세 문서(doc.html)·슬라이드(project.html)의 원문 해석(md-blocks.js·PF.headingsOf)이 모두 이 설정을 씁니다. marked가 없는 페이지(index.html)는 건너뜀.
 if (window.marked) {
   marked.use({
     tokenizer: {
@@ -32,7 +32,7 @@ if (window.marked) {
 const PF = (() => {
   const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   // 텍스트 필드: HTML 이스케이프 + `백틱` → <code> + **굵게** → <strong>(백틱 안의 별표는 그대로 둠)
-  // 굵게는 템플릿 원본에 없는 수정 — 기술 문서에서 옮긴 글 조각(개발 의도 등)의 **강조**가 기호째 보이지 않게 함
+  // 굵게는 템플릿 원본에 없는 수정 — 프로젝트 문서에서 옮긴 글 조각(개발 의도 등)의 **강조**가 기호째 보이지 않게 함
   const inline = (s) => esc(s).replace(/`([^`]+)`|\*\*(?=\S)([^*]+?)(?<=\S)\*\*/g,
     (m, code, bold) => (code !== undefined ? `<code>${code}</code>` : `<strong>${bold}</strong>`));
   const isUrl = (u) => /^https?:\/\//i.test(u || '');
@@ -93,7 +93,7 @@ const PF = (() => {
     const norm = list.map((h) => [normTitle(h.text), h]);
     return (norm.find(([t]) => t === want) || norm.find(([t]) => t && (t.startsWith(want) || want.startsWith(t))))?.[1] || null;
   }
-  // 발표 덱에서 원문 절(section 글자)에 해당하는 장면 id(포트폴리오 문서의 [발표 덱에서 보기]·발표 덱 옛 주소 hl-n 넘기기)
+  // 슬라이드에서 원문 절(section 글자)에 해당하는 장면 id(포트폴리오 페이지의 [슬라이드 열기]·슬라이드 옛 주소 hl-n 넘기기)
   const KEY_RE = /^[a-z][a-z0-9-]{1,31}$/;
   const keyOk = (k) => KEY_RE.test(k || '') && !/^s-\d+$/.test(k);
   function deckSceneFor(p, section) {
@@ -107,12 +107,42 @@ const PF = (() => {
     const hid = find(p.deck.base || []);
     return hid && keyOk(hid.chapter) && p.deck.slides.some((x) => x.chapter === hid.chapter) ? `ch-${hid.chapter}` : '';
   }
+  // md → HTML. marked(gfm)를 부르는 곳은 이 함수 하나입니다(프로젝트 상세 문서·슬라이드·제목 목록이 같은 결과를 쓰도록).
+  //   한국어 굵은 글씨 보완: CommonMark 규칙은 **"인용"**입니다 · **이름(설명)**와 처럼 닫는 ** 앞이 문장부호이고 바로 뒤에
+  //   글자(조사)가 붙으면 굵은 글씨로 보지 않아 별표가 그대로 보입니다. 여는 쪽도 같습니다(글자**"인용"**). 그 두 경우만
+  //   굵은 글씨로 받아 주고, 나머지는 marked의 기본 규칙에 맡깁니다(조건에 안 맞으면 아무것도 돌려주지 않음).
+  const PUNCT = /[\p{P}\p{S}]/u, WORD = /[^\s\p{P}\p{S}]/u;
+  let mdReady = false;
+  function mdHtml(md) {
+    if (!mdReady) {
+      mdReady = true;
+      marked.use({ extensions: [{
+        name: 'strongKo', level: 'inline',
+        start(src) { const i = src.indexOf('**'); return i < 0 ? undefined : i; },
+        tokenizer(src, tokens) {
+          // ** + 안쪽(줄 안, 코드 조각은 통째로, 양 끝은 공백 아님) + **  — 안쪽에 **가 또 있으면 가장 가까운 곳에서 닫음
+          const m = /^\*\*(?!\s)((?:`[^`\n]+`|[^`\n])+?)(?<!\s)\*\*(?!\*)/.exec(src);
+          if (!m) return undefined;
+          const inner = m[1], after = src[m[0].length] || '';
+          const last = tokens && tokens[tokens.length - 1];
+          const before = last && last.raw ? last.raw.slice(-1) : '';
+          const closeFails = PUNCT.test(inner.slice(-1)) && WORD.test(after);    // 닫는 ** : 앞이 문장부호, 뒤가 글자
+          const openFails = PUNCT.test(inner[0]) && WORD.test(before);            // 여는 ** : 앞이 글자, 뒤가 문장부호
+          if (!closeFails && !openFails) return undefined;
+          return { type: 'strongKo', raw: m[0], text: inner, tokens: this.lexer.inlineTokens(inner) };
+        },
+        renderer(token) { return `<strong>${this.parser.parseInline(token.tokens)}</strong>`; },
+      }] });
+    }
+    return marked.parse(md, { gfm: true });
+  }
+
   // md → 제목 목록(상세 문서와 같은 파이프라인: marked gfm → 제목 textContent → slugger). 제목 목록이 필요한 곳용(원문 블록까지 필요하면 md-blocks.js의 PF.md.parse)
   //   <template>에 넣는 이유: 그 안의 내용은 비활성이라 문서 속 이미지(GIF 수십 MB)를 받지 않음. div에 넣으면 DOM에 붙이지 않아도 이미지를 받기 시작함
   function headingsOf(md) {
     if (!window.marked) return [];
     const box = document.createElement('template');
-    box.innerHTML = marked.parse(md, { gfm: true });
+    box.innerHTML = mdHtml(md);
     const slug = slugger();
     return [...box.content.querySelectorAll('h1, h2, h3, h4, h5, h6')].map((h) => ({ level: +h.tagName[1], text: h.textContent.trim(), id: slug(h.textContent.trim()) }));
   }
@@ -121,7 +151,7 @@ const PF = (() => {
   //    포트폴리오 안의 이동(문서 사이·원문 파일·같은 문서 안)은 같은 탭(새 탭이 계속 쌓이지 않게 — 새 탭은 읽는 사람이 휠 클릭으로).
   //    ↗(aria-hidden)는 문서 사이·외부·원문 파일 = "다른 페이지로 감" 표시. 같은 문서 안 이동·mailto:·덱 조작 버튼·라이트박스 = 표시 없음
   const ICON = '<svg class="pf-newtab-icon" aria-hidden="true" focusable="false" viewBox="0 0 12 12" width="12" height="12"><path d="M4.5 2.5h5v5M9.5 2.5 3 9" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>';
-  //    외부(새 탭) = 상자+화살표 아이콘(포트폴리오 문서의 ext와 같은 모양) · 포트폴리오 안의 다른 페이지·원문 파일 = ↗ · 돌아가기(kind 'back') = 아이콘 없음
+  //    외부(새 탭) = 상자+화살표 아이콘(포트폴리오 페이지의 ext와 같은 모양) · 포트폴리오 안의 다른 페이지·원문 파일 = ↗ · 돌아가기(kind 'back') = 아이콘 없음
   const ICON_EXT = '<svg class="pf-newtab-icon pf-ext-icon" aria-hidden="true" focusable="false" viewBox="0 0 12 12" width="12" height="12" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 2.25H3.75a1 1 0 0 0-1 1v5.5a1 1 0 0 0 1 1h5.5a1 1 0 0 0 1-1V7.5"/><path d="M7.25 2.25h3v3M10.25 2.25 6.25 6.25"/></svg>';
   const NEWTAB = ICON;
   const NEWTAB_SR = '<span class="pf-sr-only pf-newtab-sr">(새 탭)</span>';
@@ -131,9 +161,9 @@ const PF = (() => {
     const back = kind === 'back', ext = !back && isExternal(href), nt = !back && (NEW_TAB_KINDS.has(kind) || ext);
     return `<a${cls ? ` class="${cls}"` : ''} href="${esc(href)}"${ext ? ' target="_blank" rel="noopener"' : ''}${back ? ' data-pf-back' : ''}${attrs ? ' ' + attrs : ''}>${label}${ext ? ICON_EXT + NEWTAB_SR : nt ? NEWTAB : ''}</a>`;
   }
-  // 돌아가기 링크(data-pf-back): 포트폴리오 문서에서 왔으면 브라우저 '뒤로'처럼 돌아가 읽던 자리로(스크롤 위치 그대로).
+  // 돌아가기 링크(data-pf-back): 포트폴리오 페이지에서 왔으면 브라우저 '뒤로'처럼 돌아가 읽던 자리로(스크롤 위치 그대로).
   //   같은 페이지 안에서 목차·절 링크(#…)로 옮겨 다닌 기록은 건너뜀 — 이 페이지에 들어온 뒤 쌓인 # 이동 수(pfDepth)를 기록마다 적어 두고 그만큼 더 뒤로.
-  //   새 탭에서 열었거나(그 탭에 앞 기록이 없음 — 들어올 때 기록 수가 1이면 pfPrev = false) 다른 곳(발표 덱·주소 직접 입력)에서 왔으면 그냥 href(index.html)로 이동.
+  //   새 탭에서 열었거나(그 탭에 앞 기록이 없음 — 들어올 때 기록 수가 1이면 pfPrev = false) 다른 곳(슬라이드·주소 직접 입력)에서 왔으면 그냥 href(index.html)로 이동.
   //   휠 클릭·Ctrl/⌘ 클릭은 브라우저 기본 동작(새 탭) 그대로
   let pfDepth = history.state?.pfDepth ?? 0;
   const pfPrev = history.state?.pfPrev ?? history.length > 1;
@@ -305,7 +335,7 @@ const PF = (() => {
   //   글자에 쓰는 강조색은 화면 바탕(--t-bg, 없으면 어두운 기본 바탕) 대비 7:1 이상이 되게 바탕 반대쪽(어두운 바탕이면 밝게, 밝은 바탕이면 어둡게)으로,
   //   흰 글자를 올리는 칠은 4.5:1 이상이 되게 어둡게 맞춤. --accent-2 = 강조색의 색상을 보라(285°) 쪽으로 50° 돌린 짝(파랑 → 보라, 주황 → 분홍),
   //   --accent-3 = 같은 쪽으로 95°(광채). theme.css에 --t-accent-2·--t-accent-3이 있으면 그 색
-  //   흰 종이에 찍는 A4 인쇄(포트폴리오 문서·상세 문서)는 '-p'가 붙은 값을 씀(portfolio.css·doc.css의 @media print). 발표 덱은 인쇄도 화면 장면 그대로
+  //   흰 종이에 찍는 A4 인쇄(포트폴리오 페이지·상세 문서)는 '-p'가 붙은 값을 씀(portfolio.css·doc.css의 @media print). 슬라이드는 인쇄도 화면 장면 그대로
   const hexRgb = (h) => [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16));
   const rgbHex = (c) => '#' + c.map((v) => Math.round(Math.max(0, Math.min(255, v))).toString(16).padStart(2, '0')).join('').toUpperCase();
   const mix = (a, b, t) => a.map((v, i) => v + (b[i] - v) * t);           // t = b 쪽 비율
@@ -361,7 +391,7 @@ const PF = (() => {
   // ── 다이어그램(Mermaid) 색 — 페이지의 지금 색(테마 손잡이 · 밝은/어두운 화면)에서 뽑아 mermaid 'base' 테마 변수로 ──
   //   판(--diagram-bg) · 글자(--ink) · 선(--muted) · 테두리(--line-2) · 강조(--accent)를 계산된 색으로 읽어 섞음.
   //   print: true → 흰 종이용(상세 문서 인쇄). 수강생 문서에 %%{init}%%·classDef·style이 있으면 그 값이 이김(mermaid 규칙).
-  //   글자 크기는 기본 테마와 같아서(16px) 테마를 바꿔도 그림 크기·발표 덱 배치는 그대로
+  //   글자 크기는 기본 테마와 같아서(16px) 테마를 바꿔도 그림 크기·슬라이드 배치는 그대로
   let colorProbe, colorCtx;
   function cssRgb(expr, fallback) {                                       // CSS 색 식(var()·color-mix() 포함) → [r, g, b]
     if (!document.body) return fallback;
@@ -625,7 +655,7 @@ const PF = (() => {
   // ── 화면 모드 전환(어두운 ↔ 밝은) — theme/theme-light.css(:root[data-pf-mode="light"])가 있을 때만 버튼이 생김 ──
   //   처음에는 기기 설정(prefers-color-scheme)을 따르고, 버튼으로 고르면 localStorage 'pf-mode'에 남아 그 뒤로는 기기 설정보다 우선
   //   각 html <head>의 짧은 스크립트가 그리기 전에 모드를 정함(깜빡임 없음). 고른 적이 없으면 페이지를 연 채로 기기 설정이 바뀌어도 따라감
-  //   글자 크기·간격은 그대로라 발표 덱 배치 점검에 영향 없음. 인쇄(제출 PDF·상세 문서)는 모드와 상관없이 흰 종이
+  //   글자 크기·간격은 그대로라 슬라이드 배치 점검에 영향 없음. 인쇄(제출 PDF·상세 문서)는 모드와 상관없이 흰 종이
   const MODE_KEY = 'pf-mode', root = document.documentElement;
   const getMode = () => (root.dataset.pfMode === 'light' ? 'light' : 'dark');
   let lightOk = null;
@@ -663,7 +693,7 @@ const PF = (() => {
   const savedMode = () => { try { return localStorage.getItem(MODE_KEY); } catch (e) { return null; } };
   const sysLight = window.matchMedia?.('(prefers-color-scheme: light)');
   sysLight?.addEventListener?.('change', (e) => { if (!savedMode()) setMode(e.matches ? 'light' : 'dark', { save: false }); });   // 고른 적이 없을 때만 기기 설정을 따라감
-  window.PFMode = { button: modeButton, set: setMode, get: getMode, available: hasLightMode };   // 발표 덱 키트(deck-kit.js)는 PF 이름을 따로 써서 이것으로 부름
+  window.PFMode = { button: modeButton, set: setMode, get: getMode, available: hasLightMode };   // 슬라이드 키트(deck-kit.js)는 PF 이름을 따로 써서 이것으로 부름
   document.addEventListener('click', (e) => {
     const b = e.target.closest?.('[data-pf-mode-toggle]'); if (!b) return;
     e.stopPropagation();
@@ -671,21 +701,21 @@ const PF = (() => {
   }, true);
 
   // ── 안내 문구(옛 렌더러와 같은 글) ──
-  const FILE_HELP = `<p>이 페이지는 <code>data/</code>와 기술 문서를 불러와 그리기 때문에, 파일을 더블클릭해서는 열리지 않습니다.</p>
+  const FILE_HELP = `<p>이 페이지는 <code>data/</code>와 프로젝트 문서를 불러와 그리기 때문에, 파일을 더블클릭해서는 열리지 않습니다.</p>
       <ol>
         <li>레포 폴더에서 터미널을 열고 아래 명령을 실행한 뒤 <b>http://localhost:4600</b> 접속
           <pre>python -m http.server 4600</pre>(Windows에서 안 되면 <code>py -m http.server 4600</code>)</li>
         <li>또는 JetBrains IDE(Rider·WebStorm)에서 <code>index.html</code> 우클릭 → <b>Open in → Browser</b></li>
         <li>또는 Claude Code에게 "미리보기 띄워줘"라고 요청</li>
       </ol>`;
-  const noDataHtml = (err) => `<p>Claude Code에서 아래 명령을 실행하면 <code>src/</code>의 기술 문서·스크린샷을 읽어 데이터를 만듭니다.</p>
+  const noDataHtml = (err) => `<p>Claude Code에서 아래 명령을 실행하면 <code>src/</code>의 프로젝트 문서·스크린샷을 읽어 데이터를 만듭니다.</p>
       <pre>/portfolio-build</pre>
       <p class="pf-note-err">${esc(err?.message || '')}</p>`;
   const isFile = () => location.protocol === 'file:';
   function notice(root, title, bodyHtml) {
     root.innerHTML = `<div class="notice"><h1>${title}</h1>${bodyHtml}</div>`;
   }
-  // file:// 로 열면 fetch가 막힌다 → 로컬 서버 안내(흐르는 페이지용. 덱은 안내 장면으로 보여 줌)
+  // file:// 로 열면 fetch가 막힌다 → 로컬 서버 안내(흐르는 페이지용. 슬라이드는 안내 장면으로 보여 줌)
   function guardFileProtocol(root) {
     if (!isFile()) return false;
     notice(root, '로컬 서버로 열어 주세요', FILE_HELP);
@@ -697,6 +727,6 @@ const PF = (() => {
   const { t, tab, label, load: loadStrings, report: stringsReport } = PFStr;
 
   return { esc, inline, isUrl, shortUrl, repoLinks, otherLinks, loadJSON, loadText, encodePath, srcPath, projectUrl, docUrl, siteBase, visibleUrl, metaValue, teamLabel,
-           slugger, normTitle, resolveHeading, keyOk, deckSceneFor, headingsOf, ICON, NEWTAB, link, markNewTab, topCap, railToggle, themeTokens, applyTheme, mermaidConfig, hlMore, routeFolkSackTerrain, gatherFanIn, fitSides, contrast, hexRgb, modeButton, setMode, getMode, hasLightMode,
+           slugger, normTitle, resolveHeading, keyOk, deckSceneFor, mdHtml, headingsOf, ICON, NEWTAB, link, markNewTab, topCap, railToggle, themeTokens, applyTheme, mermaidConfig, hlMore, routeFolkSackTerrain, gatherFanIn, fitSides, contrast, hexRgb, modeButton, setMode, getMode, hasLightMode,
            FILE_HELP, noDataHtml, isFile, notice, guardFileProtocol, noData, t, tab, label, loadStrings, stringsReport };
 })();

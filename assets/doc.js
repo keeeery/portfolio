@@ -1,22 +1,39 @@
-// 상세 기술문서 — doc.html?p=<폴더>  (portfolio-structure §4, 링크 §5, 결정 F2·F3·F6·F10)
+// 프로젝트 상세 문서 — doc.html?p=<폴더>  (portfolio-structure §4, 링크 §5, 결정 F2·F3·F6·F10)
 //   흐르는 읽기 문서. 레이아웃 ① 가운데 정렬(spikes/doc-layout/doc.html?layout=1). 출처: spikes/doc-layout/doc.js
 //   주석의 설계 근거(docs/design/…의 portfolio-structure·deck-vs-scroll·01 §, R0, 결정 F·Q·# 번호)와 원본 시안(spikes/…)은 템플릿 유지관리용 maintainer 브랜치에 있습니다. 이 레포에 없어도 정상입니다.
-//   문서 처리 순서: marked 12.0.2(gfm) → 상대경로 → GitHub식 slug(PF.slugger) — 여기까지 md-blocks.js(PF.md.parse, 발표 덱과 같은 규칙) → 목차 → Mermaid 11.12.0 → highlight.js 11.9.0
-//   주소: #<제목 slug>(발표 덱·옛 project.html 조각이 이 형식으로 옴) · #sec=<절 제목>(제목을 찾아 #<slug>로 바꿈)
-//   발표 덱으로: 머리 [발표 덱 ↗](같은 탭 — 포트폴리오 안 이동). 예전의 절 머리 칩·목차 ★(덱 장면 연결)는 없앴습니다(결정 G1)
-//   내용은 data/projects/<폴더>.json + src/<폴더>/<기술 문서>만 씁니다. UI 문구는 문구 표(PF.t, assets/strings.js + theme/strings.tsv)에서 옵니다.
-//   점검: PFDoc.report() — 문구 표 점검(strings)
+//   문서 처리 순서: marked 12.0.2(gfm) → 상대경로 → GitHub식 slug(PF.slugger) — 여기까지 md-blocks.js(PF.md.parse, 와 같은 규칙) → 목차 → Mermaid 11.12.0 → highlight.js 11.9.0
+//   주소: #<제목 slug>(슬라이드·옛 project.html 조각이 이 형식으로 옴) · #sec=<절 제목>(제목을 찾아 #<slug>로 바꿈)
+//   로: 머리 [슬라이드 ↗](같은 탭 — 포트폴리오 안 이동). 예전의 절 머리 칩·목차 ★(덱 장면 연결)는 없앴습니다(결정 G1)
+//   내용은 data/projects/<폴더>.json + src/<폴더>/<프로젝트 문서>만 씁니다. UI 문구는 문구 표(PF.t, assets/strings.js + theme/strings.tsv)에서 옵니다.
+//   점검: await PFDoc.whenReady() → PFDoc.report() — errors(못 읽은 파일·그리지 못한 다이어그램) · images(깨진·아직 받는 그림) · diagrams · strings(문구 표).
+//         whenReady는 문서·Mermaid·코드 처리와 글꼴까지만 기다립니다(그림은 기다리지 않음 → images.pending으로 봄)
 // Mermaid는 불러오자마자 window load 때 자동 run(기본 startOnLoad: true)을 걸어 둠. 아래 ⑦이 .mermaid 상자를 만든 뒤 글꼴을 기다리는 사이에
 //   load가 오면 그 자동 run이 상자를 먼저 집어(data-processed) 그리다 실패해 원문 글자로 남음 → load 전에(지금, 동기로) 꺼 둠
 try { window.mermaid?.initialize({ startOnLoad: false }); } catch (_) { /* */ }
 (async () => {
   const root = document.getElementById('app');
-  window.PFDoc = Object.assign(window.PFDoc || {}, { report: () => ({ page: 'doc', ready: document.documentElement.dataset.docReady === '1', strings: PF.stringsReport() }) });
-  if (PF.guardFileProtocol(root)) return;
+  const html = document.documentElement;
+  const errors = [];
+  let resolveReady;
+  const whenReady = new Promise((r) => { resolveReady = r; });
+  const report = () => {
+    const imgs = [...document.querySelectorAll('#doc img')];
+    const figs = [...document.querySelectorAll('#doc figure.mmd')];
+    return {
+      page: 'doc', ready: html.dataset.docReady === '1',
+      images: { total: imgs.length, broken: imgs.filter((i) => i.complete && i.naturalWidth === 0).map((i) => i.getAttribute('src')),
+                pending: imgs.filter((i) => !i.complete).map((i) => i.getAttribute('src')) },
+      diagrams: { total: figs.length, failed: figs.filter((f) => !f.querySelector('.mermaid svg')).map((f) => f.dataset.label || '') },
+      errors, strings: PF.stringsReport(),
+    };
+  };
+  window.PFDoc = Object.assign(window.PFDoc || {}, { whenReady: () => whenReady, report });
+  // Mermaid가 페이지 load 때 스스로 그리지 않게 맨 먼저 끕니다(아래 await 사이에 load가 오면 기본 설정으로 먼저 그려 버림)
+  if (window.mermaid) mermaid.initialize({ startOnLoad: false, theme: 'default', securityLevel: 'loose', fontFamily: 'Pretendard, sans-serif' });
+  if (PF.guardFileProtocol(root)) { errors.push('file:// — 로컬 서버로 열어야 합니다'); return done(); }
 
   const { esc, inline, link, markNewTab } = PF;
   const T = (k, v) => esc(PF.t(k, v));                                 // HTML에 넣는 문구
-  const html = document.documentElement;
   const Q = new URLSearchParams(location.search);
   const id = Q.get('p');
   const srcPath = (rel) => PF.srcPath(id, rel);
@@ -157,9 +174,9 @@ try { window.mermaid?.initialize({ startOnLoad: false }); } catch (_) { /* */ }
     document.fonts?.addEventListener('loadingdone', run);             // 글꼴이 늦게 들어오면 다시 잼
   }
 
-  if (!id) { PF.notice(root, '프로젝트를 고르세요', `<p>주소 끝에 <code>?p=폴더이름</code>을 붙여 주세요.</p>${back}`); return done(); }
+  if (!id) { errors.push('no-project: 주소에 ?p=<폴더 이름>이 없습니다'); PF.notice(root, '프로젝트를 고르세요', `<p>주소 끝에 <code>?p=폴더이름</code>을 붙여 주세요.</p>${back}`); return done(); }
   const [pf] = await Promise.all([PF.loadJSON('data/portfolio.json').catch(() => ({})), PF.loadStrings()]);
-  // profile.md 페이지 설정 "- 발표 덱 빼기: 폴더, …"에 이 폴더가 있으면 발표 덱 버튼·인쇄 주소를 뺌(포트폴리오 문서 카드와 같은 설정)
+  // profile.md 페이지 설정 "- 발표 덱 빼기: 폴더, …"에 이 폴더가 있으면 슬라이드 버튼·인쇄 주소를 뺌(포트폴리오 페이지 카드와 같은 설정)
   const noDeck = await fetch('profile.md', { cache: 'no-cache' }).then((r) => (r.ok ? r.text() : '')).then((md) => {
     const m = md.replace(/<!--[\s\S]*?-->/g, '').match(/^\s*-\s*발표 덱 빼기\s*[:：](.*)$/m);
     return !!m && m[1].split(',').map((x) => x.trim()).includes(id);
@@ -170,6 +187,7 @@ try { window.mermaid?.initialize({ startOnLoad: false }); } catch (_) { /* */ }
   try {
     p = await PF.loadJSON(`data/projects/${encodeURIComponent(id)}.json`);
   } catch (err) {
+    errors.push(`data/projects/${id}.json: ${err && err.message || err}`);
     PF.notice(root, '프로젝트를 찾을 수 없습니다', `<p>${esc(err.message)}</p>${back}`);
     return done();
   }
@@ -185,7 +203,7 @@ try { window.mermaid?.initialize({ startOnLoad: false }); } catch (_) { /* */ }
     ...PF.otherLinks(p).map((l) => link({ href: l.url, label: esc(l.label), kind: 'external', cls: 'btn' })),
   ].filter(Boolean);
   const deckBtn = noDeck ? '' : link({ href: deckUrl(), label: T('name.deck'), kind: 'page', cls: 'btn primary' });
-  if (noDeck && ext.length) ext[0] = ext[0].replace('class="btn"', 'class="btn primary"');   // 발표 덱이 없으면 첫 링크를 강조
+  if (noDeck && ext.length) ext[0] = ext[0].replace('class="btn"', 'class="btn primary"');   // 가 없으면 첫 링크를 강조
   // 프로젝트 링크: 오른쪽 칸 '링크' 카드에 글자 링크로(doc.css '레일 링크'), 오른쪽 칸이 기본으로 없는 폭은 제목 아래 [한눈에] 상자에도
   const railLinks = [
     !noDeck && link({ href: deckUrl(), label: T('name.deck'), kind: 'page' }),
@@ -218,7 +236,7 @@ try { window.mermaid?.initialize({ startOnLoad: false }); } catch (_) { /* */ }
             <p class="newtab-note">${T('doc.deck-note')}</p></div>
           </details>
         </div>
-        <article class="md" id="doc"><p class="loading">기술 문서를 불러오는 중…</p></article>
+        <article class="md" id="doc"><p class="loading">프로젝트 문서를 불러오는 중…</p></article>
         <footer class="doc-foot">
           ${name ? `<p>© ${esc(name)}</p>` : ''}
           <p>${T('page.browser-note')}</p>
@@ -238,8 +256,13 @@ try { window.mermaid?.initialize({ startOnLoad: false }); } catch (_) { /* */ }
   document.getElementById('glance').open = !matchMedia('(max-width: 719.98px)').matches;
 
   const zoom = lightbox();
-  await renderDoc();
-  ready();
+  try { await renderDoc(); ready(); }
+  catch (err) {                                                       // 그리다 멈추면 "불러오는 중…"에 머물지 않게 이유를 보이고 준비 신호는 냄
+    errors.push(String(err && err.stack || err));
+    console.error('[doc] 프로젝트 문서를 그리지 못함:', err);
+    const doc = document.getElementById('doc');
+    if (doc?.querySelector('.loading')) doc.innerHTML = `<p class="error">프로젝트 문서를 그리지 못했습니다 (${esc(err && err.message || err)}).</p>`;
+  }
   PF.topCap(PF.t('doc.top'));
   PF.railToggle();
   done();
@@ -249,8 +272,8 @@ try { window.mermaid?.initialize({ startOnLoad: false }); } catch (_) { /* */ }
     const doc = document.getElementById('doc');
     let md;
     try { md = await PF.loadText(srcPath(p.doc)); }
-    catch (err) { doc.innerHTML = `<p class="error">기술 문서를 불러오지 못했습니다 (${esc(err.message)}).</p>`; return; }
-    // ①② md HTML은 먼저 비활성 <template>에 넣고(그 안의 그림은 받지 않음) 상대경로·제목 id를 고친 뒤에 문서에 붙임(PF.md.parse, 발표 덱과 같은 규칙).
+    catch (err) { errors.push(`doc: ${err.message}`); doc.innerHTML = `<p class="error">프로젝트 문서를 불러오지 못했습니다 (${esc(err.message)}).</p>`; return; }
+    // ①② md HTML은 먼저 비활성 <template>에 넣고(그 안의 그림은 받지 않음) 상대경로·제목 id를 고친 뒤에 문서에 붙임(PF.md.parse, 와 같은 규칙).
     //    제목 id는 GitHub 규칙(PF.slugger), 링크 분류(↗ 표시)·인쇄 각주([n])가 섞이기 전의 원문 제목 글자로 계산하고, 그 글자를 목차·레일에도 씀
     const { frag, headings: hs } = PF.md.parse(md, id);
     const { isRelative, decode } = PF.md;
@@ -374,8 +397,9 @@ try { window.mermaid?.initialize({ startOnLoad: false }); } catch (_) { /* */ }
     const runMermaid = async (sel, cfg) => {
       mermaid.initialize(cfg);
       try { await mermaid.run({ nodes: doc.querySelectorAll(sel) }); }
-      catch (err) { console.warn('[doc] Mermaid 렌더 오류:', err); }
+      catch (err) { console.warn('[doc] Mermaid 렌더 오류:', err); errors.push(`mermaid: ${String(err?.message || err).split('\n')[0].slice(0, 160)}`); }
     };
+    if (!window.mermaid && figs.length) errors.push('mermaid: 다이어그램 라이브러리(Mermaid)를 불러오지 못했습니다');
     if (window.mermaid && figs.length) {
       // 인쇄용: 화면에 보이지 않는 상자에서는 글자 폭을 잴 수 없어서 mermaid.render(본문 밖 임시 자리)로 그려 넣음
       mermaid.initialize({ ...mmdCfg({ print: true }), suppressErrorRendering: true });
@@ -537,7 +561,7 @@ try { window.mermaid?.initialize({ startOnLoad: false }); } catch (_) { /* */ }
     document.querySelector('.fab-toc').addEventListener('click', () => dlg.showModal());
     dlg.addEventListener('click', (e) => { if (e.target === dlg || e.target.closest('.dlg-close') || e.target.closest('a')) dlg.close(); });
 
-    // 딥링크: #sec=<절 제목> → 정규 앵커 #<slug>로 바꾸고 도착 강조, 그냥 #<slug>(발표 덱·옛 주소)도 도착 강조
+    // 딥링크: #sec=<절 제목> → 정규 앵커 #<slug>로 바꾸고 도착 강조, 그냥 #<slug>(슬라이드·옛 주소)도 도착 강조
     const flash = (el) => { el.classList.add('arrive'); setTimeout(() => el.classList.remove('arrive'), 2100); };
     const arrive = (el) => {
       el.scrollIntoView({ block: 'start', behavior: 'instant' });
@@ -592,6 +616,6 @@ try { window.mermaid?.initialize({ startOnLoad: false }); } catch (_) { /* */ }
   }
 
   // 준비 신호(점검 하네스용): 문서·Mermaid·코드 처리와 글꼴이 끝난 뒤
-  function done() { (document.fonts ? document.fonts.ready : Promise.resolve()).then(() => { html.dataset.docReady = '1'; }); }
+  function done() { (document.fonts ? document.fonts.ready : Promise.resolve()).then(() => { html.dataset.docReady = '1'; resolveReady(report()); }); }
   function sleep(ms) { return new Promise((r) => setTimeout(r, ms)); }
 })();

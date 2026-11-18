@@ -1,4 +1,4 @@
-// 다이어그램 다듬기 엔진 — 상세 문서(doc.html)·발표 덱(project.html)의 Mermaid 그림을 다시 그림
+// 다이어그램 다듬기 엔진 — 상세 문서(doc.html)·슬라이드(project.html)의 Mermaid 그림을 다시 그림
 //   화살표를 수직·수평 직선 + 둥근 모서리로, %% 격자 배치, %% 화살표 지목, classDiagram note for 메모, 같은 변 화살표 자리 나누기.
 //   common.js 다음에 불러오면 PF.orthoEdges · PF.mmdText가 생김. doc.js·project-deck.js는 PF.orthoEdges?.(svg, 원문) 처럼
 //   있을 때만 부르므로, 이 파일을 빼면 Mermaid 기본 그림으로 돌아감.

@@ -6,9 +6,9 @@
   <meta name="theme-color" content="#000000">   <!-- 브라우저 막대 색(안드로이드 크롬·예전 iOS). 화면 모드를 바꾸면 syncBarColor()가 바탕색으로 맞춤 -->
   <title>포트폴리오</title>
   <link rel="icon" href="data:,">
-  <!-- 포트폴리오 문서(기본 페이지) — /portfolio-custom 직접 생성 모드로 만든 새 레이아웃을 기본 주소로 옮긴 것. 예전 고정 렌더러 배치는 classic.html.
+  <!-- 포트폴리오 페이지(기본 페이지) — /portfolio-custom 직접 생성 모드로 만든 새 레이아웃을 기본 주소로 옮긴 것. 예전 고정 렌더러 배치는 classic.html.
        다크 톤, 색은 theme/theme.css · theme-light.css. 배치: theme/layout.json(배치 레퍼런스). 내용은 data/*.json을 실행 중에 읽어 그립니다(내용을 이 파일에 복사하지 않음).
-       기능: 탭 제목 · 밝은/어두운 화면 버튼 · [PDF로 저장](A4) · 머리 막대 늘어남(프로젝트명 떠오름) · 기능별 발표 덱 장면 링크 · 링크 표시(외부만 새 탭) ·
+       기능: 탭 제목 · 밝은/어두운 화면 버튼 · [PDF로 저장](A4) · 머리 막대 늘어남(프로젝트명 떠오름) · 기능별 슬라이드 장면 링크 · 링크 표시(외부만 새 탭) ·
        주소로 절 바로 가기(#p-<폴더> 등) · 새로고침해도 읽던 위치 · 점검 PFPage.whenReady() → PFPage.report() · ?pf-audit=1이면 #pf-audit에 report()의 base64 JSON
        주의: /portfolio-update는 템플릿의 index.html로 이 파일을 덮어씁니다(업데이트 전에 백업하거나 업데이트 뒤 git으로 되돌리기) -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css">
@@ -21,11 +21,11 @@
   <link rel="stylesheet" href="theme/theme.css">
   <link rel="stylesheet" href="theme/theme-light.css">
   <script>
-    // 그리기 전에 화면 모드를 정함: 포트폴리오 문서에서 고른 값(localStorage 'pf-mode') → 없으면 기기 설정
+    // 그리기 전에 화면 모드를 정함: 포트폴리오 페이지에서 고른 값(localStorage 'pf-mode') → 없으면 기기 설정
     try { var m = localStorage.getItem('pf-mode'); if (m ? m === 'light' : matchMedia('(prefers-color-scheme: light)').matches) document.documentElement.dataset.pfMode = 'light'; } catch (e) {}
   </script>
   <style>
-    /* 색은 포트폴리오 문서와 같은 테마(--t-*)를 그대로. 테마가 없으면 괄호 안 기본값 */
+    /* 색은 포트폴리오 페이지와 같은 테마(--t-*)를 그대로. 테마가 없으면 괄호 안 기본값 */
     :root {
       --top-h: calc(56px + var(--safe-t)); --safe-t: env(safe-area-inset-top, 0px); --safe-b: env(safe-area-inset-bottom, 0px); --ext-h: 40px; --ext-up: 8px; --ext-bg: 37px;                                                     /* 머리 막대 높이 */
       --bg: var(--t-bg, #0A0A0D);                                        /* 바탕 */
@@ -51,7 +51,7 @@
     .accent { color: var(--accent-ink); }
     .btn { display: inline-flex; align-items: center; gap: 6px; min-height: 40px; padding: 0 18px; border-radius: var(--t-pill, 999px); font-size: 14px; font-weight: 600;
       border: 1px solid var(--line); color: var(--ink); background: transparent; cursor: pointer; transition: background .15s, border-color .15s, box-shadow .15s; white-space: nowrap; }
-    /* 마우스 올림: 자기소개서·기술문서 페이지(doc.css)의 버튼과 같게 — 테두리는 옅은 강조색, 바탕은 강조색을 아주 옅게 / 주 버튼은 바깥에 강조색 고리 */
+    /* 마우스 올림: 자기소개서·프로젝트 문서 페이지(doc.css)의 버튼과 같게 — 테두리는 옅은 강조색, 바탕은 강조색을 아주 옅게 / 주 버튼은 바깥에 강조색 고리 */
     .btn:hover { border-color: color-mix(in srgb, var(--accent) 45%, var(--bg)); background: color-mix(in srgb, var(--accent) 16%, var(--bg)); }
     .btn:disabled { opacity: .6; cursor: progress; }
     .btn-solid { background: var(--accent); border-color: var(--accent); color: #fff; }
@@ -142,7 +142,7 @@
     .copy-btn:hover { opacity: 1; color: var(--ink); }
     .copy-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
     .copy-btn.done { color: var(--accent); opacity: 1; }
-    /* 공용 규칙 — 글자 링크(.tlink): 글자 링크는 모두 본문색(강조색은 버튼형 주 버튼 하나에만 — 캡슐 바 [발표 덱]), 글자 아래 4px 띄운 1px 옅은 밑줄(글자색 35%)로 누를 수 있음을 표시.
+    /* 공용 규칙 — 글자 링크(.tlink): 글자 링크는 모두 본문색(강조색은 버튼형 주 버튼 하나에만 — 캡슐 바 [슬라이드]), 글자 아래 4px 띄운 1px 옅은 밑줄(글자색 35%)로 누를 수 있음을 표시.
        마우스를 올리면 밑줄이 글자색 그대로 진해지고, 본문색 링크는 글자도 제목 글 색으로. 인쇄(PDF)에서도 밑줄·링크 화살표(↗)는 화면과 같게 */
     .tlink { text-decoration-line: underline; text-decoration-thickness: 1px; text-underline-offset: 4px;
              text-decoration-color: color-mix(in srgb, currentColor 35%, transparent); transition: color .2s ease, text-decoration-color .2s ease; }
@@ -220,7 +220,7 @@
     .hero-pill .btn { min-height: 44px; padding: 0 22px; font-size: 15px; }
     @media (max-width: 480px) { .hero-pill { gap: 2px; padding: 6px; } .hero-pill .btn { min-height: 42px; padding: 0 15px; font-size: 14.5px; } }
     /* 떠 있는 캡슐(넓은 화면): 나타날 때(.on) ① 캡슐 높이의 동그라미가 화면 아래에서 솟아올라 제자리에 닿고(오르는 동안 세로로 살짝 늘어났다 제 모양으로)
-       ② 동그라미 안에 강조색 점이 작게 생겨 버튼 높이로 커진 뒤 ③ 파란 버튼 쪽에서 버튼이 없는 오른쪽으로 펼쳐지며(동그라미 · 점 · 왼쪽 끝은 함께 왼쪽 제자리로 옮겨 가 캡슐은 가운데에 맞춰짐) 점은 같은 방향으로 [발표 덱] 버튼 폭만큼 늘어나 버튼이 되고, 버튼 줄은 흐림이 걷히며 나타남.
+       ② 동그라미 안에 강조색 점이 작게 생겨 버튼 높이로 커진 뒤 ③ 파란 버튼 쪽에서 버튼이 없는 오른쪽으로 펼쳐지며(동그라미 · 점 · 왼쪽 끝은 함께 왼쪽 제자리로 옮겨 가 캡슐은 가운데에 맞춰짐) 점은 같은 방향으로 [슬라이드] 버튼 폭만큼 늘어나 버튼이 되고, 버튼 줄은 흐림이 걷히며 나타남.
        사라질 때(.out)는 거꾸로 — 버튼 줄이 흐려지며 동그라미로 접힌 뒤 화면 아래로 가라앉음.
        부드럽게: 움직이는 것은 모두 transform · opacity(브라우저가 GPU에서 따로 그림 — 스크롤 처리로 바쁜 중에도 프레임이 밀리지 않음).
        캡슐 몸통(.cap-body): 처음부터 끝까지 멈춰 있을 때와 같은 한 덩어리(.cb-full — 반투명 카드색 72% + 뒤 흐림) 하나를 보여 주고, 보이는 모양만 몸통 자신의 잘라 보이기(clip-path)로
@@ -242,7 +242,7 @@
     .cb-ring-l { left: 0; border-right: 0; border-radius: 999px 0 0 999px; }
     .cb-ring-r { right: 0; border-left: 0; border-radius: 0 999px 999px 0; }
     .cap-dot { position: absolute; left: 6px; top: 6px; width: var(--cap-dot, calc(var(--cap-h, 50px) - 14px)); height: var(--cap-dot, calc(var(--cap-h, 50px) - 14px)); border-radius: 999px;
-               background: var(--accent); opacity: 0; pointer-events: none; }   /* 강조색 점: [발표 덱] 버튼 왼쪽 끝 자리(캡슐 안쪽 여백 6px)의 동그라미 */
+               background: var(--accent); opacity: 0; pointer-events: none; }   /* 강조색 점: [슬라이드] 버튼 왼쪽 끝 자리(캡슐 안쪽 여백 6px)의 동그라미 */
     .cap-row { position: relative; }                                           /* 버튼 줄은 몸통 · 점 위에 */
     .cap.on .cap-pill { animation: cap-y .9s both, cap-x .9s both, cap-s .9s both; }
     .cap.on .cb-full { animation: cap-reveal .9s both; }
@@ -278,7 +278,7 @@
        위치 이동(translate)이 아니라 right로 — translate는 GPU에서 따로 움직여, 메인 스레드가 바쁠 때(첫 화면 여는 중) 늦게 그려지는 몸통 잘라 보이기보다 앞서 나가 빈 외곽선이 먼저 보임. right는 몸통과 같은 프레임에 그려짐 */
     @keyframes cap-reveal { 0%, 28% { clip-path: inset(0 calc(100% - var(--cap-h, 50px)) 0 0 round 999px); animation-timing-function: cubic-bezier(.15,0,.15,1); } 100% { clip-path: inset(0 round 999px); } }   /* 몸통: 왼쪽 끝 동그라미 → 오른쪽으로 넓어짐 */
     @keyframes cap-dot-in { 0%, 8% { scale: 0; opacity: 0; animation-timing-function: cubic-bezier(.3,.5,.7,1); } 9% { opacity: 1; } 28%, 100% { scale: 1; opacity: 1; } }   /* 솟아오르는 중에 점이 생겨 펼치기 전에 버튼 높이로 */
-    /* 강조색 점 → [발표 덱] 버튼: 점의 폭은 펼쳐지는 몸통의 오른쪽 끝(--cap-edge, 버튼 줄 가림과 같은 키프레임 cap-row-edge)에서 왼쪽과 같은 안쪽 여백만큼 안쪽을 따라가고, 버튼 폭(--b1)에 닿으면 멈춤.
+    /* 강조색 점 → [슬라이드] 버튼: 점의 폭은 펼쳐지는 몸통의 오른쪽 끝(--cap-edge, 버튼 줄 가림과 같은 키프레임 cap-row-edge)에서 왼쪽과 같은 안쪽 여백만큼 안쪽을 따라가고, 버튼 폭(--b1)에 닿으면 멈춤.
        → 점이 몸통과 한 덩어리로 늘어나고, 버튼 글자가 나타나기(45%) 훨씬 전에 버튼 폭이 다 됨(예전에는 점이 따로 늦게 늘어나 버튼이 나타날 때 폭이 10px쯤 모자라 툭 늘어나 보였음).
        움직이지 않을 때 --cap-edge는 아주 멀리(9999px)라 폭 = 버튼 폭 */
     .cap-dot { width: clamp(var(--cap-dot, calc(var(--cap-h, 50px) - 14px)), calc(var(--cap-edge) - 2 * var(--cap-pad, 7px)), var(--b1, 90px)); }
@@ -327,7 +327,7 @@
     @media (max-width: 480px) { .cap-pill { gap: 0; padding: 4px; } .cap-pill .btn { padding: 0 9px; font-size: 12.5px; } .cap-pill .nt-icon { display: none; } }
     .cap-pill .btn { min-height: 36px; padding: 0 16px; font-size: 13px; }
     /* 캡슐 안 버튼 줄: 캡슐(외곽선·바탕)은 그대로 두고 버튼 줄만 옆으로 넘김. 넘칠 때 아직 남은 쪽 끝을 그라데이션으로 흐려(.fr 오른쪽 · .fl 왼쪽) 옆에 더 있다는 것을 알림 */
-    @media (max-width: 759px) { .cap-pill { max-width: min(calc(100vw - 24px), var(--cap-max, 100vw)); } }   /* 휴대폰만: 최대 폭 = 추가 링크가 없는 캡슐(발표 덱·상세 기술문서·GitHub·시연 영상)의 폭 — 스크립트가 재서 --cap-max로. 링크가 더 많은 캡슐은 넘기고 끝을 흐림 */
+    @media (max-width: 759px) { .cap-pill { max-width: min(calc(100vw - 24px), var(--cap-max, 100vw)); } }   /* 휴대폰만: 최대 폭 = 추가 링크가 없는 캡슐(슬라이드·프로젝트 상세 문서·GitHub·시연 영상)의 폭 — 스크립트가 재서 --cap-max로. 링크가 더 많은 캡슐은 넘기고 끝을 흐림 */
     .cap-row { display: flex; gap: inherit; min-width: 0; overflow-x: auto; border-radius: 999px; --fl: 0px; --fr: 0px;
                -webkit-mask-image: linear-gradient(to right, transparent, #000 var(--fl), #000 min(calc(100% - var(--fr)), calc(var(--cap-edge) - var(--cap-pad, 7px) - var(--cap-in) - 36px)), transparent min(100%, calc(var(--cap-edge) - var(--cap-pad, 7px) - var(--cap-in))));
                        mask-image: linear-gradient(to right, transparent, #000 var(--fl), #000 min(calc(100% - var(--fr)), calc(var(--cap-edge) - var(--cap-pad, 7px) - var(--cap-in) - 36px)), transparent min(100%, calc(var(--cap-edge) - var(--cap-pad, 7px) - var(--cap-in)))); }   /* 7px = 캡슐 왼쪽 끝 → 버튼 줄 왼쪽 끝(외곽선 1px + 안쪽 여백 6px). 펼치는 동안의 오른쪽 끝 가림은 아래 --cap-edge */
@@ -362,7 +362,7 @@
     .fe-pane { display: none; }
     .fe-item .fe-what { margin-top: 8px; }                            /* 제목 ↔ 설명(8px)은 설명 ↔ 버튼(16px)보다 좁게 — 합은 예전(12+12)과 같아 펼침 높이는 그대로 */
     .fe-item .fe-links { margin-top: 16px; }
-    .fe-what { min-height: calc(3em * 1.625); }                       /* 기능 제목+설명 = '제목 1줄 + 설명 3줄' 높이를 늘 확보(제목이 2줄이면 설명 자리는 2줄). 정확한 높이는 스크립트가 제목 줄 수를 재서 맞춤 → [발표 덱에서 보기]가 같은 높이에 */
+    .fe-what { min-height: calc(3em * 1.625); }                       /* 기능 제목+설명 = '제목 1줄 + 설명 3줄' 높이를 늘 확보(제목이 2줄이면 설명 자리는 2줄). 정확한 높이는 스크립트가 제목 줄 수를 재서 맞춤 → [슬라이드에서 보기]가 같은 높이에 */
     @media screen and (min-width: 760px) {
       .fe { height: calc((var(--fe-n) + 1) * (100vh - var(--top-h) - var(--ext-bg))); }
       /* 가운데 맞춤은 늘어난 머리 막대 아래 ~ 화면 아래 캡슐 바 위 사이에서(--cap-zone = 캡슐 아래 간격 20px + 캡슐 높이 50px).
@@ -412,7 +412,7 @@
     }
     @media (prefers-reduced-motion: reduce) { .fe-head, .fe-title, .fe-detail, .fe-shot, .fe-dot, .fe-dot i { transition: none !important; } }
     .fe-measure, .fe-measure *, .fe-snap, .fe-snap * { transition: none !important; }   /* 목록 높이를 잴 때 · 여러 칸 건너뛸 때 중간 항목을 즉시 접을 때 애니메이션 끔 */
-    /* 그림 칸 4:3. 그림 비율이 4:3과 15% 넘게 다르면(.fit) 잘라 내지 않고 전체를 보여 줌 — 포트폴리오 문서와 같은 규칙 */
+    /* 그림 칸 4:3. 그림 비율이 4:3과 15% 넘게 다르면(.fit) 잘라 내지 않고 전체를 보여 줌 — 포트폴리오 페이지와 같은 규칙 */
     .shot { position: relative; aspect-ratio: 4 / 3; background: #000; overflow: hidden; }
     /* 프로젝트 요약(한눈에 보기): 작은 대표 이미지 + 줄 목록. 넓은 화면 [이미지 | 번호·이름·구분·기술 | 한 줄 소개·구현 범위·링크], 줄 사이는 정보 표와 같은 구분선 */
     .gl { margin: 0; padding: 0; list-style: none; }
@@ -688,12 +688,12 @@
     const { useEffect, useLayoutEffect, useState, useRef, Fragment } = React;
     const html = document.documentElement;
 
-    // ── 점검: PFPage.whenReady() → PFPage.report() (포트폴리오 문서와 같은 모양) ──
+    // ── 점검: PFPage.whenReady() → PFPage.report() (포트폴리오 페이지와 같은 모양) ──
     const info = { errors: [], sections: [], projects: 0, others: 0 };
     let resolveReady; const ready = new Promise((r) => { resolveReady = r; });
     html.dataset.pfReady = 'no';
     window.PFPage = { whenReady: () => ready, report };
-    // ?pf-audit=1(headless 점검): #pf-audit에 report()의 base64 JSON — 발표 덱·예전 포트폴리오 문서와 같은 형식
+    // ?pf-audit=1(headless 점검): #pf-audit에 report()의 base64 JSON — 슬라이드·예전 포트폴리오 페이지와 같은 형식
     function writeAudit() {
       let pre = document.getElementById('pf-audit');
       if (!pre) { pre = document.createElement('pre'); pre.id = 'pf-audit'; pre.hidden = true; document.body.appendChild(pre); }
@@ -714,12 +714,12 @@
 
     // ── 문구 표(theme/strings.tsv): "내 문구" 칸 → 비면 기본 문구. {a.b}는 다른 줄, {n}은 넣는 값 ──
     const FALLBACK = {
-      'name.portfolio': '포트폴리오', 'name.deck': '발표 덱', 'name.doc': '상세 기술문서', 'name.doc-short': '상세 문서', 'name.video': '시연 영상', 'name.role': '내 역할', 'name.role-short': '역할',
+      'name.portfolio': '포트폴리오', 'name.deck': '슬라이드', 'name.doc': '프로젝트 상세 문서', 'name.doc-short': '상세 문서', 'name.video': '시연 영상', 'name.role': '내 역할', 'name.role-short': '역할',
       'name.intent': '개발 의도', 'name.team': '팀 프로젝트', 'name.solo': '개인 프로젝트',
       'en.portfolio': 'PORTFOLIO', 'en.about': 'ABOUT ME', 'en.skills': 'SKILLS', 'en.project': 'PROJECT', 'en.feature': 'FEATURE', 'en.others': 'OTHER WORK',
       'en.glance': 'AT A GLANCE', 'en.contact': 'CONTACT', 'en.link': 'LINK',
       'page.updated': '업데이트 {date}', 'page.intro': '자기소개', 'page.stack': '기술 스택', 'page.stack-note': '근거 프로젝트와 함께', 'page.project-no': '{en.project} {no} / {total}',
-      'page.features': '기능 소개', 'page.see-in-deck': '{name.deck}에서 보기', 'page.see-in-doc': '기술문서에서 보기', 'page.browser-note': '이 문서는 넓은 화면(PC), Chrome 브라우저 환경에 최적화되어 있습니다.', 'page.last-updated': '마지막 업데이트 {date}', 'page.deck-all': '{name.deck} 전체', 'page.others': '기타 프로젝트', 'page.link-card-open': '바로가기', 'page.glance': '프로젝트 요약',
+      'page.features': '기능 소개', 'page.see-in-deck': '{name.deck}에서 보기', 'page.see-in-doc': '프로젝트 문서에서 보기', 'page.browser-note': '이 문서는 넓은 화면(PC), Chrome 브라우저 환경에 최적화되어 있습니다.', 'page.last-updated': '마지막 업데이트 {date}', 'page.deck-all': '{name.deck} 전체', 'page.others': '기타 프로젝트', 'page.link-card-open': '바로가기', 'page.glance': '프로젝트 요약',
       'page.nav-intro': '소개', 'page.nav-stack': '{page.stack}', 'page.nav-projects': '프로젝트', 'page.nav-others': '기타', 'page.nav-glance': '한눈에 보기', 'page.nav-contact': '연락처',
       'page.print-email': '이메일', 'page.print-web': '웹 {name.portfolio}',
       'ui.pdf': 'PDF로 저장', 'ui.preparing': '준비 중…', 'ui.skip': '본문으로 건너뛰기',
@@ -760,7 +760,7 @@
     const PDF_BASE = (() => { const b = new URLSearchParams(location.search).get('pdf-base'); return isUrl(b) ? b.replace(/\/?$/, '/') : ''; })();
     const PAGE_URL = PDF_BASE || location.pathname;                     // 인쇄에 적는 '이 페이지' 주소
     const visibleUrl = (rel) => { let u = new URL(rel, PDF_BASE || location.href); u = `${u.host}${u.pathname}${u.search}`; try { u = decodeURI(u); } catch { /* 그대로 */ } return u; };
-    //   페이지 안의 상대 링크(발표 덱·상세 문서 등)를 배포 주소로 바꿈 — PDF 속 링크가 localhost로 가지 않게(#절 링크는 PDF 안 이동이라 그대로)
+    //   페이지 안의 상대 링크(슬라이드·상세 문서 등)를 배포 주소로 바꿈 — PDF 속 링크가 localhost로 가지 않게(#절 링크는 PDF 안 이동이라 그대로)
     const absolutizeLinks = () => PDF_BASE && document.querySelectorAll('a[href]').forEach((a) => {
       const h = a.getAttribute('href');
       if (h && !h.startsWith('#') && !/^[a-z][a-z0-9+.-]*:/i.test(h)) a.setAttribute('href', new URL(h, PDF_BASE).href);
@@ -769,7 +769,7 @@
     const encodePath = (p) => String(p).replace(/^\.\//, '').split('/').map(encodeURIComponent).join('/');
     const img = (p, src) => `src/${encodeURIComponent(p.id)}/${encodePath(src)}`;
     const teamLabel = (team) => team?.type === 'team' ? t('name.team') : t('name.solo');   // 인원수는 프로젝트 정보 표(meta)에 있어 빼고 팀/개인만
-    // 발표 덱의 그 기능 장면(포트폴리오 문서와 같은 규칙: highlights[].section → deck.slides의 sectionPath)
+    // 슬라이드의 그 기능 장면(포트폴리오 페이지와 같은 규칙: highlights[].section → deck.slides의 sectionPath)
     const normTitle = (s) => String(s || '').replace(/[`*_~]/g, '').replace(/\s+/g, ' ').trim();
     const keyOk = (k) => /^[a-z][a-z0-9-]{1,31}$/.test(k || '') && !/^s-\d+$/.test(k);
     function deckSceneFor(p, section) {
@@ -784,14 +784,14 @@
     }
     const deckHref = (p, sid = '') => `project.html?p=${encodeURIComponent(p.id)}${sid ? `#s=${sid}` : ''}`;
     const docHref = (p) => `doc.html?p=${encodeURIComponent(p.id)}`;
-    // 기능마다 [기술문서에서 보기]: 상세 기술문서의 그 기능을 설명한 절로(#sec=<절 제목> — doc.html이 제목을 찾아 그 자리로 이동·강조).
-    //   기본은 기능 소개가 가리키는 절(highlights[].section). 그 절보다 더 맞는 절이 있는 기능만 아래 표에서 바꿈(기술 문서를 보고 고름)
+    // 기능마다 [프로젝트 문서에서 보기]: 프로젝트 상세 문서의 그 기능을 설명한 절로(#sec=<절 제목> — doc.html이 제목을 찾아 그 자리로 이동·강조).
+    //   기본은 기능 소개가 가리키는 절(highlights[].section). 그 절보다 더 맞는 절이 있는 기능만 아래 표에서 바꿈(프로젝트 문서를 보고 고름)
     const DOC_SECTION = {
       '2-Folk-Sack': { 3: '4.2 핵심 API — 탈출·매몰 판정과 피해 전달' },   // 낙하 지형 충돌·탈출·매몰 — '4.1 개요와 구조'보다 판정·피해 처리를 직접 설명하는 절
     };
     const docSecHref = (p, i, h) => { const sec = DOC_SECTION[p.id]?.[i] || h.section; return sec ? `${docHref(p)}#sec=${encodeURIComponent(sec)}` : docHref(p); };
 
-    // 링크 규칙(포트폴리오 문서와 같음): 외부(http(s)) = 새 탭 + 읽기 도구용 "(새 탭, 외부 사이트)". 포트폴리오 안의 다른 페이지 = 같은 탭 + ↗. 같은 페이지 안 이동·메일 = 같은 탭
+    // 링크 규칙(포트폴리오 페이지와 같음): 외부(http(s)) = 새 탭 + 읽기 도구용 "(새 탭, 외부 사이트)". 포트폴리오 안의 다른 페이지 = 같은 탭 + ↗. 같은 페이지 안 이동·메일 = 같은 탭
     // 이메일 주소를 클립보드에 복사하는 작은 아이콘 버튼(복사되면 1.5초 동안 체크 표시)
     function CopyButton({ text }) {
       const [done, setDone] = React.useState(false);
@@ -811,7 +811,7 @@
     }
     /* 글 옆 아이콘은 원래 ↗ 아이콘에 맞춤: 12×12 칸, 선 굵기 1.6, 11px. 눈에 보이는 크기를 맞춤 —
        ↗는 대각선 하나라 커 보이므로 그림 영역 6.5칸(가로 3~9.5), 상자·내려받기·복사·복사됨(체크)은 7.5칸(2.75~10.25)
-       inner ↗ = 포트폴리오 안의 다른 페이지(발표 덱·기술 문서) · ext 상자+화살표 = 포트폴리오 밖(GitHub·영상, 새 탭) · save = 내려받기 */
+       inner ↗ = 포트폴리오 안의 다른 페이지(슬라이드·프로젝트 문서) · ext 상자+화살표 = 포트폴리오 밖(GitHub·영상, 새 탭) · save = 내려받기 */
     const ICON_PATHS = {
       inner: <path d="M4.5 2.5h5v5M9.5 2.5 3 9" />,
       ext: <><path d="M5 2.25H3.75a1 1 0 0 0-1 1v5.5a1 1 0 0 0 1 1h5.5a1 1 0 0 0 1-1V7.5" /><path d="M7.25 2.25h3v3M10.25 2.25 6.25 6.25" /></>,
@@ -823,7 +823,7 @@
     const Icon = ({ name, size = ICON_SIZE, sw = 1.6, className = 'nt-icon' }) =>
       <svg className={className} aria-hidden="true" focusable="false" viewBox="0 0 12 12" width={size} height={size} fill="none" stroke="currentColor" strokeWidth={sw} strokeLinecap="round" strokeLinejoin="round">{ICON_PATHS[name]}</svg>;
     const NewTabIcon = ({ external }) => <><Icon name={external ? 'ext' : 'inner'} />{external && <span className="sr-only nt-sr">(새 탭, 외부 사이트)</span>}</>;
-    // 포트폴리오 밖(http(s) 주소)과 PDF만 새 탭. 포트폴리오 안의 이동(발표 덱·기술 문서)은 같은 탭 — 새 탭이 계속 쌓이지 않게(새 탭은 읽는 사람이 휠 클릭으로)
+    // 포트폴리오 밖(http(s) 주소)과 PDF만 새 탭. 포트폴리오 안의 이동(슬라이드·프로젝트 문서)은 같은 탭 — 새 탭이 계속 쌓이지 않게(새 탭은 읽는 사람이 휠 클릭으로)
     const Ext = ({ href, className, children, ...rest }) => { const external = /^https?:\/\//i.test(href || '') || /\.pdf(?:[?#]|$)/i.test(href || '');   // 외부 주소·PDF = 새 탭
       return <a href={href} className={className} {...(external ? { target: '_blank', rel: 'noopener' } : {})} {...rest}>{children}<NewTabIcon external={external} /></a>; };
 
@@ -1383,7 +1383,7 @@
               {introParas(prof.intro).map((para, i) =>
                 <FitLines key={i} lines={para} className={i ? 'text-lg md:text-xl leading-relaxed text-[var(--muted)]' : 'text-2xl md:text-4xl font-semibold leading-snug tracking-tight'} />)}
             </div>
-            {/* 자기소개서 전문(letter.html — 자기소개서.md를 기술문서와 같은 모양으로) 글자 링크. 화면에서만(인쇄·PDF는 빠짐) */}
+            {/* 자기소개서 전문(letter.html — 자기소개서.md를 프로젝트 문서와 같은 모양으로) 글자 링크. 화면에서만(인쇄·PDF는 빠짐) */}
             <p className="no-print mt-10 text-base md:text-lg"><Ext className="tlink text-[var(--muted)]" href="letter.html">자기소개서 전문</Ext></p>
           </div>
         </section>
@@ -1466,7 +1466,7 @@
         if (cap.getAnimations?.({ subtree: true }).some((a) => a.playState === 'running')) return;
         const pill = cap.querySelector('.cap-pill'), b1 = pill?.querySelector('.cap-row .btn');
         if (pill) cap.style.setProperty('--cap-w', `${pill.getBoundingClientRect().width}px`);
-        if (b1) cap.style.setProperty('--b1', `${b1.getBoundingClientRect().width}px`);   // 점이 늘어날 [발표 덱] 버튼 폭
+        if (b1) cap.style.setProperty('--b1', `${b1.getBoundingClientRect().width}px`);   // 점이 늘어날 [슬라이드] 버튼 폭
       });
       measure(); addEventListener('resize', measure); document.fonts?.ready.then(measure);
       const motion = () => matchMedia('(min-width: 760px)').matches && !matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -1658,7 +1658,7 @@
     }
 
     // ⑥ 기능 소개(목록 + 고정된 큰 그림) — 넓은 화면: 기능 소개 전체가 머리 막대 아래에 붙어 있고(.fe-pin), 스크롤한 만큼(진척도) 현재 기능이 바뀜.
-    //   현재 기능은 [번호 · 제목 · 설명 · 발표 덱 버튼]을 펼치고, 나머지는 번호 · 제목만 흐리게. 오른쪽 큰 그림은 현재 기능 화면으로. 흐린 기능을 누르면 그 기능으로 스크롤.
+    //   현재 기능은 [번호 · 제목 · 설명 · 슬라이드 버튼]을 펼치고, 나머지는 번호 · 제목만 흐리게. 오른쪽 큰 그림은 현재 기능 화면으로. 흐린 기능을 누르면 그 기능으로 스크롤.
     //   760px 미만·인쇄: 기능마다 [그림 → 글] 한 열, 모두 펼침
     function Features({ p, no }) {
       const hl = (p.highlights || []).slice(0, 5);   // 빌드는 2~4개를 고르고, 사용자가 직접 더한 다섯 번째까지 그림
@@ -1842,7 +1842,7 @@
       addEventListener('resize', update);
     }
 
-    // profile.md "## 기타 프로젝트 (링크만)" 절 → [{ title, intro, info, tech[], role, url, video }] (기술 문서 없이 소개·링크만 있는 카드)
+    // profile.md "## 기타 프로젝트 (링크만)" 절 → [{ title, intro, info, tech[], role, url, video }] (프로젝트 문서 없이 소개·링크만 있는 카드)
     function parseLinkCards(md) {
       const lines = md.replace(new RegExp('<' + '!--[\\s\\S]*?--' + '>', 'g'), '').split(/\r?\n/);
       const start = lines.findIndex((l) => /^##\s+기타 프로젝트\s*\(링크/.test(l.trim()));
@@ -1902,7 +1902,7 @@
       );
     }
     // data/의 기타 프로젝트 → 카드 형식(정보 = 기간 · 인원 팀)
-    // profile.md 페이지 설정 "- 발표 덱 빼기: 폴더, 폴더" → 그 기타 프로젝트 카드에서 발표 덱 링크를 뺌(발표 덱 페이지는 그대로 있음)
+    // profile.md 페이지 설정 "- 발표 덱 빼기: 폴더, 폴더" → 그 기타 프로젝트 카드에서 슬라이드 링크를 뺌(슬라이드 페이지는 그대로 있음)
     let noDeck = new Set();
     function parseNoDeck(md) {
       const l = md.replace(new RegExp('<' + '!--[\\s\\S]*?--' + '>', 'g'), '').split(/\r?\n/).map((x) => x.trim()).find((x) => /^-\s*발표 덱 빼기\s*[:：]/.test(x));
@@ -2108,7 +2108,7 @@
         let userMoved = false;
         ['wheel', 'touchstart', 'keydown', 'pointerdown'].forEach((ev) => addEventListener(ev, () => { userMoved = true; }, { once: true, passive: true }));
         let arrived = goHash(state.projects), restoreY = null;
-        if (!arrived && ['reload', 'back_forward'].includes(performance.getEntriesByType?.('navigation')[0]?.type)) {   // 새로고침 · 뒤로(상세 기술문서의 [← 포트폴리오] 포함)로 다시 열렸을 때 읽던 위치로
+        if (!arrived && ['reload', 'back_forward'].includes(performance.getEntriesByType?.('navigation')[0]?.type)) {   // 새로고침 · 뒤로(프로젝트 상세 문서의 [← 포트폴리오] 포함)로 다시 열렸을 때 읽던 위치로
           try { restoreY = +sessionStorage.getItem(POS) || null; } catch {}
           if (restoreY) scrollTo({ top: restoreY, behavior: 'instant' });
         }
