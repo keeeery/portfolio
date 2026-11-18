@@ -16,7 +16,7 @@
 
 ## 1. 프로젝트 개요
 
-### 1.1 What — 무엇을 만들었나
+### 1.1 게임 소개
 
 ![Folk Sack 로고와, 지상 마을의 상점 아래 지하에서 세 플레이어가 광물 타일을 채굴하는 화면](images/cover-village-mining-logo.png)
 
@@ -44,7 +44,7 @@ flowchart TB
 - **붕괴와 매몰:** 지지 구조가 사라진 지형은 덩어리째 떨어집니다. 깔리면 피해를 받거나 매몰되고, 사망하면 그 칸에 사망 보관함이 생기며 골드 절반과 아이템을 떨어뜨립니다.
 - **지도:** 미니맵과 Tab 전체 지도에서 이미 가 본 곳과 지금 보이는 곳을 나눠 보여 줍니다.
 
-### 1.2 Why — 왜 만들었나
+### 1.2 개발 의도
 
 직접 땅을 파면서 자원을 찾는 재미와, **지형 붕괴·매몰의 위험** 때문에 긴장하며 탐험하는 경험을 주고 싶었습니다.
 또한 지형을 의도적으로 무너뜨려 다른 플레이어를 매몰시키는 **간접 PvP**도 목표로 삼았습니다.
@@ -133,7 +133,7 @@ flowchart TB
 
 ---
 
-## 2. 기능 A — 시드 기반 절차적 맵 데이터 생성
+## 2. 기능 A — 같은 시드로 모두에게 같은 맵 생성
 
 ### 2.1 개요와 구조
 
@@ -157,7 +157,7 @@ flowchart TB
 동굴을 뚫은 후 광물을 붙이는 순서나 난수 호출 순서가 달라지면 같은 시드여도 맵이 달라질 수 있습니다.
 맵 형태와 게임 플레이 중 수정되는 셀 상태도 구분합니다.
 
-### 2.2 지형 데이터·화면 표현·연결성 탐색
+### 2.2 지형 칸 저장·표시와 이어진 공간 탐색
 
 | 구성 요소 | 책임 |
 |---|---|
@@ -184,7 +184,7 @@ Mesh는 변경된 Chunk 단위로, Collider는 별도 dirty 표시로 다시 만
 | 기반에서 분리된 그룹 탐색 | `FindFloatingGroups()` | 부유 셀 그룹 목록 |
 | 서버 확정 변경 적용 | `ApplyAuthoritativeBatch(batch, reason, out error)` | 성공 시 적용 이벤트와 지형 변경 이벤트 |
 
-### 2.3 핵심 기능 — 초기 맵을 공유하는 계약
+### 2.3 핵심 기능 — 접속 시 같은 맵 재생성
 
 클라이언트는 `map_session`에서 받은 프로필·시드와 테이블 버전을 확인하고 초기 맵을 재생성합니다.
 `TerrainNetworkAdapter.FromGeneratedMap()`이 생성 결과를 Revision 0의 런타임 스냅샷으로 변환합니다.
@@ -210,7 +210,7 @@ ApplyTerrainSnapshot(TerrainNetworkAdapter.FromGeneratedMap(map));
 
 ### 2.4 세부 구현
 
-#### 동굴 후보를 적용한 뒤 연결성 검증과 복원
+#### 동굴로 끊긴 지형의 복원
 
 `TerrainCaveGenerator`는 깊이 범위와 경계 여유를 만족하는 시작점을 찾고,
 수평 방향에 작은 수직 변화를 누적하며 원형 셀들을 이어 동굴 후보를 만듭니다.
@@ -238,7 +238,7 @@ return false;
 게임 중 `TerrainManager.FindFloatingGroups()`는 상하좌우 탐색에서 기반암이나 스폰 플랫폼과의 인접을 검사합니다.
 두 경로는 쓰이는 시점과 지지 조건이 다른 별개의 판정입니다.
 
-#### 광물 밀도와 군집 크기의 분리
+#### 광물의 양과 뭉침 크기
 
 `TerrainMineralClusterGenerator`는 깊이 섹션과 광물 규칙을 순서대로 읽고,
 적합한 바탕 셀에서 `ClusterDensity` 확률로 군집 생성을 시작합니다.
@@ -257,9 +257,9 @@ return false;
 주변 후보가 없으면 목표 크기에 도달하기 전에 확장을 멈춥니다.
 확률·성장 순서·난수 소비가 함께 결과를 결정하므로 서버와 클라이언트의 순회 순서를 맞춰야 합니다.
 
-소스: `TerrainCaveGenerator.cs`, `TerrainMapConnectivityValidator.cs`, `TerrainMineralClusterGenerator.cs`.
+소스: [TerrainCaveGenerator.cs](https://github.com/keeeery/Folk-Sack/blob/main/Assets/02.%20Scripts/TerrainCollapse/Generation/TerrainCaveGenerator.cs), [TerrainMapConnectivityValidator.cs](https://github.com/keeeery/Folk-Sack/blob/main/Assets/02.%20Scripts/TerrainCollapse/Generation/TerrainMapConnectivityValidator.cs), [TerrainMineralClusterGenerator.cs](https://github.com/keeeery/Folk-Sack/blob/main/Assets/02.%20Scripts/TerrainCollapse/Generation/TerrainMineralClusterGenerator.cs).
 
-### 2.5 결정적 생성의 데이터 검증과 난수 경계
+### 2.5 같은 시드, 같은 맵의 보장
 
 지형 테이블은 값을 읽은 뒤 참조와 적용 순서를 확정합니다. 깊이 섹션은 `SectionOrder`로 정렬하고 첫 구간 0, 마지막 구간 1, 인접 구간의 연속성을 검사합니다. 광물은 섹션별 `ResourceOrder`, 변칙 군집은 섹션·`VariantOrder`, 동굴은 `CaveOrder` 순서로 적용합니다. 중복 ID·순서와 없는 타일·자원 참조는 로딩 오류로 처리합니다.
 
@@ -267,7 +267,7 @@ return false;
 
 테이블 버전(§2.3)과 별도로 클라이언트·서버의 규칙 적용 순서와 반올림 방식도 맞아야 합니다. 서버의 동굴 좌표 반올림은 `Math.Round(double)`의 기본 중간값 짝수 반올림을 사용하여 Unity의 대응 연산과 맞춥니다.
 
-#### TSV에 저장된 값(DTO)과 조회해 쓰는 값(Def)의 분리
+#### 표(TSV)로 관리하는 지형 규칙
 
 지형 테이블 7종(타일·자원·시드 프로필·깊이 구간·구간별 광물·변칙 군집·동굴)은 모두 같은 경로로 읽습니다.
 **DTO는 TSV에 저장된 값, Def는 게임이 실제로 조회해 사용하는 값**으로 구분했습니다.
@@ -307,7 +307,7 @@ foreach (TerrainTileDTO dto in rows)
 잘못된 값은 DTO에서 Def로 바꾸는 순간에 걸러 내고, 통과한 값만 읽기 전용 Def로 만들어 실행 중에 바뀌지 않게 막았습니다.
 다른 테이블을 참조하는 테이블은 참조 대상을 먼저 읽습니다. 예를 들어 깊이 구간은 시드 프로필·타일 테이블을 받은 뒤 `ProfileID`·`BaseTileType`이 등록되어 있는지 검사하고, 찾은 Def를 함께 담아 생성합니다.
 
-소스: `TerrainTsvReader.cs`, `TerrainTileDef.cs`, `TerrainDataTables.cs`, `TerrainTableSeedGenerator.cs`, `RoomClient.Terrain.cs`.
+소스: [TerrainTsvReader.cs](https://github.com/keeeery/Folk-Sack/blob/main/Assets/02.%20Scripts/TerrainCollapse/Data/TerrainTsvReader.cs), [TerrainTileDef.cs](https://github.com/keeeery/Folk-Sack/blob/main/Assets/02.%20Scripts/TerrainCollapse/Data/TerrainTileDef.cs), [TerrainDataTables.cs](https://github.com/keeeery/Folk-Sack/blob/main/Assets/02.%20Scripts/TerrainCollapse/Data/TerrainDataTables.cs), [TerrainTableSeedGenerator.cs](https://github.com/keeeery/Folk-Sack/blob/main/Assets/02.%20Scripts/TerrainCollapse/Generation/TerrainTableSeedGenerator.cs), [RoomClient.Terrain.cs](https://github.com/keeeery/Folk-Sack/blob/main/Assets/02.%20Scripts/Networking/RoomClient.Terrain.cs).
 
 ### 2.6 고민과 선택
 
@@ -352,9 +352,9 @@ AI로 빠르게 만든 프로토타입으로 붕괴 동작을 먼저 확인하�
 
 ---
 
-## 3. 기능 B — 채굴·지형 붕괴의 서버 확정 파이프라인
+## 3. 기능 B — 여럿이 함께 캐고 무너뜨리는 지형
 
-### 3.1 개요와 책임 분리
+### 3.1 개요와 구조
 
 채굴과 낙하 배치의 공유 결과는 서버에서 확정하고, 클라이언트가 순서대로 런타임 지형에 적용합니다.
 물리 청크가 정착한 시점과 서버 배치가 확정된 시점을 나누어 다중 청크와 연쇄 붕괴를 처리합니다.
@@ -391,7 +391,7 @@ flowchart TB
 
 이 파이프라인을 만들며 겪은 멀티플레이 멈춤 문제와 해결 과정은 8.1에 있습니다.
 
-### 3.2 핵심 API와 채굴 변경 순서
+### 3.2 모두에게 같은 순서로 반영되는 채굴 결과
 
 ![플레이어가 사파이어 타일을 채굴하여 사파이어가 드롭된 장면](images/mining-crystal-break.png)
 
@@ -446,7 +446,7 @@ while (bufferedTerrainBatches.TryGetValue(
 `TerrainGridData`는 적용 전 BaseRevision과 중복 좌표를 검사한 뒤 셀 목록을 반영하고,
 마지막에 `Revision = batch.ResultRevision`을 수행합니다.
 
-### 3.3 다중 낙하 — 전역 대기 대신 요청·청크별 상태
+### 3.3 여러 덩어리의 동시 낙하
 
 여러 청크가 동시에 정착할 때 하나의 대기 플래그를 사용하면 먼저 보낸 요청 때문에
 다음 청크의 배치 제안이 버려질 수 있습니다.
@@ -470,7 +470,7 @@ if (pendingCollapsePlacementIds.ContainsValue(proposal.CollapseId))
 반면 낙하 배치 요청은 단순 시간 초과로 지우지 않습니다.
 늦게 도착한 확정 Batch의 소유권을 식별해야 하므로 성공·오류·취소에 연결해 정리합니다.
 
-### 3.4 연쇄 붕괴 — 물리 완료와 서버 확정을 구분
+### 3.4 떨어진 지형이 다시 일으키는 연쇄 붕괴
 
 `RebuildCompleted`는 정착·만료된 로컬 청크의 제안 처리와 제거, 물리 프레임 대기 후 발생합니다.
 그 순간 서버가 최종 배치를 확정한 것은 아니므로, 권위 모드에서는 이 이벤트로 연쇄 탐색을 시작하지 않습니다.
@@ -504,7 +504,7 @@ if (reason == TerrainChangeReason.CollapsePlacement)
 
 ### 3.6 세부 구현
 
-#### 낙하 예약과 최종 변경을 하나의 Batch로 확정
+#### 떨어진 지형의 일괄 확정
 
 서버의 낙하 시작 요청에는 여러 그룹이 들어갈 수 있습니다.
 `TryStartCollapse()`는 먼저 그룹 내부 중복과 그룹 사이의 셀 중복을 확인하고,
@@ -560,9 +560,9 @@ foreach (GridCoord sourceCell in sourceCells)
 이 정리는 변경 결과를 재전송하는 기능과 다릅니다.
 서버의 예약 원본이 남아 있다는 전제에서 취소 메시지로 화면과 예약 상태를 되돌리는 방식입니다.
 
-소스: `GameSession.Terrain.cs`, `RoomClient.Terrain.cs`.
+소스: [GameSession.Terrain.cs](https://github.com/KooHoo-Dev/3rd-TeamProject-KH-Server/blob/main/HelloServer/Game/GameSession.Terrain.cs), [RoomClient.Terrain.cs](https://github.com/keeeery/Folk-Sack/blob/main/Assets/02.%20Scripts/Networking/RoomClient.Terrain.cs).
 
-#### 방송 큐와 초기 입장의 잠금 범위
+#### 변경 알림 전송과 입장 중 대기
 
 일반 지형 명령은 `terrainPipelineGate` 안에서 상태 변경과 방송 등록 순서를 맞춘 뒤 실제 송신을 큐에서 처리합니다. 초기 입장의 `JoinAsync()`는 별도 경로로, welcome·맵 세션·아이템·체력 상태를 보내는 동안에도 이 Gate를 유지합니다. 따라서 입장 처리 중에는 그 송신이 끝날 때까지 지형 명령이 기다립니다.
 
@@ -572,7 +572,7 @@ foreach (GridCoord sourceCell in sourceCells)
 
 방 생성에서도 초기 지형 전체를 전역 잠금 안에서 만들지 않습니다. `RoomHub.EnterAsync()`는 잠금 밖에서 후보 방을 만들고 다시 확인한 뒤 등록합니다. 같은 방 코드의 생성 경쟁에서 이미 등록된 방이 있으면 새 후보는 `StopAsync()`로 정리합니다.
 
-소스: `Room.cs`, `RoomHub.cs`.
+소스: [Room.cs](https://github.com/KooHoo-Dev/3rd-TeamProject-KH-Server/blob/main/HelloServer/Network/Room.cs), [RoomHub.cs](https://github.com/KooHoo-Dev/3rd-TeamProject-KH-Server/blob/main/HelloServer/Network/RoomHub.cs).
 
 ### 3.7 고민과 선택
 
@@ -621,7 +621,7 @@ stateDiagram-v2
 
 이 다이어그램은 `FallingTerrainInteraction`이 여러 값과 처리 순서로 나타내는 상황과 흐름을 도식화한 것입니다. 맨 아래의 끝 점은 다시 평소 상태로 돌아감을 뜻합니다.
 
-### 4.2 핵심 API — 탈출·매몰 판정과 피해 전달
+### 4.2 핵심 API — 탈출·깔림 결정과 피해 전달
 
 | API·이벤트 | 역할 |
 |---|---|
@@ -634,7 +634,7 @@ stateDiagram-v2
 
 ### 4.3 세부 구현
 
-#### 물리 정착과 Grid 배치 후보 선택
+#### 떨어진 덩어리가 멈출 칸 선택
 
 `FallingChunk`는 저속이라는 조건만으로 정착하지 않습니다.
 지형 접촉의 지지 방향·폭과 최근 접촉 여부를 확인하고,
@@ -687,9 +687,9 @@ return collisionCount < bestCollisionCount;
 충돌 없는 후보가 없더라도 후보를 반환할 수 있고, 맵 범위·정적 지형 충돌 등은 서버 검증에서 거절될 수 있습니다.
 정착·후보 계산·서버 승인을 분리한 만큼 실패 시 원본 복구가 함께 필요합니다.
 
-소스: `FallingChunk.cs`, `TerrainSampler.cs`, `CollapseManager.cs`.
+소스: [FallingChunk.cs](https://github.com/keeeery/Folk-Sack/blob/main/Assets/02.%20Scripts/TerrainCollapse/FallingChunk.cs), [TerrainSampler.cs](https://github.com/keeeery/Folk-Sack/blob/main/Assets/02.%20Scripts/TerrainCollapse/TerrainSampler.cs), [CollapseManager.cs](https://github.com/keeeery/Folk-Sack/blob/main/Assets/02.%20Scripts/TerrainCollapse/CollapseManager.cs).
 
-#### 연동 구현 — 속도 계산·충돌 이동·지형 상태의 분리
+#### 연동 구현 — 플레이어 이동과 지형 충돌
 
 `PlayerController`는 플레이어 루트의 실행 순서를 조정하고,
 입력·속도·충돌·지형 상태·생명주기를 별도 객체에 위임합니다.
@@ -718,7 +718,7 @@ Dynamic·Kinematic 낙하 청크는 이 보정 대상에서 제외해,
 플랫폼 폭 안으로 수평 위치를 제한하고 몸 전체가 경계를 지날 때까지 상태를 유지합니다.
 플랫폼 안에서 등반을 취소한 경우 아래로 통과시키는 경로도 둡니다.
 
-#### 연동 구현 — 낙하 높이·등반과 서버 체력의 경계
+#### 연동 구현 — 낙하 피해와 벽 오르기
 
 `FallDamageDetector`는 현재 수직 속도만으로 피해를 계산하지 않습니다.
 마지막 정적 지면의 높이와 착지 높이 차이를 타일 수로 바꾸고,
@@ -748,9 +748,9 @@ int damage = Mathf.CeilToInt(baseDamage * damageMultiplier);
 
 ![사망 후 처리 — 서버의 'HJ님이 사망했습니다' 채팅창 시스템 메시지](images/fall-death-chat.png)
 
-소스: `PlayerController.cs`, `PlayerCollisionMove.cs`, `PlayerTerrainState.cs`, `FallDamageDetector.cs`, `PlayerHp.cs`.
+소스: [PlayerController.cs](https://github.com/keeeery/Folk-Sack/blob/main/Assets/02.%20Scripts/Player/PlayerController.cs), [PlayerCollisionMove.cs](https://github.com/keeeery/Folk-Sack/blob/main/Assets/02.%20Scripts/Player/PlayerCollisionMove.cs), [PlayerTerrainState.cs](https://github.com/keeeery/Folk-Sack/blob/main/Assets/02.%20Scripts/Player/PlayerTerrainState.cs), [FallDamageDetector.cs](https://github.com/keeeery/Folk-Sack/blob/main/Assets/02.%20Scripts/Character/Health/FallDamageDetector.cs), [PlayerHp.cs](https://github.com/keeeery/Folk-Sack/blob/main/Assets/02.%20Scripts/Character/Health/PlayerHp.cs).
 
-#### 타격 연출과 지형 확정 상태의 분리
+#### 칠 때 흔들리는 지형 연출
 
 `TerrainGridWorld.TrySetCellVisualOffset()`은 셀의 Mesh 정점·자원 표시·균열 표시 위치만 움직입니다. `TerrainGridData` 좌표와 내구도, 경계 Collider는 바꾸지 않습니다. Chunk마다 셀의 시작 정점 인덱스를 캐시하고, 연출로 바뀐 정점은 `visualDirtyChunks`에 모아 `LateUpdate()`에서 반영합니다.
 
@@ -766,7 +766,7 @@ int damage = Mathf.CeilToInt(baseDamage * damageMultiplier);
 
 탈출 중에는 Trigger와 무중력 상태로 `SmoothDamp` 이동하고, 도착 위치가 여전히 비어 있으면 중력과 일반 충돌을 복원합니다. 서버 Batch로 지형이 새로 배치된 뒤 이미 아이템이 겹쳤다면 다음 물리 갱신에서 다시 빈 위치를 찾아 즉시 분리합니다. 아이템의 물리 이동은 클라이언트 표시에서만 일어나며, 서버와 연속으로 동기화하지 않습니다.
 
-소스: `TerrainGridWorld.cs`, `TerrainTileHitEffect.cs`, `TerrainCrackOverlayManager.cs`, `WorldItemDrop.cs`.
+소스: [TerrainGridWorld.cs](https://github.com/keeeery/Folk-Sack/blob/main/Assets/02.%20Scripts/TerrainCollapse/TerrainGridWorld.cs), [TerrainTileHitEffect.cs](https://github.com/keeeery/Folk-Sack/blob/main/Assets/02.%20Scripts/TerrainCollapse/TerrainTileHitEffect.cs), [TerrainCrackOverlayManager.cs](https://github.com/keeeery/Folk-Sack/blob/main/Assets/02.%20Scripts/TerrainCollapse/TerrainCrackOverlayManager.cs), [WorldItemDrop.cs](https://github.com/keeeery/Folk-Sack/blob/main/Assets/02.%20Scripts/Item/WorldItemDrop.cs).
 
 ### 4.4 고민과 선택
 
@@ -785,7 +785,7 @@ int damage = Mathf.CeilToInt(baseDamage * damageMultiplier);
 
 ---
 
-## 5. 기능 D — 서버 인벤토리와 아이템·상점의 연결
+## 5. 기능 D — 인벤토리·아이템·상점
 
 ### 5.1 개요와 구조
 
@@ -805,7 +805,7 @@ flowchart TB
 서버가 확정한 상태를 클라이언트의 로컬 무게 제한으로 거절하지 않도록 처리합니다.
 장착 곡괭이도 `EquippedPickaxeItemID`로 별도 적용합니다.
 
-### 5.2 핵심 기능 — 권위 스냅샷을 UI 모델로 변환
+### 5.2 핵심 기능 — 서버 인벤토리의 화면 표시
 
 ```csharp
 // RoomClient.HandleInventorySnapshot() — 권위 스냅샷으로 인벤토리 모델 교체
@@ -848,7 +848,7 @@ itemReadyTime.Remove(pending.ItemID);
 
 ### 5.5 세부 구현
 
-#### 장착 장비와 수집 수량·가격의 분리
+#### 장착 곡괭이와 모은 광물의 분리 집계
 
 서버는 장착 곡괭이를 일반 소모 아이템의 수량과 구분해 `EquippedPickaxeItemID`로 관리합니다.
 구매 시 다음 장비의 채굴력이 현재보다 높아야 하며,
@@ -870,9 +870,9 @@ UI의 구매 취소 표시와 서버가 허용하는 범위를 함께 맞출 필
 서버가 이전 위치로 구역 검사를 하는 차이를 줄입니다.
 판매·획득이 서버 권위라고 해도 플레이어 좌표 자체는 클라이언트 보고값이라는 경계는 유지됩니다.
 
-소스: `GameSession.cs`, `PlayerSellController.cs`.
+소스: [GameSession.cs](https://github.com/KooHoo-Dev/3rd-TeamProject-KH-Server/blob/main/HelloServer/Game/GameSession.cs), [PlayerSellController.cs](https://github.com/keeeery/Folk-Sack/blob/main/Assets/02.%20Scripts/Item/Inventory/PlayerSellController.cs).
 
-#### 팀 아이템 연동 — 미리보기와 서버 확정 결과의 분리
+#### 팀 아이템 연동 — 사용 전 미리보기와 확정 뒤 결과
 
 아이템 고유 동작과 연출은 팀 구현을 포함하며,
 온라인 경로에서는 요청 전 입력·미리보기와 서버 확정 뒤 피드백을 연결합니다.
@@ -913,9 +913,9 @@ UI의 구매 취소 표시와 서버가 허용하는 범위를 함께 맞출 필
 남는 문제는 폭발 확정 뒤 지뢰는 표시 전용 경로를, 다이너마이트는 지형 손상까지 하는 경로를 쓴다는 차이입니다.
 여러 클라이언트의 폭발 Batch 적용 순서·타일 내구도 차이를 함께 검증할 부분입니다.
 
-소스: `DynamiteItem.cs`, `DynamiteExplosive.cs`, `ExplosiveBase.cs`, `Detector.cs`, `GridOccupancy.cs`.
+소스: [DynamiteItem.cs](https://github.com/keeeery/Folk-Sack/blob/main/Assets/02.%20Scripts/Item/Usable/DynamiteItem.cs), [DynamiteExplosive.cs](https://github.com/keeeery/Folk-Sack/blob/main/Assets/02.%20Scripts/Item/Usable/DynamiteExplosive.cs), [ExplosiveBase.cs](https://github.com/keeeery/Folk-Sack/blob/main/Assets/02.%20Scripts/Item/Usable/ExplosiveBase.cs), [Detector.cs](https://github.com/keeeery/Folk-Sack/blob/main/Assets/02.%20Scripts/Item/Usable/Detector.cs), [GridOccupancy.cs](https://github.com/keeeery/Folk-Sack/blob/main/Assets/02.%20Scripts/Item/Usable/GridOccupancy.cs).
 
-#### 요청별로 다른 서버 검증 범위
+#### 요청마다 다른 서버 확인 항목
 
 필드 아이템 획득은 서버가 DropID와 수량·획득 대기 시간·수용량을 관리합니다. 거리 판정은 요청에 담긴 아이템 좌표와 서버가 보관한 플레이어 좌표 사이에서 수행합니다. 서버는 드롭 생성 좌표와 요청 좌표를 대조하지 않으므로, 클라이언트 물리로 움직인 드롭 위치를 그대로 믿습니다.
 
@@ -923,7 +923,7 @@ UI의 구매 취소 표시와 서버가 허용하는 범위를 함께 맞출 필
 
 온라인 아이템 사용의 소모량은 서버 결과로 반영하지만, 연결이 끊어진 경우의 로컬 대체 경로는 기능마다 다릅니다. `PickaxeItem`은 RoomClient가 존재하면 준비·연결 전 로컬 지형 확정을 막는 반면, `ItemController`의 액티브 아이템은 연결 여부로 온라인·오프라인 경로를 선택합니다. 연결이 끊긴 뒤의 입력 정책은 하나로 정리해 검증해야 합니다.
 
-소스: `GameSession.cs`, `ItemController.cs`, `PickaxeItem.cs`.
+소스: [GameSession.cs](https://github.com/KooHoo-Dev/3rd-TeamProject-KH-Server/blob/main/HelloServer/Game/GameSession.cs), [ItemController.cs](https://github.com/keeeery/Folk-Sack/blob/main/Assets/02.%20Scripts/Item/ItemController.cs), [PickaxeItem.cs](https://github.com/keeeery/Folk-Sack/blob/main/Assets/02.%20Scripts/Item/PickaxeItem.cs).
 
 ### 5.6 고민과 선택
 
@@ -941,7 +941,7 @@ UI의 구매 취소 표시와 서버가 허용하는 범위를 함께 맞출 필
 
 ---
 
-## 6. 기능 E — 탐험 기록과 현재 시야를 분리한 지도
+## 6. 기능 E — 가 본 곳과 지금 보이는 곳을 보여 주는 지도
 
 ### 6.1 개요와 구조
 
@@ -949,7 +949,7 @@ UI의 구매 취소 표시와 서버가 허용하는 범위를 함께 맞출 필
 `PlayerExplorationController.CurrentObservedCells`는 지금 관측되는 셀을 보관합니다.
 미니맵과 월드 안개는 같은 지형·탐험 상태를 참조하되 서로 다른 표시 역할을 맡습니다.
 
-### 6.2 핵심 기능 — 이동 셀과 지형 변경을 기준으로 갱신
+### 6.2 핵심 기능 — 이동·지형 변경 때만 하는 재계산
 
 ```csharp
 // PlayerExplorationController.RefreshPlayerVision() — 같은 셀이고 갱신 요청이 없으면 계산 생략
@@ -970,7 +970,7 @@ ExploreVisionRadius(playerCell);
 
 ### 6.3 세부 구현
 
-#### 탐험 이력과 현재 관측의 계산 경로
+#### 가 본 곳과 지금 보이는 곳의 계산
 
 누적 탐험은 `visionRadius` 안의 원형 후보를 순회하며 `HasLineOfSight()`로 차폐를 검사합니다.
 새로 탐험한 셀만 `CellsExplored`에 전달합니다.
@@ -991,9 +991,9 @@ ExploreVisionRadius(playerCell);
 관측 반경과 방향 전환 횟수는 이 방식의 범위 제한입니다.
 횃불마다 시야를 추가하므로 비용은 광원 수·반경·통로 형상에 영향을 받습니다.
 
-소스: `PlayerExplorationController.cs`, `ExplorationMapData.cs`.
+소스: [PlayerExplorationController.cs](https://github.com/keeeery/Folk-Sack/blob/main/Assets/02.%20Scripts/Exploration/PlayerExplorationController.cs), [ExplorationMapData.cs](https://github.com/keeeery/Folk-Sack/blob/main/Assets/02.%20Scripts/Exploration/ExplorationMapData.cs).
 
-#### 두 겹의 안개 Mesh와 전체 지도 조작
+#### 두 겹의 안개와 전체 지도 보기
 
 월드 안개는 탐험 이력과 현재 시야를 두 Mesh 계층으로 표현합니다. `ExplorationForWorldView`는 32×32 셀 Chunk를 사용하고, 이전·새 관측 셀이 속한 Chunk를 dirty 집합에 모읍니다. 관측 범위를 떠난 탐험 지역도 현재 시야 안개에는 다시 가려지며, 지상과 기반암·스폰 플랫폼은 표시 예외로 둡니다.
 
@@ -1003,7 +1003,7 @@ Tab 전체 지도는 프레임 Mask와 지도 콘텐츠의 RectTransform을 구�
 
 ![전체 지도(Tab)에 탐험한 구역과 플레이어 위치 마커가 표시된 화면](images/full-map.png)
 
-소스: `ExplorationForWorldView.cs`, `TerrainMinimapPresenter.cs`, `MinimapView.cs`.
+소스: [ExplorationForWorldView.cs](https://github.com/keeeery/Folk-Sack/blob/main/Assets/02.%20Scripts/Exploration/ExplorationForWorldView.cs), [TerrainMinimapPresenter.cs](https://github.com/keeeery/Folk-Sack/blob/main/Assets/03.%20UI/Scripts/TerrainMinimapPresenter.cs), [MinimapView.cs](https://github.com/keeeery/Folk-Sack/blob/main/Assets/03.%20UI/Scripts/MinimapView.cs).
 
 ### 6.4 고민과 선택
 
@@ -1020,7 +1020,7 @@ Tab 전체 지도는 프레임 Mask와 지도 콘텐츠의 RectTransform을 구�
 
 ---
 
-## 7. 기능 F — 로비에서 게임 결과까지 연결하는 통합 계층
+## 7. 기능 F — 로비부터 결과 화면까지의 흐름
 
 ### 7.1 개요 — 로비와 준비 완료
 
@@ -1031,7 +1031,7 @@ Tab 전체 지도는 프레임 Mask와 지도 콘텐츠의 RectTransform을 구�
 클라이언트의 게임 입력 조건은 연결, 핸드셰이크, 지형 초기화, 게임 시작 상태를 함께 확인합니다.
 이동 활성화와 실제 게임 플레이 활성화 조건도 분리해 시작 시각 전 행동을 구분합니다.
 
-### 7.2 시간·원격 표시·피드백
+### 7.2 남은 시간·다른 플레이어 표시·알림
 
 서버 기준 시작/종료 시각과 로컬 시각 보정값으로 카운트다운과 경과 시간을 표시합니다.
 원격 플레이어는 위치 외에도 속도·접지·등반·매몰 상태와 행동 메시지를 이용해 표현합니다.
@@ -1044,7 +1044,7 @@ Tab 전체 지도는 프레임 Mask와 지도 콘텐츠의 RectTransform을 구�
 
 ### 7.3 세부 구현
 
-#### 로비 상태 순서와 게임 시작 준비 장벽
+#### 모두 준비돼야 시작하는 로비
 
 로비의 참가자 상태에도 Revision이 있지만 지형 Revision과는 별개입니다.
 `LobbyHub.BroadcastStateAsync()`는 참가자 목록과 수신 대상을 잠금 안에서 구성하고,
@@ -1072,7 +1072,7 @@ Tab 전체 지도는 프레임 Mask와 지도 콘텐츠의 RectTransform을 구�
 
 같은 준비 통지가 다시 와도 집합이므로 인원 수가 중복 증가하지 않습니다.
 
-#### 원격 플레이어는 표시 계층으로 유지
+#### 다른 플레이어의 움직임 표시
 
 원격 상태는 목표 위치·속도·접지·등반·매몰·사망 표시로 분리됩니다.
 `RemotePlayerView.Update()`는 목표 위치로 지수 보간하며,
@@ -1089,9 +1089,9 @@ transform.position = new Vector3(next.x, next.y, current.z);
 원격 채굴 애니메이션 이벤트는 지형·인벤토리를 다시 변경하지 않고 효과음만 재생합니다.
 판정과 원격 연출이 같은 애니메이션 신호를 통해 중복 실행되지 않도록 경계를 둡니다.
 
-소스: `LobbyHub.cs`, `LobbySocketClient.cs`, `RemotePlayerView.cs`, `RemotePlayerAnimationView.cs`.
+소스: [LobbyHub.cs](https://github.com/KooHoo-Dev/3rd-TeamProject-KH-Server/blob/main/HelloServer/Network/LobbyHub.cs), [LobbySocketClient.cs](https://github.com/keeeery/Folk-Sack/blob/main/Assets/02.%20Scripts/Networking/LobbySocketClient.cs), [RemotePlayerView.cs](https://github.com/keeeery/Folk-Sack/blob/main/Assets/02.%20Scripts/Networking/RemotePlayerView.cs), [RemotePlayerAnimationView.cs](https://github.com/keeeery/Folk-Sack/blob/main/Assets/02.%20Scripts/Networking/RemotePlayerAnimationView.cs).
 
-#### 멀티플레이에서의 모달 입력과 환경설정
+#### 멀티플레이 중 메뉴·설정 창
 
 `PauseMenuController`는 메뉴·설정·결과 창의 활성 상태를 모달 입력 차단 조건으로 제공합니다.
 `PlayerInputReader`는 채팅 입력 중이거나 모달이 열리면 빈 입력을 전달합니다.
@@ -1124,7 +1124,7 @@ PlayerPrefs 키에는 `Application.dataPath`의 Hash128을 접두어로 넣습�
 파편 등 다른 객체와 달리 오디오 보이스는 풀링하지 않습니다.
 반복음은 반환받은 AudioSource를 `StopLoop()`로 종료하는 별도 수명 경로를 가집니다.
 
-소스: `PauseMenuController.cs`, `SettingsController.cs`, `PlayerInputReader.cs`, `GameSound.cs`.
+소스: [PauseMenuController.cs](https://github.com/keeeery/Folk-Sack/blob/main/Assets/03.%20UI/Scripts/PauseMenuController.cs), [SettingsController.cs](https://github.com/keeeery/Folk-Sack/blob/main/Assets/03.%20UI/Scripts/SettingsController.cs), [PlayerInputReader.cs](https://github.com/keeeery/Folk-Sack/blob/main/Assets/02.%20Scripts/Player/PlayerInputReader.cs), [GameSound.cs](https://github.com/keeeery/Folk-Sack/blob/main/Assets/02.%20Scripts/GameSound.cs).
 
 #### 대기방 프리뷰·채팅·승자 표시
 
@@ -1138,7 +1138,7 @@ PlayerPrefs 키에는 `Application.dataPath`의 Hash128을 접두어로 넣습�
 
 ![게임 종료 결과 창](images/game-result.png)
 
-소스: `LobbyPlayerSlotView.cs`, `ChatPanelView.cs`, `GameTimerBarView.cs`.
+소스: [LobbyPlayerSlotView.cs](https://github.com/keeeery/Folk-Sack/blob/main/Assets/02.%20Scripts/Networking/LobbyPlayerSlotView.cs), [ChatPanelView.cs](https://github.com/keeeery/Folk-Sack/blob/main/Assets/03.%20UI/Scripts/ChatPanelView.cs), [GameTimerBarView.cs](https://github.com/keeeery/Folk-Sack/blob/main/Assets/03.%20UI/Scripts/GameTimerBarView.cs).
 
 ### 7.4 고민과 선택
 
@@ -1150,7 +1150,7 @@ PlayerPrefs 키에는 `Application.dataPath`의 Hash128을 접두어로 넣습�
 
 ## 8. 트러블슈팅
 
-### 8.1 큰 스냅샷과 긴 잠금 구간으로 멈추던 멀티플레이
+### 8.1 여럿이 하면 멈추던 멀티플레이
 
 #### 8.1.1 증상과 초기 선택
 
@@ -1271,7 +1271,7 @@ Snapshot 생성의 상태 복사는 여전히 잠금이 필요하고, 방송 큐
 전체 지형 Snapshot 전송을 없앤 대신, 게임 도중 재접속·중간 참여 때의 지형 복원은 따로 설계해야 합니다.
 무제한 방송 큐가 쌓이거나 느린 연결이 다른 방송을 늦추는 상황도 부하 테스트로 확인해야 합니다.
 
-### 8.2 Grid와 Collider의 갱신 시점 — 채굴해도 풀리지 않던 매몰
+### 8.2 채굴해도 풀리지 않던 매몰
 
 | 단계 | 내용 |
 |---|---|

@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "id": "4-ODDITY",
+  "id": "1-ODDITY",
   "doc": "TechDoc_ODDITY.md",
   "title": "ODDITY",
   "tagline": "주변 물체를 들어 휘두르거나 던지고, 초능력 스킬을 조합해 보스와 싸우는 3D 액션 게임",
@@ -64,7 +64,7 @@
       "what": "게임 전체를 멈추지 않고 정지 가능한 객체만 멈춰, 플레이어가 움직이면서 멈춘 물체를 잡아 공격하거나 멈춘 보스를 공격할 수 있습니다.",
       "how": "`TimeFreezable`이 정지·감속 동안 누적된 시간 차이로 로컬 시간을 계산하고, Animator 속도와 Rigidbody 운동 상태를 저장한 뒤 kinematic 전환·DOTween 일시정지를 했다가 해제 시 복구합니다.",
       "why": "`Time.timeScale`을 0으로 만드는 대신 객체별 시간 상태를 두어 플레이어와 일부 물체를 계속 조작할 수 있게 했습니다. 대신 관련 제어 코드가 로컬 시간을 사용해야 합니다.",
-      "section": "4.2 핵심 기능 — 로컬 시간과 상태 복원",
+      "section": "4.2 핵심 기능 — 시간이 풀린 뒤의 원래 움직임 복원",
       "image": {
         "src": "images/time-freeze.png",
         "w": 1170,
@@ -120,7 +120,7 @@
       "solution": "자신이 요청한 `DamageEvent`의 결과와 실제 피해량을 확인한 뒤 파편화하고, 같은 프레임의 다른 공격과는 이벤트 인스턴스를 비교해 구분합니다.",
       "result": "",
       "lesson": "",
-      "section": "2.7 핵심 기능 — 실제 피해 성공 뒤 파편화"
+      "section": "2.7 핵심 기능 — 맞혔을 때만 부서지는 물체"
     },
     {
       "title": "이어하기 후 칩 목록과 실제 장착 효과 불일치",
@@ -129,7 +129,7 @@
       "solution": "장착 요청을 보관했다가 플레이어 생성 이후 적용하고, 살아 있는 인벤토리를 추적해 `sceneLoaded`에서도 대기 장착을 적용하도록 보완했습니다.",
       "result": "이어하기 시 이미 초기화가 끝난 플레이어가 있는 경우에도 장착이 반영됩니다.",
       "lesson": "",
-      "section": "6.5 핵심 기능 — 목록 복원과 실제 장착의 분리"
+      "section": "6.5 핵심 기능 — 이어하기의 칩·장착 복원"
     },
     {
       "title": "씬 전환 후 배치된 플레이어가 제거되는 문제",
@@ -138,7 +138,7 @@
       "solution": "`[SceneOnlySingleton]`으로 Player는 씬 배치 객체만 허용하고(없으면 null), `UIManager.Start`의 null 허용과 `HumanoidClone.OnDestroy`의 `Player.IsInitialized` 검사로 정리 경로가 새 플레이어를 만들지 않게 했습니다.",
       "result": "",
       "lesson": "",
-      "section": "고민과 선택 — 정리 중 조회가 새 플레이어를 만들지 않도록 제한"
+      "section": "고민과 선택 — 로비로 오면 플레이어가 사라지던 버그"
     }
   ],
   "screenshots": [],
@@ -168,8 +168,8 @@
     "chapters": [
       {"key": "intro", "title": "프로젝트 개요", "sectionPath": ["1. 프로젝트 개요"]},
       {"key": "psy", "title": "기능 A — 물리 기반 염동력", "sectionPath": ["2. 기능 A — 물리 기반 염동력"]},
-      {"key": "debris", "title": "기능 B — 재사용 가능한 물리 파편과 연출 파편", "sectionPath": ["3. 기능 B — 재사용 가능한 물리 파편과 연출 파편"]},
-      {"key": "time", "title": "기능 C — 객체별 시간 제어와 시간 정지 연출", "sectionPath": ["4. 기능 C — 객체별 시간 제어와 시간 정지 연출"]},
+      {"key": "debris", "title": "기능 B — 부서진 조각을 다시 쓰는 파편", "sectionPath": ["3. 기능 B — 부서진 조각을 다시 쓰는 파편"]},
+      {"key": "time", "title": "기능 C — 나만 움직이는 시간 정지", "sectionPath": ["4. 기능 C — 나만 움직이는 시간 정지"]},
       {"key": "boss", "title": "기능 D — 보스 패턴과 전투 판정", "sectionPath": ["5. 기능 D — 보스 패턴과 전투 판정"]},
       {"key": "growth", "title": "기능 E — 칩·스킬·임무와 보상·저장", "sectionPath": ["6. 기능 E — 칩·스킬·임무와 보상·저장"]},
       {"key": "scene", "title": "기능 F — 월드·UI·소리가 함께 전환되는 씬 로딩", "sectionPath": ["7. 기능 F — 월드·UI·소리가 함께 전환되는 씬 로딩"]},
@@ -184,15 +184,15 @@
         "chapter": "intro",
         "layout": "overview",
         "tab": "개요",
-        "title": {"text": "1.1 What — 무엇을 만들었나", "verbatim": true},
+        "title": {"text": "1.1 게임 소개", "verbatim": true},
         "lead": {"text": "ODDITY는 염동력과 초능력 스킬을 사용해 보스와 싸우는 Unity 3D 액션 팀 프로젝트입니다.", "verbatim": true},
-        "sectionPath": ["1. 프로젝트 개요", "1.1 What — 무엇을 만들었나"],
+        "sectionPath": ["1. 프로젝트 개요", "1.1 게임 소개"],
         "points": [
           {"label": "", "text": "플레이어는 주변 물체를 들어 휘두르거나 던지고, 시간 정지와 여러 스킬을 조합해 전투합니다.", "verbatim": true},
           {"label": "", "text": "로비에서는 증강 칩을 장착하고 임무를 선택하며, 보스 처치 보상으로 새로운 칩을 얻습니다.", "verbatim": true},
           {"label": "", "text": "임무는 차르카로사우루스, 페르데로스, 휴머노이드 보스의 전투 씬으로 연결됩니다.", "verbatim": true}
         ],
-        "visuals": [{"kind": "table", "n": 1, "fp": "문제|구현 방향", "sectionPath": ["1. 프로젝트 개요", "1.2 Why — 왜 만들었나"]}]
+        "visuals": [{"kind": "table", "n": 1, "fp": "문제|구현 방향", "sectionPath": ["1. 프로젝트 개요", "1.2 개발 의도"]}]
       },
       {
         "key": "role",
@@ -251,9 +251,9 @@
         "chapter": "psy",
         "layout": "code",
         "tab": "구현",
-        "title": {"text": "2.7 핵심 기능 — 실제 피해 성공 뒤 파편화", "verbatim": true},
+        "title": {"text": "2.7 핵심 기능 — 맞혔을 때만 부서지는 물체", "verbatim": true},
         "lead": {"text": "이벤트가 처리되기 전에는 방어·무적 등으로 실제 피해가 발생했는지 알 수 없으므로, 자신이 요청한 이벤트의 결과를 확인한 뒤 파편화합니다.", "verbatim": true},
-        "sectionPath": ["2. 기능 A — 물리 기반 염동력", "2.7 핵심 기능 — 실제 피해 성공 뒤 파편화"],
+        "sectionPath": ["2. 기능 A — 물리 기반 염동력", "2.7 핵심 기능 — 맞혔을 때만 부서지는 물체"],
         "points": [
           {"label": "", "text": "같은 프레임에 다른 공격이 처리되어도 이벤트 인스턴스를 비교해 자신의 타격 결과만 사용합니다.", "verbatim": true},
           {"label": "", "text": "보스가 생성한 물체의 벽 충돌이나 외부 공격에 의한 파편화는 별도 경로로 처리합니다.", "verbatim": true}
@@ -265,12 +265,12 @@
         "chapter": "debris",
         "layout": "code",
         "tab": "구현",
-        "title": {"text": "3.2 핵심 기능 — 크기별 공유 풀과 형태 교체", "verbatim": true},
+        "title": {"text": "3.2 핵심 기능 — 미리 만들어 다시 쓰는 파편", "verbatim": true},
         "lead": {
           "text": "풀은 `Dictionary<string, ObjectPool>`로 찾고, 내부에서는 `Stack<IObjectPoolItem>`로 객체를 꺼내고 돌려받습니다.",
           "verbatim": true
         },
-        "sectionPath": ["3. 기능 B — 재사용 가능한 물리 파편과 연출 파편", "3.2 핵심 기능 — 크기별 공유 풀과 형태 교체"],
+        "sectionPath": ["3. 기능 B — 부서진 조각을 다시 쓰는 파편", "3.2 핵심 기능 — 미리 만들어 다시 쓰는 파편"],
         "points": [
           {"label": "", "text": "초기 확보 수량과 고갈 시 확장 수량을 분리해, 작은 파편처럼 자주 쓰는 객체를 미리 준비할 수 있게 했습니다.", "verbatim": true},
           {
@@ -287,9 +287,9 @@
         "chapter": "time",
         "layout": "code",
         "tab": "구현",
-        "title": {"text": "4.2 핵심 기능 — 로컬 시간과 상태 복원", "verbatim": true},
+        "title": {"text": "4.2 핵심 기능 — 시간이 풀린 뒤의 원래 움직임 복원", "verbatim": true},
         "lead": {"text": "객체는 정지·감속 동안 누적된 시간 차이를 반영해 자신의 시간을 계산합니다.", "verbatim": true},
-        "sectionPath": ["4. 기능 C — 객체별 시간 제어와 시간 정지 연출", "4.2 핵심 기능 — 로컬 시간과 상태 복원"],
+        "sectionPath": ["4. 기능 C — 나만 움직이는 시간 정지", "4.2 핵심 기능 — 시간이 풀린 뒤의 원래 움직임 복원"],
         "points": [
           {
             "label": "",
@@ -305,9 +305,9 @@
         "chapter": "time",
         "layout": "screens",
         "tab": "결과",
-        "title": {"text": "4.3 핵심 기능 — 염동력과 정지 세계의 예외", "verbatim": true},
+        "title": {"text": "4.3 핵심 기능 — 멈춘 세계에서도 움직이는 잡은 물체", "verbatim": true},
         "lead": {"text": "물체를 잡으면 전체 시간 정지에서 제외합니다.", "verbatim": true},
-        "sectionPath": ["4. 기능 C — 객체별 시간 제어와 시간 정지 연출", "4.3 핵심 기능 — 염동력과 정지 세계의 예외"],
+        "sectionPath": ["4. 기능 C — 나만 움직이는 시간 정지", "4.3 핵심 기능 — 멈춘 세계에서도 움직이는 잡은 물체"],
         "points": [{"label": "", "text": "따라서 시간 정지와 염동력은 독립된 화면 효과가 아니라 같은 물체 상태를 공유합니다.", "verbatim": true}],
         "visuals": [
           {
@@ -323,7 +323,7 @@
             "w": 1170,
             "h": 878,
             "caption": {"text": "염동 내려찍기 스킬 ― 홀로그램으로 멈춘 휴머노이드 보스", "verbatim": true},
-            "sectionPath": ["4. 기능 C — 객체별 시간 제어와 시간 정지 연출", "4.3 핵심 기능 — 염동력과 정지 세계의 예외", "염동 내려찍기 — 개별 정지·물리 이동·카메라 조율"]
+            "sectionPath": ["4. 기능 C — 나만 움직이는 시간 정지", "4.3 핵심 기능 — 멈춘 세계에서도 움직이는 잡은 물체", "염동 내려찍기 — 개별 정지·물리 이동·카메라 조율"]
           }
         ]
       },
@@ -332,9 +332,9 @@
         "chapter": "boss",
         "layout": "screens",
         "tab": "결과",
-        "title": {"text": "5.3 핵심 기능 — 환경 물체를 공유하는 보스 공격", "verbatim": true},
+        "title": {"text": "5.3 핵심 기능 — 주변 물체를 떨어뜨리고 던지는 보스 공격", "verbatim": true},
         "lead": {"text": "보스가 만들어 낸 파편도 플레이어의 잡기·투척 대상으로 연결되므로 공격 연출과 전투 자원이 겹칩니다.", "verbatim": true},
-        "sectionPath": ["5. 기능 D — 보스 패턴과 전투 판정", "5.3 핵심 기능 — 환경 물체를 공유하는 보스 공격"],
+        "sectionPath": ["5. 기능 D — 보스 패턴과 전투 판정", "5.3 핵심 기능 — 주변 물체를 떨어뜨리고 던지는 보스 공격"],
         "points": [],
         "visuals": [
           {
@@ -366,9 +366,9 @@
         "chapter": "growth",
         "layout": "full",
         "tab": "구현",
-        "title": {"text": "임무 데이터와 보상 데이터의 연결 — DTO와 Def", "verbatim": true},
+        "title": {"text": "임무 표와 보상 표의 연결", "verbatim": true},
         "lead": {"text": "증강 칩의 TSV → DTO → Def 구조는 팀이 만든 것을 사용했고, 직접 맡은 부분은 임무 데이터와 보상 데이터의 연결입니다.", "verbatim": true},
-        "sectionPath": ["6. 기능 E — 칩·스킬·임무와 보상·저장", "6.4 핵심 기능 — 데이터 기반 보상 연결", "임무 데이터와 보상 데이터의 연결 — DTO와 Def"],
+        "sectionPath": ["6. 기능 E — 칩·스킬·임무와 보상·저장", "6.4 핵심 기능 — 임무 완료 시 정해진 칩 보상", "임무 표와 보상 표의 연결"],
         "points": [],
         "visuals": [
           {"kind": "table", "n": 1, "fp": "단계|처리"},
@@ -378,7 +378,7 @@
             "w": 1920,
             "h": 1080,
             "caption": {"text": "임무 완료 화면 — 획득한 증강 칩이 한 줄로 표시됨", "verbatim": true},
-            "sectionPath": ["6. 기능 E — 칩·스킬·임무와 보상·저장", "6.4 핵심 기능 — 데이터 기반 보상 연결"]
+            "sectionPath": ["6. 기능 E — 칩·스킬·임무와 보상·저장", "6.4 핵심 기능 — 임무 완료 시 정해진 칩 보상"]
           }
         ]
       },
@@ -387,9 +387,9 @@
         "chapter": "growth",
         "layout": "visual",
         "tab": "흐름",
-        "title": {"text": "6.5 핵심 기능 — 목록 복원과 실제 장착의 분리", "verbatim": true},
+        "title": {"text": "6.5 핵심 기능 — 이어하기의 칩·장착 복원", "verbatim": true},
         "lead": {"text": "목록을 읽는 시점에 플레이어 스탯이 준비되지 않을 수 있어, 장착 요청을 보관했다가 플레이어 생성 이후 적용합니다.", "verbatim": true},
-        "sectionPath": ["6. 기능 E — 칩·스킬·임무와 보상·저장", "6.5 핵심 기능 — 목록 복원과 실제 장착의 분리"],
+        "sectionPath": ["6. 기능 E — 칩·스킬·임무와 보상·저장", "6.5 핵심 기능 — 이어하기의 칩·장착 복원"],
         "points": [
           {"label": "", "text": "저장 파일에는 칩 ID·모양 셀·장착 여부·배치 원점·회전·스킬 슬롯과 수락 임무 ID를 기록합니다.", "verbatim": true},
           {"label": "", "text": "이어하기 시 이미 초기화가 끝난 플레이어가 있는 경우에도 장착을 반영하도록 연결했습니다.", "verbatim": true}
@@ -425,13 +425,9 @@
         "chapter": "scene",
         "layout": "problem",
         "tab": "문제 해결",
-        "title": {"text": "고민과 선택 — 정리 중 조회가 새 플레이어를 만들지 않도록 제한", "verbatim": true},
+        "title": {"text": "고민과 선택 — 로비로 오면 플레이어가 사라지던 버그", "verbatim": true},
         "lead": null,
-        "sectionPath": [
-          "7. 기능 F — 월드·UI·소리가 함께 전환되는 씬 로딩",
-          "7.4 팀 공통 기반 — 씬별 객체와 영속 서비스의 수명 구분",
-          "고민과 선택 — 정리 중 조회가 새 플레이어를 만들지 않도록 제한"
-        ],
+        "sectionPath": ["7. 기능 F — 월드·UI·소리가 함께 전환되는 씬 로딩", "7.4 팀 공통 기반 — 씬이 바뀌어도 남는 것과 사라지는 것", "고민과 선택 — 로비로 오면 플레이어가 사라지던 버그"],
         "points": [
           {
             "label": "문제",
@@ -637,15 +633,15 @@
         "chapter": "intro",
         "layout": "overview",
         "tab": "개요",
-        "title": {"text": "1.1 What — 무엇을 만들었나", "verbatim": true},
+        "title": {"text": "1.1 게임 소개", "verbatim": true},
         "lead": {"text": "ODDITY는 염동력과 초능력 스킬을 사용해 보스와 싸우는 Unity 3D 액션 팀 프로젝트입니다.", "verbatim": true},
-        "sectionPath": ["1. 프로젝트 개요", "1.1 What — 무엇을 만들었나"],
+        "sectionPath": ["1. 프로젝트 개요", "1.1 게임 소개"],
         "points": [
           {"label": "", "text": "플레이어는 주변 물체를 들어 휘두르거나 던지고, 시간 정지와 여러 스킬을 조합해 전투합니다.", "verbatim": true},
           {"label": "", "text": "로비에서는 증강 칩을 장착하고 임무를 선택하며, 보스 처치 보상으로 새로운 칩을 얻습니다.", "verbatim": true},
           {"label": "", "text": "임무는 차르카로사우루스, 페르데로스, 휴머노이드 보스의 전투 씬으로 연결됩니다.", "verbatim": true}
         ],
-        "visuals": [{"kind": "table", "n": 1, "fp": "문제|구현 방향", "sectionPath": ["1. 프로젝트 개요", "1.2 Why — 왜 만들었나"]}]
+        "visuals": [{"kind": "table", "n": 1, "fp": "문제|구현 방향", "sectionPath": ["1. 프로젝트 개요", "1.2 개발 의도"]}]
       },
       {
         "key": "role",
@@ -704,9 +700,9 @@
         "chapter": "psy",
         "layout": "code",
         "tab": "구현",
-        "title": {"text": "2.7 핵심 기능 — 실제 피해 성공 뒤 파편화", "verbatim": true},
+        "title": {"text": "2.7 핵심 기능 — 맞혔을 때만 부서지는 물체", "verbatim": true},
         "lead": {"text": "이벤트가 처리되기 전에는 방어·무적 등으로 실제 피해가 발생했는지 알 수 없으므로, 자신이 요청한 이벤트의 결과를 확인한 뒤 파편화합니다.", "verbatim": true},
-        "sectionPath": ["2. 기능 A — 물리 기반 염동력", "2.7 핵심 기능 — 실제 피해 성공 뒤 파편화"],
+        "sectionPath": ["2. 기능 A — 물리 기반 염동력", "2.7 핵심 기능 — 맞혔을 때만 부서지는 물체"],
         "points": [
           {"label": "", "text": "같은 프레임에 다른 공격이 처리되어도 이벤트 인스턴스를 비교해 자신의 타격 결과만 사용합니다.", "verbatim": true},
           {"label": "", "text": "보스가 생성한 물체의 벽 충돌이나 외부 공격에 의한 파편화는 별도 경로로 처리합니다.", "verbatim": true}
@@ -718,12 +714,12 @@
         "chapter": "debris",
         "layout": "code",
         "tab": "구현",
-        "title": {"text": "3.2 핵심 기능 — 크기별 공유 풀과 형태 교체", "verbatim": true},
+        "title": {"text": "3.2 핵심 기능 — 미리 만들어 다시 쓰는 파편", "verbatim": true},
         "lead": {
           "text": "풀은 `Dictionary<string, ObjectPool>`로 찾고, 내부에서는 `Stack<IObjectPoolItem>`로 객체를 꺼내고 돌려받습니다.",
           "verbatim": true
         },
-        "sectionPath": ["3. 기능 B — 재사용 가능한 물리 파편과 연출 파편", "3.2 핵심 기능 — 크기별 공유 풀과 형태 교체"],
+        "sectionPath": ["3. 기능 B — 부서진 조각을 다시 쓰는 파편", "3.2 핵심 기능 — 미리 만들어 다시 쓰는 파편"],
         "points": [
           {"label": "", "text": "초기 확보 수량과 고갈 시 확장 수량을 분리해, 작은 파편처럼 자주 쓰는 객체를 미리 준비할 수 있게 했습니다.", "verbatim": true},
           {
@@ -740,9 +736,9 @@
         "chapter": "time",
         "layout": "code",
         "tab": "구현",
-        "title": {"text": "4.2 핵심 기능 — 로컬 시간과 상태 복원", "verbatim": true},
+        "title": {"text": "4.2 핵심 기능 — 시간이 풀린 뒤의 원래 움직임 복원", "verbatim": true},
         "lead": {"text": "객체는 정지·감속 동안 누적된 시간 차이를 반영해 자신의 시간을 계산합니다.", "verbatim": true},
-        "sectionPath": ["4. 기능 C — 객체별 시간 제어와 시간 정지 연출", "4.2 핵심 기능 — 로컬 시간과 상태 복원"],
+        "sectionPath": ["4. 기능 C — 나만 움직이는 시간 정지", "4.2 핵심 기능 — 시간이 풀린 뒤의 원래 움직임 복원"],
         "points": [
           {
             "label": "",
@@ -758,9 +754,9 @@
         "chapter": "time",
         "layout": "screens",
         "tab": "결과",
-        "title": {"text": "4.3 핵심 기능 — 염동력과 정지 세계의 예외", "verbatim": true},
+        "title": {"text": "4.3 핵심 기능 — 멈춘 세계에서도 움직이는 잡은 물체", "verbatim": true},
         "lead": {"text": "물체를 잡으면 전체 시간 정지에서 제외합니다.", "verbatim": true},
-        "sectionPath": ["4. 기능 C — 객체별 시간 제어와 시간 정지 연출", "4.3 핵심 기능 — 염동력과 정지 세계의 예외"],
+        "sectionPath": ["4. 기능 C — 나만 움직이는 시간 정지", "4.3 핵심 기능 — 멈춘 세계에서도 움직이는 잡은 물체"],
         "points": [{"label": "", "text": "따라서 시간 정지와 염동력은 독립된 화면 효과가 아니라 같은 물체 상태를 공유합니다.", "verbatim": true}],
         "visuals": [
           {
@@ -776,7 +772,7 @@
             "w": 1170,
             "h": 878,
             "caption": {"text": "염동 내려찍기 스킬 ― 홀로그램으로 멈춘 휴머노이드 보스", "verbatim": true},
-            "sectionPath": ["4. 기능 C — 객체별 시간 제어와 시간 정지 연출", "4.3 핵심 기능 — 염동력과 정지 세계의 예외", "염동 내려찍기 — 개별 정지·물리 이동·카메라 조율"]
+            "sectionPath": ["4. 기능 C — 나만 움직이는 시간 정지", "4.3 핵심 기능 — 멈춘 세계에서도 움직이는 잡은 물체", "염동 내려찍기 — 개별 정지·물리 이동·카메라 조율"]
           }
         ]
       },
@@ -785,9 +781,9 @@
         "chapter": "boss",
         "layout": "screens",
         "tab": "결과",
-        "title": {"text": "5.3 핵심 기능 — 환경 물체를 공유하는 보스 공격", "verbatim": true},
+        "title": {"text": "5.3 핵심 기능 — 주변 물체를 떨어뜨리고 던지는 보스 공격", "verbatim": true},
         "lead": {"text": "보스가 만들어 낸 파편도 플레이어의 잡기·투척 대상으로 연결되므로 공격 연출과 전투 자원이 겹칩니다.", "verbatim": true},
-        "sectionPath": ["5. 기능 D — 보스 패턴과 전투 판정", "5.3 핵심 기능 — 환경 물체를 공유하는 보스 공격"],
+        "sectionPath": ["5. 기능 D — 보스 패턴과 전투 판정", "5.3 핵심 기능 — 주변 물체를 떨어뜨리고 던지는 보스 공격"],
         "points": [],
         "visuals": [
           {
@@ -819,9 +815,9 @@
         "chapter": "growth",
         "layout": "full",
         "tab": "구현",
-        "title": {"text": "임무 데이터와 보상 데이터의 연결 — DTO와 Def", "verbatim": true},
+        "title": {"text": "임무 표와 보상 표의 연결", "verbatim": true},
         "lead": {"text": "증강 칩의 TSV → DTO → Def 구조는 팀이 만든 것을 사용했고, 직접 맡은 부분은 임무 데이터와 보상 데이터의 연결입니다.", "verbatim": true},
-        "sectionPath": ["6. 기능 E — 칩·스킬·임무와 보상·저장", "6.4 핵심 기능 — 데이터 기반 보상 연결", "임무 데이터와 보상 데이터의 연결 — DTO와 Def"],
+        "sectionPath": ["6. 기능 E — 칩·스킬·임무와 보상·저장", "6.4 핵심 기능 — 임무 완료 시 정해진 칩 보상", "임무 표와 보상 표의 연결"],
         "points": [],
         "visuals": [
           {"kind": "table", "n": 1, "fp": "단계|처리"},
@@ -831,7 +827,7 @@
             "w": 1920,
             "h": 1080,
             "caption": {"text": "임무 완료 화면 — 획득한 증강 칩이 한 줄로 표시됨", "verbatim": true},
-            "sectionPath": ["6. 기능 E — 칩·스킬·임무와 보상·저장", "6.4 핵심 기능 — 데이터 기반 보상 연결"]
+            "sectionPath": ["6. 기능 E — 칩·스킬·임무와 보상·저장", "6.4 핵심 기능 — 임무 완료 시 정해진 칩 보상"]
           }
         ]
       },
@@ -840,9 +836,9 @@
         "chapter": "growth",
         "layout": "visual",
         "tab": "흐름",
-        "title": {"text": "6.5 핵심 기능 — 목록 복원과 실제 장착의 분리", "verbatim": true},
+        "title": {"text": "6.5 핵심 기능 — 이어하기의 칩·장착 복원", "verbatim": true},
         "lead": {"text": "목록을 읽는 시점에 플레이어 스탯이 준비되지 않을 수 있어, 장착 요청을 보관했다가 플레이어 생성 이후 적용합니다.", "verbatim": true},
-        "sectionPath": ["6. 기능 E — 칩·스킬·임무와 보상·저장", "6.5 핵심 기능 — 목록 복원과 실제 장착의 분리"],
+        "sectionPath": ["6. 기능 E — 칩·스킬·임무와 보상·저장", "6.5 핵심 기능 — 이어하기의 칩·장착 복원"],
         "points": [
           {"label": "", "text": "저장 파일에는 칩 ID·모양 셀·장착 여부·배치 원점·회전·스킬 슬롯과 수락 임무 ID를 기록합니다.", "verbatim": true},
           {"label": "", "text": "이어하기 시 이미 초기화가 끝난 플레이어가 있는 경우에도 장착을 반영하도록 연결했습니다.", "verbatim": true}
@@ -878,13 +874,9 @@
         "chapter": "scene",
         "layout": "problem",
         "tab": "문제 해결",
-        "title": {"text": "고민과 선택 — 정리 중 조회가 새 플레이어를 만들지 않도록 제한", "verbatim": true},
+        "title": {"text": "고민과 선택 — 로비로 오면 플레이어가 사라지던 버그", "verbatim": true},
         "lead": null,
-        "sectionPath": [
-          "7. 기능 F — 월드·UI·소리가 함께 전환되는 씬 로딩",
-          "7.4 팀 공통 기반 — 씬별 객체와 영속 서비스의 수명 구분",
-          "고민과 선택 — 정리 중 조회가 새 플레이어를 만들지 않도록 제한"
-        ],
+        "sectionPath": ["7. 기능 F — 월드·UI·소리가 함께 전환되는 씬 로딩", "7.4 팀 공통 기반 — 씬이 바뀌어도 남는 것과 사라지는 것", "고민과 선택 — 로비로 오면 플레이어가 사라지던 버그"],
         "points": [
           {
             "label": "문제",
@@ -922,6 +914,45 @@
           {"label": "", "text": "그래서 방어·무적으로 막힌 공격에는 ×가 나타나지 않습니다.", "verbatim": true}
         ],
         "visuals": [{"kind": "code", "n": 1, "fp": "// Crosshair.Update() — 조준점 링·사거리 표시 조건"}]
+      },
+      {
+        "key": "ui-tools",
+        "chapter": "ui",
+        "layout": "visual",
+        "tab": "",
+        "title": {"text": "에디터 도구로 한 번에 맞춘 UI", "verbatim": true},
+        "lead": {"text": "초반에 UI 규칙을 정하지 않아 팀원마다 기준 해상도(1920×1080·3840×2160)와 배율이 다른 창이 쌓였습니다.", "verbatim": true},
+        "sectionPath": ["8. 기능 G — UI/UX ① 화면 UI와 조작", "8.4 UI 연출 부품과 스타일 통일", "에디터 도구로 한 번에 맞춘 UI"],
+        "points": [
+          {"label": "", "text": "규칙은 제가 정하고, 그 규칙을 한 번에 적용하는 에디터 도구는 AI 코딩 에이전트를 활용해 만들었습니다.", "verbatim": false},
+          {"label": "", "text": "도구는 다시 실행해도 같은 결과가 되도록 이미 만든 것을 지우고 새로 만들거나, 이미 맞춰진 것은 건너뜁니다.", "verbatim": true},
+          {
+            "label": "",
+            "text": "AI가 \"컴파일 오류 없음\"이라고 보고한 첫 버전은 Unity 콘솔에서 오류가 났는데, 확인해 보니 AI 쪽 컴파일 확인이 실제로는 실행되지 않고 있었습니다.",
+            "verbatim": true
+          },
+          {"label": "", "text": "적용한 뒤에는 겹치거나 어긋난 곳을 다시 점검해, X 버튼 크기에까지 0.65가 곱해진 문제를 찾아 고쳤습니다.", "verbatim": true}
+        ],
+        "visuals": [
+          {
+            "kind": "image",
+            "src": "images/ui-windows.jpg",
+            "w": 1600,
+            "h": 1200,
+            "caption": {"text": "같은 규칙으로 맞춘 창 — 임무 목록·임무 이동·조작 가이드·환경설정의 제목줄과 닫기 버튼", "verbatim": true}
+          }
+        ]
+      },
+      {
+        "key": "ui-tools-table",
+        "chapter": "ui",
+        "layout": "full",
+        "tab": "",
+        "title": {"text": "에디터 도구로 한 번에 맞춘 UI", "verbatim": true},
+        "lead": null,
+        "sectionPath": ["8. 기능 G — UI/UX ① 화면 UI와 조작", "8.4 UI 연출 부품과 스타일 통일", "에디터 도구로 한 번에 맞춘 UI"],
+        "points": [],
+        "visuals": [{"kind": "table", "n": 1, "fp": "도구|하는 일"}]
       },
       {
         "key": "chip-search",
@@ -1043,6 +1074,6 @@
         "visuals": [{"kind": "table", "n": 1, "fp": "받은 피드백|준 사람|반영|본문"}]
       }
     ],
-    "applied": "e8747ee5762fecca"
+    "applied": "22c0b6e9ed3f3c6d"
   }
 }

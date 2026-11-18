@@ -65,6 +65,7 @@
     placeGrid();
     const noteBoxes = placeNotes();
     // %% 격자: A B | C D — 적은 칸을 줄(|)·열 순서로 바둑판처럼 놓음(같은 줄은 흐름도·상태 그림이면 가운데, 클래스 그림이면 윗변을 맞추고, 같은 열은 가운데를 맞춤)
+    //   한 줄에 같은 이름을 이어 적으면(A A A) 그 칸이 그 열들에 걸쳐 놓이고, 네모 칸이면 걸친 폭만큼 늘림(아래에 길게 까는 칸)
     //   칸 사이는 선 위 글자가 들어갈 만큼 벌림. 화살표는 마주 보는 변끼리 잇고(같은 줄·열이면 직선),
     //   대각선 자리끼리는 열 사이 빈 곳으로 꺾어 감. 적지 않은 칸은 그대로
     function placeGrid() {
@@ -78,7 +79,14 @@
         return { g, name: (/^(?:flowchart|classId|state)-(.+)-\d+$/.exec(g.id) || [])[1] || g.id, l: Math.min(p1.x, p2.x), r: Math.max(p1.x, p2.x), t: Math.min(p1.y, p2.y), b: Math.max(p1.y, p2.y) };
       }).filter(Boolean);
       const cell = new Map();
-      rows.forEach((r, ri) => r.forEach((name, ci) => { const nd = nodes.find((o) => o.name === name); if (nd) cell.set(nd, { ri, ci }); }));
+      rows.forEach((r, ri) => r.forEach((name, ci) => {
+        const nd = nodes.find((o) => o.name === name);
+        if (!nd) return;
+        const c = cell.get(nd);
+        if (c && c.ri === ri && c.ce === ci - 1) c.ce = ci;               // 같은 줄에 이어 적은 이름 → 여러 열에 걸침
+        else cell.set(nd, { ri, ci, ce: ci });
+      }));
+      const overlapCol = (a, b) => a.ci <= b.ce && b.ci <= a.ce;
       if (cell.size < 2) return;
       const labs = [...svg.querySelectorAll('g.edgeLabel')].filter((g) => g.textContent.trim()).map((g) => {
         let w = 0, h = 0;
@@ -98,7 +106,7 @@
         if (c0 && c1 && c0.ri === c1.ri) sameRowEdge.set(p.id, [c0.ci, c1.ci]);
       });
       const nc = Math.max(...rows.map((r) => r.length)), colW = Array(nc).fill(0), rowH = rows.map(() => 0);
-      cell.forEach(({ ri, ci }, nd) => { colW[ci] = Math.max(colW[ci], nd.r - nd.l); rowH[ri] = Math.max(rowH[ri], nd.b - nd.t); });
+      cell.forEach(({ ri, ci, ce }, nd) => { if (ci === ce) colW[ci] = Math.max(colW[ci], nd.r - nd.l); rowH[ri] = Math.max(rowH[ri], nd.b - nd.t); });
       // 묶음(subgraph): 원문의 subgraph … end 안에 적힌 칸을 그 묶음 칸으로 보고, 옮기기 전 테두리와 칸 사이 여백을 재 둠
       const groups = [];
       for (const m of src.matchAll(/^\s*subgraph\s+([^\s\["]+)[^\n]*\n([\s\S]*?)^\s*end\s*$/gim)) {
@@ -119,7 +127,7 @@
       // 묶음 경계가 지나는 열·줄 사이: 그 사이를 건너는 선의 글자가 양쪽 묶음 테두리(여백 16px)에 걸리지 않게 더 벌림
       const spans = groups.map((gr) => {
         const cs = gr.members.map((o) => cell.get(o)).filter(Boolean);
-        return cs.length ? { c0: Math.min(...cs.map((c) => c.ci)), c1: Math.max(...cs.map((c) => c.ci)), r0: Math.min(...cs.map((c) => c.ri)), r1: Math.max(...cs.map((c) => c.ri)) } : null;
+        return cs.length ? { c0: Math.min(...cs.map((c) => c.ci)), c1: Math.max(...cs.map((c) => c.ce)), r0: Math.min(...cs.map((c) => c.ri)), r1: Math.max(...cs.map((c) => c.ri)) } : null;
       }).filter(Boolean);
       const colEdge = (i) => spans.some((sp) => sp.c1 === i || sp.c0 === i + 1);
       const rowEdge = (j) => spans.some((sp) => sp.r1 === j || sp.r0 === j + 1);
@@ -154,7 +162,16 @@
         const r0 = cell.get(e[0]).ri, r1 = cell.get(e[1]).ri;
         if (Math.abs(r0 - r1) !== 1) return;                               // 여러 줄을 건너는 선·꺾인 선의 글자는 빈 칸·긴 토막 위에 놓임
         const j = Math.min(r0, r1);
-        rowGaps[j] = Math.max(rowGaps[j], l.h + (rowEdge(j) && cell.get(e[0]).ci === cell.get(e[1]).ci ? 72 : 32));
+        // 같은 열에서 묶음 경계를 넘는 선: 글자는 줄 사이 가운데에 놓이므로, 아래 묶음 이름표(위 여백) 몫을 양쪽에 두어 글자가 이름표에 붙지 않게
+        const titleRoom = Math.max(0, ...groups.filter((gr) => Math.min(...gr.members.map((o) => cell.get(o)?.ri ?? Infinity)) === j + 1).map((gr) => gr.pad.t));
+        rowGaps[j] = Math.max(rowGaps[j], l.h + (rowEdge(j) && overlapCol(cell.get(e[0]), cell.get(e[1])) ? Math.max(72, 40 + 2 * titleRoom) : 32));
+      });
+      // 걸친 칸이 걸친 열들보다 넓으면 그 열들을 고르게 넓힘
+      cell.forEach(({ ci, ce }, nd) => {
+        if (ci === ce) return;
+        const have = colW.slice(ci, ce + 1).reduce((a, c) => a + c, 0) + colGaps.slice(ci, ce).reduce((a, c) => a + c, 0);
+        const more = (nd.r - nd.l) - have;
+        if (more > 0) for (let i = ci; i <= ce; i++) colW[i] += more / (ce - ci + 1);
       });
       const x0 = Math.min(...[...cell.keys()].map((n) => n.l)), y0 = Math.min(...[...cell.keys()].map((n) => n.t));
       const colX = colW.map((_, i) => x0 + colW.slice(0, i).reduce((a, c) => a + c, 0) + colGaps.slice(0, i).reduce((a, c) => a + c, 0));
@@ -164,9 +181,19 @@
       const midRow = rowH.map(() => !/class/.test(type));
       cell.forEach(({ ri }, nd) => { if (nd.g.querySelector(':scope > polygon, :scope > g > polygon')) midRow[ri] = true; });
       const old = new Map(), at = new Map();
-      cell.forEach(({ ri, ci }, nd) => {
+      cell.forEach(({ ri, ci, ce }, nd) => {
         old.set(nd, { ...nd });
-        const w = nd.r - nd.l, h = nd.b - nd.t, l = colX[ci] + (colW[ci] - w) / 2, t = rowY[ri] + (midRow[ri] ? (rowH[ri] - h) / 2 : 0);
+        let w = nd.r - nd.l;
+        const spanW = colX[ce] + colW[ce] - colX[ci];
+        if (ce > ci && spanW > w) {                                       // 걸친 칸: 네모면 걸친 폭만큼 늘림(글자는 가운데 그대로)
+          const rect = nd.g.querySelector(':scope > rect');
+          if (rect && !nd.g.querySelector(':scope > polygon')) {
+            const k = (+rect.getAttribute('width') || w) / w;            // 칸 안 좌표와 그림 좌표의 비
+            rect.setAttribute('x', (-(spanW * k) / 2).toFixed(2)); rect.setAttribute('width', (spanW * k).toFixed(2));
+            const cx = (nd.l + nd.r) / 2; nd.l = cx - spanW / 2; nd.r = cx + spanW / 2; w = spanW;
+          }
+        }
+        const h = nd.b - nd.t, l = colX[ci] + (spanW - w) / 2, t = rowY[ri] + (midRow[ri] ? (rowH[ri] - h) / 2 : 0);
         const dx = l - nd.l, dy = t - nd.t;
         nd.g.setAttribute('transform', `translate(${dx.toFixed(2)},${dy.toFixed(2)}) ${nd.g.getAttribute('transform') || ''}`.trim());
         at.set(nd, { l, t, r: l + w, b: t + h });
@@ -181,12 +208,14 @@
         if (!s0 || !s1 || s0 === s1 || (!at.has(s0) && !at.has(s1))) return;
         const S = at.get(s0) || old.get(s0) || s0, T = at.get(s1) || old.get(s1) || s1;
         const c0 = cell.get(s0), c1 = cell.get(s1);
-        const sameRow = c0 && c1 && c0.ri === c1.ri, sameCol = c0 && c1 && c0.ci === c1.ci;
+        const sameRow = c0 && c1 && c0.ri === c1.ri, sameCol = c0 && c1 && overlapCol(c0, c1);
         const mx = (b) => (b.l + b.r) / 2, my = (b) => (b.t + b.b) / 2;
         let way;
         if (sameCol && !sameRow) {
           const down = T.t >= S.b;
-          way = [{ x: mx(S), y: down ? S.b : S.t }, { x: mx(T), y: down ? T.t : T.b }];
+          const wide0 = c0.ce > c0.ci, wide1 = c1.ce > c1.ci;               // 걸친 칸과 잇는 선은 좁은 쪽 칸의 가운데로 곧게
+          const x = wide0 && !wide1 ? mx(T) : wide1 && !wide0 ? mx(S) : null;
+          way = [{ x: x ?? mx(S), y: down ? S.b : S.t }, { x: x ?? mx(T), y: down ? T.t : T.b }];
         } else {
           const right = T.l >= S.r, down = my(T) > my(S);
           const A = { x: right ? S.r : S.l, y: sameRow ? my(S) : down ? S.b - 16 : S.t + 16 };

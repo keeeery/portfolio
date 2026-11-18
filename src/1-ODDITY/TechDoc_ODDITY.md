@@ -18,7 +18,7 @@
 
 ## 1. 프로젝트 개요
 
-### 1.1 What — 무엇을 만들었나
+### 1.1 게임 소개
 
 ![ODDITY 로고와, 타이틀 시네마틱 화면](images/cover.jpg)
 
@@ -57,7 +57,7 @@ flowchart TB
 - **증강 칩:** 격자에 칩을 배치해 장착하면 최대 염동 질량·기본 공격 사거리 같은 스탯이 오르고, 칩에 딸린 스킬이 스킬 슬롯 5칸에 들어갑니다.
 - **사망과 저장:** 사망하면 사망 화면 뒤 로비로 돌아갑니다. 보유 칩·장착 배치·수락한 임무는 로컬에 저장되어 이어하기로 복원됩니다.
 
-### 1.2 Why — 왜 만들었나
+### 1.2 개발 의도
 
 소울류·몬스터 헌터류 액션 게임과는 **차별화된 전투 경험**을 주고 싶었습니다.
 첫 3D 프로젝트인 만큼 3D에서만 가능한 시스템을 구현하고자 **염동력의 자연스러운 물리 반응**을 살리는 데 집중했고, 평소 중요하게 여기는 **UI/UX**에도 특히 공을 들였습니다.
@@ -287,7 +287,7 @@ velocity = direction.normalized * throwSpeed;
 
 ![염동력으로 잡은 물체를 던져 훈련용 더미에 맞히는 장면](images/psychokinesis-demo.gif)
 
-### 2.6 핵심 기능 — 잡는 동안의 물리 상태 저장과 복원
+### 2.6 핵심 기능 — 놓았을 때 물체의 원래 상태 복원
 
 잡은 물체는 손 앞을 따라다니는 동안 플레이어·중력·시간 정지와 다르게 반응해야 합니다.
 잡는 순간 바꾼 값은 모두 원래 값을 저장해 두고, 놓을 때 되돌립니다.
@@ -322,7 +322,7 @@ sequenceDiagram
 보스 Rigidbody는 염동력 물체 레이어와 물리 충돌하지 않으므로, 이 트리거는 몬스터 레이어하고만 반응하도록 두었습니다.
 물체가 보스 몸에 밀리거나 보스를 밀지 않고, 닿은 순간의 피해·파편화로만 이어집니다.
 
-### 2.7 핵심 기능 — 실제 피해 성공 뒤 파편화
+### 2.7 핵심 기능 — 맞혔을 때만 부서지는 물체
 
 적에게 충돌해 피해를 요청하는 경로에서는 `DamageEvent`를 큐에 등록합니다.
 이벤트가 처리되기 전에는 방어·무적 등으로 실제 피해가 발생했는지 알 수 없으므로,
@@ -340,7 +340,7 @@ Shatter();
 보스가 생성한 물체의 벽 충돌이나 외부 공격에 의한 파편화는 별도 경로로 처리합니다.
 투척 피해에는 물체 질량·속도 또는 설정된 공격력 기반 규칙이 적용되며, 크기 변경 상태를 반영하는 배율도 연결했습니다.
 
-### 2.8 핵심 기능 — 손 동작과 착탄 시점을 연결한 기본 공격
+### 2.8 핵심 기능 — 손을 뻗는 순간 맞는 기본 공격
 
 기본 공격은 버튼을 누른 프레임에 즉시 피해를 주지 않습니다.
 `PsychokinesisForceWave.Fire`가 손을 당겼다 펴는 동작의 발사 지연을 예약하고,
@@ -359,9 +359,9 @@ Shatter();
 탄·고리 효과와 발사 상태는 자체 Stack으로 재사용하고, 효과별 값은 `MaterialPropertyBlock`으로 전달합니다.
 머티리얼이 없으면 해당 시각 효과를 생략하되, 발사 상태와 피해 처리는 진행합니다.
 
-소스: `PsychokinesisForceWave.cs`, `ForcePush.cs`.
+소스: [PsychokinesisForceWave.cs](https://github.com/keeeery/ODDITY/blob/main/Assets/Scripts/3.%20Psychokinesis/PsychokinesisForceWave.cs), [ForcePush.cs](https://github.com/keeeery/ODDITY/blob/main/Assets/Scripts/3.%20Psychokinesis/ForcePush.cs).
 
-#### 크기 변경과 피해 등급을 함께 반영하는 방식
+#### 무겁고 빠를수록 커지는 피해
 
 씬별 피해 오버라이드를 사용하지 않으면 질량과 충돌 전 상대 속도를 곱한 운동량 기반 피해를 계산합니다.
 오버라이드를 사용하면 원래 질량으로 소형·중형·대형 등급을 정하고, 현재 공격력에 등급 배율과 누적 크기 배율을 곱합니다.
@@ -411,9 +411,9 @@ groggy = Mathf.RoundToInt(damage * objectGroggyScale);
 플레이어가 들고 있거나 이미 kinematic인 물체는 건드리지 않습니다.
 풀 파편은 크기별 풀의 부모 아래에서, 맵 배치 물체는 활성 목록에서 찾아 같은 물체를 두 번 띄우지 않습니다.
 
-소스: `PsychokinesisObject.cs`, `BossFragmentLift.cs`, `PsychokinesisFallZone.cs`.
+소스: [PsychokinesisObject.cs](https://github.com/keeeery/ODDITY/blob/main/Assets/Scripts/3.%20Psychokinesis/PsychokinesisObject.cs), [BossFragmentLift.cs](https://github.com/keeeery/ODDITY/blob/main/Assets/Scripts/6.%20Boss/BossFragmentLift.cs), [PsychokinesisFallZone.cs](https://github.com/keeeery/ODDITY/blob/main/Assets/Scripts/8.%20Environmental%20Mechanics/PsychokinesisFallZone.cs).
 
-### 2.10 연동 구현 — 이동·회피·피격과 행동 제한
+### 2.10 연동 구현 — 이동·회피·피격 중 가능한 행동
 
 플레이어 이동·회피의 팀 기반 위에 염동력·피격·상체 연출을 연결합니다.
 `PlayerController`는 카메라의 수평 방향을 기준으로 `CharacterController.Move`를 수행하고,
@@ -429,7 +429,7 @@ groggy = Mathf.RoundToInt(damage * objectGroggyScale);
 회피 연출은 구르기 입력 자체가 아니라 실제 공격을 구르기 무적으로 막았을 때 발생합니다.
 `PoseBaker`로 현재 SkinnedMesh 포즈를 메시로 구워 허물·잔상을 만들며, 이 메시들은 사용 후 제거하는 경로로 파편 풀과 다릅니다.
 
-소스: `PlayerController.cs`, `Player.cs`, `DodgeEffect.cs`, `PoseBaker.cs`.
+소스: [PlayerController.cs](https://github.com/keeeery/ODDITY/blob/main/Assets/Scripts/1.%20Player/PlayerController.cs), [Player.cs](https://github.com/keeeery/ODDITY/blob/main/Assets/Scripts/1.%20Player/Player.cs), [DodgeEffect.cs](https://github.com/keeeery/ODDITY/blob/main/Assets/Scripts/1.%20Player/DodgeEffect.cs), [PoseBaker.cs](https://github.com/keeeery/ODDITY/blob/main/Assets/Scripts/1.%20Player/PoseBaker.cs).
 
 ### 2.11 고민과 선택
 
@@ -450,11 +450,11 @@ groggy = Mathf.RoundToInt(damage * objectGroggyScale);
 
 UI 진입·피격·조작 잠금 시에는 예약 입력과 공격 준비를 취소하고 잡은 물체를 놓도록 연결했습니다.
 
-소스: `PsychokinesisController.cs`, `PsychokinesisObject.cs`.
+소스: [PsychokinesisController.cs](https://github.com/keeeery/ODDITY/blob/main/Assets/Scripts/3.%20Psychokinesis/PsychokinesisController.cs), [PsychokinesisObject.cs](https://github.com/keeeery/ODDITY/blob/main/Assets/Scripts/3.%20Psychokinesis/PsychokinesisObject.cs).
 
 ---
 
-## 3. 기능 B — 재사용 가능한 물리 파편과 연출 파편
+## 3. 기능 B — 부서진 조각을 다시 쓰는 파편
 
 ### 3.1 개요와 구조
 
@@ -508,7 +508,7 @@ classDiagram
 실시간으로 원본 메시를 절단하는 방식이 아니라, 미리 만든 파편 형태를 조합해 생성합니다.
 기본 생성 요청은 큰 파편 1개·중간 5개·작은 9개이며, 배치 공간을 찾지 못하면 일부가 생략될 수 있습니다.
 
-### 3.2 핵심 기능 — 크기별 공유 풀과 형태 교체
+### 3.2 핵심 기능 — 미리 만들어 다시 쓰는 파편
 
 풀은 `Dictionary<string, ObjectPool>`로 찾고, 내부에서는 `Stack<IObjectPoolItem>`로 객체를 꺼내고 돌려받습니다.
 
@@ -559,7 +559,7 @@ stateDiagram-v2
 런타임은 준비된 파편 메시를 크기별 풀에서 꺼내 형태를 교체합니다.
 큰·중간 파편의 염동력 조작과 작은 파편의 안정 판정·반납은 서로 다른 컴포넌트로 처리합니다.
 
-소스: `WallFragment.cs`.
+소스: [WallFragment.cs](https://github.com/keeeery/ODDITY/blob/main/Assets/Scripts/8.%20Environmental%20Mechanics/WallFragment.cs).
 
 ### 3.5 고민과 선택
 
@@ -572,11 +572,11 @@ stateDiagram-v2
 
 풀에서 꺼내고 반납하는 기본 연산은 상수 시간이지만, 풀 고갈 시에는 `Instantiate`가 발생합니다.
 
-소스: `WallFragmentSpawner.cs`, `WallFragmentDebris.cs`, `ObjectPoolManager.cs`.
+소스: [WallFragmentSpawner.cs](https://github.com/keeeery/ODDITY/blob/main/Assets/Scripts/8.%20Environmental%20Mechanics/WallFragmentSpawner.cs), [WallFragmentDebris.cs](https://github.com/keeeery/ODDITY/blob/main/Assets/Scripts/8.%20Environmental%20Mechanics/WallFragmentDebris.cs), [ObjectPoolManager.cs](https://github.com/keeeery/ODDITY/blob/main/Assets/Scripts/98.%20Utils/ObjectPool/ObjectPoolManager.cs).
 
 ---
 
-## 4. 기능 C — 객체별 시간 제어와 시간 정지 연출
+## 4. 기능 C — 나만 움직이는 시간 정지
 
 ### 4.1 개요와 시스템 구조
 
@@ -624,7 +624,7 @@ classDiagram
 개별 정지 횟수가 남아 있으면 정지하고, 전체 시간 효과가 여러 개라면 가장 낮은 배율을 사용합니다.
 시간 정지 기반에 시간 감속 스킬과 중첩 배율·중력 보정 등 팀의 확장 기능을 통합한 구조입니다.
 
-### 4.2 핵심 기능 — 로컬 시간과 상태 복원
+### 4.2 핵심 기능 — 시간이 풀린 뒤의 원래 움직임 복원
 
 객체는 정지·감속 동안 누적된 시간 차이를 반영해 자신의 시간을 계산합니다.
 
@@ -646,7 +646,7 @@ Animator의 원래 속도와 Rigidbody의 운동 상태를 저장하고,
 
 ![시간이 정지된 보스·물체들과 움직이는 플레이어](images/time-freeze.png)
 
-### 4.3 핵심 기능 — 염동력과 정지 세계의 예외
+### 4.3 핵심 기능 — 멈춘 세계에서도 움직이는 잡은 물체
 
 물체를 잡으면 전체 시간 정지에서 제외합니다.
 던진 직후 정지 상태가 바로 덮여 물체가 멈추지 않도록 예외 해제 시점도 연결합니다.
@@ -682,7 +682,7 @@ clip( sweepMask - 0.001 );
 원본 셰이더의 글리치는 키워드로 켜고 끄지만, 이 글리치는 키워드와 상관없이 세기 값으로만 켭니다.
 막이 다 덮여 머티리얼을 교체한 뒤에는 높이 범위를 아주 넓게 넘겨 마스크 없이 전체가 보이게 합니다.
 
-소스: `TimeFreezeHologram.shader`, `TimeFreezeOverlayFeature.cs`, `TimeFreezable.cs`.
+소스: [TimeFreezeHologram.shader](https://github.com/keeeery/ODDITY/blob/main/Assets/Shaders/TimeFreezeHologram.shader), [TimeFreezeOverlayFeature.cs](https://github.com/keeeery/ODDITY/blob/main/Assets/Scripts/4.%20Superpower/Time%20Control/TimeFreezeOverlayFeature.cs), [TimeFreezable.cs](https://github.com/keeeery/ODDITY/blob/main/Assets/Scripts/4.%20Superpower/Time%20Control/TimeFreezable.cs).
 
 #### 염동 내려찍기 — 개별 정지·물리 이동·카메라 조율
 
@@ -698,7 +698,7 @@ clip( sweepMask - 0.001 );
 
 ![염동 내려찍기 스킬 ― 홀로그램으로 멈춘 휴머노이드 보스](images/psycho-slam.png)
 
-#### 전체 히트스톱과 선택적 시간 정지의 분리
+#### 타격 순간 멈춤(히트스톱)과 시간 정지의 차이
 
 `HitStop`은 타격 순간 월드 전체의 `Time.timeScale`을 0으로 만드는 별도 기능입니다.
 유효한 중첩 요청은 종료 시각이 더 긴 쪽으로 합치고, 종료 뒤 짧은 재요청 제한을 둡니다.
@@ -720,7 +720,7 @@ clip( sweepMask - 0.001 );
 
 정지 지속시간을 기다리는 매니저는 `WaitForSeconds`를 사용하므로 게임 전체의 일시정지에는 영향을 받습니다.
 
-소스: `TimeFreezable.cs`, `TimeFreezeManager.cs`, `TimeFreezeOverlayFeature.cs`.
+소스: [TimeFreezable.cs](https://github.com/keeeery/ODDITY/blob/main/Assets/Scripts/4.%20Superpower/Time%20Control/TimeFreezable.cs), [TimeFreezeManager.cs](https://github.com/keeeery/ODDITY/blob/main/Assets/Scripts/4.%20Superpower/Time%20Control/TimeFreezeManager.cs), [TimeFreezeOverlayFeature.cs](https://github.com/keeeery/ODDITY/blob/main/Assets/Scripts/4.%20Superpower/Time%20Control/TimeFreezeOverlayFeature.cs).
 
 ---
 
@@ -794,7 +794,7 @@ OnPatternExit();
 
 ![페르데로스 보스의 투하 패턴 — 바닥의 원형 공격 범위 예고](images/boss-drop-pattern.png)
 
-### 5.3 핵심 기능 — 환경 물체를 공유하는 보스 공격
+### 5.3 핵심 기능 — 주변 물체를 떨어뜨리고 던지는 보스 공격
 
 | 패턴 | 준비와 실행 | 상호작용·정리 |
 |---|---|---|
@@ -809,12 +809,12 @@ OnPatternExit();
 
 ![벽에 돌진하여 충돌한 페르데로스 보스와 벽에서 튀어나온 파편](images/charge-wall-hit.png) ![벽에 돌진하여 충돌한 페르데로스 보스와 왼쪽 벽 쪽으로 튀는 파편](images/charge-wall-debris.png)
 
-#### 투하·투척 판정의 경로
+#### 떨어뜨리기·던지기의 명중 판정
 
 투하 패턴의 착지 판정은 실제 Collision 콜백이 아니라 예상 낙하시간을 기다린 뒤 실행하는 면적 판정이고, 투척 패턴은 탄도 속도로 발사한 뒤 비행 중 겹침으로 검사합니다.
 보스 투척물은 타격을 요청한 직후 `ShatterAt`으로 파편화해, 피해 결과를 기다린 뒤 파편화하는 플레이어 물체(§2.7)와 경로를 나눕니다.
 
-소스: `BossPsychokinesisDropPattern.cs`, `BossPsychokinesisThrowPattern.cs`.
+소스: [BossPsychokinesisDropPattern.cs](https://github.com/keeeery/ODDITY/blob/main/Assets/Scripts/6.%20Boss/1.%20States/Pattern/BossPsychokinesisDropPattern.cs), [BossPsychokinesisThrowPattern.cs](https://github.com/keeeery/ODDITY/blob/main/Assets/Scripts/6.%20Boss/1.%20States/Pattern/BossPsychokinesisThrowPattern.cs).
 
 ### 5.4 핵심 기능 — 공격 판정과 그로기
 
@@ -824,14 +824,14 @@ OnPatternExit();
 범위가 차오르는 박자와 바닥에만 붙는 표시 방법은 §9.4에서 다룹니다.
 큰 보스에서는 중심점만으로 타격 위치를 계산하지 않고, 부위 판정과 몸체 기준 보정을 사용합니다.
 
-#### 몸체 기준 타격 지점과 효과의 역할 분리
+#### 큰 보스의 타격 효과 위치
 
 다중 Collider 보스에서 범위 공격의 첫 후보만 사용하면 발 Collider에 이펙트가 몰릴 수 있습니다.
 `HitPoint.GetBodyBounds`는 활성 비Trigger Collider를 묶어 몸 전체 Bounds를 만들고,
 `TowardBody`는 공격 방향 쪽 몸통 높이의 점을, `OnLineNearBody`는 공격 선분 위에서 몸 중심에 가까운 점을 구합니다.
 피해 요청의 기준점을 정한 뒤 실제 표면 연출은 `BossHitFeedback`에서 다시 보정합니다.
 
-#### 여러 부위 Collider를 같은 전투 대상으로 연결
+#### 여러 부위를 묶은 하나의 보스
 
 `MonsterRegistry`는 충돌한 Collider를 `ICombatable`로 변환하는 Dictionary입니다.
 `BossHitboxRegistrar`는 보스의 여러 비Trigger 부위를 같은 소유자에 등록하고 비활성화 시 자신이 등록한 항목을 해제합니다.
@@ -848,7 +848,7 @@ OnPatternExit();
 
 돌진의 벽 충돌로 발생하는 기절과 `BossGroggy` 게이지 소진에 의한 그로기는 진입 조건이 다른 경로입니다.
 
-소스: `HitPoint.cs`, `MonsterRegistry.cs`, `BossHitboxRegistrar.cs`.
+소스: [HitPoint.cs](https://github.com/keeeery/ODDITY/blob/main/Assets/Scripts/5.%20Combat/HitPoint.cs), [MonsterRegistry.cs](https://github.com/keeeery/ODDITY/blob/main/Assets/Scripts/5.%20Combat/2.%20Registry/MonsterRegistry.cs), [BossHitboxRegistrar.cs](https://github.com/keeeery/ODDITY/blob/main/Assets/Scripts/6.%20Boss/BossHitboxRegistrar.cs).
 
 ### 5.5 팀 기반 확장 — 휴머노이드의 페이즈·반응·분신
 
@@ -856,7 +856,7 @@ OnPatternExit();
 여러 검격 클래스는 공통 `BossMeleePattern`을 그대로 상속하고 Animator와 타격 데이터로 차이를 만듭니다.
 직접 연결한 부분은 공통 패턴·시간 제어와의 연동, 반사 투사체의 파편화 연출, 차원 가르기의 순간이동 홀로그램(§9.3), 분신 정리 시의 플레이어 수명 처리(§7.4)입니다.
 
-소스: `HumanoidProjectileWatcher.cs`, `HumanoidPhaseController.cs`, `HumanoidCloneSummon.cs`.
+소스: [HumanoidProjectileWatcher.cs](https://github.com/keeeery/ODDITY/blob/main/Assets/Scripts/6.5.%20Humanoid%20Boss/Reaction/HumanoidProjectileWatcher.cs), [HumanoidPhaseController.cs](https://github.com/keeeery/ODDITY/blob/main/Assets/Scripts/6.5.%20Humanoid%20Boss/Phase/HumanoidPhaseController.cs), [HumanoidCloneSummon.cs](https://github.com/keeeery/ODDITY/blob/main/Assets/Scripts/6.5.%20Humanoid%20Boss/Clone/HumanoidCloneSummon.cs).
 
 ### 5.6 핵심 기능 — 카메라 시점
 
@@ -868,9 +868,9 @@ OnPatternExit();
 어깨 쪽 공간이 부족하면 반대쪽이나 중앙으로 이동하도록 시점도 조정합니다.
 보스 조우 연출은 별도 카메라 시점과 HUD 표시를 조율하고, 종료 후 추적 시점으로 돌아갑니다.
 
-소스: `CameraController.cs`.
+소스: [CameraController.cs](https://github.com/keeeery/ODDITY/blob/main/Assets/Scripts/2.%20Camera/CameraController.cs).
 
-### 5.7 연동 구현 — 큰 보스 몸체와 겹칠 때의 이동 보정
+### 5.7 연동 구현 — 보스 몸 위·틈에서의 이동 보정
 
 플레이어는 보스 몸체 위에 올라서면 수평 방향으로 미끄러지게 하고,
 몸체가 플레이어 안으로 들어오는 상황은 부위별 충돌 무시·분리 후 복구로 다룹니다.
@@ -886,14 +886,14 @@ OnPatternExit();
 
 이 구조를 만들며 가장 오래 붙잡은 문제와 그 과정은 10.1에 있습니다.
 
-소스: `PlayerController.cs`, `PlayerCombatIdle.cs`.
+소스: [PlayerController.cs](https://github.com/keeeery/ODDITY/blob/main/Assets/Scripts/1.%20Player/PlayerController.cs), [PlayerCombatIdle.cs](https://github.com/keeeery/ODDITY/blob/main/Assets/Scripts/1.%20Player/PlayerCombatIdle.cs).
 
-#### 이동 제한과 이탈 복구를 분리한 보스 이동
+#### 막히거나 길을 벗어났을 때의 보스 이동
 
 `BossMovement`는 `BossPathfinder`의 경로 코너를 실제 이동으로 바꾸며, 벽 SphereCast와 지면 탐침으로 진행을 보정합니다.
 크게 이탈한 보스는 팀 구현인 `BossNavMeshGuard`가 일정 간격으로 발밑 NavMesh를 검사해 가까운 NavMesh 위치로 복구하므로, 정상 이동의 제한과 예외적인 이탈 복구가 나뉩니다.
 
-소스: `BossMovement.cs`, `BossNavMeshGuard.cs`.
+소스: [BossMovement.cs](https://github.com/keeeery/ODDITY/blob/main/Assets/Scripts/6.%20Boss/BossMovement.cs), [BossNavMeshGuard.cs](https://github.com/keeeery/ODDITY/blob/main/Assets/Scripts/6.%20Boss/BossNavMeshGuard.cs).
 
 ### 5.8 고민과 선택
 
@@ -905,7 +905,7 @@ OnPatternExit();
 대형 보스와 휴머노이드는 몸체·이동·패턴이 달라 공통 요소와 전용 처리를 함께 유지합니다.
 공통 패턴을 재사용하되 예외를 한 상태 안에 모두 넣지 않는 구성이 필요합니다.
 
-소스: `BossMeleePattern.cs`, `CombatManager.cs`, `BossMonster.cs`.
+소스: [BossMeleePattern.cs](https://github.com/keeeery/ODDITY/blob/main/Assets/Scripts/6.%20Boss/1.%20States/Pattern/BossMeleePattern.cs), [CombatManager.cs](https://github.com/keeeery/ODDITY/blob/main/Assets/Scripts/5.%20Combat/CombatManager.cs), [BossMonster.cs](https://github.com/keeeery/ODDITY/blob/main/Assets/Scripts/6.%20Boss/BossMonster.cs).
 
 ---
 
@@ -930,7 +930,7 @@ OnPatternExit();
 
 ![증강 칩 관리 창 — 장착 칩 배치와 보유 칩 목록, 스킬 슬롯](images/chip-window.jpg)
 
-### 6.2 팀 기반 — 칩별 상태와 스킬 실행 규칙
+### 6.2 팀 기반 — 칩마다 따로 도는 스킬 쿨타임
 
 칩 한 장(`OwnedChip`)이 모양·배치·회전과 스킬 인스턴스를 가지므로 쿨타임은 슬롯이 아니라 칩을 따라갑니다.
 장착 효과는 기본 스탯 `ScriptableObject`를 유지한 채 `RuntimeStats`에 보너스를 더하거나 빼서 반영합니다.
@@ -942,7 +942,7 @@ OnPatternExit();
 시간 역행은 `TimeReverseRecorder`가 플레이어의 위치·회전·Animator 레이어·HP·스태미나를 기록했다가 역순으로 복원하는 팀 구현으로, 시간 정지의 객체별 시계와는 다른 방식입니다.
 기록 복원 중에는 홀딩 전용 `Psycokinesis` 레이어의 가중치를 0으로 내려, 과거 홀딩 장면의 손가락·홀딩 자세가 현재 조작 상태와 어긋나지 않게 합니다.
 
-#### 팀 스킬 보완 — 컴포넌트 비활성화에서 공통 행동 잠금으로
+#### 팀 스킬 보완 — 시간 역행 중 조작 잠금
 
 역행의 초기 방식은 `CharacterController`와 `PlayerController`를 끄고 끝날 때 다시 켰습니다.
 현재는 두 컴포넌트를 직접 끄는 대신 `SetActionLocked`로 공통 행동 상태를 바꿉니다.
@@ -965,7 +965,7 @@ IK 코드도 `IsRewinding`을 확인해 기록 포즈와 현재 조작 자세가
 역행의 기록·재생과 행동 잠금 전환은 팀 구현·보완입니다.
 직접 보완한 부분은 역행 중 상체·손·발 IK와 홀딩 레이어가 기록 포즈를 덮지 않게 하는 연결입니다.
 
-### 6.4 핵심 기능 — 데이터 기반 보상 연결
+### 6.4 핵심 기능 — 임무 완료 시 정해진 칩 보상
 
 임무 데이터에는 이동할 전투 씬과 보상 ID가 있습니다.
 `BossReward.tsv`는 보상 ID별로 칩 칸 수의 범위와 지급 개수를 정의합니다.
@@ -995,7 +995,7 @@ IK 코드도 `IsRewinding`을 확인해 기록 포즈와 현재 조작 자세가
 
 보상 규칙은 보스가 속한 씬의 `NextStageName` 대응으로 고르고, 완료 임무 제거는 `BossName`으로 찾습니다.
 
-#### 임무 데이터와 보상 데이터의 연결 — DTO와 Def
+#### 임무 표와 보상 표의 연결
 
 증강 칩의 TSV → DTO → Def 구조는 팀이 만든 것을 사용했고, 직접 맡은 부분은 **임무 데이터와 보상 데이터의 연결**입니다.
 보상을 테이블 방식으로 바꾸면서 같은 구조로 `BossRewardDTO`(TSV 한 줄)와 `BossRewardDef`(조회용 보상 줄)를 만들었습니다.
@@ -1010,7 +1010,7 @@ IK 코드도 `IsRewinding`을 확인해 기록 포즈와 현재 조작 자세가
 임무 창에 보이는 보상과 실제로 받는 보상이 한 표의 같은 줄을 보도록, 연결 기준을 RewardId 하나로 맞춘 구성입니다.
 임무가 없는 테스트 씬에서는 Inspector에 지정한 대체 RewardId를 사용합니다.
 
-### 6.5 핵심 기능 — 목록 복원과 실제 장착의 분리
+### 6.5 핵심 기능 — 이어하기의 칩·장착 복원
 
 저장 파일에는 칩 ID·모양 셀·장착 여부·배치 원점·회전·스킬 슬롯과 수락 임무 ID를 기록합니다.
 
@@ -1061,9 +1061,9 @@ sequenceDiagram
 `PsychokinesisPropRespawner`는 맵 소품의 원본 복제본을 준비하고, 파괴 후 배치 가능한 빈자리를 찾아 다시 생성합니다.
 배치가 막히면 재시도합니다.
 
-소스: `SuperpowerSkill.cs`, `SkillCaster.cs`, `CombatEntity.cs`, `TimeReverseRecorder.cs`, `RepairShopZone.cs`, `TrainingDummy.cs`, `PsychokinesisPropRespawner.cs`.
+소스: [SuperpowerSkill.cs](https://github.com/keeeery/ODDITY/blob/main/Assets/Scripts/4.%20Superpower/3.%20Skill/SuperpowerSkill.cs), [SkillCaster.cs](https://github.com/keeeery/ODDITY/blob/main/Assets/Scripts/4.%20Superpower/3.%20Skill/SkillCaster.cs), [CombatEntity.cs](https://github.com/keeeery/ODDITY/blob/main/Assets/Scripts/5.%20Combat/1.%20Entity/CombatEntity.cs), [TimeReverseRecorder.cs](https://github.com/keeeery/ODDITY/blob/main/Assets/Scripts/4.%20Superpower/3.%20Skill/Skills/Defense/TimeReverseRecorder.cs), [RepairShopZone.cs](https://github.com/keeeery/ODDITY/blob/main/Assets/Scripts/9.%20Mission/RepairShopZone.cs), [TrainingDummy.cs](https://github.com/keeeery/ODDITY/blob/main/Assets/Scripts/7.%20Arena/TrainingDummy.cs), [PsychokinesisPropRespawner.cs](https://github.com/keeeery/ODDITY/blob/main/Assets/Scripts/7.%20Arena/PsychokinesisPropRespawner.cs).
 
-#### 염동 물체를 사용하는 스킬의 상태 연결
+#### 물체 크기를 바꾸는 스킬
 
 크기 조절 스킬은 `Resize`로 질량과 누적 크기 배율을 반영한 뒤 외형 스케일을 Tween으로 변화시킵니다.
 대상 조건을 만족하지 못하면 실행 대신 거절 연출을 하고 쿨타임·스태미나를 소비하지 않습니다.
@@ -1092,7 +1092,7 @@ sequenceDiagram
 
 환경설정 파일은 게임 진행 저장과 별개이며, 현재 영속 저장 범위는 마스터·BGM·효과음 볼륨과 각 음소거 상태, 카메라 회전 속도입니다.
 
-소스: `AugmentationChipInventory.cs`, `BossChipReward.cs`, `GameSave.cs`.
+소스: [AugmentationChipInventory.cs](https://github.com/keeeery/ODDITY/blob/main/Assets/Scripts/4.%20Superpower/1.%20AugmentationChip/AugmentationChipInventory.cs), [BossChipReward.cs](https://github.com/keeeery/ODDITY/blob/main/Assets/Scripts/11.%20Reward/BossChipReward.cs), [GameSave.cs](https://github.com/keeeery/ODDITY/blob/main/Assets/Scripts/12.%20Save/GameSave.cs).
 
 ---
 
@@ -1114,7 +1114,7 @@ flowchart TB
     On --> UI[새 UI 페이드 / 전환 상태 종료]
 ```
 
-### 7.2 핵심 기능 — 화면 효과와 Overlay UI의 차이
+### 7.2 핵심 기능 — 화면이 꺼질 때 함께 숨기는 UI
 
 렌더러의 화면 효과 뒤에 그려지는 Screen Space Overlay UI는 월드의 화면 꺼짐만으로 숨겨지지 않습니다.
 이를 해결하기 위해 Canvas 자식의 위치·스케일을 화면 효과와 함께 압축하고 검은 띠로 바깥을 덮습니다.
@@ -1150,14 +1150,14 @@ if (elapsed >= maxSettleWait)
 
 ![로비로 돌아온 직후 — 씬 로드 완료 이후 화면이 먼저 켜지고 UI는 아직 페이드 중](images/scene-reveal.jpg)
 
-#### UI 입력 제한 기준의 통일
+#### UI가 열렸을 때의 조작 잠금
 
 초기에는 염동력과 스킬이 `Cursor.lockState`로 UI 입력 제한을 판단했습니다.
 이후 두 시스템이 `UIManager.IsUIClose`를 사용하도록 바꾸어, 커서를 직접 조회하는 대신 UIManager의 공통 조작 허용 상태를 기준으로 삼았습니다.
 이 값은 `LockCursor`에서 커서 상태와 함께 갱신합니다.
 `Update`에서 예약한 입력도 `LateUpdate`에서 다시 검사해 같은 프레임에 창이 열렸을 때 실행되지 않게 합니다.
 
-#### 사망 화면과 씬 전환의 공통 연출 추출
+#### 사망 화면과 씬 전환이 함께 쓰는 꺼짐 연출
 
 사망 화면과 씬 로딩에 각각 있던 글리치→가로선→점→소멸 구간은 `ScreenOffEffect.Insert`로 공통화했습니다.
 이 함수는 호출자가 소유한 DOTween Sequence에 연출을 넣고 종료 시각을 반환합니다.
@@ -1205,9 +1205,9 @@ float2 extent = float2(lerp(0.5, pixel.x * 1.5, shrink), lerp(0.5, pixel.y * 0.7
 float2 screenUv = 0.5 + offset * 0.5 / extent;
 ```
 
-소스: `ScreenGlitch.shader`, `ScreenGlitch.cs`, `ScreenGlitchFeature.cs`.
+소스: [ScreenGlitch.shader](https://github.com/keeeery/ODDITY/blob/main/Assets/Shaders/ScreenGlitch.shader), [ScreenGlitch.cs](https://github.com/keeeery/ODDITY/blob/main/Assets/Scripts/10.%20UI/ScreenGlitch.cs), [ScreenGlitchFeature.cs](https://github.com/keeeery/ODDITY/blob/main/Assets/Scripts/10.%20UI/ScreenGlitchFeature.cs).
 
-### 7.4 팀 공통 기반 — 씬별 객체와 영속 서비스의 수명 구분
+### 7.4 팀 공통 기반 — 씬이 바뀌어도 남는 것과 사라지는 것
 
 공용 `SingletonBase<T>`는 기본적으로 기존 인스턴스를 찾거나 없으면 생성하고, 씬 사이에 유지합니다.
 여기에는 **씬을 넘어 유지할지**와 **없을 때 생성해도 되는지**라는 서로 다른 정책이 있습니다.
@@ -1223,7 +1223,7 @@ float2 screenUv = 0.5 + offset * 0.5 / extent;
 공용 싱글톤 기반과 기존 씬별 수명 설정은 팀 기반입니다.
 직접 보완한 부분은 플레이어의 자동 생성 제한과 그 호출부 정리, 저장·전환의 연결입니다.
 
-#### 고민과 선택 — 정리 중 조회가 새 플레이어를 만들지 않도록 제한
+#### 고민과 선택 — 로비로 오면 플레이어가 사라지던 버그
 
 1차 시연에서 "보스 전투에서 로비로 넘어오면 플레이어가 없어 시점이 씬 카메라의 초기 위치에 고정된다"는 버그 제보를 받았습니다(§11.2).
 이전에는 씬을 내리는 중 플레이어가 먼저 파괴된 뒤 다른 객체의 정리 코드가 `Player.Instance`를 조회하면,
@@ -1245,7 +1245,7 @@ if (instance == null && createIfMissing == false)
 모든 싱글톤의 자동 생성을 없애기보다 씬 필수 구성요소를 가진 Player에 생성 제한을 적용한 선택입니다.
 대신 이 타입의 호출자는 Player가 없는 시점을 허용해야 합니다.
 
-소스: `SingletonBase.cs`, `CombatManager.cs`, `Player.cs`.
+소스: [SingletonBase.cs](https://github.com/keeeery/ODDITY/blob/main/Assets/Scripts/99.%20Study/19.%20Legacy/9.%20Utils/SingletonBase.cs), [CombatManager.cs](https://github.com/keeeery/ODDITY/blob/main/Assets/Scripts/5.%20Combat/CombatManager.cs), [Player.cs](https://github.com/keeeery/ODDITY/blob/main/Assets/Scripts/1.%20Player/Player.cs).
 
 ### 7.5 고민과 선택
 
@@ -1255,7 +1255,7 @@ if (instance == null && createIfMissing == false)
 | 안정 프레임 조건 | 로드 직후 긴 프레임과 전환 연출을 분리 | 기기별 조건 튜닝과 상한 필요 |
 | 로딩 표시 | 암전 중 대기 상태를 전달 | 전환 완료·중단 시 표시 정리 필요 |
 
-소스: `SceneLoadManager.cs`, `ScreenOffEffect.cs`.
+소스: [SceneLoadManager.cs](https://github.com/keeeery/ODDITY/blob/main/Assets/Scripts/7.%20Arena/SceneLoadManager.cs), [ScreenOffEffect.cs](https://github.com/keeeery/ODDITY/blob/main/Assets/Scripts/10.%20UI/ScreenOffEffect.cs).
 
 ---
 
@@ -1370,7 +1370,7 @@ NPC가 여럿이면 각자 거리를 재다가 두 창이 함께 열릴 수 있�
 TextMeshPro의 외곽선·그림자는 셰이더 키워드라, 실행 중에 켜면 빌드에서 해당 셰이더 변형이 빠질 수 있습니다.
 그래서 키워드를 켠 머티리얼 에셋을 미리 만들어 `Resources`로 묶어 두고, 머티리얼이 같은 폰트 아틀라스를 쓰는 글자에만 입힙니다.
 
-소스: `Crosshair.cs`, `KeyHintBuilder.cs`, `InteractionPrompt.cs`, `ChipPanelHotkey.cs`, `ChipControlHint.cs`, `ControlGuideWindow.cs`, `SystemMessage.cs`, `ReadableTextStyle.cs`.
+소스: [Crosshair.cs](https://github.com/keeeery/ODDITY/blob/main/Assets/Scripts/10.%20UI/Crosshair.cs), [KeyHintBuilder.cs](https://github.com/keeeery/ODDITY/blob/main/Assets/Scripts/10.%20UI/KeyHintBuilder.cs), [InteractionPrompt.cs](https://github.com/keeeery/ODDITY/blob/main/Assets/Scripts/10.%20UI/InteractionPrompt.cs), [ChipPanelHotkey.cs](https://github.com/keeeery/ODDITY/blob/main/Assets/Scripts/10.%20UI/ChipPanelHotkey.cs), [ChipControlHint.cs](https://github.com/keeeery/ODDITY/blob/main/Assets/Scripts/4.%20Superpower/1.%20AugmentationChip/UI/ChipControlHint.cs), [ControlGuideWindow.cs](https://github.com/keeeery/ODDITY/blob/main/Assets/Scripts/10.%20UI/ControlGuideWindow.cs), [SystemMessage.cs](https://github.com/keeeery/ODDITY/blob/main/Assets/Scripts/10.%20UI/SystemMessage.cs), [ReadableTextStyle.cs](https://github.com/keeeery/ODDITY/blob/main/Assets/Scripts/10.%20UI/ReadableTextStyle.cs).
 
 ### 8.3 HUD 시인성 — 게이지·스킬 슬롯·미니맵·보스 정보
 
@@ -1456,7 +1456,7 @@ flowchart TB
 슬롯 스킬이 바뀌면 기존 `CooldownReduced` 구독을 해제하고 새 스킬의 이벤트에 연결해 강조 연출을 실행합니다.
 전투당 한 번만 발동하는 스킬은 사용 후 덮개를 유지하되 긴 내부 쿨타임을 초 단위로 표시하지 않습니다.
 
-소스: `VectorBar.cs`, `SkillSlotGraphic.cs`, `SkillSlotHUD.cs`, `MinimapWalkableBaker.cs`, `MinimapGround.cs`, `Minimap.cs`, `BossHUD.cs`, `PlayerHUD.cs`.
+소스: [VectorBar.cs](https://github.com/keeeery/ODDITY/blob/main/Assets/Scripts/10.%20UI/VectorBar.cs), [SkillSlotGraphic.cs](https://github.com/keeeery/ODDITY/blob/main/Assets/Scripts/10.%20UI/SkillSlotGraphic.cs), [SkillSlotHUD.cs](https://github.com/keeeery/ODDITY/blob/main/Assets/Scripts/10.%20UI/SkillSlotHUD.cs), [MinimapWalkableBaker.cs](https://github.com/keeeery/ODDITY/blob/main/Assets/Scripts/10.%20UI/MinimapWalkableBaker.cs), [MinimapGround.cs](https://github.com/keeeery/ODDITY/blob/main/Assets/Scripts/10.%20UI/MinimapGround.cs), [Minimap.cs](https://github.com/keeeery/ODDITY/blob/main/Assets/Scripts/10.%20UI/Minimap.cs), [BossHUD.cs](https://github.com/keeeery/ODDITY/blob/main/Assets/Scripts/10.%20UI/BossHUD.cs), [PlayerHUD.cs](https://github.com/keeeery/ODDITY/blob/main/Assets/Scripts/10.%20UI/PlayerHUD.cs).
 
 ### 8.4 UI 연출 부품과 스타일 통일
 
@@ -1528,7 +1528,7 @@ AI가 "컴파일 오류 없음"이라고 보고한 첫 버전은 Unity 콘솔에
 `VectorShape.Stroke`로 안쪽·바깥쪽 경계 사이의 띠만 칠하는 테두리 선을 추가하고, `VectorPanel`의 강조는 이 테두리 선에만 칠하도록 바꾸었습니다.
 `OutlineOnly`를 켜면 테두리 색으로 바탕을 채우지 않고 선만 그리며, 증강 칩 창의 전체 해제 버튼처럼 실행 중에 복제한 버튼 하나만 다르게 보이게 할 때 사용합니다.
 
-소스: `UIPopIn.cs`, `UILineReveal.cs`, `UIGlitch.cs`, `UIStaggerReveal.cs`, `ResultBanner.cs`, `BossRewardPanel.cs`, `UICloseButton.cs`, `TitleMenuButton.cs`, `UIStyleUnifier.cs`, `UICanvasScaleBaker.cs`, `VectorShape.cs`, `VectorPanel.cs`.
+소스: [UIPopIn.cs](https://github.com/keeeery/ODDITY/blob/main/Assets/Scripts/10.%20UI/UIPopIn.cs), [UILineReveal.cs](https://github.com/keeeery/ODDITY/blob/main/Assets/Scripts/10.%20UI/UILineReveal.cs), [UIGlitch.cs](https://github.com/keeeery/ODDITY/blob/main/Assets/Scripts/10.%20UI/UIGlitch.cs), [UIStaggerReveal.cs](https://github.com/keeeery/ODDITY/blob/main/Assets/Scripts/10.%20UI/UIStaggerReveal.cs), [ResultBanner.cs](https://github.com/keeeery/ODDITY/blob/main/Assets/Scripts/10.%20UI/ResultBanner.cs), [BossRewardPanel.cs](https://github.com/keeeery/ODDITY/blob/main/Assets/Scripts/11.%20Reward/BossRewardPanel.cs), [UICloseButton.cs](https://github.com/keeeery/ODDITY/blob/main/Assets/Scripts/10.%20UI/UICloseButton.cs), [TitleMenuButton.cs](https://github.com/keeeery/ODDITY/blob/main/Assets/Scripts/10.%20UI/Title/TitleMenuButton.cs), [UIStyleUnifier.cs](https://github.com/keeeery/ODDITY/blob/main/Assets/Scripts/10.%20UI/Editor/UIStyleUnifier.cs), [UICanvasScaleBaker.cs](https://github.com/keeeery/ODDITY/blob/main/Assets/Scripts/10.%20UI/Editor/UICanvasScaleBaker.cs), [VectorShape.cs](https://github.com/keeeery/ODDITY/blob/main/Assets/Scripts/10.%20UI/VectorShape.cs), [VectorPanel.cs](https://github.com/keeeery/ODDITY/blob/main/Assets/Scripts/10.%20UI/VectorPanel.cs).
 
 ### 8.5 증강 칩 창의 조작 편의
 
@@ -1554,7 +1554,7 @@ AI가 "컴파일 오류 없음"이라고 보고한 첫 버전은 Unity 콘솔에
 테두리까지 아이콘 색이 곱해지는 문제를 피하고, 위치·스케일이 바뀌면 화면 픽셀 경계로 다시 맞춥니다.
 작은 칩 모양을 툴팁에 표시할 때 배율에 따라 선이 흐려지거나 간격이 달라지는 상황을 다루는 런타임 처리입니다.
 
-소스: `TooltipView.cs`, `TooltipTrigger.cs`, `ChipTooltip.cs`, `ChipShapeGraphic.cs`, `ChipShapeBorder.cs`, `AugmentationChipPanel.cs`.
+소스: [TooltipView.cs](https://github.com/keeeery/ODDITY/blob/main/Assets/Scripts/10.%20UI/TooltipView.cs), [TooltipTrigger.cs](https://github.com/keeeery/ODDITY/blob/main/Assets/Scripts/10.%20UI/TooltipTrigger.cs), [ChipTooltip.cs](https://github.com/keeeery/ODDITY/blob/main/Assets/Scripts/10.%20UI/ChipTooltip.cs), [ChipShapeGraphic.cs](https://github.com/keeeery/ODDITY/blob/main/Assets/Scripts/10.%20UI/ChipShapeGraphic.cs), [ChipShapeBorder.cs](https://github.com/keeeery/ODDITY/blob/main/Assets/Scripts/10.%20UI/ChipShapeBorder.cs), [AugmentationChipPanel.cs](https://github.com/keeeery/ODDITY/blob/main/Assets/Scripts/4.%20Superpower/1.%20AugmentationChip/UI/AugmentationChipPanel.cs).
 
 #### 증강 칩 창의 이름 검색 — 초성·조합 중 글자 매칭과 단축키 충돌 방지
 
@@ -1623,7 +1623,7 @@ public static bool IsTyping
 | 단축키 쪽에서 입력 중 여부 확인 | 입력 칸 하나가 여러 단축키를 막을 수 있음 | 새 단축키를 만들 때마다 `IsTyping` 확인을 넣어야 함 |
 | 기존 버튼 복제로 UI 생성 | 프리팹 수정 없이 생김새 통일 | 실행 중 생성이라 에디터에서 바로 보이지 않음 |
 
-소스: `KoreanSearch.cs`, `ChipSearchField.cs`, `TextInputFocus.cs`, `ChipTrayView.cs`, `AugmentationChipPanel.cs`, `VectorPanel.cs`, `VectorShape.cs`.
+소스: [KoreanSearch.cs](https://github.com/keeeery/ODDITY/blob/main/Assets/Scripts/10.%20UI/KoreanSearch.cs), [ChipSearchField.cs](https://github.com/keeeery/ODDITY/blob/main/Assets/Scripts/4.%20Superpower/1.%20AugmentationChip/UI/ChipSearchField.cs), [TextInputFocus.cs](https://github.com/keeeery/ODDITY/blob/main/Assets/Scripts/10.%20UI/TextInputFocus.cs), [ChipTrayView.cs](https://github.com/keeeery/ODDITY/blob/main/Assets/Scripts/4.%20Superpower/1.%20AugmentationChip/UI/ChipTrayView.cs), [AugmentationChipPanel.cs](https://github.com/keeeery/ODDITY/blob/main/Assets/Scripts/4.%20Superpower/1.%20AugmentationChip/UI/AugmentationChipPanel.cs), [VectorPanel.cs](https://github.com/keeeery/ODDITY/blob/main/Assets/Scripts/10.%20UI/VectorPanel.cs), [VectorShape.cs](https://github.com/keeeery/ODDITY/blob/main/Assets/Scripts/10.%20UI/VectorShape.cs).
 
 ### 8.6 환경설정과 일시정지 메뉴
 
@@ -1658,7 +1658,7 @@ pitch -= delta.y * sensitivity;
 화면 모드·해상도는 열 때 현재 `Screen` 상태를 읽고 선택 즉시 적용하며 파일에 저장하지 않습니다.
 기존 PlayerPrefs 볼륨은 설정 파일이 없을 때 읽는 이전 방식과의 연결이고, 파일 읽기에 실패하면 기본 설정으로 돌아갑니다.
 
-소스: `GameSettings.cs`, `TitleSettingsPopup.cs`, `CameraController.cs`, `SoundManager.cs`, `SceneLoadManager.cs`.
+소스: [GameSettings.cs](https://github.com/keeeery/ODDITY/blob/main/Assets/Scripts/10.%20UI/Title/GameSettings.cs), [TitleSettingsPopup.cs](https://github.com/keeeery/ODDITY/blob/main/Assets/Scripts/10.%20UI/Title/TitleSettingsPopup.cs), [CameraController.cs](https://github.com/keeeery/ODDITY/blob/main/Assets/Scripts/2.%20Camera/CameraController.cs), [SoundManager.cs](https://github.com/keeeery/ODDITY/blob/main/Assets/Scripts/98.%20Utils/SoundManager.cs), [SceneLoadManager.cs](https://github.com/keeeery/ODDITY/blob/main/Assets/Scripts/7.%20Arena/SceneLoadManager.cs).
 
 #### 일시정지 메뉴와 설정 창의 시간·입력 연결
 
@@ -1672,7 +1672,7 @@ BGM 소스는 현재 `SoundManager`의 비공개 필드를 Reflection으로 찾�
 재개·비활성화 시 오디오 정지를 풀고, 히트스톱 상태와 `HitStop.BaseTimeScale`을 기준으로 시간을 복구합니다.
 설정 창·메뉴의 Tween은 실제 시간으로 진행하며, 로비·메인 메뉴로 떠날 때도 시간 복구 후 공통 씬 전환을 시작합니다.
 
-소스: `PauseMenuUI.cs`, `UIManager.cs`, `HitStop.cs`.
+소스: [PauseMenuUI.cs](https://github.com/keeeery/ODDITY/blob/main/Assets/Scripts/10.%20UI/PauseMenuUI.cs), [UIManager.cs](https://github.com/keeeery/ODDITY/blob/main/Assets/Scripts/10.%20UI/UIManager.cs), [HitStop.cs](https://github.com/keeeery/ODDITY/blob/main/Assets/Scripts/5.%20Combat/HitStop.cs).
 
 ### 8.7 고민과 선택
 
@@ -1774,7 +1774,7 @@ noiseTime += Time.unscaledDeltaTime * shakeFrequency;
 무적은 기상 시작부터 정해진 시간 동안 유지되며, 기상 모션이 먼저 끝나면 무적인 채로 행동할 수 있습니다.
 기상 모션은 기어가며 자리를 옮기므로 기상하는 동안만 루트 모션의 수평 이동을 캐릭터 캡슐에 반영해, 대기로 돌아갈 때 위치가 튀지 않게 합니다.
 
-소스: `DamageVignette.cs`, `PlayerHUD.cs`, `CameraController.cs`, `HitPush.cs`, `PlayerController.cs`.
+소스: [DamageVignette.cs](https://github.com/keeeery/ODDITY/blob/main/Assets/Scripts/10.%20UI/DamageVignette.cs), [PlayerHUD.cs](https://github.com/keeeery/ODDITY/blob/main/Assets/Scripts/10.%20UI/PlayerHUD.cs), [CameraController.cs](https://github.com/keeeery/ODDITY/blob/main/Assets/Scripts/2.%20Camera/CameraController.cs), [HitPush.cs](https://github.com/keeeery/ODDITY/blob/main/Assets/Scripts/5.%20Combat/HitPush.cs), [PlayerController.cs](https://github.com/keeeery/ODDITY/blob/main/Assets/Scripts/1.%20Player/PlayerController.cs).
 
 ### 9.3 보스 전투 피드백 — 피해 구간과 몸으로 보여 주는 상태
 
@@ -1847,7 +1847,7 @@ return HitTier.Weak;
 보스는 `FixedUpdate`에서 움직여 프레임마다 이동량이 들쭉날쭉하므로, 돌진 먼지는 속도 대신 달린 거리로 간격을 셉니다.
 무력화나 사망으로 몸째 쓰러질 때는 발이 아니라 몸이 닿은 자리에서 먼지가 일어납니다.
 
-#### 절차적 타격·흙먼지 표현과 화면 텍스처 의존성
+#### 텍스처 없이 그리는 타격 물결·흙먼지
 
 `ForceRipple.shader`는 같은 Quad에서 고리와 볼록 렌즈를 구분합니다.
 고리는 진행도에 따라 반지름·두께·감쇠를 바꾸고, 렌즈는 중심부터 배경을 밀어내는 UV 오프셋을 사용합니다.
@@ -1862,7 +1862,7 @@ return HitTier.Weak;
 노이즈 변형과 수명에 따른 침식, 주광원·SH 환경광, 빛 방향으로 추가 샘플한 밀도 차이로 입체감을 근사합니다.
 장면 깊이와 카메라 거리에 따른 페이드는 바닥과 교차하는 경계와 카메라 가까이의 과도한 가림을 완화합니다.
 
-소스: `ForceRipple.shader`, `HitImpact.shader`, `GroundDust.shader`.
+소스: [ForceRipple.shader](https://github.com/keeeery/ODDITY/blob/main/Assets/Shaders/ForceRipple.shader), [HitImpact.shader](https://github.com/keeeery/ODDITY/blob/main/Assets/Shaders/HitImpact.shader), [GroundDust.shader](https://github.com/keeeery/ODDITY/blob/main/Assets/Shaders/GroundDust.shader).
 
 #### 마무리 일격과 사망 연출
 
@@ -1887,7 +1887,7 @@ flowchart TB
 
 ![사망 연출 — 쓰러진 페르데로스 보스가 홀로그램으로 바뀌어 사라지는 모습](images/boss-death.png)
 
-소스: `BossHitFeedback.cs`, `HitImpact.cs`, `HitDebris.shader`, `BossDizzy.cs`, `BossDizzyStars.cs`, `BossDizzyBreath.cs`, `BossGroggyState.cs`, `BossLyingGroundFit.cs`, `BossRoarWave.cs`, `BossFootDust.cs`, `BossDeathState.cs`, `SlowMotion.cs`, `BossDeathShed.cs`, `BossDeathResidue.cs`, `HologramShell.cs`.
+소스: [BossHitFeedback.cs](https://github.com/keeeery/ODDITY/blob/main/Assets/Scripts/6.%20Boss/BossHitFeedback.cs), [HitImpact.cs](https://github.com/keeeery/ODDITY/blob/main/Assets/Scripts/5.%20Combat/HitImpact.cs), [HitDebris.shader](https://github.com/keeeery/ODDITY/blob/main/Assets/Shaders/HitDebris.shader), [BossDizzy.cs](https://github.com/keeeery/ODDITY/blob/main/Assets/Scripts/6.%20Boss/BossDizzy.cs), [BossDizzyStars.cs](https://github.com/keeeery/ODDITY/blob/main/Assets/Scripts/6.%20Boss/BossDizzyStars.cs), [BossDizzyBreath.cs](https://github.com/keeeery/ODDITY/blob/main/Assets/Scripts/6.%20Boss/BossDizzyBreath.cs), [BossGroggyState.cs](https://github.com/keeeery/ODDITY/blob/main/Assets/Scripts/6.%20Boss/1.%20States/BossGroggyState.cs), [BossLyingGroundFit.cs](https://github.com/keeeery/ODDITY/blob/main/Assets/Scripts/6.%20Boss/BossLyingGroundFit.cs), [BossRoarWave.cs](https://github.com/keeeery/ODDITY/blob/main/Assets/Scripts/6.%20Boss/BossRoarWave.cs), [BossFootDust.cs](https://github.com/keeeery/ODDITY/blob/main/Assets/Scripts/6.%20Boss/BossFootDust.cs), [BossDeathState.cs](https://github.com/keeeery/ODDITY/blob/main/Assets/Scripts/6.%20Boss/1.%20States/BossDeathState.cs), [SlowMotion.cs](https://github.com/keeeery/ODDITY/blob/main/Assets/Scripts/5.%20Combat/SlowMotion.cs), [BossDeathShed.cs](https://github.com/keeeery/ODDITY/blob/main/Assets/Scripts/6.%20Boss/BossDeathShed.cs), [BossDeathResidue.cs](https://github.com/keeeery/ODDITY/blob/main/Assets/Scripts/6.%20Boss/BossDeathResidue.cs), [HologramShell.cs](https://github.com/keeeery/ODDITY/blob/main/Assets/Scripts/6.%20Boss/HologramShell.cs).
 
 ### 9.4 공격 예고 — 범위·박자·바닥에 붙는 표시
 
@@ -1921,14 +1921,14 @@ flowchart TB
 불투명 렌더 뒤 Ground 외 물체와 등록한 렌더러에 스텐실 비트 128을 기록하고(색·깊이는 그대로), 예고가 그 위에 묻지 않게 합니다.
 표시와 판정이 같은 `TelegraphShape`를 쓰는 구조는 §5.4에 있습니다.
 
-소스: `AttackTelegraph.cs`, `BossTelegraph.shader`.
+소스: [AttackTelegraph.cs](https://github.com/keeeery/ODDITY/blob/main/Assets/Scripts/6.%20Boss/2.%20Telegraph/AttackTelegraph.cs), [BossTelegraph.shader](https://github.com/keeeery/ODDITY/blob/main/Assets/Shaders/BossTelegraph.shader).
 
 ### 9.5 외곽선과 가림 — 안 보이는 대상을 드러내기
 
 염동력 대상과 NPC 외곽선은 URP RendererFeature로 실루엣 마스크를 만든 뒤 합성합니다.
 MSAA 마스크로 가장자리 표현을 보완하며, 시간 정지 오버레이와 미니맵 카메라의 표시 범위는 따로 처리합니다.
 
-#### 렌더 패스별 마스크와 합성 책임
+#### 외곽선을 그리는 단계
 
 | RendererFeature | 별도 처리 |
 |---|---|
@@ -1949,7 +1949,7 @@ MSAA로 그린 마스크가 Resolve되면 r 채널에 픽셀 커버리지가 남
 바깥 경계는 이 거리로, 안쪽 경계는 오브젝트가 덮지 않은 비율만큼만 칠해 양쪽을 모두 부드럽게 합니다.
 피격 번쩍임(`HitFlash.shader`)은 피격 대상의 메시 위에 가산 림을 덧그리고, 세기는 대상마다 전역 값으로 받습니다.
 
-소스: `PsychokinesisOutlineFeature.cs`, `PsychokinesisOutline.shader`, `HitFlash.shader`.
+소스: [PsychokinesisOutlineFeature.cs](https://github.com/keeeery/ODDITY/blob/main/Assets/Scripts/3.%20Psychokinesis/PsychokinesisOutlineFeature.cs), [PsychokinesisOutline.shader](https://github.com/keeeery/ODDITY/blob/main/Assets/Shaders/PsychokinesisOutline.shader), [HitFlash.shader](https://github.com/keeeery/ODDITY/blob/main/Assets/Shaders/HitFlash.shader).
 
 #### 서로 가리는 보스와 플레이어 — 가려진 쪽을 드러내는 두 가지 표현
 
@@ -2008,7 +2008,7 @@ return half4(_FillColor.rgb, _FillColor.a * alpha);
 | 거리 간격 + 페이드로 가림 판정 | 맞닿은 부위의 깜빡임 감소 | 아주 가까이 붙은 얇은 물체 뒤는 덜 칠해질 수 있음 |
 | 무시할 레이어를 별도 깊이로 그림 | 수련장 벽처럼 의도된 가림은 그대로 둠 | 채우기를 켠 프레임마다 해당 레이어를 한 번 더 그림 |
 
-소스: `BossOcclusionOutlineFeature.cs`, `BossOcclusionOutline.shader`, `BossHUD.cs`.
+소스: [BossOcclusionOutlineFeature.cs](https://github.com/keeeery/ODDITY/blob/main/Assets/Scripts/10.%20UI/BossOcclusionOutlineFeature.cs), [BossOcclusionOutline.shader](https://github.com/keeeery/ODDITY/blob/main/Assets/Shaders/BossOcclusionOutline.shader), [BossHUD.cs](https://github.com/keeeery/ODDITY/blob/main/Assets/Scripts/10.%20UI/BossHUD.cs).
 
 ### 9.6 타이틀·보스 등장 연출
 
@@ -2040,7 +2040,7 @@ return half4(_FillColor.rgb, _FillColor.a * alpha);
 
 ![보스 등장 연출 — 보스별 대표 패턴 1종의 애니메이션 재생과 수식어·이름 표시](images/boss-intro.jpg)
 
-소스: `TitleCinematicDirector.cs`, `TitleHologramPulse.cs`, `BossIntroCinematic.cs`, `BossIntroTitle.cs`.
+소스: [TitleCinematicDirector.cs](https://github.com/keeeery/ODDITY/blob/main/Assets/Scripts/10.%20UI/Title/TitleCinematicDirector.cs), [TitleHologramPulse.cs](https://github.com/keeeery/ODDITY/blob/main/Assets/Scripts/10.%20UI/Title/TitleHologramPulse.cs), [BossIntroCinematic.cs](https://github.com/keeeery/ODDITY/blob/main/Assets/Scripts/6.%20Boss/BossIntroCinematic.cs), [BossIntroTitle.cs](https://github.com/keeeery/ODDITY/blob/main/Assets/Scripts/10.%20UI/BossIntroTitle.cs).
 
 ### 9.7 그 밖의 시각 효과 — 생성 파편 텍스처와 보호막 해제
 
@@ -2057,7 +2057,7 @@ UV가 없는 생성 콘크리트 파편에는 `TriplanarRock.shader`가 오브�
 종료 시 복제 메시를 정리해 도입한 원본 에셋을 직접 바꾸지 않습니다.
 이 보호막 효과의 기반은 팀 구현이며, 개인 작업은 공통 스킬·HUD·소리와 연결하거나 보완한 범위로 구분합니다.
 
-소스: `TriplanarRock.shader`, `BarrierEffect.cs`.
+소스: [TriplanarRock.shader](https://github.com/keeeery/ODDITY/blob/main/Assets/Shaders/TriplanarRock.shader), [BarrierEffect.cs](https://github.com/keeeery/ODDITY/blob/main/Assets/Scripts/4.%20Superpower/3.%20Skill/Skills/Defense/BarrierEffect.cs).
 
 ### 9.8 소리 연출
 
@@ -2068,7 +2068,7 @@ UV가 없는 생성 콘크리트 파편에는 `TriplanarRock.shader`가 오브�
 시간 역행이나 정지로 애니메이션 시간이 뒤로 가거나 멈추면 기준을 동기화하고,
 전환 중 생략과 최소 재생 간격으로 같은 효과음이 연속해서 겹치는 상황을 줄입니다.
 
-소스: `AnimStateSoundSender.cs`.
+소스: [AnimStateSoundSender.cs](https://github.com/keeeery/ODDITY/blob/main/Assets/Scripts/98.%20Utils/AnimStateSoundSender.cs).
 
 #### BGM 전환과 효과음의 시간 기준
 
@@ -2080,7 +2080,7 @@ UV가 없는 생성 콘크리트 파편에는 `TriplanarRock.shader`가 오브�
 `SoundData.PlayAsync`는 오디오가 전체 시간 배율과 독립적으로 재생되는 점에 맞춰 실제 시간으로 클립 길이를 기다립니다.
 루프 효과음은 반환된 AudioSource를 보관했다가 별도 정지 API로 끝내므로, 스킬 종료·중단 시 구독과 루프 정리를 함께 해야 합니다.
 
-#### 볼륨 원본과 설정값의 분리
+#### 설정과 따로 지키는 원래 소리 크기
 
 `SoundManager`는 BGM·루프 효과음·씬에 배치된 AudioSource의 원래 레벨을 따로 보관하고,
 음소거를 반영한 설정 출력값(`BgmOutput`·`SfxOutput`)을 곱해 실제 소스 볼륨에 적용합니다.

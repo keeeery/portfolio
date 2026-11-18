@@ -40,7 +40,7 @@ mac·Windows 모두에서 동작합니다.
 
 | 줄 | 뜻 |
 |---|---|
-| `%% 격자: A B \| C D` | 칸을 바둑판처럼 배치. 줄은 `\|`, 빈자리는 `-`, 이름은 원문 id(상태 그림 시작 점 `root_start`, 끝 점 `root_end`) |
+| `%% 격자: A B \| C D` | 칸을 바둑판처럼 배치. 줄은 `\|`, 빈자리는 `-`, 이름은 원문 id(상태 그림 시작 점 `root_start`, 끝 점 `root_end`). 한 줄에 같은 이름을 이어 적으면(`P P P`) 그 칸이 여러 열에 걸쳐 길게 놓임 |
 | `%% 화살표 X -> Y: 나감=… 들어감=… 거리=N` | 화살표 하나가 나가고 들어갈 변(위/아래/왼쪽/오른쪽), 바깥으로 돌 때 칸에서 떨어질 거리 |
 | `%% 화살표 X -> Y: 곡선` · `%% 화살표: 곡선` | 그 화살표만, 또는 그림 전체를 Mermaid 곡선 그대로 |
 | `note for X "글<br>글"` (classDiagram) | 칸 바로 위에 붙는 역할 메모(표 대신) |
@@ -153,8 +153,8 @@ Claude가 내 렌더러에 엔진을 연결합니다. 고칠 곳을 **보여 주
 | 입력 | 범위 | 하는 일 |
 |---|---|---|
 | `/portfolio-diagram 전체` | 모든 프로젝트의 모든 그림 | 프로젝트·문서 순서대로 다듬기 |
-| `/portfolio-diagram 3-Folk-Sack` | 한 프로젝트의 모든 그림 | 그 기술 문서의 그림을 차례로 다듬기 |
-| `/portfolio-diagram 3-Folk-Sack 4.1` · `… 5번` · 스크린샷 + "이것도 다듬어 줘" | 그림 하나 | 그 그림만 다듬기 |
+| `/portfolio-diagram 2-Folk-Sack` | 한 프로젝트의 모든 그림 | 그 기술 문서의 그림을 차례로 다듬기 |
+| `/portfolio-diagram 2-Folk-Sack 4.1` · `… 5번` · 스크린샷 + "이것도 다듬어 줘" | 그림 하나 | 그 그림만 다듬기 |
 | `/portfolio-diagram` · `/portfolio-diagram 훑기 [폴더]` | 보기만 | 개선 후보 목록만 |
 | `/portfolio-diagram 준비` | — | 엔진 연결(처음 한 번) |
 
@@ -194,7 +194,7 @@ Claude가 내 렌더러에 엔진을 연결합니다. 고칠 곳을 **보여 주
 ## 7. 도구 직접 쓰기 (선택)
 
 ```bash
-python3 .claude/skills/portfolio-diagram/diagram-tool.py measure 3-Folk-Sack "매몰 대기" --save before.svg
+python3 .claude/skills/portfolio-diagram/diagram-tool.py measure 2-Folk-Sack "매몰 대기" --save before.svg
 ```
 
 ```bash
@@ -202,7 +202,7 @@ python3 .claude/skills/portfolio-diagram/diagram-tool.py compare before.svg afte
 ```
 
 ```bash
-python3 .claude/skills/portfolio-diagram/diagram-tool.py audit 3-Folk-Sack
+python3 .claude/skills/portfolio-diagram/diagram-tool.py audit 2-Folk-Sack
 ```
 
 | 명령 | 하는 일 |

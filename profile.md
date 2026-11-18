@@ -41,7 +41,7 @@ UI·연출처럼 눈에 띄는 부분부터 입력 타이밍·시인성처럼 �
   - ScriptableObject 데이터 정의 (Arcanist)
 - 디자인 패턴
   - 상태 머신 기반 AI·보스 패턴 (Arcanist)
-  - Observer·중재자로 전투 결과 전달 (Arcanist)
+  - Observer(C# event)로 인벤토리 변경을 덱·화면에 전달 (Arcanist)
   - 오브젝트 풀 재사용 (ODDITY)
 - 멀티플레이 · ASP.NET Core · WebSocket
   - 서버 권위 상태 동기화 (Folk Sack)
@@ -67,27 +67,17 @@ UI·연출처럼 눈에 띄는 부분부터 입력 타이밍·시인성처럼 �
   <!-- project = 프로젝트 중심 (프로젝트가 여러 개일 때) / stack = 기술 스택 중심 (특정 기술을 강조할 때) · 지금의 덱에는 아직 반영되지 않습니다(장면 순서 고정) -->
 - 강조색: #2F6FEB
   <!-- 버튼·링크·태그에 쓰이는 색 하나. 예) #2F6FEB 블루, #0F9D76 그린, #D9480F 오렌지, #7048E8 퍼플 -->
-- 프로젝트 순서:
+- 프로젝트 순서: 1-ODDITY, 2-Folk-Sack, 3-Arcanist, 4-SichuanSung
   <!-- 비워 두면 src/ 폴더 이름 순서. 바꾸려면 폴더 이름을 쉼표로: 2-Yggdrasil, 1-action-platformer -->
-- 기타 프로젝트: 5-Nutrifit
+- 기타 프로젝트: 101-Nutrifit
   <!-- 주력 프로젝트와 따로, "기타 프로젝트" 절에 카드 하나로 짧게 소개할 폴더(쉼표로 여러 개). 기능 소개 쪽 없이 소개만 나오고, 발표 덱·상세 문서는 그대로 열립니다. 비워 두면 그 절이 없습니다 -->
-- 발표 덱 빼기: 5-Nutrifit
+- 발표 덱 빼기: 101-Nutrifit
   <!-- 기타 프로젝트 카드에서 "발표 덱" 링크를 뺄 폴더(쉼표로 여러 개). 상세 기술문서 링크는 남습니다. 페이지가 직접 읽으므로 새로고침만 하면 됩니다 -->
 
 ## 기타 프로젝트 (링크만)
 
 > 기술 문서 없이 "기타 프로젝트" 절에 소개와 링크만 있는 작은 카드로 나옵니다. 페이지(index.html)가 이 절을 직접 읽으므로 고친 뒤 새로고침만 하면 됩니다(다시 빌드 필요 없음).
 > `### 프로젝트 이름` 아래에 `- 소개:` `- 정보:` `- 기술:`(쉼표로 여러 개) `- 맡은 역할:` `- 링크:` `- 시연 영상:`(YouTube 등, 링크 뒤에 "시연 영상"으로 나옴) `- 이미지:`(카드 위 대표 이미지, 4:3 · 이 레포 안 상대경로) 를 적습니다. 비운 항목은 나오지 않습니다.
-
-### NAKO: 나만의 코치
-- 장르: Android 건강 정보 애플리케이션
-- 소개: 음식 영양 정보 검색, 운동 소개, 학식 칼로리 확인 기능을 한 애플리케이션에 담은 건강 정보 Android 애플리케이션
-- 정보: 2024.05 — 2024.06 · 4인 팀
-- 기술: Android, Java, Retrofit, Firebase Auth
-- 맡은 역할: 식품안전나라 영양성분 Open API로 음식을 검색해 열량·탄수화물·단백질·지방을 보여 주는 식단(Diet) 화면
-- 링크: https://github.com/juwonleee/3-1-MobileProgramming-Termproject
-- 시연 영상: https://youtube.com/shorts/QjFfrwAhbwE
-- 이미지: images/others/nako.png
 
 ### 3D Maze Escape Game
 - 장르: 3D 미로 웹 게임
@@ -98,3 +88,13 @@ UI·연출처럼 눈에 띄는 부분부터 입력 타이밍·시인성처럼 �
 - 링크: https://github.com/keeeery/3D-Maze-Game
 - 시연 영상: https://youtu.be/Y_owVVeZpP0
 - 이미지: images/others/3d-maze.png
+
+### NAKO: 나만의 코치
+- 장르: Android 건강 정보 애플리케이션
+- 소개: 음식 영양 정보 검색, 운동 소개, 학식 칼로리 확인 기능을 한 애플리케이션에 담은 건강 정보 Android 애플리케이션
+- 정보: 2024.05 — 2024.06 · 4인 팀
+- 기술: Android, Java, Retrofit, Firebase Auth
+- 맡은 역할: 식품안전나라 영양성분 Open API로 음식을 검색해 열량·탄수화물·단백질·지방을 보여 주는 식단(Diet) 화면
+- 링크: https://github.com/juwonleee/3-1-MobileProgramming-Termproject
+- 시연 영상: https://youtube.com/shorts/QjFfrwAhbwE
+- 이미지: images/others/nako.png

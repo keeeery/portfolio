@@ -8,7 +8,7 @@
       "tab": "구현",
       "title": {"text": "4.1 선택 흐름", "verbatim": true},
       "lead": {"text": "매칭에 실패하면 첫 카드를 해제하고 두 번째 카드를 다음 첫 카드로 넘겨, 새 카드 하나만 고르면 다시 시도할 수 있습니다.", "verbatim": true},
-      "sectionPath": ["4. 기능 C — 선택·연결선·제거 연출의 순서 제어", "4.1 선택 흐름"],
+      "sectionPath": ["4. 기능 C — 카드 선택과 제거 연출", "4.1 선택 흐름"],
       "points": [],
       "visuals": [
         {"kind": "code", "n": 1, "fp": "// CardManager.CheckMatch() — 매칭 실패 시 두 번째 카드를 다음 첫 카드로 넘김"},
@@ -18,12 +18,12 @@
           "w": 673,
           "h": 505,
           "caption": {"text": "선택 외곽선이 표시된 두 카드 사이에 연결선이 그려진 순간", "verbatim": true},
-          "sectionPath": ["4. 기능 C — 선택·연결선·제거 연출의 순서 제어", "4.2 핵심 기능 — 연결선을 먼저 보여준 뒤 제거"]
+          "sectionPath": ["4. 기능 C — 카드 선택과 제거 연출", "4.2 핵심 기능 — 연결선을 먼저 보여준 뒤 제거"]
         }
       ],
       "from": {
         "key": "input-boundary",
-        "sectionPath": ["4. 기능 C — 선택·연결선·제거 연출의 순서 제어", "4.1 선택 흐름"],
+        "sectionPath": ["4. 기능 C — 카드 선택과 제거 연출", "4.1 선택 흐름"],
         "sig": [
           "4.1 선택 흐름|code|1|// CardManager.CheckMatch() — 매칭 실패 시 두 번째 카드를 다음 첫 카드로 넘김",
           "4.2 핵심 기능 — 연결선을 먼저 보여준 뒤 제거|image|images/match-line.png|1"

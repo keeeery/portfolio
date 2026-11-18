@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-11-17",
+  "generatedAt": "2026-11-18",
   "profile": {
     "name": "주현진",
     "nameEn": "JU HYUNJIN",
@@ -24,11 +24,11 @@
       "evidence": [
         {
           "text": "Input System · Cinemachine · DOTween 활용",
-          "project": "4-ODDITY"
+          "project": "1-ODDITY"
         },
         {
           "text": "Rigidbody 물리와 Raycast 판정",
-          "project": "4-ODDITY"
+          "project": "1-ODDITY"
         }
       ]
     },
@@ -37,15 +37,15 @@
       "evidence": [
         {
           "text": "큐 기반 경로 탐색",
-          "project": "1-SichuanSung"
+          "project": "4-SichuanSung"
         },
         {
           "text": "이벤트 기반 상태 변경 통지",
-          "project": "3-Folk-Sack"
+          "project": "2-Folk-Sack"
         },
         {
           "text": "async 비동기 처리",
-          "project": "3-Folk-Sack"
+          "project": "2-Folk-Sack"
         }
       ]
     },
@@ -54,11 +54,11 @@
       "evidence": [
         {
           "text": "TSV → DTO → Def 데이터 파이프라인",
-          "project": "3-Folk-Sack"
+          "project": "2-Folk-Sack"
         },
         {
           "text": "ScriptableObject 데이터 정의",
-          "project": "2-Arcanist"
+          "project": "3-Arcanist"
         }
       ]
     },
@@ -67,15 +67,15 @@
       "evidence": [
         {
           "text": "상태 머신 기반 AI·보스 패턴",
-          "project": "2-Arcanist"
+          "project": "3-Arcanist"
         },
         {
-          "text": "Observer·중재자로 전투 결과 전달",
-          "project": "2-Arcanist"
+          "text": "Observer(C# event)로 인벤토리 변경을 덱·화면에 전달",
+          "project": "3-Arcanist"
         },
         {
           "text": "오브젝트 풀 재사용",
-          "project": "4-ODDITY"
+          "project": "1-ODDITY"
         }
       ]
     },
@@ -84,11 +84,11 @@
       "evidence": [
         {
           "text": "서버 권위 상태 동기화",
-          "project": "3-Folk-Sack"
+          "project": "2-Folk-Sack"
         },
         {
           "text": "로비·대기방·게임 진행 흐름",
-          "project": "3-Folk-Sack"
+          "project": "2-Folk-Sack"
         }
       ]
     },
@@ -97,26 +97,26 @@
       "evidence": [
         {
           "text": "Shader Graph 화면 연출",
-          "project": "2-Arcanist"
+          "project": "3-Arcanist"
         },
         {
           "text": "RendererFeature 외곽선·가림 실루엣",
-          "project": "4-ODDITY"
+          "project": "1-ODDITY"
         },
         {
           "text": "Light2D 조명 연출",
-          "project": "2-Arcanist"
+          "project": "3-Arcanist"
         }
       ]
     }
   ],
   "projects": [
-    "1-SichuanSung",
-    "2-Arcanist",
-    "3-Folk-Sack",
-    "4-ODDITY"
+    "1-ODDITY",
+    "2-Folk-Sack",
+    "3-Arcanist",
+    "4-SichuanSung"
   ],
   "others": [
-    "5-Nutrifit"
+    "101-Nutrifit"
   ]
 }

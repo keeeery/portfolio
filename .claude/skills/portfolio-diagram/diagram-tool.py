@@ -162,7 +162,7 @@ def tech_docs(root, folders=None):
     src = os.path.join(root, 'src')
     if not folders:
         folders = sorted(f for f in os.listdir(src) if os.path.isdir(os.path.join(src, f)) and not f.startswith(('_', '.')))
-    else:                                                                  # 앞부분만 맞아도 됨(3-Folk → 3-Folk-Sack). 대소문자 무시
+    else:                                                                  # 앞부분만 맞아도 됨(3-Folk → 2-Folk-Sack). 대소문자 무시
         alls = sorted(f for f in os.listdir(src) if os.path.isdir(os.path.join(src, f)) and not f.startswith(('_', '.')))
         picked = []
         for want in folders:
