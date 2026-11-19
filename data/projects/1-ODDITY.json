@@ -51,7 +51,7 @@
       "what": "타겟팅 범위 내의 대상을 선택하여 잡고, 잡은 물체를 Rigidbody 물리로 움직여 휘두르기·투척 공격으로 피해를 줍니다.",
       "how": "홀딩 위치와 현재 위치의 차이로 가속도를 만들고 목표 속도와의 차이로 감쇠를 적용해, `FixedUpdate`에서 `AddForce`(Acceleration)로 물체를 추종시킵니다.",
       "why": "Transform 직접 이동 대신 가속도 추종을 택해 Rigidbody를 유지하며 움직임과 공격을 연결하고, 위치 오차만 강하게 줄이면 물체가 목표를 지나치거나 흔들리므로 속도 감쇠와 상한을 함께 둡니다.",
-      "section": "2.4 핵심 기능 — 물리 추종과 휘두르기",
+      "section": "2.4 물리 추종과 휘두르기",
       "image": {
         "src": "images/psychokinesis-hold.png",
         "w": 1170,
@@ -64,7 +64,7 @@
       "what": "게임 전체를 멈추지 않고 정지 가능한 객체만 멈춰, 플레이어가 움직이면서 멈춘 물체를 잡아 공격하거나 멈춘 보스를 공격할 수 있습니다.",
       "how": "`TimeFreezable`이 정지·감속 동안 누적된 시간 차이로 로컬 시간을 계산하고, Animator 속도와 Rigidbody 운동 상태를 저장한 뒤 kinematic 전환·DOTween 일시정지를 했다가 해제 시 복구합니다.",
       "why": "`Time.timeScale`을 0으로 만드는 대신 객체별 시간 상태를 두어 플레이어와 일부 물체를 계속 조작할 수 있게 했습니다. 대신 관련 제어 코드가 로컬 시간을 사용해야 합니다.",
-      "section": "4.2 핵심 기능 — 시간이 풀린 뒤의 원래 움직임 복원",
+      "section": "4.2 시간이 풀린 뒤의 원래 움직임 복원",
       "image": {
         "src": "images/time-freeze.png",
         "w": 1170,
@@ -120,7 +120,7 @@
       "solution": "자신이 요청한 `DamageEvent`의 결과와 실제 피해량을 확인한 뒤 파편화하고, 같은 프레임의 다른 공격과는 이벤트 인스턴스를 비교해 구분합니다.",
       "result": "",
       "lesson": "",
-      "section": "2.7 핵심 기능 — 맞혔을 때만 부서지는 물체"
+      "section": "2.7 맞혔을 때만 부서지는 물체"
     },
     {
       "title": "이어하기 후 칩 목록과 실제 장착 효과 불일치",
@@ -129,7 +129,7 @@
       "solution": "장착 요청을 보관했다가 플레이어 생성 이후 적용하고, 살아 있는 인벤토리를 추적해 `sceneLoaded`에서도 대기 장착을 적용하도록 보완했습니다.",
       "result": "이어하기 시 이미 초기화가 끝난 플레이어가 있는 경우에도 장착이 반영됩니다.",
       "lesson": "",
-      "section": "6.5 핵심 기능 — 이어하기의 칩·장착 복원"
+      "section": "6.5 이어하기의 칩·장착 복원"
     },
     {
       "title": "씬 전환 후 배치된 플레이어가 제거되는 문제",
@@ -138,7 +138,7 @@
       "solution": "`[SceneOnlySingleton]`으로 Player는 씬 배치 객체만 허용하고(없으면 null), `UIManager.Start`의 null 허용과 `HumanoidClone.OnDestroy`의 `Player.IsInitialized` 검사로 정리 경로가 새 플레이어를 만들지 않게 했습니다.",
       "result": "",
       "lesson": "",
-      "section": "고민과 선택 — 로비로 오면 플레이어가 사라지던 버그"
+      "section": "로비로 오면 플레이어가 사라지던 버그"
     }
   ],
   "screenshots": [],
@@ -167,14 +167,14 @@
   "deck": {
     "chapters": [
       {"key": "intro", "title": "프로젝트 개요", "sectionPath": ["1. 프로젝트 개요"]},
-      {"key": "psy", "title": "기능 A — 물리 기반 염동력", "sectionPath": ["2. 기능 A — 물리 기반 염동력"]},
-      {"key": "debris", "title": "기능 B — 부서진 조각을 다시 쓰는 파편", "sectionPath": ["3. 기능 B — 부서진 조각을 다시 쓰는 파편"]},
-      {"key": "time", "title": "기능 C — 나만 움직이는 시간 정지", "sectionPath": ["4. 기능 C — 나만 움직이는 시간 정지"]},
-      {"key": "boss", "title": "기능 D — 보스 패턴과 전투 판정", "sectionPath": ["5. 기능 D — 보스 패턴과 전투 판정"]},
-      {"key": "growth", "title": "기능 E — 칩·스킬·임무와 보상·저장", "sectionPath": ["6. 기능 E — 칩·스킬·임무와 보상·저장"]},
-      {"key": "scene", "title": "기능 F — 월드·UI·소리가 함께 전환되는 씬 로딩", "sectionPath": ["7. 기능 F — 월드·UI·소리가 함께 전환되는 씬 로딩"]},
-      {"key": "ui", "title": "기능 G — UI/UX ① 화면 UI와 조작", "sectionPath": ["8. 기능 G — UI/UX ① 화면 UI와 조작"]},
-      {"key": "fx", "title": "기능 G — UI/UX ② 전투 피드백과 비주얼 효과", "sectionPath": ["9. 기능 G — UI/UX ② 전투 피드백과 비주얼 효과"]},
+      {"key": "psy", "title": "기능 A — 물리 기반 염동력", "sectionPath": ["2. 물리 기반 염동력"]},
+      {"key": "debris", "title": "기능 B — 부서진 조각을 다시 쓰는 파편", "sectionPath": ["3. 부서진 조각을 다시 쓰는 파편"]},
+      {"key": "time", "title": "기능 C — 나만 움직이는 시간 정지", "sectionPath": ["4. 나만 움직이는 시간 정지"]},
+      {"key": "boss", "title": "기능 D — 보스 패턴과 전투 판정", "sectionPath": ["5. 보스 패턴과 전투 판정"]},
+      {"key": "growth", "title": "기능 E — 칩·스킬·임무와 보상·저장", "sectionPath": ["6. 칩·스킬·임무와 보상·저장"]},
+      {"key": "scene", "title": "기능 F — 월드·UI·소리가 함께 전환되는 씬 로딩", "sectionPath": ["7. 월드·UI·소리가 함께 전환되는 씬 로딩"]},
+      {"key": "ui", "title": "기능 G — UI/UX ① 화면 UI와 조작", "sectionPath": ["8. UI/UX ① 화면 UI와 조작"]},
+      {"key": "fx", "title": "기능 G — UI/UX ② 전투 피드백과 비주얼 효과", "sectionPath": ["9. UI/UX ② 전투 피드백과 비주얼 효과"]},
       {"key": "troubleshooting", "title": "트러블슈팅", "sectionPath": ["10. 트러블슈팅"]},
       {"key": "result", "title": "결과와 배운 점", "sectionPath": ["11. 결과와 배운 점"]}
     ],
@@ -210,23 +210,23 @@
         "chapter": "psy",
         "layout": "visual",
         "tab": "흐름",
-        "title": {"text": "2.2 사용법 — 조작 입력과 물체 상태", "verbatim": true},
+        "title": {"text": "2.2 조작 입력과 물체 상태", "verbatim": true},
         "lead": {"text": "염동력은 마우스 두 버튼으로 잡기·던지기·기본 공격을 모두 처리합니다.", "verbatim": true},
-        "sectionPath": ["2. 기능 A — 물리 기반 염동력", "2.2 사용법 — 조작 입력과 물체 상태"],
+        "sectionPath": ["2. 물리 기반 염동력", "2.2 조작 입력과 물체 상태"],
         "points": [
           {"label": "", "text": "같은 좌클릭이라도 물체를 들고 있는지에 따라 기본 공격과 투척 준비로 나뉩니다.", "verbatim": true},
           {"label": "", "text": "잡기에는 조건이 있습니다. 물체 질량이 플레이어의 최대 염동 질량 이하이고, 스태미나가 최소량 이상이어야 합니다.", "verbatim": true}
         ],
-        "visuals": [{"kind": "mermaid", "n": 1, "fp": "flowchart TB"}]
+        "visuals": [{"kind": "mermaid", "n": 1, "fp": "stateDiagram-v2"}]
       },
       {
         "key": "psy-follow",
         "chapter": "psy",
         "layout": "code",
         "tab": "구현",
-        "title": {"text": "2.4 핵심 기능 — 물리 추종과 휘두르기", "verbatim": true},
+        "title": {"text": "2.4 물리 추종과 휘두르기", "verbatim": true},
         "lead": {"text": "홀딩 위치와 현재 위치의 차이로 가속도를 만들고, 목표 속도와 물체 속도의 차이로 감쇠를 적용합니다.", "verbatim": true},
-        "sectionPath": ["2. 기능 A — 물리 기반 염동력", "2.4 핵심 기능 — 물리 추종과 휘두르기"],
+        "sectionPath": ["2. 물리 기반 염동력", "2.4 물리 추종과 휘두르기"],
         "points": [
           {"label": "이유", "text": "위치 오차만 강하게 줄이면 물체가 목표를 지나치거나 심하게 흔들릴 수 있어 속도 감쇠와 상한을 함께 둡니다.", "verbatim": true},
           {
@@ -251,9 +251,9 @@
         "chapter": "psy",
         "layout": "code",
         "tab": "구현",
-        "title": {"text": "2.7 핵심 기능 — 맞혔을 때만 부서지는 물체", "verbatim": true},
+        "title": {"text": "2.7 맞혔을 때만 부서지는 물체", "verbatim": true},
         "lead": {"text": "이벤트가 처리되기 전에는 방어·무적 등으로 실제 피해가 발생했는지 알 수 없으므로, 자신이 요청한 이벤트의 결과를 확인한 뒤 파편화합니다.", "verbatim": true},
-        "sectionPath": ["2. 기능 A — 물리 기반 염동력", "2.7 핵심 기능 — 맞혔을 때만 부서지는 물체"],
+        "sectionPath": ["2. 물리 기반 염동력", "2.7 맞혔을 때만 부서지는 물체"],
         "points": [
           {"label": "", "text": "같은 프레임에 다른 공격이 처리되어도 이벤트 인스턴스를 비교해 자신의 타격 결과만 사용합니다.", "verbatim": true},
           {"label": "", "text": "보스가 생성한 물체의 벽 충돌이나 외부 공격에 의한 파편화는 별도 경로로 처리합니다.", "verbatim": true}
@@ -265,12 +265,12 @@
         "chapter": "debris",
         "layout": "code",
         "tab": "구현",
-        "title": {"text": "3.2 핵심 기능 — 미리 만들어 다시 쓰는 파편", "verbatim": true},
+        "title": {"text": "3.2 미리 만들어 다시 쓰는 파편", "verbatim": true},
         "lead": {
           "text": "풀은 `Dictionary<string, ObjectPool>`로 찾고, 내부에서는 `Stack<IObjectPoolItem>`로 객체를 꺼내고 돌려받습니다.",
           "verbatim": true
         },
-        "sectionPath": ["3. 기능 B — 부서진 조각을 다시 쓰는 파편", "3.2 핵심 기능 — 미리 만들어 다시 쓰는 파편"],
+        "sectionPath": ["3. 부서진 조각을 다시 쓰는 파편", "3.2 미리 만들어 다시 쓰는 파편"],
         "points": [
           {"label": "", "text": "초기 확보 수량과 고갈 시 확장 수량을 분리해, 작은 파편처럼 자주 쓰는 객체를 미리 준비할 수 있게 했습니다.", "verbatim": true},
           {
@@ -287,9 +287,9 @@
         "chapter": "time",
         "layout": "code",
         "tab": "구현",
-        "title": {"text": "4.2 핵심 기능 — 시간이 풀린 뒤의 원래 움직임 복원", "verbatim": true},
+        "title": {"text": "4.2 시간이 풀린 뒤의 원래 움직임 복원", "verbatim": true},
         "lead": {"text": "객체는 정지·감속 동안 누적된 시간 차이를 반영해 자신의 시간을 계산합니다.", "verbatim": true},
-        "sectionPath": ["4. 기능 C — 나만 움직이는 시간 정지", "4.2 핵심 기능 — 시간이 풀린 뒤의 원래 움직임 복원"],
+        "sectionPath": ["4. 나만 움직이는 시간 정지", "4.2 시간이 풀린 뒤의 원래 움직임 복원"],
         "points": [
           {
             "label": "",
@@ -305,9 +305,9 @@
         "chapter": "time",
         "layout": "screens",
         "tab": "결과",
-        "title": {"text": "4.3 핵심 기능 — 멈춘 세계에서도 움직이는 잡은 물체", "verbatim": true},
+        "title": {"text": "4.3 멈춘 세계에서도 움직이는 잡은 물체", "verbatim": true},
         "lead": {"text": "물체를 잡으면 전체 시간 정지에서 제외합니다.", "verbatim": true},
-        "sectionPath": ["4. 기능 C — 나만 움직이는 시간 정지", "4.3 핵심 기능 — 멈춘 세계에서도 움직이는 잡은 물체"],
+        "sectionPath": ["4. 나만 움직이는 시간 정지", "4.3 멈춘 세계에서도 움직이는 잡은 물체"],
         "points": [{"label": "", "text": "따라서 시간 정지와 염동력은 독립된 화면 효과가 아니라 같은 물체 상태를 공유합니다.", "verbatim": true}],
         "visuals": [
           {
@@ -323,7 +323,7 @@
             "w": 1170,
             "h": 878,
             "caption": {"text": "염동 내려찍기 스킬 ― 홀로그램으로 멈춘 휴머노이드 보스", "verbatim": true},
-            "sectionPath": ["4. 기능 C — 나만 움직이는 시간 정지", "4.3 핵심 기능 — 멈춘 세계에서도 움직이는 잡은 물체", "염동 내려찍기 — 개별 정지·물리 이동·카메라 조율"]
+            "sectionPath": ["4. 나만 움직이는 시간 정지", "4.3 멈춘 세계에서도 움직이는 잡은 물체", "염동 내려찍기 — 개별 정지·물리 이동·카메라 조율"]
           }
         ]
       },
@@ -332,9 +332,9 @@
         "chapter": "boss",
         "layout": "screens",
         "tab": "결과",
-        "title": {"text": "5.3 핵심 기능 — 주변 물체를 떨어뜨리고 던지는 보스 공격", "verbatim": true},
+        "title": {"text": "5.3 주변 물체를 떨어뜨리고 던지는 보스 공격", "verbatim": true},
         "lead": {"text": "보스가 만들어 낸 파편도 플레이어의 잡기·투척 대상으로 연결되므로 공격 연출과 전투 자원이 겹칩니다.", "verbatim": true},
-        "sectionPath": ["5. 기능 D — 보스 패턴과 전투 판정", "5.3 핵심 기능 — 주변 물체를 떨어뜨리고 던지는 보스 공격"],
+        "sectionPath": ["5. 보스 패턴과 전투 판정", "5.3 주변 물체를 떨어뜨리고 던지는 보스 공격"],
         "points": [],
         "visuals": [
           {
@@ -343,7 +343,7 @@
             "w": 1170,
             "h": 878,
             "caption": {"text": "페르데로스 보스의 투하 패턴 — 바닥의 원형 공격 범위 예고", "verbatim": true},
-            "sectionPath": ["5. 기능 D — 보스 패턴과 전투 판정", "5.2 보스 판단과 직접 확장한 패턴"]
+            "sectionPath": ["5. 보스 패턴과 전투 판정", "5.2 보스 판단과 직접 확장한 패턴"]
           },
           {
             "kind": "image",
@@ -368,7 +368,7 @@
         "tab": "구현",
         "title": {"text": "임무 표와 보상 표의 연결", "verbatim": true},
         "lead": {"text": "증강 칩의 TSV → DTO → Def 구조는 팀이 만든 것을 사용했고, 직접 맡은 부분은 임무 데이터와 보상 데이터의 연결입니다.", "verbatim": true},
-        "sectionPath": ["6. 기능 E — 칩·스킬·임무와 보상·저장", "6.4 핵심 기능 — 임무 완료 시 정해진 칩 보상", "임무 표와 보상 표의 연결"],
+        "sectionPath": ["6. 칩·스킬·임무와 보상·저장", "6.4 임무 완료 시 정해진 칩 보상", "임무 표와 보상 표의 연결"],
         "points": [],
         "visuals": [
           {"kind": "table", "n": 1, "fp": "단계|처리"},
@@ -378,7 +378,7 @@
             "w": 1920,
             "h": 1080,
             "caption": {"text": "임무 완료 화면 — 획득한 증강 칩이 한 줄로 표시됨", "verbatim": true},
-            "sectionPath": ["6. 기능 E — 칩·스킬·임무와 보상·저장", "6.4 핵심 기능 — 임무 완료 시 정해진 칩 보상"]
+            "sectionPath": ["6. 칩·스킬·임무와 보상·저장", "6.4 임무 완료 시 정해진 칩 보상"]
           }
         ]
       },
@@ -387,9 +387,9 @@
         "chapter": "growth",
         "layout": "visual",
         "tab": "흐름",
-        "title": {"text": "6.5 핵심 기능 — 이어하기의 칩·장착 복원", "verbatim": true},
+        "title": {"text": "6.5 이어하기의 칩·장착 복원", "verbatim": true},
         "lead": {"text": "목록을 읽는 시점에 플레이어 스탯이 준비되지 않을 수 있어, 장착 요청을 보관했다가 플레이어 생성 이후 적용합니다.", "verbatim": true},
-        "sectionPath": ["6. 기능 E — 칩·스킬·임무와 보상·저장", "6.5 핵심 기능 — 이어하기의 칩·장착 복원"],
+        "sectionPath": ["6. 칩·스킬·임무와 보상·저장", "6.5 이어하기의 칩·장착 복원"],
         "points": [
           {"label": "", "text": "저장 파일에는 칩 ID·모양 셀·장착 여부·배치 원점·회전·스킬 슬롯과 수락 임무 ID를 기록합니다.", "verbatim": true},
           {"label": "", "text": "이어하기 시 이미 초기화가 끝난 플레이어가 있는 경우에도 장착을 반영하도록 연결했습니다.", "verbatim": true}
@@ -401,9 +401,9 @@
         "chapter": "scene",
         "layout": "code",
         "tab": "구현",
-        "title": {"text": "7.3 핵심 기능 — 새 씬이 준비된 뒤 켜기", "verbatim": true},
+        "title": {"text": "7.3 새 씬이 준비된 뒤 켜기", "verbatim": true},
         "lead": {"text": "씬 로드 완료만으로 바로 화면을 켜면 초기 Start 처리·셰이더 준비 때문에 긴 프레임이 연출을 건너뛰게 할 수 있습니다.", "verbatim": true},
-        "sectionPath": ["7. 기능 F — 월드·UI·소리가 함께 전환되는 씬 로딩", "7.3 핵심 기능 — 새 씬이 준비된 뒤 켜기"],
+        "sectionPath": ["7. 월드·UI·소리가 함께 전환되는 씬 로딩", "7.3 새 씬이 준비된 뒤 켜기"],
         "points": [
           {"label": "해결", "text": "최소 암전 시간과 연속 안정 프레임, BGM 준비 조건을 확인한 뒤 화면을 켭니다.", "verbatim": true},
           {"label": "", "text": "소스 기본 설정은 최소 암전 0.2초, 0.05초 이하 프레임 5회 연속, 최대 대기 2.5초입니다.", "verbatim": true},
@@ -425,9 +425,9 @@
         "chapter": "scene",
         "layout": "problem",
         "tab": "문제 해결",
-        "title": {"text": "고민과 선택 — 로비로 오면 플레이어가 사라지던 버그", "verbatim": true},
+        "title": {"text": "로비로 오면 플레이어가 사라지던 버그", "verbatim": true},
         "lead": null,
-        "sectionPath": ["7. 기능 F — 월드·UI·소리가 함께 전환되는 씬 로딩", "7.4 팀 공통 기반 — 씬이 바뀌어도 남는 것과 사라지는 것", "고민과 선택 — 로비로 오면 플레이어가 사라지던 버그"],
+        "sectionPath": ["7. 월드·UI·소리가 함께 전환되는 씬 로딩", "7.4 씬이 바뀌어도 남는 것과 사라지는 것", "로비로 오면 플레이어가 사라지던 버그"],
         "points": [
           {
             "label": "문제",
@@ -455,7 +455,7 @@
         "tab": "구현",
         "title": {"text": "조준점이 지금 할 수 있는 행동을 보여 줌", "verbatim": true},
         "lead": {"text": "`Crosshair`는 가운데 점에 상황별 표시를 겹쳐, 화면 중앙만 보고도 지금 할 수 있는 행동을 알 수 있게 합니다.", "verbatim": true},
-        "sectionPath": ["8. 기능 G — UI/UX ① 화면 UI와 조작", "8.2 조작 안내 — 조준점·키 안내·시스템 메시지", "조준점이 지금 할 수 있는 행동을 보여 줌"],
+        "sectionPath": ["8. UI/UX ① 화면 UI와 조작", "8.2 조작 안내 — 조준점·키 안내·시스템 메시지", "조준점이 지금 할 수 있는 행동을 보여 줌"],
         "points": [
           {
             "label": "",
@@ -473,7 +473,7 @@
         "tab": "",
         "title": {"text": "에디터 도구로 한 번에 맞춘 UI", "verbatim": true},
         "lead": {"text": "초반에 UI 규칙을 정하지 않아 팀원마다 기준 해상도(1920×1080·3840×2160)와 배율이 다른 창이 쌓였습니다.", "verbatim": true},
-        "sectionPath": ["8. 기능 G — UI/UX ① 화면 UI와 조작", "8.4 UI 연출 부품과 스타일 통일", "에디터 도구로 한 번에 맞춘 UI"],
+        "sectionPath": ["8. UI/UX ① 화면 UI와 조작", "8.4 UI 연출 부품과 스타일 통일", "에디터 도구로 한 번에 맞춘 UI"],
         "points": [
           {"label": "", "text": "규칙은 제가 정하고, 그 규칙을 한 번에 적용하는 에디터 도구는 AI 코딩 에이전트를 활용해 만들었습니다.", "verbatim": false},
           {"label": "", "text": "도구는 다시 실행해도 같은 결과가 되도록 이미 만든 것을 지우고 새로 만들거나, 이미 맞춰진 것은 건너뜁니다.", "verbatim": true},
@@ -502,7 +502,7 @@
         "tab": "",
         "title": {"text": "에디터 도구로 한 번에 맞춘 UI", "verbatim": true},
         "lead": null,
-        "sectionPath": ["8. 기능 G — UI/UX ① 화면 UI와 조작", "8.4 UI 연출 부품과 스타일 통일", "에디터 도구로 한 번에 맞춘 UI"],
+        "sectionPath": ["8. UI/UX ① 화면 UI와 조작", "8.4 UI 연출 부품과 스타일 통일", "에디터 도구로 한 번에 맞춘 UI"],
         "points": [],
         "visuals": [{"kind": "table", "n": 1, "fp": "도구|하는 일"}],
         "edited": true
@@ -514,7 +514,7 @@
         "tab": "구현",
         "title": {"text": "증강 칩 창의 이름 검색 — 초성·조합 중 글자 매칭과 단축키 충돌 방지", "verbatim": true},
         "lead": {"text": "1차 시연에서도 \"필터가 있어도 원하는 칩을 찾기 어렵다\"는 피드백을 받았습니다(§11.2).", "verbatim": true},
-        "sectionPath": ["8. 기능 G — UI/UX ① 화면 UI와 조작", "8.5 증강 칩 창의 조작 편의", "증강 칩 창의 이름 검색 — 초성·조합 중 글자 매칭과 단축키 충돌 방지"],
+        "sectionPath": ["8. UI/UX ① 화면 UI와 조작", "8.5 증강 칩 창의 조작 편의", "증강 칩 창의 이름 검색 — 초성·조합 중 글자 매칭과 단축키 충돌 방지"],
         "points": [{"label": "구현", "text": "이 완화 규칙은 검색어의 마지막 글자에만 적용해, 이미 다 친 앞 글자들까지 느슨하게 맞추지 않습니다.", "verbatim": true}],
         "visuals": [
           {"kind": "table", "n": 2, "fp": "검색어|찾는 이름|판정 근거"},
@@ -528,7 +528,7 @@
         "tab": "구조",
         "title": {"text": "9.2 플레이어 전투 피드백 — 피격 강도와 빠른 기상", "verbatim": true},
         "lead": {"text": "플레이어가 맞았을 때는 피격 강도에 따라 연출의 겹을 늘립니다.", "verbatim": true},
-        "sectionPath": ["9. 기능 G — UI/UX ② 전투 피드백과 비주얼 효과", "9.2 플레이어 전투 피드백 — 피격 강도와 빠른 기상"],
+        "sectionPath": ["9. UI/UX ② 전투 피드백과 비주얼 효과", "9.2 플레이어 전투 피드백 — 피격 강도와 빠른 기상"],
         "points": [],
         "visuals": [{"kind": "table", "n": 1, "fp": "피격|화면 가장자리|체력바|카메라|히트스톱"}]
       },
@@ -539,7 +539,7 @@
         "tab": "구현",
         "title": {"text": "받은 피해를 공격자 공격력과 비교한 세 구간", "verbatim": true},
         "lead": {"text": "`BossHitFeedback`은 보스가 맞을 때마다 피해 크기를 약·중·강 세 구간으로 나누고, 구간이 높을수록 연출의 겹을 늘립니다.", "verbatim": true},
-        "sectionPath": ["9. 기능 G — UI/UX ② 전투 피드백과 비주얼 효과", "9.3 보스 전투 피드백 — 피해 구간과 몸으로 보여 주는 상태", "받은 피해를 공격자 공격력과 비교한 세 구간"],
+        "sectionPath": ["9. UI/UX ② 전투 피드백과 비주얼 효과", "9.3 보스 전투 피드백 — 피해 구간과 몸으로 보여 주는 상태", "받은 피해를 공격자 공격력과 비교한 세 구간"],
         "points": [
           {"label": "이유", "text": "공격력 칩을 끼우거나 보스가 달라져도 같은 종류의 공격은 같은 구간에 들어가도록 하기 위해서입니다.", "verbatim": true},
           {"label": "", "text": "약한 피격은 기본 공격처럼 자주 들어오므로 히트스톱을 걸지 않아 조작 흐름을 끊지 않습니다.", "verbatim": true}
@@ -556,7 +556,7 @@
           "text": "처음에는 보스에 가려진 플레이어의 외곽선만 그렸고, 이후 같은 RendererFeature에 다른 물체에 가려진 보스 부분을 반투명 실루엣으로 채우는 패스를 추가했습니다.",
           "verbatim": true
         },
-        "sectionPath": ["9. 기능 G — UI/UX ② 전투 피드백과 비주얼 효과", "9.5 외곽선과 가림 — 안 보이는 대상을 드러내기", "서로 가리는 보스와 플레이어 — 가려진 쪽을 드러내는 두 가지 표현"],
+        "sectionPath": ["9. UI/UX ② 전투 피드백과 비주얼 효과", "9.5 외곽선과 가림 — 안 보이는 대상을 드러내기", "서로 가리는 보스와 플레이어 — 가려진 쪽을 드러내는 두 가지 표현"],
         "points": [
           {
             "label": "문제",
@@ -659,23 +659,23 @@
         "chapter": "psy",
         "layout": "visual",
         "tab": "흐름",
-        "title": {"text": "2.2 사용법 — 조작 입력과 물체 상태", "verbatim": true},
+        "title": {"text": "2.2 조작 입력과 물체 상태", "verbatim": true},
         "lead": {"text": "염동력은 마우스 두 버튼으로 잡기·던지기·기본 공격을 모두 처리합니다.", "verbatim": true},
-        "sectionPath": ["2. 기능 A — 물리 기반 염동력", "2.2 사용법 — 조작 입력과 물체 상태"],
+        "sectionPath": ["2. 물리 기반 염동력", "2.2 조작 입력과 물체 상태"],
         "points": [
           {"label": "", "text": "같은 좌클릭이라도 물체를 들고 있는지에 따라 기본 공격과 투척 준비로 나뉩니다.", "verbatim": true},
           {"label": "", "text": "잡기에는 조건이 있습니다. 물체 질량이 플레이어의 최대 염동 질량 이하이고, 스태미나가 최소량 이상이어야 합니다.", "verbatim": true}
         ],
-        "visuals": [{"kind": "mermaid", "n": 1, "fp": "flowchart TB"}]
+        "visuals": [{"kind": "mermaid", "n": 1, "fp": "stateDiagram-v2"}]
       },
       {
         "key": "psy-follow",
         "chapter": "psy",
         "layout": "code",
         "tab": "구현",
-        "title": {"text": "2.4 핵심 기능 — 물리 추종과 휘두르기", "verbatim": true},
+        "title": {"text": "2.4 물리 추종과 휘두르기", "verbatim": true},
         "lead": {"text": "홀딩 위치와 현재 위치의 차이로 가속도를 만들고, 목표 속도와 물체 속도의 차이로 감쇠를 적용합니다.", "verbatim": true},
-        "sectionPath": ["2. 기능 A — 물리 기반 염동력", "2.4 핵심 기능 — 물리 추종과 휘두르기"],
+        "sectionPath": ["2. 물리 기반 염동력", "2.4 물리 추종과 휘두르기"],
         "points": [
           {"label": "이유", "text": "위치 오차만 강하게 줄이면 물체가 목표를 지나치거나 심하게 흔들릴 수 있어 속도 감쇠와 상한을 함께 둡니다.", "verbatim": true},
           {
@@ -700,9 +700,9 @@
         "chapter": "psy",
         "layout": "code",
         "tab": "구현",
-        "title": {"text": "2.7 핵심 기능 — 맞혔을 때만 부서지는 물체", "verbatim": true},
+        "title": {"text": "2.7 맞혔을 때만 부서지는 물체", "verbatim": true},
         "lead": {"text": "이벤트가 처리되기 전에는 방어·무적 등으로 실제 피해가 발생했는지 알 수 없으므로, 자신이 요청한 이벤트의 결과를 확인한 뒤 파편화합니다.", "verbatim": true},
-        "sectionPath": ["2. 기능 A — 물리 기반 염동력", "2.7 핵심 기능 — 맞혔을 때만 부서지는 물체"],
+        "sectionPath": ["2. 물리 기반 염동력", "2.7 맞혔을 때만 부서지는 물체"],
         "points": [
           {"label": "", "text": "같은 프레임에 다른 공격이 처리되어도 이벤트 인스턴스를 비교해 자신의 타격 결과만 사용합니다.", "verbatim": true},
           {"label": "", "text": "보스가 생성한 물체의 벽 충돌이나 외부 공격에 의한 파편화는 별도 경로로 처리합니다.", "verbatim": true}
@@ -714,12 +714,12 @@
         "chapter": "debris",
         "layout": "code",
         "tab": "구현",
-        "title": {"text": "3.2 핵심 기능 — 미리 만들어 다시 쓰는 파편", "verbatim": true},
+        "title": {"text": "3.2 미리 만들어 다시 쓰는 파편", "verbatim": true},
         "lead": {
           "text": "풀은 `Dictionary<string, ObjectPool>`로 찾고, 내부에서는 `Stack<IObjectPoolItem>`로 객체를 꺼내고 돌려받습니다.",
           "verbatim": true
         },
-        "sectionPath": ["3. 기능 B — 부서진 조각을 다시 쓰는 파편", "3.2 핵심 기능 — 미리 만들어 다시 쓰는 파편"],
+        "sectionPath": ["3. 부서진 조각을 다시 쓰는 파편", "3.2 미리 만들어 다시 쓰는 파편"],
         "points": [
           {"label": "", "text": "초기 확보 수량과 고갈 시 확장 수량을 분리해, 작은 파편처럼 자주 쓰는 객체를 미리 준비할 수 있게 했습니다.", "verbatim": true},
           {
@@ -736,9 +736,9 @@
         "chapter": "time",
         "layout": "code",
         "tab": "구현",
-        "title": {"text": "4.2 핵심 기능 — 시간이 풀린 뒤의 원래 움직임 복원", "verbatim": true},
+        "title": {"text": "4.2 시간이 풀린 뒤의 원래 움직임 복원", "verbatim": true},
         "lead": {"text": "객체는 정지·감속 동안 누적된 시간 차이를 반영해 자신의 시간을 계산합니다.", "verbatim": true},
-        "sectionPath": ["4. 기능 C — 나만 움직이는 시간 정지", "4.2 핵심 기능 — 시간이 풀린 뒤의 원래 움직임 복원"],
+        "sectionPath": ["4. 나만 움직이는 시간 정지", "4.2 시간이 풀린 뒤의 원래 움직임 복원"],
         "points": [
           {
             "label": "",
@@ -754,9 +754,9 @@
         "chapter": "time",
         "layout": "screens",
         "tab": "결과",
-        "title": {"text": "4.3 핵심 기능 — 멈춘 세계에서도 움직이는 잡은 물체", "verbatim": true},
+        "title": {"text": "4.3 멈춘 세계에서도 움직이는 잡은 물체", "verbatim": true},
         "lead": {"text": "물체를 잡으면 전체 시간 정지에서 제외합니다.", "verbatim": true},
-        "sectionPath": ["4. 기능 C — 나만 움직이는 시간 정지", "4.3 핵심 기능 — 멈춘 세계에서도 움직이는 잡은 물체"],
+        "sectionPath": ["4. 나만 움직이는 시간 정지", "4.3 멈춘 세계에서도 움직이는 잡은 물체"],
         "points": [{"label": "", "text": "따라서 시간 정지와 염동력은 독립된 화면 효과가 아니라 같은 물체 상태를 공유합니다.", "verbatim": true}],
         "visuals": [
           {
@@ -772,7 +772,7 @@
             "w": 1170,
             "h": 878,
             "caption": {"text": "염동 내려찍기 스킬 ― 홀로그램으로 멈춘 휴머노이드 보스", "verbatim": true},
-            "sectionPath": ["4. 기능 C — 나만 움직이는 시간 정지", "4.3 핵심 기능 — 멈춘 세계에서도 움직이는 잡은 물체", "염동 내려찍기 — 개별 정지·물리 이동·카메라 조율"]
+            "sectionPath": ["4. 나만 움직이는 시간 정지", "4.3 멈춘 세계에서도 움직이는 잡은 물체", "염동 내려찍기 — 개별 정지·물리 이동·카메라 조율"]
           }
         ]
       },
@@ -781,9 +781,9 @@
         "chapter": "boss",
         "layout": "screens",
         "tab": "결과",
-        "title": {"text": "5.3 핵심 기능 — 주변 물체를 떨어뜨리고 던지는 보스 공격", "verbatim": true},
+        "title": {"text": "5.3 주변 물체를 떨어뜨리고 던지는 보스 공격", "verbatim": true},
         "lead": {"text": "보스가 만들어 낸 파편도 플레이어의 잡기·투척 대상으로 연결되므로 공격 연출과 전투 자원이 겹칩니다.", "verbatim": true},
-        "sectionPath": ["5. 기능 D — 보스 패턴과 전투 판정", "5.3 핵심 기능 — 주변 물체를 떨어뜨리고 던지는 보스 공격"],
+        "sectionPath": ["5. 보스 패턴과 전투 판정", "5.3 주변 물체를 떨어뜨리고 던지는 보스 공격"],
         "points": [],
         "visuals": [
           {
@@ -792,7 +792,7 @@
             "w": 1170,
             "h": 878,
             "caption": {"text": "페르데로스 보스의 투하 패턴 — 바닥의 원형 공격 범위 예고", "verbatim": true},
-            "sectionPath": ["5. 기능 D — 보스 패턴과 전투 판정", "5.2 보스 판단과 직접 확장한 패턴"]
+            "sectionPath": ["5. 보스 패턴과 전투 판정", "5.2 보스 판단과 직접 확장한 패턴"]
           },
           {
             "kind": "image",
@@ -817,7 +817,7 @@
         "tab": "구현",
         "title": {"text": "임무 표와 보상 표의 연결", "verbatim": true},
         "lead": {"text": "증강 칩의 TSV → DTO → Def 구조는 팀이 만든 것을 사용했고, 직접 맡은 부분은 임무 데이터와 보상 데이터의 연결입니다.", "verbatim": true},
-        "sectionPath": ["6. 기능 E — 칩·스킬·임무와 보상·저장", "6.4 핵심 기능 — 임무 완료 시 정해진 칩 보상", "임무 표와 보상 표의 연결"],
+        "sectionPath": ["6. 칩·스킬·임무와 보상·저장", "6.4 임무 완료 시 정해진 칩 보상", "임무 표와 보상 표의 연결"],
         "points": [],
         "visuals": [
           {"kind": "table", "n": 1, "fp": "단계|처리"},
@@ -827,7 +827,7 @@
             "w": 1920,
             "h": 1080,
             "caption": {"text": "임무 완료 화면 — 획득한 증강 칩이 한 줄로 표시됨", "verbatim": true},
-            "sectionPath": ["6. 기능 E — 칩·스킬·임무와 보상·저장", "6.4 핵심 기능 — 임무 완료 시 정해진 칩 보상"]
+            "sectionPath": ["6. 칩·스킬·임무와 보상·저장", "6.4 임무 완료 시 정해진 칩 보상"]
           }
         ]
       },
@@ -836,9 +836,9 @@
         "chapter": "growth",
         "layout": "visual",
         "tab": "흐름",
-        "title": {"text": "6.5 핵심 기능 — 이어하기의 칩·장착 복원", "verbatim": true},
+        "title": {"text": "6.5 이어하기의 칩·장착 복원", "verbatim": true},
         "lead": {"text": "목록을 읽는 시점에 플레이어 스탯이 준비되지 않을 수 있어, 장착 요청을 보관했다가 플레이어 생성 이후 적용합니다.", "verbatim": true},
-        "sectionPath": ["6. 기능 E — 칩·스킬·임무와 보상·저장", "6.5 핵심 기능 — 이어하기의 칩·장착 복원"],
+        "sectionPath": ["6. 칩·스킬·임무와 보상·저장", "6.5 이어하기의 칩·장착 복원"],
         "points": [
           {"label": "", "text": "저장 파일에는 칩 ID·모양 셀·장착 여부·배치 원점·회전·스킬 슬롯과 수락 임무 ID를 기록합니다.", "verbatim": true},
           {"label": "", "text": "이어하기 시 이미 초기화가 끝난 플레이어가 있는 경우에도 장착을 반영하도록 연결했습니다.", "verbatim": true}
@@ -850,9 +850,9 @@
         "chapter": "scene",
         "layout": "code",
         "tab": "구현",
-        "title": {"text": "7.3 핵심 기능 — 새 씬이 준비된 뒤 켜기", "verbatim": true},
+        "title": {"text": "7.3 새 씬이 준비된 뒤 켜기", "verbatim": true},
         "lead": {"text": "씬 로드 완료만으로 바로 화면을 켜면 초기 Start 처리·셰이더 준비 때문에 긴 프레임이 연출을 건너뛰게 할 수 있습니다.", "verbatim": true},
-        "sectionPath": ["7. 기능 F — 월드·UI·소리가 함께 전환되는 씬 로딩", "7.3 핵심 기능 — 새 씬이 준비된 뒤 켜기"],
+        "sectionPath": ["7. 월드·UI·소리가 함께 전환되는 씬 로딩", "7.3 새 씬이 준비된 뒤 켜기"],
         "points": [
           {"label": "해결", "text": "최소 암전 시간과 연속 안정 프레임, BGM 준비 조건을 확인한 뒤 화면을 켭니다.", "verbatim": true},
           {"label": "", "text": "소스 기본 설정은 최소 암전 0.2초, 0.05초 이하 프레임 5회 연속, 최대 대기 2.5초입니다.", "verbatim": true},
@@ -874,9 +874,9 @@
         "chapter": "scene",
         "layout": "problem",
         "tab": "문제 해결",
-        "title": {"text": "고민과 선택 — 로비로 오면 플레이어가 사라지던 버그", "verbatim": true},
+        "title": {"text": "로비로 오면 플레이어가 사라지던 버그", "verbatim": true},
         "lead": null,
-        "sectionPath": ["7. 기능 F — 월드·UI·소리가 함께 전환되는 씬 로딩", "7.4 팀 공통 기반 — 씬이 바뀌어도 남는 것과 사라지는 것", "고민과 선택 — 로비로 오면 플레이어가 사라지던 버그"],
+        "sectionPath": ["7. 월드·UI·소리가 함께 전환되는 씬 로딩", "7.4 씬이 바뀌어도 남는 것과 사라지는 것", "로비로 오면 플레이어가 사라지던 버그"],
         "points": [
           {
             "label": "문제",
@@ -904,7 +904,7 @@
         "tab": "구현",
         "title": {"text": "조준점이 지금 할 수 있는 행동을 보여 줌", "verbatim": true},
         "lead": {"text": "`Crosshair`는 가운데 점에 상황별 표시를 겹쳐, 화면 중앙만 보고도 지금 할 수 있는 행동을 알 수 있게 합니다.", "verbatim": true},
-        "sectionPath": ["8. 기능 G — UI/UX ① 화면 UI와 조작", "8.2 조작 안내 — 조준점·키 안내·시스템 메시지", "조준점이 지금 할 수 있는 행동을 보여 줌"],
+        "sectionPath": ["8. UI/UX ① 화면 UI와 조작", "8.2 조작 안내 — 조준점·키 안내·시스템 메시지", "조준점이 지금 할 수 있는 행동을 보여 줌"],
         "points": [
           {
             "label": "",
@@ -922,7 +922,7 @@
         "tab": "",
         "title": {"text": "에디터 도구로 한 번에 맞춘 UI", "verbatim": true},
         "lead": {"text": "초반에 UI 규칙을 정하지 않아 팀원마다 기준 해상도(1920×1080·3840×2160)와 배율이 다른 창이 쌓였습니다.", "verbatim": true},
-        "sectionPath": ["8. 기능 G — UI/UX ① 화면 UI와 조작", "8.4 UI 연출 부품과 스타일 통일", "에디터 도구로 한 번에 맞춘 UI"],
+        "sectionPath": ["8. UI/UX ① 화면 UI와 조작", "8.4 UI 연출 부품과 스타일 통일", "에디터 도구로 한 번에 맞춘 UI"],
         "points": [
           {"label": "", "text": "규칙은 제가 정하고, 그 규칙을 한 번에 적용하는 에디터 도구는 AI 코딩 에이전트를 활용해 만들었습니다.", "verbatim": false},
           {"label": "", "text": "도구는 다시 실행해도 같은 결과가 되도록 이미 만든 것을 지우고 새로 만들거나, 이미 맞춰진 것은 건너뜁니다.", "verbatim": true},
@@ -950,7 +950,7 @@
         "tab": "",
         "title": {"text": "에디터 도구로 한 번에 맞춘 UI", "verbatim": true},
         "lead": null,
-        "sectionPath": ["8. 기능 G — UI/UX ① 화면 UI와 조작", "8.4 UI 연출 부품과 스타일 통일", "에디터 도구로 한 번에 맞춘 UI"],
+        "sectionPath": ["8. UI/UX ① 화면 UI와 조작", "8.4 UI 연출 부품과 스타일 통일", "에디터 도구로 한 번에 맞춘 UI"],
         "points": [],
         "visuals": [{"kind": "table", "n": 1, "fp": "도구|하는 일"}]
       },
@@ -961,7 +961,7 @@
         "tab": "구현",
         "title": {"text": "증강 칩 창의 이름 검색 — 초성·조합 중 글자 매칭과 단축키 충돌 방지", "verbatim": true},
         "lead": {"text": "1차 시연에서도 \"필터가 있어도 원하는 칩을 찾기 어렵다\"는 피드백을 받았습니다(§11.2).", "verbatim": true},
-        "sectionPath": ["8. 기능 G — UI/UX ① 화면 UI와 조작", "8.5 증강 칩 창의 조작 편의", "증강 칩 창의 이름 검색 — 초성·조합 중 글자 매칭과 단축키 충돌 방지"],
+        "sectionPath": ["8. UI/UX ① 화면 UI와 조작", "8.5 증강 칩 창의 조작 편의", "증강 칩 창의 이름 검색 — 초성·조합 중 글자 매칭과 단축키 충돌 방지"],
         "points": [{"label": "구현", "text": "이 완화 규칙은 검색어의 마지막 글자에만 적용해, 이미 다 친 앞 글자들까지 느슨하게 맞추지 않습니다.", "verbatim": true}],
         "visuals": [
           {"kind": "table", "n": 2, "fp": "검색어|찾는 이름|판정 근거"},
@@ -975,7 +975,7 @@
         "tab": "구조",
         "title": {"text": "9.2 플레이어 전투 피드백 — 피격 강도와 빠른 기상", "verbatim": true},
         "lead": {"text": "플레이어가 맞았을 때는 피격 강도에 따라 연출의 겹을 늘립니다.", "verbatim": true},
-        "sectionPath": ["9. 기능 G — UI/UX ② 전투 피드백과 비주얼 효과", "9.2 플레이어 전투 피드백 — 피격 강도와 빠른 기상"],
+        "sectionPath": ["9. UI/UX ② 전투 피드백과 비주얼 효과", "9.2 플레이어 전투 피드백 — 피격 강도와 빠른 기상"],
         "points": [],
         "visuals": [{"kind": "table", "n": 1, "fp": "피격|화면 가장자리|체력바|카메라|히트스톱"}]
       },
@@ -986,7 +986,7 @@
         "tab": "구현",
         "title": {"text": "받은 피해를 공격자 공격력과 비교한 세 구간", "verbatim": true},
         "lead": {"text": "`BossHitFeedback`은 보스가 맞을 때마다 피해 크기를 약·중·강 세 구간으로 나누고, 구간이 높을수록 연출의 겹을 늘립니다.", "verbatim": true},
-        "sectionPath": ["9. 기능 G — UI/UX ② 전투 피드백과 비주얼 효과", "9.3 보스 전투 피드백 — 피해 구간과 몸으로 보여 주는 상태", "받은 피해를 공격자 공격력과 비교한 세 구간"],
+        "sectionPath": ["9. UI/UX ② 전투 피드백과 비주얼 효과", "9.3 보스 전투 피드백 — 피해 구간과 몸으로 보여 주는 상태", "받은 피해를 공격자 공격력과 비교한 세 구간"],
         "points": [
           {"label": "이유", "text": "공격력 칩을 끼우거나 보스가 달라져도 같은 종류의 공격은 같은 구간에 들어가도록 하기 위해서입니다.", "verbatim": true},
           {"label": "", "text": "약한 피격은 기본 공격처럼 자주 들어오므로 히트스톱을 걸지 않아 조작 흐름을 끊지 않습니다.", "verbatim": true}
@@ -1003,7 +1003,7 @@
           "text": "처음에는 보스에 가려진 플레이어의 외곽선만 그렸고, 이후 같은 RendererFeature에 다른 물체에 가려진 보스 부분을 반투명 실루엣으로 채우는 패스를 추가했습니다.",
           "verbatim": true
         },
-        "sectionPath": ["9. 기능 G — UI/UX ② 전투 피드백과 비주얼 효과", "9.5 외곽선과 가림 — 안 보이는 대상을 드러내기", "서로 가리는 보스와 플레이어 — 가려진 쪽을 드러내는 두 가지 표현"],
+        "sectionPath": ["9. UI/UX ② 전투 피드백과 비주얼 효과", "9.5 외곽선과 가림 — 안 보이는 대상을 드러내기", "서로 가리는 보스와 플레이어 — 가려진 쪽을 드러내는 두 가지 표현"],
         "points": [
           {
             "label": "문제",

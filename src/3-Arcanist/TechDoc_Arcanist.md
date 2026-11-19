@@ -51,6 +51,7 @@ flowchart TB
 본격적으로 만든 첫 개인 게임 프로젝트로, 카드 덱 빌딩과 2D 액션을 결합해 **카드 조합에 따라 전투 방식이 달라지는 게임**을 만들고자 했습니다.
 그 중심에는 **패링에 성공해 카드 게이지를 얻고**, 그 게이지로 카드를 사용해 전투를 이어 가는 흐름을 두었습니다.
 처음 목표는 매번 다른 덱을 구성하며 플레이하는 로그라이트였고, 이번 빌드에서는 보상으로 얻은 카드로 덱을 바꾸며 방을 이어 가는 흐름까지 구현했습니다(§8.4).
+컨셉 기획서에서는 카드 기반 전투와 패링 시스템을 결합하는 것을 기존 로그라이트 게임과 다른 점으로 잡았습니다.
 
 | 문제 | 구현 방향 |
 |---|---|
@@ -70,6 +71,7 @@ flowchart TB
 | 엔진 | Unity `6000.3.15f1`, URP `17.3.0` |
 | 언어 | C# |
 | 주요 패키지 | Input System `1.19.0`(프로젝트 입력 래퍼 `SimpleInput`), Cinemachine `3.1.7`, LDtkUnity `6.12.3`, 2D Animation `13.0.4`, DOTween |
+| 리소스 | 외부 에셋: 캐릭터·적 스프라이트, 입력 키 아이콘, UI 패널, 아이콘, 배경, 이펙트 팩, DOTween·LDtkUnity / 직접 제작: 스크립트, 화면 흑백 반전 셰이더(`SG_ScreenInvert`) |
 | GitHub | [GitHub](https://github.com/keeeery/Arcanist) |
 | 시연 영상 | [YouTube](https://youtu.be/8hEJXeohnA8) |
 
@@ -104,9 +106,9 @@ flowchart TB
 
 ---
 
-## 2. 기능 A — 충돌 기반 전투와 패링
+## 2. 충돌 기반 전투와 패링
 
-### 2.1 개요와 시스템 구조
+### 2.1 근접 공격과 패링 판정
 
 플레이어는 D로 근접 공격을 하고, 공격 모션 중간에 D를 다시 누르면 다음 공격으로 이어집니다.
 적의 공격이 닿기 직전에 패링 자세를 취하면, 판정 창이 열려 있는 동안 닿은 공격은 피해를 주지 않고 패링으로 처리됩니다.
@@ -144,7 +146,7 @@ HitResolver는 넉백·스턴을, HitBox는 피격 FX와 타격 연출을 담당
 
 소스: [HitBox.cs](https://github.com/keeeery/Arcanist/blob/main/Assets/02.%20Scripts/03.%20CombatSystem/HitBox.cs), [HitResolver.cs](https://github.com/keeeery/Arcanist/blob/main/Assets/02.%20Scripts/03.%20CombatSystem/HitResolver.cs), [HitTargetTracker.cs](https://github.com/keeeery/Arcanist/blob/main/Assets/02.%20Scripts/03.%20CombatSystem/HitTargetTracker.cs).
 
-### 2.2 핵심 기능 — 한 공격의 중복 타격 제어
+### 2.2 한 공격의 중복 타격 제어
 
 ```csharp
 // HitTargetTracker.TryRegister() — 다단 히트 여부에 따라 허용 판단과 기록을 한 번에
@@ -164,7 +166,7 @@ return true;
 `HitBox.OnEnable/Initialize`에서 기록을 비워 풀 재사용 시 이전 공격의 기록이 남지 않게 합니다.
 기준은 개체가 아닌 HurtBox이므로 한 개체의 여러 HurtBox는 별도 기록됩니다.
 
-### 2.3 핵심 기능 — 패링 성공 시 피해 무효화
+### 2.3 패링 성공 시 피해 무효화
 
 ```csharp
 // HitResolver.Resolve() — 패링 창이 열려 있으면 피해 전달 전에 패링으로 처리
@@ -189,7 +191,7 @@ Applied가 아니면 일반 피격 FX·히트스톱·카메라 흔들림·적중
 
 ![패링 성공 순간의 이펙트](images/parry-combat-zoom.png)
 
-### 2.4 핵심 기능 — 피해·회복 전달
+### 2.4 피해·회복 전달
 
 | 작업 | API | 동작 |
 |---|---|---|
@@ -208,10 +210,10 @@ private void HandleDamageEvent(CombatEntity sender, CombatEntity receiver, Comba
 ```
 
 피해는 수신자에게 바로 적용됩니다.
-그 뒤의 Observer 통지(`Subscribe`·`UnSubscribe`)와 통지만 수행하는 `HandleHealEvent`는 강의 프로젝트에서 옮겨 온 구조입니다. 이 게임에서는 통지를 받아 쓰는 쪽을 붙이지 않아 실제 동작에는 쓰이지 않습니다.
+그 뒤의 Observer 통지(`Subscribe`·`UnSubscribe`)와 통지만 수행하는 `HandleHealEvent`는 구조로만 남아 있습니다. 이 게임에서는 통지를 받아 쓰는 쪽을 붙이지 않아 실제 동작에는 쓰이지 않습니다.
 회복은 `Player.TakeHeal` 등 별도 호출 경로로 적용합니다.
 
-### 2.5 세부 구현 — 체력바와 피격 연출
+### 2.5 체력바와 피격 연출
 
 `BaseStat`의 수치 변경과 Player·Enemy의 피격 반응은 엔티티가 처리합니다.
 
@@ -250,10 +252,10 @@ DOTween으로 코드 반복은 줄었지만, 트윈 대상의 상태 초기화�
 
 ![패링 성공 순간 — 화면 가장자리 보라색 비네트와 파티클·조명 이펙트](images/parry-effect-crop.png)
 
-#### 죽음 선고 — 화면 반전과 느려지는 시간
+#### 죽음 선고 — 화면 흑백 반전과 느려지는 시간
 
 전설 등급 카드 ‘죽음 선고’의 이펙트 프리팹에는 `DeathSentenceEffectController`가 있고, 활성화될 때 `ScreenEffectController.PlayDeathSentenceFlash`를 호출합니다.
-이 함수는 Shader Graph로 만든 화면 반전 머티리얼(`SG_ScreenInvert`)의 `_Blend`를 켜는 동안 `Time.timeScale`을 낮춥니다.
+이 함수는 Shader Graph로 만든 화면 흑백 반전 머티리얼(`SG_ScreenInvert`)의 `_Blend`를 켜는 동안 `Time.timeScale`을 낮춥니다.
 
 ```csharp
 // ScreenEffectController.DeathSentenceFlashRoutine() — 화면 반전을 켜는 동안 시간 배율을 낮춤
@@ -280,7 +282,7 @@ deathSentenceFlashRoutine = null;
 반전은 소스 기본값 기준 0.05초, 느려진 시간은 0.08초(배율 0.25) 유지합니다. 대기는 `WaitForSecondsRealtime`이라 낮춘 시간 배율의 영향을 받지 않습니다.
 `HitStopController`가 복구 값을 1로 고정하는 것과 달리, 이 연출은 직전 `timeScale`·`fixedDeltaTime`을 저장했다가 되돌립니다. 히트스톱이나 일시정지와 겹칠 때의 동작은 이 문서에서 확인하지 않았습니다.
 
-![죽음 선고를 사용한 순간의 화면 반전](images/strong-attack-grayscale.png)
+![죽음 선고를 사용한 순간의 화면 흑백 반전](images/strong-attack-grayscale.png)
 
 소스: [PlayerController.cs](https://github.com/keeeery/Arcanist/blob/main/Assets/02.%20Scripts/01.%20Player/PlayerController.cs), [ParryLightEffect.cs](https://github.com/keeeery/Arcanist/blob/main/Assets/02.%20Scripts/10.%20VFX/ParryLightEffect.cs), [ScreenEffectController.cs](https://github.com/keeeery/Arcanist/blob/main/Assets/02.%20Scripts/10.%20VFX/ScreenEffectController.cs), [CameraImpulseController.cs](https://github.com/keeeery/Arcanist/blob/main/Assets/02.%20Scripts/10.%20VFX/CameraImpulseController.cs), [DeathSentenceEffectController.cs](https://github.com/keeeery/Arcanist/blob/main/Assets/02.%20Scripts/10.%20VFX/DeathSentenceEffectController.cs).
 
@@ -293,12 +295,16 @@ deathSentenceFlashRoutine = null;
 | 단발·다단 판정을 같은 HitBox에 제공 | 공격 프리팹 설정으로 구분 | HurtBox 단위 중복 정책을 이해해야 함 |
 
 강의에서 익힌 중재자 구조를 실제 전투에 적용해, 피해 적용을 `CombatSystem` 한곳으로 모았습니다.
+한 공격이 같은 HurtBox를 한 번만 치게 하는 중복 타격 방지 위에, 일정 간격마다 같은 대상을 다시 칠 수 있는 다단 히트(`allowMultiHit`, 소스 기본 간격 0.25초)를 나중에 더했습니다.
+
+패링은 컨셉 기획서에서 패링용 Collider(`ParryCollider`)를 켜고 투사체 Collider와 닿는 타이밍으로 판정할 예정이었습니다.
+실제 구현에서는 공격이 닿았을 때 `HitResolver`가 플레이어의 패링 판정 창이 열려 있는지(`IsParryWindowOpen`) 확인하는 방식으로 만들었습니다(§2.3).
 
 ---
 
-## 3. 기능 B — 카드 순환과 모션 연계 스킬
+## 3. 카드 순환과 모션 연계 스킬
 
-### 3.1 개요와 시스템 구조
+### 3.1 Q/W/E 슬롯과 카드 게이지
 
 화면 아래의 Q/W/E 슬롯에 카드가 한 장씩 들어옵니다.
 카드 게이지는 시간이 지나면 차고 패링에 성공하면 더 빨리 차며(기능 A), 가득 차면 편성한 덱에서 카드 1장을 빈 슬롯으로 뽑습니다.
@@ -338,7 +344,7 @@ deathSentenceFlashRoutine = null;
 
 소스: [CardData.cs](https://github.com/keeeery/Arcanist/blob/main/Assets/02.%20Scripts/04.%20CardSystem/CardData.cs), [CardEffect.cs](https://github.com/keeeery/Arcanist/blob/main/Assets/02.%20Scripts/04.%20CardSystem/CardEffect.cs), [CardSystem.cs](https://github.com/keeeery/Arcanist/blob/main/Assets/02.%20Scripts/04.%20CardSystem/CardSystem.cs).
 
-### 3.2 시스템 구조 — 덱·손패·버림 더미를 도는 카드 순환
+### 3.2 덱·손패·버림 더미를 도는 카드 순환
 
 | 목록 | 의미 |
 |---|---|
@@ -363,7 +369,7 @@ flowchart TB
 드로우 시도 직전에 `BeginNextGaugeCycle()`을 호출해 다음 게이지 주기를 시작합니다.
 덱 동기화 시 기존 손패를 통째로 초기화하지 않고 드로우·버림 목록에서 빠진 카드를 제거합니다.
 
-### 3.3 핵심 기능 — 사용 가능 확인과 모션에 맞춘 발동
+### 3.3 사용 가능 확인과 모션에 맞춘 발동
 
 카드 처리 책임을 다음 순수 C# 클래스로 분리하고, 타겟 계약과 손패 UI도 별도 구성했습니다.
 
@@ -413,6 +419,42 @@ flowchart TB
 실제 효과는 `CardSkillExecutor.ExecutePending()`에서 발생합니다.
 유효한 Animator 트리거가 없으면 즉시 실행하는 경로도 있습니다.
 
+```mermaid
+%%{init: {"sequence": {"actorMargin": 16, "width": 120, "wrap": false}}}%%
+sequenceDiagram
+    participant Card as CardSystem
+    participant Validator as CardUseValidator
+    participant Executor as CardSkillExecutor
+    participant Resolver as CardTargetResolver
+    participant Anim as Animator
+    participant Receiver as PlayerAnimation<br/>EventReceiver
+    participant Effect as CardEffect
+    Card->>Validator: Validate()
+    Note over Validator: 체력이 최대이면 FullHealth
+    Validator->>Resolver: TryFindTarget()
+    Validator-->>Card: CardUseFailure
+    Card->>Executor: Begin()
+    alt 유효한 Animator 트리거가 있음
+        Executor->>Anim: SetTrigger()
+    else 트리거가 없음
+        Executor-->>Card: false
+        Card->>Executor: ExecutePending()
+    end
+    Card->>Card: 버림 더미로 이동
+    Anim->>Receiver: 애니메이션 이벤트
+    Receiver->>Card: ExecutePendingCardSkill()
+    Card->>Executor: ExecutePending()
+    Executor->>Resolver: TryResolveForCard()
+    alt 타겟이 있음(또는 타겟이 필요 없는 카드)
+        Executor->>Effect: Execute()
+    else 필수 타겟이 없음
+        Executor-->>Card: MissingTarget(실행 취소)
+    end
+%% 글자 자리: ExecutePendingCardSkill() = Executor Resolver
+```
+
+이 다이어그램은 카드 사용 시 사용 가능 여부를 확인한 뒤 애니메이션 이벤트 시점에 효과를 발동하는 차례를 도식화한 것입니다.
+
 효과를 입력 시점이 아니라 애니메이션 이벤트 시점에 실행하도록 나눈 이유는 연출입니다.
 시전 모션이 지나고 실제로 주문을 내뻗는 순간에 효과가 나가야 어색하지 않고 자연스럽다고 판단했습니다.
 사소하다고 생각할 수도 있는 부분이지만, 플레이 감성을 해칠 수도 좋게 만들 수도 있는 부분이라고 보고 플레이 감성이 좋아지도록 디테일을 챙겼습니다.
@@ -440,7 +482,7 @@ return new CardSkillExecutionResult(CardSkillExecutionStatus.Executed, card);
 
 소스: [ProjectileCardEffect.cs](https://github.com/keeeery/Arcanist/blob/main/Assets/02.%20Scripts/04.%20CardSystem/ProjectileCardEffect.cs).
 
-### 3.5 타겟 선정 정책
+### 3.5 등급 우선, 같은 등급에서는 거리 우선
 
 `EnemyManager`는 일반 적과 보스를 하나의 `List<ICombatTarget>`으로 관리합니다.
 조회 중 파괴된 Unity 객체를 제거하고 `IsTargetable`과 `IsDead`를 확인합니다.
@@ -532,9 +574,9 @@ currentCell = Mathf.Min(totalCells, gaugeCells.Length);
 
 ---
 
-## 4. 기능 C — 인벤토리·덱 편성과 카드 보상
+## 4. 인벤토리·덱 편성과 카드 보상
 
-### 4.1 개요와 시스템 구조
+### 4.1 보상 카드 3장 중 1장과 덱 편성 화면
 
 방의 적을 모두 쓰러뜨리면 출구의 오벨리스크가 열리고, 무작위로 뽑힌 보상 카드 3장 중 1장을 고릅니다.
 고른 카드는 보유 목록에만 들어가고, 덱에는 자동으로 들어가지 않습니다.
@@ -556,7 +598,7 @@ currentCell = Mathf.Min(totalCells, gaugeCells.Length);
 
 소스: [PlayerInventory.cs](https://github.com/keeeery/Arcanist/blob/main/Assets/02.%20Scripts/06.%20Inventory/PlayerInventory.cs), [CardSystem.cs](https://github.com/keeeery/Arcanist/blob/main/Assets/02.%20Scripts/04.%20CardSystem/CardSystem.cs), [InventoryWindow.cs](https://github.com/keeeery/Arcanist/blob/main/Assets/02.%20Scripts/06.%20Inventory/InventoryWindow.cs), [RewardController.cs](https://github.com/keeeery/Arcanist/blob/main/Assets/02.%20Scripts/08.%20Reward/RewardController.cs).
 
-### 4.2 핵심 기능 — 편성 규칙
+### 4.2 편성 규칙
 
 소스 기본값은 최소 6장, 덱 비용 8~14, 최대 20장입니다.
 씬의 실제 값은 Inspector에 저장된 설정을 따릅니다.
@@ -575,7 +617,7 @@ InventoryWindow는 선택(`InventorySelection`), 정렬(`InventoryCardSorter`), 
 
 ![전체 카드와 플레이어 카드 덱 편성 화면(최소 카드 수·마력 조건 표시)](images/deck-inventory.png)
 
-### 4.3 핵심 기능 — 보상 추첨
+### 4.3 보상 추첨
 
 보유 카드와 같은 보상 화면에서 이미 뽑힌 카드는 제외합니다.
 추첨은 `RewardCardSelector`가 담당하고, 남은 카드 각각에 등급 가중치를 부여합니다.
@@ -601,7 +643,7 @@ foreach (CardData card in candidates)
 
 ![방 클리어 후 가중치에 의해 무작위로 추첨된 3장 중 하나를 고르는 보상 선택 화면](images/reward-selection-zoom.png)
 
-### 4.4 세부 구현
+### 4.4 전체 카드 목록과 더블 클릭·드래그 드롭 편성
 
 #### 클릭·더블 클릭·끌어 놓기 편성
 
@@ -641,6 +683,10 @@ Tooltip CanvasGroup은 raycast를 막지 않으며, 슬롯이 비활성화되거
 
 ### 4.5 고민과 선택
 
+처음에는 `CardSystem`이 보유 카드와 덱 목록을 자기 안에 따로 가지고, 나중에 저장·보상 같은 외부 시스템이 그 목록을 넣어 주는 구조로 두었습니다. `PlayerInventory`에 변경 이벤트는 있었지만 `CardSystem`은 이를 구독하지 않았습니다.
+이후 `PlayerInventory`를 `DontDestroyOnLoad`로 유지하고, `CardSystem`이 그 변경 이벤트를 구독해 목록을 맞추며 카드 추가도 `PlayerInventory`를 거치도록 바꾸었습니다.
+런타임 중 씬이 이동되더라도 데이터를 서로 주고받을 수 있게 하기 위해서였습니다.
+
 보유 목록과 덱을 분리하면 수집과 전투 편성을 독립적으로 다룰 수 있습니다.
 이벤트 동기화는 UI나 보상 코드가 CardSystem 내부 목록을 직접 수정하는 경로를 줄입니다.
 보상·편성 코드는 `PlayerInventory`만 바꾸고, 덱과 화면은 각자 알림을 받아 따라오므로 새 구독자를 더해도 변경하는 쪽 코드는 그대로입니다.
@@ -648,9 +694,9 @@ Tooltip CanvasGroup은 raycast를 막지 않으며, 슬롯이 비활성화되거
 
 ---
 
-## 5. 기능 D — 플레이어 이동과 적·보스의 행동
+## 5. 플레이어 이동과 적·보스의 행동
 
-### 5.1 개요와 시스템 구조
+### 5.1 플레이어 이동, 일반 적의 순찰과 골렘의 패턴
 
 플레이어는 좌우 이동·점프(더블 점프)·대시·달리기로 움직이고, 달리는 동안에는 스태미나를 씁니다.
 일반 적(해골 병사)은 두 지점 사이를 순찰하다가 플레이어를 감지하면 쫓아오고, 공격 거리에 들어오면 멈춰 공격합니다.
@@ -679,7 +725,7 @@ Tooltip CanvasGroup은 raycast를 막지 않으며, 슬롯이 비활성화되거
 피격·기절 반응을 우선 처리하고, 일반 적 행동은 순수 C# 상태 진행으로 분리한 반면 보스는 아래 컴포넌트 상태 구조를 유지합니다.
 소스: [PlayerLocomotionRuntime.cs](https://github.com/keeeery/Arcanist/blob/main/Assets/02.%20Scripts/01.%20Player/PlayerLocomotionRuntime.cs), [EnemySensor.cs](https://github.com/keeeery/Arcanist/blob/main/Assets/02.%20Scripts/02.%20Enemy/EnemySensor.cs), [EnemyStateMachine.cs](https://github.com/keeeery/Arcanist/blob/main/Assets/02.%20Scripts/02.%20Enemy/EnemyStateMachine.cs).
 
-### 5.2 핵심 기능 — 골렘 상태 전이
+### 5.2 골렘 상태 전이
 
 `BossController.Awake()`에서 자식 `BossBaseState`들을 수집하고 `Type`을 키로 등록합니다.
 상태를 바꿀 때 이전 GameObject를 비활성화하고 다음 상태 GameObject를 활성화합니다.
@@ -706,7 +752,7 @@ Idle 기본 대기시간은 1.2초, 근접 X축 거리 기준은 3입니다.
 
 ![고대 수호 골렘의 레이저 패턴](images/boss-combat-zoom.png)
 
-### 5.3 핵심 기능 — 모션에 맞춘 공격 판정
+### 5.3 모션에 맞춘 공격 판정
 
 `BossAnimationEventReceiver`는 근접 HitBox 활성/비활성, 레이저 발사, 팔 발사를 호출하는 진입점입니다.
 근접 상태는 진입 때 판정을 끄고 애니메이션을 시작하며, 종료 때 코루틴 정지와 판정 비활성화를 수행합니다.
@@ -769,6 +815,30 @@ Patrol은 출발 지점 A와 순찰 지점 B를 번갈아 목표로 사용하며
 Attack 상태는 ‘공격 애니메이션 재생 중’만을 뜻하지 않고 추적까지 포함합니다.
 추적 범위 안에서 공격 거리에 들어오면 정지·방향 전환 후 EnemyCombat.TryAttack을 호출하고, 멀면 대상에게 이동합니다.
 
+```mermaid
+%%{init: {"state": {"rankSpacing": 48, "nodeSpacing": 56}}}%%
+stateDiagram-v2
+    direction TB
+    state "<div style=width:294px>대기</div>" as Idle
+    state "순찰" as Patrol
+    state "<div style=width:294px>추적·공격</div>" as Attack
+    Idle --> Patrol: 대기시간 경과
+    Patrol --> Idle: 목적지 도착
+    Idle --> Attack: 대상 감지
+    Patrol --> Attack: 대상 감지
+    Attack --> Idle: 감지 해제
+    note right of Attack
+        가까우면 TryAttack
+        멀면 대상에게 이동
+    end note
+%% 격자: Idle Idle | - Patrol | Attack Attack | Attack----note Attack----note
+%% 격자 열 간격: 0
+%% 화살표 Idle -> Attack: 나감=아래 들어감=위 자리=62
+%% 화살표 Attack -> Idle: 나감=위 들어감=아래 자리=86
+```
+
+이 다이어그램은 일반 적(해골 병사)이 `EnemyStateMachine`에서 Idle·Patrol·Attack 사이를 오가는 상태 전이를 도식화한 것입니다. 피격·기절 중에는 상태 머신 진행이 멈추고, 기절이 끝나면 Idle로 돌아갑니다.
+
 ![일반 적(해골 병사)이 공격을 시작하는 장면](images/monster-start-attack-crop.png)
 
 EnemyCombat은 공격 쿨타임과 2종 공격 인덱스를 선택하고 Animator 트리거를 설정합니다.
@@ -818,9 +888,9 @@ EnemyCombat은 공격 쿨타임과 2종 공격 인덱스를 선택하고 Animato
 
 ---
 
-## 6. 기능 E — 방 전환과 체크포인트 복원
+## 6. 방 전환과 체크포인트 복원
 
-### 6.1 개요와 시스템 구조
+### 6.1 체크포인트 저장과 부활
 
 방마다 체크포인트가 두 곳 있고, 플레이어가 체크포인트 영역에 들어서면 그 위치와 체력이 저장됩니다.
 죽으면 화면이 어두워지고, 위 방향키를 누르면 마지막 체크포인트에서 저장된 체력으로 부활합니다.
@@ -837,6 +907,7 @@ EnemyCombat은 공격 쿨타임과 2종 공격 인덱스를 선택하고 Animato
 인벤토리 ID 목록과 `SaveInventory` API는 정의만 되어 있고, 아직 호출·복원 경로에 연결하지 않았습니다.
 
 ```mermaid
+%%{init: {"sequence": {"actorMargin": 80}}}%%
 sequenceDiagram
     participant Check as CheckPointManager
     participant Fade as ScreenFadeManager
@@ -849,7 +920,7 @@ sequenceDiagram
     Check->>Fade: 페이드 인, 입력 복원
 ```
 
-### 6.2 핵심 기능 — 클리어한 방의 적 재생성 생략
+### 6.2 클리어한 방의 적 재생성 생략
 
 ```csharp
 // CheckPointManager.ReturnToCheckpointRoutine() — 방 클리어·플레이어만 복구 플래그로 적 생성 여부 결정
@@ -869,8 +940,43 @@ bool loadedRoom = roomManager.TryLoadRoomById(
 방은 Ready → Combat → Reward → Cleared 순서로 상태가 바뀝니다.
 적이 전멸하거나 보스가 쓰러지면 Reward가 되어 출구 잠금이 풀리고, 출구에서 보상을 고른 뒤에야 Cleared가 되어 다음 방으로 이동할 수 있습니다.
 그래서 ‘적 전멸’(`roomCleared`)과 ‘보상 완료’(`rewardObtained`)를 따로 저장하고, 복귀할 때 두 값으로 보상을 다시 받을 방과 이미 마친 방을 구분합니다(§7.4).
+일반 방은 출구에 체크포인트가 함께 있어, 보상을 받으러 출구에 도착하면 그때 `roomCleared`가 저장되고, 보상을 고르면 같은 방 체크포인트에 `rewardObtained`까지 바로 저장됩니다.
 
-### 6.3 핵심 기능 — 부활 시 체력·카드 초기화
+```mermaid
+%%{init: {"state": {"rankSpacing": 48, "nodeSpacing": 56}}}%%
+stateDiagram-v2
+    direction TB
+    state "<div style=width:134px>준비</div>" as Ready
+    state ChkEnemy <<choice>>
+    state ChkReward <<choice>>
+    state "전투" as Combat
+    state "<div style=width:134px>보상</div>" as Reward
+    state "<div style=width:134px>클리어</div>" as Cleared
+    [*] --> Ready: 방 생성
+    Ready --> ChkEnemy: 처음 입장·재도전
+    Ready --> ChkReward: 적 전멸 후 복귀
+    ChkEnemy --> Combat: 적 있음
+    ChkEnemy --> Cleared: 적 없음
+    ChkReward --> Reward: 보상 전
+    ChkReward --> Cleared: 보상 받음
+    Combat --> Reward: 적 전멸
+    Reward --> Cleared: 보상 선택
+    Cleared --> [*]: 다음 방 이동
+    note left of Reward
+        적 전멸 상태 저장
+        (roomCleared)
+    end note
+%% 격자: - root_start root_start | - Ready Ready | - ChkEnemy ChkReward | - Combat - | Reward----note Reward Reward | - Cleared Cleared | - root_end root_end
+%% 격자 열 간격: 80
+%% 화살표 ChkEnemy -> Cleared: 나감=왼쪽 들어감=왼쪽
+%% 화살표 ChkReward -> Cleared: 나감=오른쪽 들어감=오른쪽
+%% 선 메모 왼쪽: Combat -> Reward: 적 전멸 상태 전환<br>(roomCleared)
+%% 선 메모: Reward -> Cleared: 보상 획득 여부 저장<br>(rewardObtained)
+```
+
+이 다이어그램은 방의 진행 상태(Ready → Combat → Reward → Cleared)와, 전투 클리어(`roomCleared`)가 참인 상태와 보상 획득(`rewardObtained`)이 저장되는 때를 도식화한 것입니다.
+
+### 6.3 부활 시 체력·카드 초기화
 
 `CheckPointManager.ReturnToCheckpoint(Action onFadeToBlackCompleted = null)`은 bool로 요청 수락 여부를 반환합니다.
 암전 완료 후 콜백으로 Overlay를 정리하고 `timeScale`을 복원하므로, 보이는 화면에서 먼저 UI를 닫는 순서와 구분됩니다.
@@ -881,7 +987,7 @@ Animator를 재바인딩하고 체력을 복원하며 `ResetRuntimeCardsForRespa
 
 ![사망 화면 — 화면이 어두워지고, 위 방향키로 체크포인트에서 부활](images/death-panel.png)
 
-### 6.4 세부 구현
+### 6.4 Pause·Inventory·Reward의 입력 차단과 UI 연출
 
 #### 메뉴·옵션·인트로와 시간 기준
 
@@ -992,7 +1098,7 @@ protected virtual void OnDestroy()
 
 소스: [SingletonBase.cs](https://github.com/keeeery/Arcanist/blob/main/Assets/02.%20Scripts/99.%20Utilities/SingletonBase.cs), [HurtBox.cs](https://github.com/keeeery/Arcanist/blob/main/Assets/02.%20Scripts/03.%20CombatSystem/HurtBox.cs).
 
-### 7.2 체크포인트 복귀의 작업 소유와 참조 갱신
+### 7.2 이전 씬의 체크포인트로 돌아가면 첫 방부터 다시 시작
 
 1차 시연 시점에는 씬에 속한 `OverlayController`가 복귀 코루틴을 실행했고, 방을 ID로 불러오는 경로도 없었습니다. 그래서 같은 씬 안의 복귀는 동작했지만, 보스 씬에서 죽어 이전 씬의 체크포인트로 돌아가면 그 씬이 첫 방부터 다시 시작되어 체크포인트 위치·체력이 이어지지 않았습니다.
 체크포인트 복귀에서도 씬 전환을 넘어 실행할 작업과 새 씬에서 사용할 참조를 구분해야 했습니다. 복귀 흐름은 **작업의 소유자와 참조 갱신 방식**을 다음과 같이 분리했습니다.
@@ -1008,7 +1114,7 @@ protected virtual void OnDestroy()
 `ScreenFadeManager`도 루트로 분리하고 유지 객체로 설정하며, 자기 자식으로 페이드 Canvas를 관리합니다.
 즉 씬을 넘어서 완료해야 하는 코루틴은 유지 객체가 맡고, 씬에 속한 플레이어와 방은 로드 뒤 다시 찾는 구조입니다.
 
-### 7.3 체크포인트 복귀의 핵심 변경 코드
+### 7.3 복귀 작업을 관리자에 위임
 
 Overlay는 복귀 작업을 관리자에 위임하고, 암전이 끝난 뒤 실행할 UI 정리 콜백을 전달합니다.
 
@@ -1145,7 +1251,7 @@ Save(player);
 체크포인트 기능도 1차 시연까지 완성하지 못했습니다. 같은 씬 안에서는 체크포인트로 돌아왔지만, 보스 씬에서 죽어 이전 씬의 체크포인트로 돌아가면 씬이 첫 방부터 다시 시작되어 위치·체력과 방의 클리어 상태가 이어지지 않았습니다. 지금의 복귀 동작은 시연 이후 추가 작업으로 마무리한 것입니다(§8.2).
 여러 시스템을 연결하는 경험을 얻었지만, 개별 시스템의 구현을 넘어 이를 반복해서 활용할 콘텐츠와 진행 흐름까지 완성하는 것이 과제로 남았습니다.
 
-스킬을 사용할 때 강력한 느낌과 타격감을 전달하기 위해 파티클 시스템과 조명을 활용했습니다. Shader Graph를 활용한 화면 흑백 반전은 강공격을 시각적으로 강조하기 위한 연출이었습니다.
+스킬을 사용할 때 강력한 느낌과 타격감을 전달하기 위해 파티클 시스템과 조명을 활용했습니다. Shader Graph를 활용한 화면 흑백 반전은 전설 등급 카드 ‘죽음 선고’를 시각적으로 강조하기 위한 연출이었습니다(§2.5).
 플레이어들에게 시스템의 완성도와 연출을 칭찬받은 점은 만족스러웠고, 구현과 연출에 들인 노력을 알아봐 준 경험이 기억에 남습니다.
 
 가장 큰 성장은 **여러 시스템을 직접 구현하고 하나의 게임으로 연결하면서 Unity의 오브젝트 생명주기와 시스템 간 연결 구조를 이해하게 된 점**입니다. 개별 기능을 만드는 데서 나아가, 씬 전환과 게임 진행 속에서 각 객체와 시스템이 어떻게 이어져 동작하는지 경험할 수 있었습니다.

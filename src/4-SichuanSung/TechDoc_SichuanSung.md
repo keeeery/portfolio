@@ -6,10 +6,10 @@
 
 | 구분 | 시스템 | 핵심 내용 | 절 |
 |---|---|---|---|
-| 핵심 A | 연결 경로 판정 | 위치·방향·회전 횟수를 함께 관리하는 큐 기반 탐색 | §2 |
-| 핵심 B | 보드 생성과 재배치 | 짝을 이루는 카드 구성, 연결 가능한 쌍 검사와 자동 셔플 | §3 |
-| 보조 C | 입력과 시각 피드백 | 카드 선택, 연결선 표시, 제거 애니메이션과 처리 중 입력 제한 | §4 |
-| 보조 D | 진행·평가·기록 | 시작·재시작, 타이머와 별 평가, PlayerPrefs 최고 기록 | §5 |
+| 핵심 | 맞는 짝 판정 | 위치·방향·회전 횟수를 함께 관리하는 큐 기반 탐색 | §2 |
+| 보조 | 카드 선택과 제거 연출 | 카드 선택, 연결선 표시, 제거 애니메이션과 처리 중 입력 제한 | §3 |
+| 핵심 | 보드 생성과 자동 재배치 | 짝을 이루는 카드 구성, 연결 가능한 쌍 검사와 자동 셔플 | §4 |
+| 보조 | 게임 진행·결과·최고 기록 저장 | 시작·재시작, 타이머와 별 평가, PlayerPrefs 최고 기록 | §5 |
 
 ---
 
@@ -113,7 +113,7 @@ classDiagram
 
 ---
 
-## 2. 기능 A — 맞는 짝 판정
+## 2. 맞는 짝 판정
 
 ### 2.1 개요와 구조
 
@@ -129,7 +129,7 @@ classDiagram
 | `IsDeadlocked()` | 현재 연결 가능한 같은 ID 쌍이 없으면 true |
 | `LastPath` | 시작부터 끝까지 표시할 격자 좌표 목록 |
 
-### 2.2 핵심 기능 — 꺾은 횟수를 세는 경로 탐색
+### 2.2 꺾은 횟수를 세는 경로 탐색
 
 ```csharp
 // PathFinder.CanConnect() — 위치·방향·회전 수마다 따로 두는 방문 기록과 역추적용 부모
@@ -156,9 +156,34 @@ if (card != null && !(nx == end.x && ny == end.y))
 목표 카드는 장애물 검사에서 통과를 허용하므로 끝점에 카드가 있다는 이유로 경로가 막히지 않습니다.
 이 탐색의 목적은 최단 경로가 아니라 **규칙을 만족하는 경로가 있는지**이며, 처음 찾은 경로를 반환합니다.
 
+```mermaid
+%%{init: {"flowchart": {"padding": 8, "wrappingWidth": 260}}}%%
+flowchart TB
+    Prep["시작 카드의 네 방향을<br>회전 수 0으로 큐에 넣기"] --> Q{"큐에 상태가 남았는가"}
+    Q -->|아니오| Fail(["연결 불가"])
+    Q -->|예| Pop["상태 꺼내기 (위치·방향·회전 수)<br>다음 칸으로"]
+    Pop --> Block{"다른 카드나 보드<br>끝에 막혔는가"}
+    Block -->|예 · 중단| Q
+    Block -->|아니오| Goal{"목표 카드에 닿았는가"}
+    Goal -->|예| Success(["경로 저장 후<br>연결 가능"])
+    Goal -->|아니오| Turn{"회전 수가 2 미만인가"}
+    Turn -->|예| Add["다른 세 방향을<br>회전 수 + 1로 큐에 추가"]
+    Turn -->|아니오| Next["같은 방향<br>다음 칸으로"]
+    Add --> Next
+    Next --> Block
+%% 격자 열 간격: 0
+%% 격자: Prep - - | Q Fail - | Pop - - | Block - - | Goal Success - | Turn - Next | Add - -
+%% 화살표 Q -> Fail: 나감=오른쪽 들어감=왼쪽
+%% 화살표 Block -> Q: 나감=왼쪽 들어감=왼쪽
+%% 화살표 Add -> Next: 나감=오른쪽 들어감=아래
+%% 화살표 Next -> Block: 나감=위 들어감=오른쪽
+```
+
+이 다이어그램은 `PathFinder.CanConnect`가 위치·방향·회전 수 상태를 큐로 넓혀 가며 두 번 이하로 꺾어 이어지는 경로를 찾는 순서를 도식화한 것입니다.
+
 ![보드 위쪽 영역을 통해 연결된 두 카드](images/path-border.png)
 
-### 2.3 핵심 기능 — 판정 경로 복원과 연결선 표시
+### 2.3 판정 경로 복원과 연결선 표시
 
 `SavePath`는 부모 상태를 역으로 따라간 뒤 순서를 뒤집고,
 `CompressPath`는 방향이 바뀌는 지점을 남겨 표시 목록을 줄입니다.
@@ -181,7 +206,7 @@ if (card != null && !(nx == end.x && ny == end.y))
 
 ---
 
-## 3. 기능 B — 카드 선택과 제거 연출
+## 3. 카드 선택과 제거 연출
 
 ### 3.1 선택 흐름
 
@@ -197,7 +222,7 @@ secondCard = null;
 firstCard.Select();
 ```
 
-### 3.2 핵심 기능 — 연결선을 먼저 보여준 뒤 제거
+### 3.2 연결선을 먼저 보여준 뒤 제거
 
 ```mermaid
 sequenceDiagram
@@ -244,7 +269,7 @@ sequenceDiagram
 
 ---
 
-## 4. 기능 C — 보드 생성과 자동 재배치
+## 4. 보드 생성과 자동 재배치
 
 ### 4.1 보드 생성
 
@@ -261,7 +286,7 @@ for (int i = 0; i < pairCount; i++)
 }
 ```
 
-### 4.2 핵심 기능 — 이을 짝이 없을 때의 그림 재배치
+### 4.2 이을 짝이 없을 때의 그림 재배치
 
 `IsDeadlocked`는 남은 카드에서 같은 ID의 쌍만 골라 `CanConnect`를 호출하고, 한 쌍이라도 연결되면 즉시 끝냅니다.
 연결 가능한 쌍이 없으면 남은 카드의 **위치는 그대로 두고 ID만 섞습니다.**
@@ -298,7 +323,7 @@ while (PathFinder.Instance.IsDeadlocked());
 
 ---
 
-## 5. 기능 D — 게임 진행·결과·최고 기록 저장
+## 5. 게임 진행·결과·최고 기록 저장
 
 단일 씬 안에서 시작 화면 → 카운트다운 → 보드 준비 → 플레이 → 결과 → 재시작으로 이어집니다.
 재시작은 씬 재로드 대신 상태·UI·보드를 초기화하는 방식입니다.
@@ -333,11 +358,42 @@ if (bestRecord == 0f || clearTime < bestRecord)
 
 소스: [GameManager.cs](https://github.com/keeeery/Unity_2D_SichuanSung/blob/main/Assets/SichuanSung/Scripts/GameManager.cs), [UIManager.cs](https://github.com/keeeery/Unity_2D_SichuanSung/blob/main/Assets/SichuanSung/Scripts/UIManager.cs).
 
-#### 고민과 선택 — 진행 흐름을 상태 머신 대신 bool과 코루틴으로
+#### 진행 흐름을 상태 머신 대신 bool과 코루틴으로
 
 진행은 시작 화면 → 카운트다운 → 보드 준비 → 플레이 → 결과 → 재시작의 여섯 단계이고,
 `GameManager`는 이를 `isGameClear`·`IsGameStarted`·`isCountingDown`·`canClick` 네 개의 bool과
 `StartGameSequence`·`RestartGameSequence`·`GameOverSequence` 코루틴으로 조율합니다.
+
+```mermaid
+stateDiagram-v2
+    direction TB
+    state "<div style=width:260px;text-align:center>시작 화면</div>" as Title
+    state "<div style=width:260px;text-align:center>카운트다운</div>" as Countdown
+    state "<div style=width:260px;text-align:center>보드 준비</div>" as Board
+    state "<div style=width:260px;text-align:center>플레이</div>" as Play
+    state "<div style=width:260px;text-align:center>결과</div>" as Result
+    state "<div style=width:260px;text-align:center>재시작</div>" as Restart
+    Title : <div style=text-align#58;center>모든 bool = false<br>1초 뒤 canClick = true</div>
+    Countdown : <div style=text-align#58;center>isCountingDown = true<br>canClick = false</div>
+    Board : <div style=text-align#58;center>CreateBoard()<br>ShuffleRemainCards()</div>
+    Play : <div style=text-align#58;center>IsGameStarted = true<br>isCountingDown = false</div>
+    Result : <div style=text-align#58;center>isGameClear = true<br>IsGameStarted = false<br>1초 뒤 canClick = true</div>
+    Restart : <div style=text-align#58;center>ResetGameState()<br>ClearBoard()</div>
+    [*] --> Title: 씬 시작
+    Title --> Countdown: 클릭 → StartGameSequence
+    Countdown --> Board: 3·2·1 표시 (각 0.5초)
+    Board --> Play: 준비 끝
+    Play --> Result: 카드 모두 제거<br>→ 클리어
+    Play --> Result: 120초 초과<br>→ GameOverSequence
+    Result --> Restart: 클릭 → RestartGameSequence
+    Restart --> Countdown: StartGameSequence
+%% 격자: root_start | Title | Countdown | Board | Play | Result | Restart
+%% 화살표 Restart -> Countdown: 나감=오른쪽 들어감=오른쪽 거리=110
+%% 화살표 Play -> Result: 간격=40%
+%% 선 글자: 한 줄
+```
+
+이 다이어그램은 `GameManager`가 bool 네 개와 코루틴으로 조율하는 시작 화면 → 카운트다운 → 보드 준비 → 플레이 → 결과 → 재시작 진행 흐름을 도식화한 것입니다. 재시작은 시작 화면이 아니라 카운트다운으로 돌아갑니다.
 
 처음 끝까지 만들어 본 게임이었기 때문에, 당시 다룰 수 있던 bool과 코루틴으로 진행 흐름을 구성했습니다.
 지금 돌아봐도, 단계가 여섯 개뿐이고 씬도 하나인 게임에 상태 머신을 따로 두는 것은 규모에 비해 과하다고 판단합니다.

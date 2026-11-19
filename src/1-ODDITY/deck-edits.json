@@ -9,7 +9,7 @@
       "tab": "",
       "title": {"text": "에디터 도구로 한 번에 맞춘 UI", "verbatim": true},
       "lead": {"text": "초반에 UI 규칙을 정하지 않아 팀원마다 기준 해상도(1920×1080·3840×2160)와 배율이 다른 창이 쌓였습니다.", "verbatim": true},
-      "sectionPath": ["8. 기능 G — UI/UX ① 화면 UI와 조작", "8.4 UI 연출 부품과 스타일 통일", "에디터 도구로 한 번에 맞춘 UI"],
+      "sectionPath": ["8. UI/UX ① 화면 UI와 조작", "8.4 UI 연출 부품과 스타일 통일", "에디터 도구로 한 번에 맞춘 UI"],
       "points": [
         {"label": "", "text": "규칙은 제가 정하고, 그 규칙을 한 번에 적용하는 에디터 도구는 AI 코딩 에이전트를 활용해 만들었습니다.", "verbatim": false},
         {"label": "", "text": "도구는 다시 실행해도 같은 결과가 되도록 이미 만든 것을 지우고 새로 만들거나, 이미 맞춰진 것은 건너뜁니다.", "verbatim": true},
@@ -28,7 +28,7 @@
       "tab": "",
       "title": {"text": "에디터 도구로 한 번에 맞춘 UI", "verbatim": true},
       "lead": null,
-      "sectionPath": ["8. 기능 G — UI/UX ① 화면 UI와 조작", "8.4 UI 연출 부품과 스타일 통일", "에디터 도구로 한 번에 맞춘 UI"],
+      "sectionPath": ["8. UI/UX ① 화면 UI와 조작", "8.4 UI 연출 부품과 스타일 통일", "에디터 도구로 한 번에 맞춘 UI"],
       "points": [],
       "visuals": [
         {"kind": "table", "n": 1, "fp": "도구|하는 일"}

@@ -44,6 +44,22 @@ flowchart TB
 - **붕괴와 매몰:** 지지 구조가 사라진 지형은 덩어리째 떨어집니다. 깔리면 피해를 받거나 매몰되고, 사망하면 그 칸에 사망 보관함이 생기며 골드 절반과 아이템을 떨어뜨립니다.
 - **지도:** 미니맵과 Tab 전체 지도에서 이미 가 본 곳과 지금 보이는 곳을 나눠 보여 줍니다.
 
+조작은 다음과 같습니다.
+
+| 동작 | 조작 |
+|---|---|
+| 이동 | A / D (벽을 오르는 중에는 W / S) |
+| 점프 | Space |
+| 벽 잡기 | Shift |
+| 채굴 | 마우스 왼쪽 버튼 누르고 있기 |
+| 사용 아이템 | 마우스 오른쪽 버튼 — 누르면 조준, 떼면 사용, 조준 중 왼쪽 클릭은 취소 |
+| 슬롯 고르기 | 숫자 1~0, 마우스 휠 |
+| 아이템 버리기 | Q 누르고 있기 |
+| 전체 지도 | Tab 누르는 동안 (휠로 확대·축소, 가운데 버튼을 끌어 이동) |
+| 채팅 | Enter 또는 T로 열기, Esc로 닫기 |
+| 메뉴 | Esc |
+| 상점 | 상점 NPC 클릭 또는 B |
+
 ### 1.2 개발 의도
 
 직접 땅을 파면서 자원을 찾는 재미와, **지형 붕괴·매몰의 위험** 때문에 긴장하며 탐험하는 경험을 주고 싶었습니다.
@@ -71,7 +87,7 @@ flowchart TB
 - **여러 덩어리가 동시에 떨어짐** → 덩어리마다 번호(`CollapseID`)와 담당 플레이어를 따로 둡니다(§3.3).
 - **떨어진 덩어리가 자리 잡자마자 다시 무너질 수 있음** → 서버가 배치를 확정한 뒤 다시 검사합니다(§3.4).
 - **땅을 파서 공간을 만들었는데 깔림이 풀리지 않음** → 물리 충돌 정보가 갱신될 때까지 기다린 뒤 다시 판정합니다(§8.2).
-- **서버가 거절한 아이템을 쓴 것처럼 보임** → 거절되면 쿨타임을 취소하고 서버 상태로 되돌립니다(§5.3).
+- **서버가 거절한 아이템을 쓴 것처럼 보임** → 거절되면 쿨타임을 취소하고 서버 상태로 되돌립니다(§5.4).
 - **이미 가 본 곳과 지금 보이는 곳이 섞임** → 탐험 기록과 현재 시야를 따로 저장합니다(§6).
 
 ### 1.3 개발 환경
@@ -97,6 +113,14 @@ flowchart TB
 청크 소유권과 연쇄 붕괴 안정화까지 연결했습니다.
 초기 맵을 시드로 공유하는 구조와 채굴 요청 정책(요청의 Revision 대조를 없애고 Batch의 Revision으로 순서를 맞추는 방식)은 강사님과 같은 개선안을 제안했고, 구현 방향은 강사님의 도움을 받았습니다(§8.1).
 서버는 수업에서 배운 ASP.NET Core WebSocket 기본 틀 위에 게임 로직을 구현했습니다.
+
+3인 팀의 역할은 다음과 같이 나눴습니다.
+
+- **나** — 맵 생성·채굴·지형 붕괴와 멀티플레이 동기화(서버 로비·패킷 처리 포함), 낙하 지형 충돌·매몰, 플레이어 조작 책임 분리, UI 스크립트(HUD 연결·로비·메뉴·설정·채팅), 탐험·시야·지도
+- **팀원 1** — 아이템·상점·곡괭이 슬롯·쿨타임·리스폰, 캐릭터 조작 초기 구현(벽 잡기·회피), 밸런스 수치
+- **팀원 2** — 그래픽·UI 그래픽·애니메이션·사운드·타격 연출, 캐릭터 이동 충돌 초기 구현, 서버 초기 구조
+
+강사님은 서버 리팩토링에서 채굴 요청의 Revision 대조를 없애는 작업과, 굴착 요청별 대기, 낙하 취소·매몰 정리를 도와주셨습니다.
 
 ### 1.5 전체 구조
 
@@ -133,9 +157,9 @@ flowchart TB
 
 ---
 
-## 2. 기능 A — 같은 시드로 모두에게 같은 맵 생성
+## 2. 같은 시드로 모두에게 같은 맵 생성
 
-### 2.1 개요와 구조
+### 2.1 같은 시드와 규칙의 절차적 맵 데이터 생성
 
 같은 시드와 규칙으로 클라이언트와 서버가 같은 맵 데이터를 절차적으로 생성합니다.
 생성 규칙은 TSV 테이블 데이터로 관리하며, 시드 프로필, 깊이 구간, 동굴, 변칙 지형 군집, 광물 테이블로 나눕니다.
@@ -184,7 +208,7 @@ Mesh는 변경된 Chunk 단위로, Collider는 별도 dirty 표시로 다시 만
 | 기반에서 분리된 그룹 탐색 | `FindFloatingGroups()` | 부유 셀 그룹 목록 |
 | 서버 확정 변경 적용 | `ApplyAuthoritativeBatch(batch, reason, out error)` | 성공 시 적용 이벤트와 지형 변경 이벤트 |
 
-### 2.3 핵심 기능 — 접속 시 같은 맵 재생성
+### 2.3 접속 시 같은 맵 재생성
 
 클라이언트는 `map_session`에서 받은 프로필·시드와 테이블 버전을 확인하고 초기 맵을 재생성합니다.
 `TerrainNetworkAdapter.FromGeneratedMap()`이 생성 결과를 Revision 0의 런타임 스냅샷으로 변환합니다.
@@ -307,6 +331,73 @@ foreach (TerrainTileDTO dto in rows)
 잘못된 값은 DTO에서 Def로 바꾸는 순간에 걸러 내고, 통과한 값만 읽기 전용 Def로 만들어 실행 중에 바뀌지 않게 막았습니다.
 다른 테이블을 참조하는 테이블은 참조 대상을 먼저 읽습니다. 예를 들어 깊이 구간은 시드 프로필·타일 테이블을 받은 뒤 `ProfileID`·`BaseTileType`이 등록되어 있는지 검사하고, 찾은 Def를 함께 담아 생성합니다.
 
+```mermaid
+%%{init: {"er": {"nodeSpacing": 40, "rankSpacing": 50}}}%%
+erDiagram
+    TerrainSeedProfileDTO ||--o{ TerrainCaveDTO : "ProfileID"
+    TerrainSeedProfileDTO ||--o{ TerrainDepthSectionDTO : "ProfileID"
+    TerrainTileDTO ||--o{ TerrainDepthSectionDTO : "BaseTileType"
+    TerrainDepthSectionDTO ||--o{ TerrainVariantClusterDTO : "ProfileID·SectionID"
+    TerrainTileDTO ||--o{ TerrainVariantClusterDTO : "VariantTileType"
+    TerrainDepthSectionDTO ||--o{ TerrainSectionMineralDTO : "ProfileID·SectionID"
+    TerrainResourceDTO ||--o{ TerrainSectionMineralDTO : "ResourceID"
+    %% 격자: TerrainSeedProfileDTO - TerrainTileDTO | TerrainCaveDTO TerrainDepthSectionDTO - | TerrainResourceDTO TerrainSectionMineralDTO TerrainVariantClusterDTO
+    %% 화살표 TerrainSeedProfileDTO -> TerrainDepthSectionDTO: 나감=아래 들어감=위
+    %% 화살표 TerrainTileDTO -> TerrainDepthSectionDTO: 나감=아래 들어감=위
+    %% 화살표 TerrainDepthSectionDTO -> TerrainVariantClusterDTO: 나감=아래 들어감=위
+    %% 격자 맞춤: 위
+    TerrainTileDTO {
+        TerrainTileType TileType PK
+        string Name
+        int MaxDurability
+        bool IsMineable
+    }
+    TerrainResourceDTO {
+        int ResourceID PK
+        string Name
+        int MaxDurability
+    }
+    TerrainSeedProfileDTO {
+        string ProfileID PK
+        string Name
+        int Width
+        int Height
+    }
+    TerrainDepthSectionDTO {
+        string ProfileID PK, FK
+        string SectionID PK
+        int SectionOrder
+        float MinDepthRatio
+        float MaxDepthRatio
+        TerrainTileType BaseTileType FK
+    }
+    TerrainSectionMineralDTO {
+        string ProfileID FK
+        string SectionID FK
+        int ResourceOrder
+        int ResourceID FK
+        float ClusterDensity
+        int MinClusterSize
+        int MaxClusterSize
+    }
+    TerrainVariantClusterDTO {
+        string ProfileID FK
+        string SectionID FK
+        int VariantOrder
+        TerrainTileType VariantTileType FK
+        float FillRatio
+    }
+    TerrainCaveDTO {
+        string ProfileID FK
+        int CaveOrder
+        float MinDepthRatio
+        float MaxDepthRatio
+        int CaveCount
+    }
+```
+
+이 다이어그램은 지형 테이블 7종(타일·자원·시드 프로필·깊이 구간·구간별 광물·변칙 군집·동굴)이 ID로 서로를 참조하는 관계를 도식화한 것입니다.
+
 소스: [TerrainTsvReader.cs](https://github.com/keeeery/Folk-Sack/blob/main/Assets/02.%20Scripts/TerrainCollapse/Data/TerrainTsvReader.cs), [TerrainTileDef.cs](https://github.com/keeeery/Folk-Sack/blob/main/Assets/02.%20Scripts/TerrainCollapse/Data/TerrainTileDef.cs), [TerrainDataTables.cs](https://github.com/keeeery/Folk-Sack/blob/main/Assets/02.%20Scripts/TerrainCollapse/Data/TerrainDataTables.cs), [TerrainTableSeedGenerator.cs](https://github.com/keeeery/Folk-Sack/blob/main/Assets/02.%20Scripts/TerrainCollapse/Generation/TerrainTableSeedGenerator.cs), [RoomClient.Terrain.cs](https://github.com/keeeery/Folk-Sack/blob/main/Assets/02.%20Scripts/Networking/RoomClient.Terrain.cs).
 
 ### 2.6 고민과 선택
@@ -352,9 +443,9 @@ AI로 빠르게 만든 프로토타입으로 붕괴 동작을 먼저 확인하�
 
 ---
 
-## 3. 기능 B — 여럿이 함께 캐고 무너뜨리는 지형
+## 3. 여럿이 함께 캐고 무너뜨리는 지형
 
-### 3.1 개요와 구조
+### 3.1 서버에서 확정하는 채굴과 낙하 배치
 
 채굴과 낙하 배치의 공유 결과는 서버에서 확정하고, 클라이언트가 순서대로 런타임 지형에 적용합니다.
 물리 청크가 정착한 시점과 서버 배치가 확정된 시점을 나누어 다중 청크와 연쇄 붕괴를 처리합니다.
@@ -490,6 +581,38 @@ if (reason == TerrainChangeReason.CollapsePlacement)
 }
 ```
 
+```mermaid
+%%{init: {"sequence": {"actorMargin": 16, "width": 120, "wrap": false}}}%%
+sequenceDiagram
+    participant O as TerrainCollapse<br/>Coordinator
+    participant M as CollapseManager
+    participant C as RoomClient
+    participant G as GameSession
+    participant T as TerrainManager
+    O->>C: CollapseStartRequested
+    C->>G: TryStartCollapse()
+    Note over G: CollapseID 발급·원본 셀 예약
+    G-->>C: TerrainCollapseStarted
+    C->>O: NotifyCollapseStarted()
+    C->>M: CreateChunk()
+    M-->>C: PlacementProposed
+    C->>C: 확정 대기 등록
+    C->>G: TryPlaceCollapse()
+    alt 검증 성공
+        G-->>C: CollapsePlacement Batch
+        C->>T: ApplyAuthoritativeBatch()
+        T-->>O: TerrainChanged
+        O->>O: ContinueAuthoritativeChain()
+        Note right of O: 새 부유 그룹이 있으면<br/>다시 낙하 시작(최대 횟수까지)
+    else 검증 실패
+        G->>G: 예약 해제
+        G-->>C: TerrainCollapseCancelled
+        C->>M: CancelChunk() · RestoreCells()
+    end
+```
+
+이 다이어그램은 떨어진 지형의 낙하 시작 요청부터 서버의 배치 확정, 확정된 배치가 반영된 뒤 이어지는 연쇄 붕괴와 검증 실패 시 원본 복원까지를 도식화한 것입니다.
+
 ### 3.5 서버 검증과 순서 보장
 
 서버 `TryExcavate()`는 장착 곡괭이 ID와 테이블의 채굴력·거리를 확인하고 내구도와 드롭을 확정합니다.
@@ -589,9 +712,9 @@ foreach (GridCoord sourceCell in sourceCells)
 
 ---
 
-## 4. 기능 C — 낙하 지형 충돌·탈출·매몰 상태
+## 4. 낙하 지형 충돌·탈출·매몰 상태
 
-### 4.1 개요와 구조
+### 4.1 낙하 청크 접촉과 매몰 상태
 
 `FallingTerrainInteraction`은 캐릭터와 낙하 청크의 접촉 결과, 탈출 위치 탐색,
 매몰 상태와 지속 피해 요청을 담당합니다.
@@ -621,7 +744,7 @@ stateDiagram-v2
 
 이 다이어그램은 `FallingTerrainInteraction`이 여러 값과 처리 순서로 나타내는 상황과 흐름을 도식화한 것입니다. 맨 아래의 끝 점은 다시 평소 상태로 돌아감을 뜻합니다.
 
-### 4.2 핵심 API — 탈출·깔림 결정과 피해 전달
+### 4.2 탈출·깔림 결정과 피해 전달
 
 | API·이벤트 | 역할 |
 |---|---|
@@ -689,7 +812,10 @@ return collisionCount < bestCollisionCount;
 
 소스: [FallingChunk.cs](https://github.com/keeeery/Folk-Sack/blob/main/Assets/02.%20Scripts/TerrainCollapse/FallingChunk.cs), [TerrainSampler.cs](https://github.com/keeeery/Folk-Sack/blob/main/Assets/02.%20Scripts/TerrainCollapse/TerrainSampler.cs), [CollapseManager.cs](https://github.com/keeeery/Folk-Sack/blob/main/Assets/02.%20Scripts/TerrainCollapse/CollapseManager.cs).
 
-#### 연동 구현 — 플레이어 이동과 지형 충돌
+#### 플레이어 이동과 지형 충돌
+
+충돌을 고려한 이동(`Collider2D.Cast`)은 팀원 2가, 벽 잡기는 팀원 1이 처음 구현했습니다.
+이후 제가 `PlayerController`에 몰려 있던 이동·충돌·생명주기·지형 상태 처리를 아래 구성 요소로 나눴습니다.
 
 `PlayerController`는 플레이어 루트의 실행 순서를 조정하고,
 입력·속도·충돌·지형 상태·생명주기를 별도 객체에 위임합니다.
@@ -718,7 +844,7 @@ Dynamic·Kinematic 낙하 청크는 이 보정 대상에서 제외해,
 플랫폼 폭 안으로 수평 위치를 제한하고 몸 전체가 경계를 지날 때까지 상태를 유지합니다.
 플랫폼 안에서 등반을 취소한 경우 아래로 통과시키는 경로도 둡니다.
 
-#### 연동 구현 — 낙하 피해와 벽 오르기
+#### 낙하 피해와 벽 오르기
 
 `FallDamageDetector`는 현재 수직 속도만으로 피해를 계산하지 않습니다.
 마지막 정적 지면의 높이와 착지 높이 차이를 타일 수로 바꾸고,
@@ -743,7 +869,7 @@ int damage = Mathf.CeilToInt(baseDamage * damageMultiplier);
 사망 후의 위치 처리는 상황에 따라 다릅니다.
 매몰이나 사망 보관함에 의해 위치가 잠겼으면 정지하고,
 그 외에는 수평 입력을 끈 채 수직 낙하만 진행할 수 있습니다.
-`RespawnController`는 지연 후 온라인에서는 리스폰 요청을 보내고,
+팀원 1이 구현한 `RespawnController`는 지연 후 온라인에서는 리스폰 요청을 보내고,
 서버 응답에서 위치·지형 상태·체력을 복구합니다.
 
 ![사망 후 처리 — 서버의 'HJ님이 사망했습니다' 채팅창 시스템 메시지](images/fall-death-chat.png)
@@ -751,6 +877,8 @@ int damage = Mathf.CeilToInt(baseDamage * damageMultiplier);
 소스: [PlayerController.cs](https://github.com/keeeery/Folk-Sack/blob/main/Assets/02.%20Scripts/Player/PlayerController.cs), [PlayerCollisionMove.cs](https://github.com/keeeery/Folk-Sack/blob/main/Assets/02.%20Scripts/Player/PlayerCollisionMove.cs), [PlayerTerrainState.cs](https://github.com/keeeery/Folk-Sack/blob/main/Assets/02.%20Scripts/Player/PlayerTerrainState.cs), [FallDamageDetector.cs](https://github.com/keeeery/Folk-Sack/blob/main/Assets/02.%20Scripts/Character/Health/FallDamageDetector.cs), [PlayerHp.cs](https://github.com/keeeery/Folk-Sack/blob/main/Assets/02.%20Scripts/Character/Health/PlayerHp.cs).
 
 #### 칠 때 흔들리는 지형 연출
+
+이 소절의 타격 흔들림(`TerrainTileHitEffect`), 균열 표시(`TerrainCrackOverlayManager`), 셀 표시 위치 이동(`TrySetCellVisualOffset()`)은 팀원 2가 구현한 부분입니다.
 
 `TerrainGridWorld.TrySetCellVisualOffset()`은 셀의 Mesh 정점·자원 표시·균열 표시 위치만 움직입니다. `TerrainGridData` 좌표와 내구도, 경계 Collider는 바꾸지 않습니다. Chunk마다 셀의 시작 정점 인덱스를 캐시하고, 연출로 바뀐 정점은 `visualDirtyChunks`에 모아 `LateUpdate()`에서 반영합니다.
 
@@ -785,27 +913,77 @@ int damage = Mathf.CeilToInt(baseDamage * damageMultiplier);
 
 ---
 
-## 5. 기능 D — 인벤토리·아이템·상점
+## 5. 인벤토리·아이템·상점
 
-### 5.1 개요와 구조
+이 장은 먼저 게임에 어떤 아이템이 있고 플레이어가 무엇을 하는지(§5.1), 아이템을 다룰 때 서버에 보내는 요청이 무엇인지(§5.2)를 한눈에 정리한 뒤, 요청별 처리를 자세히 설명합니다(§5.3~§5.6).
+
+### 5.1 아이템 구성과 역할
+
+아이템은 세 갈래입니다. 캐는 데 쓰는 **장비(곡괭이)**, 탐험을 돕는 **사용 아이템**, 캐서 모아 파는 **광물·원석**입니다.
+아이템 종류와 효과·수치는 팀원 1이 정했고(§1.4), 이 장에서 제가 다루는 부분은 이 아이템들의 수량·무게·장착 상태를 서버가 확정하고 화면에 반영하는 연결입니다.
+
+| 갈래 | 아이템 | 플레이어가 하는 일 | 인벤토리에서 |
+|---|---|---|---|
+| 장비 | 낡은·청동·은·금 채굴 키트 | 장착한 곡괭이로 타일을 캡니다. 등급이 오를수록 채굴력(1·2·4·8)과 사거리(2~3칸), 수용량 보너스(+0~100)가 커집니다 | 수량이 아니라 장착한 하나만 있고, 상점에서 더 좋은 장비로 바꿉니다 |
+| 사용 | 다이너마이트 | 던지면 3초 뒤 반경 2.5칸의 타일을 부수고, 가까운 플레이어에게도 피해를 줍니다 | 수량만큼 쓰고, 아이템마다 쿨타임이 있습니다 |
+| 사용 | 지뢰 | 설치 1.5초 뒤부터 반경 1.5칸 안에 누가 다가오면 터져, 주변 타일과 플레이어에게 피해를 줍니다 | 〃 |
+| 사용 | 포션 | 체력을 20 회복합니다 | 〃 |
+| 사용 | 탐지기 | 반경 6칸 안의 자원 위치를 파동으로 4초 동안 보여 줍니다 | 〃 |
+| 사용 | 횃불 | 설치하면 바로 켜져 어두운 지하를 밝힙니다 | 〃 |
+| 광물·원석 | 석탄·황동·은광석·금광석, 사파이어·루비·다이아몬드 원석 | 타일을 캐면 떨어지고, 지상 스폰 구역으로 돌아오면 자동으로 팔려 골드가 됩니다 | 종류마다 무게(2~5)가 있어, 무게 제한까지만 들고 다닐 수 있습니다 |
+
+골드로 장비를 바꾸고 사용 아이템을 사서 더 깊이 내려가는 것이 §1.1 게임 루프의 "판매 → 상점" 부분입니다.
+
+### 5.2 아이템 요청과 서버 전체 상태로 교체
+
+아이템을 줍고, 버리고, 팔고, 사고, 쓰는 모든 행동은 클라이언트(`RoomClient`)가 서버에 요청하고 서버가 검사해 확정합니다.
+요청과 그 역할은 아래와 같습니다.
+
+| 요청 (`RoomClient`) | 플레이어 행동 | 서버 처리 | 돌려받는 것 |
+|---|---|---|---|
+| `RequestWorldItemPickup` | 떨어진 광물·아이템 줍기 | `GameSession.TryPickup` | `InventorySnapshot` / `Error` |
+| `RequestWorldItemDrop` | 아이템 버리기 | `GameSession.TryDropWorldItem` | `InventorySnapshot` / `Error` |
+| `RequestInventorySell` | 지상 스폰 구역에서 자동 판매 | `GameSession.TrySellInventory` | `InventorySnapshot` / `Error` |
+| `RequestShop` (begin · purchase · undo) | 상점 열기 · 구매 · 구매 취소 | `GameSession.TryHandleShopRequest` | `InventorySnapshot` / `Error` |
+| `RequestUsableItemUse` | 포션 · 탐지기 사용 | `GameSession.TryUseUsableItem` | `UsableItemUsed` → `InventorySnapshot` / `Error` |
+| `RequestDynamiteThrow` · `RequestMinePlacement` · `RequestTorchPlacement` | 다이너마이트 던지기 · 지뢰 · 횃불 설치 | `DynamiteThrowPacketHandler` | 던짐·설치 방송 + `InventorySnapshot` / `Error` |
+| `RequestDynamiteExplosion` | 다이너마이트 · 지뢰 폭발 | `DynamiteExplodePacketHandler` | 지형 Batch · 체력 변경 · 폭발 방송 / `Error` |
+
+인벤토리를 바꾸는 요청의 응답은 모두 `InventorySnapshot`, 곧 서버가 확정한 인벤토리 전체 상태입니다.
+클라이언트는 바뀐 부분을 계산하지 않고 이 전체 상태로 교체합니다.
 
 ```mermaid
-%%{init: {"flowchart": {"rankSpacing": 28, "nodeSpacing": 30, "padding": 8}}}%%
-flowchart TB
-    User["획득 / 버리기 / 판매 / 구매 / 사용"] --> Req["RoomClient 요청"]
-    Req --> Server["GameSession 검증·상태 변경"]
-    Server --> Snapshot["InventorySnapshot / UsableItemUsed / Error"]
-    Snapshot --> Model["PlayerInventory / PickaxeInventory"]
-    Model -.ItemChanged.-> Presenter["PlayerInventoryHudPresenter"]
-    Presenter --> View["InventoryView / Gold / Weight"]
+%%{init: {"sequence": {"actorMargin": 20, "width": 140, "wrap": true}}}%%
+sequenceDiagram
+    participant C as RoomClient
+    participant G as GameSession
+    participant P as PlayerInventory
+    participant K as PickaxeInventory
+    participant H as PlayerInventory<br/>HudPresenter
+    participant V as InventoryView
+    C->>G: 아이템 요청 + RequestId
+    G->>G: 검증·상태 변경
+    alt 검증 성공
+        G-->>C: InventorySnapshot
+        C->>C: 요청 대기 해제
+        C->>P: ReplaceWithSnapshot()
+        P-->>H: ItemChanged
+        H->>V: Render()
+        C->>K: ApplyAuthoritativePickaxe()
+    else 검증 실패
+        G-->>C: Error(RequestId)
+        C->>C: 요청 대기 해제
+    end
 ```
+
+이 다이어그램은 획득·버리기·판매·구매·사용 요청을 서버가 검증·확정한 뒤, 받은 인벤토리 전체 상태로 수량·무게와 장착 곡괭이를 교체하고 HUD에 다시 표시하는 흐름을 도식화한 것입니다.
 
 `PlayerInventory`는 ItemID별 수량과 무게를 관리합니다.
 `ReplaceWithSnapshot()`은 서버 전체 상태를 수신해 교체하고, 실제 수량이 바뀐 아이템의 이벤트를 발생시킵니다.
 서버가 확정한 상태를 클라이언트의 로컬 무게 제한으로 거절하지 않도록 처리합니다.
 장착 곡괭이도 `EquippedPickaxeItemID`로 별도 적용합니다.
 
-### 5.2 핵심 기능 — 서버 인벤토리의 화면 표시
+### 5.3 서버 인벤토리의 화면 표시
 
 ```csharp
 // RoomClient.HandleInventorySnapshot() — 권위 스냅샷으로 인벤토리 모델 교체
@@ -821,7 +999,13 @@ localPickaxeInventory.ApplyAuthoritativePickaxe(message.EquippedPickaxeItemID);
 HUD Presenter는 `ItemChanged`를 구독해 표시 데이터를 정렬하고 `InventoryView.Render()`로 전달합니다.
 아이템 한 종류만 바뀌어도 변경 이벤트마다 전체 목록을 정렬해 다시 표시합니다.
 
-### 5.3 아이템 사용 거절과 쿨타임
+서버 스냅샷을 모델에 반영하는 경로와 `PlayerInventoryHudPresenter`는 제가 구현했습니다.
+`InventoryView`는 팀원 2가 처음 만든 뒤 제가 대부분 고쳐 썼고,
+HUD 그래픽·프리팹과 체력 바(`HealthBarView`)는 팀원 2가, 곡괭이 슬롯(`PickaxeSlotView`)과 쿨타임 표시(`ItemCooldownIndicator`)는 팀원 1이 만들었습니다.
+
+### 5.4 아이템 사용 거절과 쿨타임
+
+아이템 쿨타임(`ItemController`)은 팀원 1이 만들었고, 서버가 사용을 거절하면 예상 쿨타임을 취소하는 처리는 제가 더했습니다.
 
 온라인 사용 요청을 보낼 때 화면의 쿨타임은 먼저 시작할 수 있습니다.
 `pendingCooldowns`는 해당 요청 ID와 아이템·준비 시각을 연결합니다.
@@ -837,7 +1021,7 @@ if (message == null || string.IsNullOrEmpty(message.RequestId) ||
 itemReadyTime.Remove(pending.ItemID);
 ```
 
-### 5.4 경제 기능의 서버 확정
+### 5.5 경제 기능의 서버 확정
 
 지상 스폰 구역의 자동 판매, 사망 보관함·골드 드롭, 인벤토리 무게 제한,
 상점 구매·장비 강화·수용량 변경이 서버 인벤토리 상태와 연결됩니다.
@@ -846,7 +1030,7 @@ itemReadyTime.Remove(pending.ItemID);
 판매는 스폰 구역·생존·게임 진행 조건과 금액 overflow를 검사합니다.
 상점은 기존 장비와의 차액과 구매 기록을 서버에서 처리하고, 가격도 서버가 확정합니다.
 
-### 5.5 세부 구현
+### 5.6 세부 구현
 
 #### 장착 곡괭이와 모은 광물의 분리 집계
 
@@ -874,7 +1058,7 @@ UI의 구매 취소 표시와 서버가 허용하는 범위를 함께 맞출 필
 
 #### 팀 아이템 연동 — 사용 전 미리보기와 확정 뒤 결과
 
-아이템 고유 동작과 연출은 팀 구현을 포함하며,
+아이템마다 하는 일은 §5.1에 정리했습니다. 아이템 고유 동작과 연출은 팀 구현을 포함하며,
 온라인 경로에서는 요청 전 입력·미리보기와 서버 확정 뒤 피드백을 연결합니다.
 
 | 아이템 | 로컬 준비·표시 | 확정 결과 연결 |
@@ -925,7 +1109,7 @@ UI의 구매 취소 표시와 서버가 허용하는 범위를 함께 맞출 필
 
 소스: [GameSession.cs](https://github.com/KooHoo-Dev/3rd-TeamProject-KH-Server/blob/main/HelloServer/Game/GameSession.cs), [ItemController.cs](https://github.com/keeeery/Folk-Sack/blob/main/Assets/02.%20Scripts/Item/ItemController.cs), [PickaxeItem.cs](https://github.com/keeeery/Folk-Sack/blob/main/Assets/02.%20Scripts/Item/PickaxeItem.cs).
 
-### 5.6 고민과 선택
+### 5.7 고민과 선택
 
 | 선택 | 이유 | 확인할 제약 |
 |---|---|---|
@@ -934,22 +1118,22 @@ UI의 구매 취소 표시와 서버가 허용하는 범위를 함께 맞출 필
 | 아이템 데이터와 표시 분리 | ItemID와 공통 데이터로 슬롯·상점 표현 | 클라이언트/서버 Item 테이블 버전 일치 필요 |
 
 인벤토리는 지형 데이터에 비해 크기가 작아, 바뀐 부분만 보내지 않고 서버 스냅샷을 통째로 교체해도 문제가 없다고 판단했습니다.
-표시도 아이템 한 종류만 바뀌면 전체 목록을 `ItemID` 순으로 정렬해 다시 그립니다(§5.2).
+표시도 아이템 한 종류만 바뀌면 전체 목록을 `ItemID` 순으로 정렬해 다시 그립니다(§5.3).
 플레이어가 슬롯 순서를 직접 바꾸는 기능을 넣지 않아 지켜야 할 순서가 없으므로, 이 방식을 문제 삼지 않았습니다.
 슬롯 변경 기능을 넣지 않은 것은, 아래로 파 내려가는 플레이에서 화면 아래의 인벤토리 슬롯을 마우스로 다루게 하면 의도치 않은 클릭 실수가 나올 수 있다고 보았기 때문입니다.
 슬롯은 숫자 키(1~0) 또는 마우스 휠 스크롤로 고릅니다.
 
 ---
 
-## 6. 기능 E — 가 본 곳과 지금 보이는 곳을 보여 주는 지도
+## 6. 가 본 곳과 지금 보이는 곳을 보여 주는 지도
 
-### 6.1 개요와 구조
+### 6.1 누적 탐험 정보와 지금 관측되는 셀
 
 `ExplorationMapData`는 누적 탐험 정보를 보관하고,
 `PlayerExplorationController.CurrentObservedCells`는 지금 관측되는 셀을 보관합니다.
 미니맵과 월드 안개는 같은 지형·탐험 상태를 참조하되 서로 다른 표시 역할을 맡습니다.
 
-### 6.2 핵심 기능 — 이동·지형 변경 때만 하는 재계산
+### 6.2 이동·지형 변경 때만 하는 재계산
 
 ```csharp
 // PlayerExplorationController.RefreshPlayerVision() — 같은 셀이고 갱신 요청이 없으면 계산 생략
@@ -1020,9 +1204,9 @@ Tab 전체 지도는 프레임 Mask와 지도 콘텐츠의 RectTransform을 구�
 
 ---
 
-## 7. 기능 F — 로비부터 결과 화면까지의 흐름
+## 7. 로비부터 결과 화면까지의 흐름
 
-### 7.1 개요 — 로비와 준비 완료
+### 7.1 로비와 준비 완료
 
 로비 WebSocket은 방 목록·입장·준비·채팅·호스트 추방 등 대기 상태를 관리합니다.
 인게임 `RoomClient`는 로비 세션 정보를 적용해 게임 방에 연결합니다.
@@ -1043,6 +1227,8 @@ Tab 전체 지도는 프레임 Mask와 지도 콘텐츠의 RectTransform을 구�
 메시지 수신 스레드에서 Unity 오브젝트를 직접 수정하지 않기 위한 경계입니다.
 
 ### 7.3 세부 구현
+
+이 절의 로비·대기방·메뉴·설정·채팅·승자 표시 코드는 제가 구현했고, 이 화면들의 그래픽과 레이아웃은 팀원 2가 만들었습니다.
 
 #### 모두 준비돼야 시작하는 로비
 
@@ -1337,16 +1523,16 @@ else
 
 ### 9.1 구현 결과
 
-| 목표 | 구현 결과 | 핵심 클래스·처리 |
-|---|---|---|
-| 긴 지형 임계 구간 축소 | 상태 변경·FIFO 등록과 WebSocket 송신 분리 | `Room.ExecuteTerrainCommandAsync`·방송 큐 |
-| 셀 작업이 전체 지형 복구로 확대되는 결합 완화 | 채굴 요청의 전역 Revision 검사 제거와 변경 셀 Batch 적용 | 8.1의 과거·현재 비교 |
-| 같은 공유 상태를 기준으로 채굴 | 서버 검증과 전역 Revision Batch 적용 경로 | `TryExcavate`, `ApplyAuthoritativeBatch` |
-| 동시 낙하의 전역 단일 요청 대기 제거 | RequestId별 배치 대기 및 CollapseID별 소유권 | `RoomClient`·`TerrainCollapseCoordinator` |
-| 서버 확정 전 연쇄 재검사 방지 | 권위 모드의 물리 완료 콜백과 연쇄 검사 분리 | `TerrainCollapseCoordinator` |
-| 타일 제거와 물리 재생성 순서 보완 | 프레임 종료 대기와 물리 동기화 후 매몰 재검사 | `FallingTerrainInteraction` |
-| 아이템 거절과 HUD 상태 연결 | 요청 실패의 예상 쿨타임 취소, 권위 인벤토리 적용 | `ItemController`·`ReplaceWithSnapshot` |
-| 정지 상태의 지형 변경도 시야에 반영 | 지형 변경 플래그 기반 시야 재계산 | `PlayerExplorationController` |
+| 목표 | 구현 결과 | 핵심 클래스·처리 | 담당 |
+|---|---|---|---|
+| 긴 지형 임계 구간 축소 | 상태 변경·FIFO 등록과 WebSocket 송신 분리 | `Room.ExecuteTerrainCommandAsync`·방송 큐 | 내 기여 (강사님이 정리) |
+| 셀 작업이 전체 지형 복구로 확대되는 결합 완화 | 채굴 요청의 전역 Revision 검사 제거와 변경 셀 Batch 적용 | 8.1의 과거·현재 비교 | 강사님 |
+| 같은 공유 상태를 기준으로 채굴 | 서버 검증과 전역 Revision Batch 적용 경로 | `TryExcavate`, `ApplyAuthoritativeBatch` | 팀 (`ApplyAuthoritativeBatch`는 내 기여) |
+| 동시 낙하의 전역 단일 요청 대기 제거 | RequestId별 배치 대기 및 CollapseID별 소유권 | `RoomClient`·`TerrainCollapseCoordinator` | 내 기여 (굴착 요청별 대기는 강사님) |
+| 서버 확정 전 연쇄 재검사 방지 | 권위 모드의 물리 완료 콜백과 연쇄 검사 분리 | `TerrainCollapseCoordinator` | 내 기여 |
+| 타일 제거와 물리 재생성 순서 보완 | 프레임 종료 대기와 물리 동기화 후 매몰 재검사 | `FallingTerrainInteraction` | 내 기여 (지형 정착 뒤 매몰 정리는 강사님) |
+| 아이템 거절과 HUD 상태 연결 | 요청 실패의 예상 쿨타임 취소, 권위 인벤토리 적용 | `ItemController`·`ReplaceWithSnapshot` | 내 기여 |
+| 정지 상태의 지형 변경도 시야에 반영 | 지형 변경 플래그 기반 시야 재계산 | `PlayerExplorationController` | 내 기여 |
 
 ### 9.2 한계와 개선 과제
 
@@ -1356,7 +1542,7 @@ else
 - **Revision 누락 복구**: 미래 Batch 버퍼링만으로 영구 누락을 해결할 수 없습니다. 재접속·재동기화 시나리오 검증이 필요합니다.
 - **방송 적체**: 무제한 `Channel`의 큐 길이와 느린 연결에 대한 운영 정책을 측정해야 합니다.
 - **UI·시야 할당**: 전체 인벤토리 표시 재구성과 시야 컬렉션 생성이 있습니다. 병목 여부는 Profiler에서 판단해야 합니다.
-- **다이너마이트 로컬 지형 변경**: 서버 폭발 확정 뒤에도 로컬 지형을 다시 바꿀 수 있는 경로가 남아 있습니다(§5.5).
+- **다이너마이트 로컬 지형 변경**: 서버 폭발 확정 뒤에도 로컬 지형을 다시 바꿀 수 있는 경로가 남아 있습니다(§5.6).
 - **지형 표현 방식의 근거**: 셀마다 객체를 두던 방식의 로드 시간·프레임 저하는 팀원 환경에서 확인했지만 수치로 남기지 않았습니다(§2.6).
 - **추가 검증**: 소유자 퇴장, 늦은 확정·취소 메시지, 장시간 부하에서의 안정성 검증이 필요합니다.
 

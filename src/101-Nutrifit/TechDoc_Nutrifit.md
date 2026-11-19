@@ -5,8 +5,8 @@
 
 | 구분 | 시스템 | 핵심 내용 | 절 |
 |---|---|---|---|
-| 핵심 A | 영양소 기반 추천 | 사용자 정보·섭취 기록으로 다음 음식 후보 계산 — pandas 정제, 잔여 영양소 벡터, cosine similarity | §2 |
-| 핵심 B | 앱·서버 연동 | Android 기록을 전송하고 Flask 결과를 수신 — JSON, OkHttp 비동기 요청, Flask API | §3 |
+| 핵심 | 영양소 기반 추천 | 사용자 정보·섭취 기록으로 다음 음식 후보 계산 — pandas 정제, 잔여 영양소 벡터, cosine similarity | §2 |
+| 핵심 | 앱·서버 연동 | Android 기록을 전송하고 Flask 결과를 수신 — JSON, OkHttp 비동기 요청, Flask API | §3 |
 
 ---
 
@@ -24,12 +24,12 @@ Nutrifit은 신체 정보와 식사 기록을 바탕으로 영양소 섭취 현�
 ```mermaid
 %%{init: {"flowchart": {"padding": 8}}}%%
 flowchart TB
-    Profile["사용자 정보 입력<br>신체 정보 · 활동량 · 선호 음식"] --> Record["식사 기록<br>사진 인식 · 수동 입력"]
-    Record --> Home["홈 화면<br>권장 · 섭취 · 잔여 칼로리"]
-    Home --> Recommend["다음 식사 추천<br>남은 영양소에 맞는 음식 후보"]
+    Profile["<div style=width:184px>사용자 정보 입력<br>신체 정보 · 활동량 · 선호 음식"] --> Record["<div style=width:184px>식사 기록<br>사진 인식 · 수동 입력"]
+    Record --> Home["<div style=width:184px>홈 화면<br>권장 · 섭취 · 잔여 칼로리"]
+    Home --> Recommend["<div style=width:184px>다음 식사 추천<br>남은 영양소에 맞는 음식 후보"]
     Recommend -->|다음 식사| Record
-%% 격자: Profile Record Home | - - Recommend
-%% 화살표 Recommend -> Record: 나감=왼쪽 들어감=아래
+%% 격자: Profile | Record | Home | Recommend
+%% 화살표 Recommend -> Record: 나감=오른쪽 들어감=오른쪽 거리=60
 ```
 
 - **사용자 정보:** 키·몸무게·나이·성별·활동량으로 하루 영양소 목표를 계산하고, 선호 음식 종류는 추천 가중치에 씁니다.
@@ -69,24 +69,35 @@ flowchart TB
 | 추천 서버 | 식품 데이터 정제, 영양소 목표 계산, 코사인 유사도 추천, Flask `server.py`와 JSON 응답 |
 | Android 화면·연동 | 홈의 식사 기록 표시, 주간 통계 페이지(`CustomLineChart`·`CustomBarChart`), 두 식단 추천 UI와 서버 요청 |
 
+저장소의 커밋 기록 기준으로 나눈 팀 구성은 다음과 같습니다.
+
+| 구성원 | 맡은 작업 |
+|---|---|
+| 본인 | 식사 기록·추천 화면과 서버 요청 연결, 주간 통계 차트, 두 식단 추천 화면, Flask 서버 형식 지원과 JSON 반환, 추천 계산 코드 업로드 |
+| 팀원 1 | Autoencoder 모델 실험, README, 버튼·레이아웃 수정 |
+| 팀원 2 | 음식 사진 인식 API 연동, 사용자 정보 입력과 SQLite 저장, 선호 음식 입력, 사용자 수동 입력과 입력 데이터의 JSON 저장, 시작 화면 |
+| 팀원 3 | UI 개선 |
+
 ### 1.5 전체 구조
 
 ```mermaid
 %%{init: {"flowchart": {"rankSpacing": 28, "nodeSpacing": 30, "padding": 8}}}%%
 flowchart TB
-    Record["Android 식사 기록 · 사용자 정보"] --> Local["앱 내부 JSON"]
+    Record["Android<br>식사 기록 · 사용자 정보"] --> Local[("앱 내부 JSON")]
     Local -->|user 배열 · foods 배열| Request["OkHttp POST /recommend"]
     Request --> API["Flask 추천 API"]
-    CSV["식품영양성분 표준데이터 CSV"] --> Clean["pandas 정제 · 음식별 영양소 벡터"]
-    API --> Rank["목표량에서 섭취량 차감 · 코사인 유사도 계산"]
+    CSV[("식품영양성분<br>표준데이터 CSV")] --> Clean["pandas 정제<br>음식별 영양소 벡터"]
+    API --> Rank["목표량에서 섭취량 차감<br>코사인 유사도 계산"]
     Clean --> Rank
     Rank --> Response["Android로 추천 후보 응답"]
+%% 격자: Record - | Local - | Request CSV | API Clean | Rank - | Response -
+%% 화살표 Clean -> Rank: 나감=아래 들어감=오른쪽
 ```
 
-앱은 사진 인식과 수동 입력을 모두 내부 저장소의 식사 파일에 기록합니다. 사진 인식은 `CameraActivity`가 FoodLens SDK에서 결과를 받아 파일에 저장한 뒤 `CameraResultActivity`를 엽니다. 수동 입력은 `UserFoodCalculate`가 앱의 SQLite 음식 목록을 조회해 입력한 중량에 맞게 영양소를 계산합니다. 사용자 정보는 `UserInformActivity`가 SQLite에 저장한 뒤 `user_data.json`으로 내보냅니다.
+앱은 사진 인식과 수동 입력을 모두 내부 저장소의 식사 파일에 기록합니다. 사진 인식은 `CameraActivity`가 FoodLens SDK에서 결과를 받아 파일에 저장한 뒤 `CameraResultActivity`를 엽니다. 수동 입력은 팀원 2가 구현한 `UserFoodCalculate`가 앱의 SQLite 음식 목록을 조회해 입력한 중량에 맞게 영양소를 계산합니다. 사용자 정보는 `UserInformActivity`가 SQLite에 저장한 뒤 `user_data.json`으로 내보냅니다. `CameraActivity`·`CameraResultActivity`·`UserInformActivity`는 팀원 2가 처음 만들었고, 이후 제가 일부를 고쳤습니다.
 
 ```mermaid
-%%{init: {"flowchart": {"rankSpacing": 24, "nodeSpacing": 20, "subGraphTitleMargin": {"top": 0, "bottom": 10}, "padding": 8}}}%%
+%%{init: {"flowchart": {"padding": 8, "subGraphTitleMargin": {"top": 0, "bottom": 10}}}}%%
 flowchart TB
     Lens["FoodLens 음식 인식"]
     subgraph App["Android 앱"]
@@ -95,7 +106,7 @@ flowchart TB
         Profile["UserInformActivity"]
         Food[("food_data_*.json")]
         User[("user_data.json")]
-        Views["PostFragment · StatisticsFragment"]
+        Views["PostFragment<br>StatisticsFragment"]
         Request["CameraResultActivity<br/>RecommendFragment"]
         Camera -->|인식 기록 저장| Food
         Manual -->|수동 기록 저장| Food
@@ -106,7 +117,11 @@ flowchart TB
     end
     Lens <-->|사진 · 인식 결과| Camera
     Request <-->|POST /recommend · 응답| API["Flask · server.py"]
-    CSV["식품영양성분 표준데이터 CSV"] -->|서버 시작 시 로드| API
+    CSV[("식품영양성분<br>표준데이터 CSV")] -->|서버 시작 시 로드| API
+%% 격자: - Lens - | Manual Camera Profile | - Food User | Views - Request | - CSV API
+%% 화살표 Manual -> Food: 나감=아래 들어감=왼쪽
+%% 화살표 Food -> Views: 나감=아래 들어감=오른쪽
+%% 화살표 Food -> Request: 나감=아래 들어감=왼쪽
 ```
 
 `CameraResultActivity`는 화면에 최근 수정된 식사 파일을 표시하고, 추천을 요청할 때는 오늘 날짜의 식사 파일을 모두 합칩니다. `RecommendFragment`는 오늘 날짜로 검색된 첫 파일의 배열만 전송하며, 응답 JSON에 음식이 10개 이상 있으면 두 식단으로 나눠 표시합니다. 공개 서버의 응답 형식과 후보 수는 §4.2에 정리했습니다.
@@ -114,61 +129,69 @@ flowchart TB
 식사 파일은 저장 시각을 넣은 `food_data_yyyyMMdd_HHmmss.json` 이름을 사용하며, 최상위 값은 음식 배열입니다. `foodID`는 사진 인식 항목에, `servingSize`와 `mealType`은 수동 입력 항목에 들어갑니다. 수동 입력의 `mealType` 값은 아침·점심·저녁입니다.
 
 ```mermaid
-%%{init: {"class": {"nodeSpacing": 22, "rankSpacing": 40, "padding": 6}}}%%
-classDiagram
+%%{init: {"er": {"nodeSpacing": 22, "rankSpacing": 40}}}%%
+erDiagram
     direction LR
-    class MealFile["food_data_*.json"] {
-        <<JSONArray>>
+    UserFile["user_data.json"] {
+        JSONArray user
     }
-    class FoodItem["음식 항목"] {
-        foodName
-        nutrition
-        eatAmount
-        foodID
-        servingSize
-        mealType
+    Request["POST /recommend 요청 본문"] {
+        JSONArray user "user_data.json의 user 그대로"
+        JSONArray foods "오늘 식사 파일의 배열"
     }
-    class UserFile["user_data.json"] {
-        user 배열
+    MealFile["food_data_*.json"]
+    UserProfile["사용자 항목"] {
+        double height
+        double weight
+        int age
+        String gender "SQLite int를 문자열로"
+        int activity
+        int taste1
+        int taste2
     }
-    class UserProfile["사용자 항목"] {
-        height, weight, age
-        gender, activity
-        taste1, taste2
+    FoodItem["음식 항목"] {
+        String foodName
+        JSONObject nutrition "사진: FoodLens 키(float) · 수동: carbohydrate 등(double)"
+        float eatAmount "수동 입력은 1 고정"
+        int foodID "사진 인식만"
+        float servingSize "수동 입력만"
+        String mealType "수동 입력만 · 아침·점심·저녁"
     }
-    class Request["POST /recommend 요청 본문"] {
-        user 배열
-        foods 배열
-    }
-    UserFile "1" *--> "0..1" UserProfile : user
-    MealFile "1" *--> "0..*" FoodItem
-    UserProfile --> Request : user 배열
-    FoodItem --> Request : foods 배열
+    UserFile ||--o{ UserProfile : "user 배열"
+    Request ||--o{ UserProfile : "user 배열 · 서버는 user[0]만"
+    Request ||--o{ FoodItem : "foods 배열"
+    MealFile ||--o{ FoodItem : "최상위 음식 배열"
+%% 격자: Request - | UserProfile FoodItem | UserFile MealFile
+%% 화살표 Request -> FoodItem: 나감=오른쪽 들어감=위
+%% 격자 열 간격: 40
+%% 격자 맞춤: 위
 ```
 
 이 다이어그램은 앱 내부 JSON과 추천 요청의 구조를 도식화한 것입니다. `nutrition`은 음식 항목 안의 객체입니다. 사진 인식은 FoodLens 응답의 키를 유지하고 수동 입력은 `carbohydrate`, `fiber`, `vitaminA`, `vitaminC` 등을 사용합니다. Flask는 `user[0]`과 `foods`를 읽고 `nutrition`과 `eatAmount`로 섭취량을 차감합니다.
 
-소스는 [CameraActivity.java](https://github.com/keeeery/Nutrifit/blob/21991464c454283cf069188a4f5b7351b37b458e/app/src/main/java/com/nutrifit/CameraActivity.java#L183-L269), [UserFoodCalculate.java](https://github.com/keeeery/Nutrifit/blob/21991464c454283cf069188a4f5b7351b37b458e/app/src/main/java/com/nutrifit/UserFoodCalculate.java#L72-L119), [UserInformActivity.java](https://github.com/keeeery/Nutrifit/blob/21991464c454283cf069188a4f5b7351b37b458e/app/src/main/java/com/nutrifit/UserInformActivity.java#L193-L237), [CameraResultActivity.java](https://github.com/keeeery/Nutrifit/blob/21991464c454283cf069188a4f5b7351b37b458e/app/src/main/java/com/nutrifit/CameraResultActivity.java#L126-L188), [RecommendFragment.java](https://github.com/keeeery/Nutrifit/blob/21991464c454283cf069188a4f5b7351b37b458e/app/src/main/java/com/nutrifit/RecommendFragment.java#L57-L133), [server.py](https://github.com/keeeery/Nutrifit_Recommendation/blob/5b5e78c33435370b8980b64656b5418ba254b184/server.py#L110-L155)에서 확인할 수 있습니다.
+소스: [CameraActivity.java](https://github.com/keeeery/Nutrifit/blob/21991464c454283cf069188a4f5b7351b37b458e/app/src/main/java/com/nutrifit/CameraActivity.java#L183-L269), [UserFoodCalculate.java](https://github.com/keeeery/Nutrifit/blob/21991464c454283cf069188a4f5b7351b37b458e/app/src/main/java/com/nutrifit/UserFoodCalculate.java#L72-L119), [UserInformActivity.java](https://github.com/keeeery/Nutrifit/blob/21991464c454283cf069188a4f5b7351b37b458e/app/src/main/java/com/nutrifit/UserInformActivity.java#L193-L237), [CameraResultActivity.java](https://github.com/keeeery/Nutrifit/blob/21991464c454283cf069188a4f5b7351b37b458e/app/src/main/java/com/nutrifit/CameraResultActivity.java#L126-L188), [RecommendFragment.java](https://github.com/keeeery/Nutrifit/blob/21991464c454283cf069188a4f5b7351b37b458e/app/src/main/java/com/nutrifit/RecommendFragment.java#L57-L133), [server.py](https://github.com/keeeery/Nutrifit_Recommendation/blob/5b5e78c33435370b8980b64656b5418ba254b184/server.py#L110-L155).
 
 ---
 
-## 2. 기능 A — 부족한 영양소에 맞춘 다음 식사 추천
+## 2. 부족한 영양소에 맞춘 다음 식사 추천
 
-### 2.1 개요와 시스템 구조
+### 2.1 후보 테이블과 코사인 유사도 비교
 
 서버는 시작할 때 CSV를 한 번 읽어 음식명·대분류와 11개 영양소를 선택하고,
 결측 행을 제거한 뒤 같은 대표식품명·대분류의 영양소 평균으로 후보 테이블을 만듭니다.
 요청이 오면 사용자 정보로 목표 영양소를 계산하고, 섭취량을 차감한 남은 영양소와 각 음식의 코사인 유사도를 비교합니다.
 
 ```mermaid
-%%{init: {"flowchart": {"rankSpacing": 28, "nodeSpacing": 30, "padding": 8}}}%%
+%%{init: {"flowchart": {"padding": 8}}}%%
 flowchart TB
-    User[신체 정보·활동량] --> Target[11개 영양소 목표]
-    Food[섭취 영양소 × eatAmount] --> Remain[목표에서 차감·0 이상 제한]
+    User["<div style=width:200px>신체 정보·활동량"] --> Target["<div style=width:200px>11개 영양소 목표"]
+    Food["<div style=width:200px>섭취 영양소 × eatAmount"] --> Remain["<div style=width:200px>목표에서 차감·0 이상 제한"]
     Target --> Remain
-    Remain --> Weight[성분별 가중치]
-    Weight --> Score[음식 벡터와 cosine similarity]
-    Score --> Group[음식군별 최대 1개 선택]
+    Remain --> Weight["<div style=width:200px>성분별 가중치"]
+    Weight --> Score["<div style=width:200px>음식 벡터와 cosine similarity"]
+    Score --> Group["<div style=width:200px>음식군별 최대 1개 선택"]
+%% 격자: - User | Food Target | - Remain | - Weight | - Score | - Group
+%% 화살표 Food -> Remain: 나감=아래 들어감=왼쪽
 ```
 
 ```python
@@ -179,7 +202,7 @@ nutrition_data_grouped = nutrition_data.groupby(
 ).mean()
 ```
 
-### 2.2 핵심 기능 — 남은 영양소 계산과 비슷한 음식 찾기
+### 2.2 남은 영양소 계산과 비슷한 음식 찾기
 
 | API | 입력 | 결과 |
 |---|---|---|
@@ -218,16 +241,19 @@ return df.sort_values(by="추천점수", ascending=False).head(1)
 | 고민 | 대안 | 선택과 이유 | 남은 한계 |
 |---|---|---|---|
 | 무엇을 기준으로 추천할까 | 사용자 평점 이력 기반 협업 필터링 | 음식 영양소 벡터의 유사도 — 평점 이력이 없어도 계산 가능 | kcal·g·mg 원본 단위의 스케일 영향 |
-| 모델을 쓸까 | Autoencoder로 음식 특징 학습 (별도 실험 작성) | 수치 벡터 유사도를 API 경로로 사용 — 실험의 인코더 출력은 추천에 연결하지 않음 | 추천 품질은 미측정 |
+| 모델을 쓸까 | Autoencoder로 음식 특징 학습 (팀원 1의 별도 실험) | 수치 벡터 유사도를 API 경로로 사용 — 실험의 인코더 출력은 추천에 연결하지 않음 | 추천 품질은 미측정 |
 | 식사를 어떻게 구성할까 | 식사 전체의 중량·열량을 제약식으로 최적화 | 음식군별 1개 선택 — 밥·국·반찬 형태로 구성 | 다섯 음식 합의 영양소 총합은 최적화하지 않음 |
 
 ![model_based_filtering.py(Autoencoder 실험) 실행 결과 — 10 epoch 학습 손실과 추천 음식](images/console-autoencoder.png)
+
+Autoencoder 실험(`model_based_filtering.py`)은 팀원 1이 작성했습니다.
+이 실험 안에서도 인코더 출력은 추천에 쓰이지 않았고, 추천 점수는 정규화한 원래 영양소 벡터의 코사인 유사도로 계산했습니다.
 
 소스: [server.py](https://github.com/keeeery/Nutrifit_Recommendation/blob/main/server.py).
 
 ---
 
-## 3. 기능 B — 앱과 추천 서버 연결·주간 통계
+## 3. 앱과 추천 서버 연결·주간 통계
 
 ### 3.1 요청과 응답
 
@@ -250,6 +276,34 @@ Request request = new Request.Builder()
 응답 배열은 밥(0·1)·국(2·3)·반찬(4~9) 순서로 두 개씩 와야 하며, 짝수 번째를 식단 1, 홀수 번째를 식단 2로 나눕니다.
 오류 응답은 앱에서 성공 여부를 확인해 Toast로 알립니다.
 
+```mermaid
+%%{init: {"sequence": {"actorMargin": 20, "width": 120, "messageMargin": 24, "noteMargin": 8, "diagramMarginX": 8, "diagramMarginY": 8}}}%%
+sequenceDiagram
+    participant RF as RecommendFragment
+    participant OK as OkHttp
+    participant S as Flask 서버<br/>server.py
+    participant UI as 두 식단 UI
+    RF->>RF: 요청 본문 만들기<br/>user + 오늘 식사 → merged
+    RF->>OK: 비동기로 요청<br/>enqueue()
+    OK->>S: POST /recommend (merged JSON)
+    S->>S: 하루 목표 영양소 계산<br/>calculate_daily_intake(user[0])
+    S->>S: 먹은 만큼 목표에서 빼기<br/>nutrition × eatAmount, 0 아래는 0
+    S->>S: 음식군마다 점수가 가장 높은 1개 고르기<br/>recommend_foods() → select_top()
+    alt 성공
+        S-->>OK: 추천 음식 JSON 배열
+        OK-->>RF: onResponse()
+        RF->>RF: UI 스레드에서 화면에 표시<br/>displayRecommendations()
+        RF->>UI: 짝수 번째(0·2·4·6·8) → 식단 1
+        RF->>UI: 홀수 번째(1·3·5·7·9) → 식단 2
+    else 실패
+        S-->>OK: 500 에러 응답
+        OK-->>RF: onFailure() 또는 실패 응답
+        RF->>RF: UI 스레드에서 Toast로 알림
+    end
+```
+
+이 다이어그램은 앱이 사용자 정보와 식사 기록을 서버에 보내고, 받은 추천을 두 식단으로 나누어 표시하는 요청과 응답의 순서를 도식화한 것입니다.
+
 ![추천 화면 — 서버 응답을 추천 식단 두 개로 나누어 표시한 화면](images/recommend.png)
 
 ### 3.2 주간 통계 차트
@@ -264,6 +318,8 @@ nutritionChart.setData(labels, nutritionData);
 
 `CustomLineChart`는 Canvas·Path로 선과 점, 평균선을 그리고, 터치한 위치와 가까운 날의 kcal 말풍선을 화면 안쪽으로 보정해 띄웁니다.
 `CustomBarChart`는 하루 탄수화물·단백질·지방의 g 구성비를 누적 막대로 그립니다.
+앱의 의존성에는 차트 라이브러리가 한 번도 추가되지 않았고, 두 차트는 직접 그립니다.
+막대의 x 위치는 꺾은선과 같은 `padding + i * xStep`으로 계산해, 두 차트가 같은 날짜를 같은 x 위치에 놓습니다.
 
 ![주간 통계 — 터치한 날의 kcal 말풍선과 평균선, 3대 영양소 구성비 누적 막대](images/weekly-stats.png)
 
@@ -297,3 +353,13 @@ nutritionChart.setData(labels, nutritionData);
 
 이 프로젝트는 데이터 계산을 API로 제공하고 클라이언트에서 사용하도록 연결한 경험입니다.
 앱과 서버를 나누면 화면과 계산을 따로 바꿀 수 있지만, 그만큼 입력 키·배율·MIME·결과 배열 순서 같은 **계약을 양쪽에서 함께 관리해야 한다**는 점이 남았습니다.
+
+### 4.4 두 식단 칸에 같은 추천이 들어가던 문제
+
+| 단계 | 내용 |
+|---|---|
+| 고치기 전 | 추천 화면에는 식단 칸이 두 개 있었지만, 두 칸 모두 같은 결과(같은 밥·국·반찬)로 채워졌습니다. |
+| 고친 방법 | 서버 결과 10개를 받아 짝수 번째(0·2·4·6·8)는 식단 1, 홀수 번째(1·3·5·7·9)는 식단 2로 나눴습니다. 결과가 10개보다 적으면 표시하지 않고, 「추천 없음」으로 온 음식은 빈칸으로 둡니다. |
+| 결과 | 시연 영상(2025.06.16)의 추천 화면에 서로 다른 두 식단이 표시됩니다(§4.2). |
+
+소스: [두 가지 식단 추천 변경 커밋](https://github.com/keeeery/Nutrifit/commit/bcb61d40f72cb790dc1dad6255bad8436bf45521).
