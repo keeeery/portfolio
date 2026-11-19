@@ -382,6 +382,12 @@ try { window.mermaid?.initialize({ startOnLoad: false }); } catch (_) { /* */ }
       const ortho = PF.orthoEdges?.(svg, fig._mmdSrc);                    // 화살표를 수직·수평 직선 + 둥근 모서리로(원문 %% 화살표 줄로 고르기)
       if (fig._mmdSrc.includes('%% folk-sack-architecture')) PF.routeFolkSackTerrain?.(svg);
       if (!ortho) PF.gatherFanIn?.(svg);                                  // 곡선 그대로인 그림: 한 상자로 모이는 화살표를 한 변 가운데로
+      // 가운데 맞춤 글자(선 글자·흐름도 칸 글자): Mermaid는 글자 폭만 한 칸(table-cell)을 foreignObject 왼쪽에 둠.
+      //   페이지에서 그림이 줄면 브라우저 최소 글자 크기 때문에 글자가 넓게 그려지고 그 폭으로 상자를 잡아서,
+      //   크게 보기(실제 크기)에서는 글자가 상자보다 좁아져 왼쪽으로 쏠림 → 칸을 상자 폭에 채우고 그 안에서 가운데로
+      svg.querySelectorAll('foreignObject > div').forEach((d) => {
+        if (d.style.textAlign === 'center' && d.style.display === 'table-cell') Object.assign(d.style, { display: 'block', width: '100%' });
+      });
       const natural = svg.viewBox?.baseVal?.width || parseFloat(svg.style.maxWidth) || 0;
       if (natural) { svg.setAttribute('width', String(Math.ceil(natural))); svg.style.maxWidth = '100%'; svg.removeAttribute('height'); }
       svg.dataset.naturalWidth = String(natural);
@@ -463,6 +469,20 @@ try { window.mermaid?.initialize({ startOnLoad: false }); } catch (_) { /* */ }
       const hit = e.target.closest('.mmd-zoom') || (!e.target.closest('a') && e.target.closest('.mmd-screen'));   // 다이어그램 안 링크(click)는 그대로 열림
       if (hit) { const fig = hit.closest('.mmd'), svg = fig.querySelector('.mmd-screen svg'); if (svg) zoom({ svg, caption: fig.dataset.label }); }
     });
+    // 다이어그램 원문 패널: 그림 폭(fit-content)이 아니라 본문 칸 폭(코드 블록과 같은 폭·위치)으로 펼침
+    const sizeSrc = (d) => {
+      const pre = d.querySelector(':scope > pre');
+      if (!pre) return;
+      if (!d.open) { pre.style.width = pre.style.marginLeft = ''; return; }
+      const md = d.closest('.md'), cs = getComputedStyle(md), r = md.getBoundingClientRect();
+      const inner = md.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight);
+      const measure = parseFloat(cs.getPropertyValue('--measure')) * parseFloat(getComputedStyle(document.documentElement).fontSize) || inner;
+      const colW = Math.min(measure, inner), colL = r.left + parseFloat(cs.paddingLeft) + (inner - colW) / 2;
+      pre.style.width = `${colW}px`;
+      pre.style.marginLeft = `${colL - d.getBoundingClientRect().left}px`;
+    };
+    doc.addEventListener('toggle', (e) => { if (e.target.matches?.('.mmd-src')) sizeSrc(e.target); }, true);
+    addEventListener('resize', () => doc.querySelectorAll('.mmd-src[open]').forEach(sizeSrc));
     // 코드 오른쪽 흐림 표시: 가로로 더 있을 때만
     const fade = (pre) => pre.classList.toggle('fade-r', pre.scrollWidth > pre.clientWidth + 1 && pre.scrollLeft + pre.clientWidth < pre.scrollWidth - 1);
     const pres = [...doc.querySelectorAll('pre')].filter((x) => !x.closest('.mmd-src'));

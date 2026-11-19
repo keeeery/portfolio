@@ -244,37 +244,65 @@ const PF = (() => {
     linksPop(rail);
   }
 
-  // ── 좁은 화면(<1280px) [바로가기]: 아래 빠른 이동 캡슐([목차] [바로가기], 목차가 사라지는 <1280px)이 같은 폭 그대로 위로 늘어나며 그 안 위쪽에 오른쪽 칸 '바로가기' 카드의 링크가 나타남
-  //   (누를 때마다 그때의 링크를 복사 — 자기소개서 PDF는 늦게 채워짐). 바깥 누르기·Esc·링크 누르기·넓은 화면으로 바뀌면 다시 줄어듦. 모양·움직임은 doc.css '빠른 이동 캡슐'
+  // ── 좁은 화면(<1280px) 아래 떠 있는 단추: 동그란 [≡](목차 + 바로가기 창) 하나, 그 위에 동그란 [↑](맨 위로 — 위로 스크롤할 때만 빠르게 페이드 인, topCap이 켜고 끔).
+  //   [≡]를 누르면 목차 창(.toc-dialog)이 열리고, 목차 목록은 줄어든 칸 안에서 스크롤되며 그 아래에 오른쪽 칸 '바로가기' 카드의 링크가 함께 나옴
+  //   (열 때마다 그때의 링크를 복사 — 자기소개서 PDF는 늦게 채워짐. 링크가 없으면 카드도 없음). 모양은 doc.css '떠 있는 동그란 단추'
+  const FAB_ICON = {
+    menu: '<svg viewBox="0 0 20 20" width="20" height="20" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 6h12M4 10h12M4 14h12"/></svg>',
+    close: '<svg viewBox="0 0 20 20" width="20" height="20" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M5 5l10 10M15 5L5 15"/></svg>',
+    up: '<svg viewBox="0 0 20 20" width="20" height="20" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10 15.5V4.5M5 9.5l5-5 5 5"/></svg>',
+  };
   function linksPop(rail) {
-    const src = rail.querySelector('.rail-links'), fab = document.querySelector('.doc-fab');
-    if (!src || !fab) return;
-    const root = document.documentElement, narrow = matchMedia('screen and (max-width: 1279.98px)');
+    const src = rail.querySelector('.rail-links'), fab = document.querySelector('.doc-fab'), dlg = document.querySelector('.toc-dialog');
+    if (!fab) return;
+    const toc = fab.querySelector('.fab-toc');
     const word = ((s) => esc(s === 'doc.rail-links' ? '바로가기' : s))(t('doc.rail-links'));
-    const row = document.createElement('div');                        // 원래 단추 줄([목차]) + [바로가기]
-    row.className = 'fab-row';
-    row.append(...fab.children);
-    row.insertAdjacentHTML('beforeend', `<button type="button" class="fab-links" aria-expanded="false" aria-controls="pf-links-pop">${word}</button>`);
-    fab.innerHTML = `<div class="fab-more"><nav class="fab-more-in" id="pf-links-pop" aria-label="${word}" inert></nav></div>`;
-    fab.append(row);
-    const btn = row.querySelector('.fab-links'), pop = fab.querySelector('.fab-more-in');
-    const isOpen = () => fab.classList.contains('open');
-    const set = (on) => {
-      if (on) pop.innerHTML = `<div class="fab-list">${src.innerHTML}</div>`;
-      fab.classList.toggle('open', on); pop.inert = !on;
-      btn.setAttribute('aria-expanded', String(on)); root.classList.toggle('pf-links-open', on);
+    const tocWord = esc(t('name.toc')), topWord = esc(t('doc.top'));
+    if (toc) { const label = src ? `${tocWord} · ${word}` : tocWord; toc.innerHTML = FAB_ICON.menu; toc.setAttribute('aria-label', label); toc.title = label; }
+    fab.insertAdjacentHTML('afterbegin', `<a class="fab-top" href="#top" tabindex="-1" aria-label="${topWord}" title="${topWord}">${FAB_ICON.up}</a>`);
+    fab.querySelector('.fab-top').addEventListener('click', (e) => e.currentTarget.blur());
+    if (!dlg) return;
+    //   목차 창 = 화면 전체를 덮는 투명한 창(어두운 막은 ::backdrop) 안에 [≡] 위에 붙어 나오는 패널(.toc-panel) + 눌린 모양의 [≡](.toc-dlg-fab).
+    //   눌린 단추는 어두운 막 위에 아래 [≡]와 같은 자리로 다시 그리고 아이콘은 [×] — 이 단추가 닫기를 맡으므로 패널 머리의 [닫기]는 뺌.
+    //   누르면 창이 닫힘(.dlg-close — doc.js·letter.js가 닫음). 막(창 빈 곳)을 눌러도 닫힘. 창을 열면 초점은 패널 자체(autofocus — 단추에 초점 테두리가 바로 뜨지 않게, Tab으로 목차 → 링크 → [×])
+    const panel = document.createElement('div');
+    panel.className = 'toc-panel'; panel.tabIndex = -1; panel.autofocus = true;
+    panel.append(...dlg.childNodes);
+    panel.querySelector('.toc-dialog-head .dlg-close')?.remove();
+    dlg.append(panel);
+    //   (터치) 열려 있는 동안 뒤 페이지 스크롤 막기: 목차 목록(스크롤할 내용이 있을 때) 밖에서의 터치 쓸기는 무시(iPhone Safari는 html overflow:hidden만으로는 막이 뒤로 스크롤을 넘김).
+    //   마우스 휠은 막지 않음 — 마우스로 쓰는 좁은 화면은 막 위에서 뒤 페이지가 스크롤돼도 됨
+    const scroller = (e) => { const sc = e.target.closest?.('.toc-links'); return sc && sc.scrollHeight > sc.clientHeight + 1; };
+    dlg.addEventListener('touchmove', (e) => { if (!scroller(e)) e.preventDefault(); }, { passive: false });
+    //   창을 열면 지금 읽는 절(옆 목차 #toc-links의 .active — doc.js·letter.js가 스크롤에 맞춰 붙임)을 창 목차에서도 강조하고, 목록 위에서 1/3쯤에 오게 스크롤
+    //   (창은 다음 리스너가 showModal로 여므로 그린 뒤 프레임에서 잼). 열려 있는 동안 뒤 페이지가 스크롤돼(마우스 휠) 지금 절이 바뀌면 바로 따라 바꾸고,
+    //   목록에서 벗어나면 다시 보이게 스크롤(옆 목차와 같은 규칙 — 위아래 40px 안쪽)
+    const sync = (center) => {
+      const list = dlg.querySelector('.toc-links'), cur = document.querySelector('#toc-links a.active');
+      if (!list) return;
+      list.querySelectorAll('a').forEach((a) => { const on = !!cur && a.hash === cur.hash; a.classList.toggle('active', on); on ? a.setAttribute('aria-current', 'location') : a.removeAttribute('aria-current'); });
+      const a = list.querySelector('a.active');
+      if (!a) { if (center) list.scrollTop = 0; return; }
+      const top = a.offsetTop, bottom = top + a.offsetHeight;
+      if (center || top < list.scrollTop + 40 || bottom > list.scrollTop + list.clientHeight - 40) list.scrollTop = Math.max(0, top - list.clientHeight / 3);
     };
-    const fit = () => { btn.hidden = !src.textContent.trim(); };   // 링크가 없으면 단추도 없음
-    new MutationObserver(fit).observe(src, { childList: true, subtree: true }); fit();
-    btn.addEventListener('click', () => { fit(); set(!isOpen()); });
-    row.querySelector('.fab-toc')?.addEventListener('click', () => set(false));   // [목차] 서랍을 열면 늘어난 칸은 접음
-    pop.addEventListener('click', (e) => {
-      if (e.target.closest('[data-pdf-print]')) { set(false); window.print(); return; }   // 자기소개서 [PDF로 저장](복사본에는 원래 단추의 동작이 없음)
-      if (e.target.closest('a')) set(false);
+    toc?.addEventListener('click', () => requestAnimationFrame(() => sync(true)));
+    const side = document.getElementById('toc-links');
+    if (side) new MutationObserver(() => { if (dlg.open) sync(false); }).observe(side, { subtree: true, attributes: true, attributeFilter: ['class'] });
+    const closeWord = esc(t('ui.close'));
+    dlg.insertAdjacentHTML('beforeend', `<button type="button" class="toc-dlg-fab dlg-close" aria-label="${tocWord} ${closeWord}" title="${tocWord} ${closeWord}">${FAB_ICON.close}</button>`);
+    if (!src) return;
+    const card = document.createElement('section');                   // 목차 창 아래 '바로가기' 카드
+    card.className = 'toc-dialog-links';
+    card.innerHTML = `<p class="rail-title">${word}</p><nav class="rail-links" aria-label="${word}"></nav>`;
+    panel.append(card);
+    const list = card.querySelector('.rail-links');
+    const fill = () => { list.innerHTML = src.innerHTML; card.hidden = !src.textContent.trim(); };
+    toc?.addEventListener('click', fill);
+    list.addEventListener('click', (e) => {
+      if (e.target.closest('[data-pdf-print]')) { dlg.close(); window.print(); }   // 자기소개서 [PDF로 저장](복사본에는 원래 단추의 동작이 없음). 링크는 목차 창이 닫음
     });
-    document.addEventListener('click', (e) => { if (isOpen() && !fab.contains(e.target)) set(false); });
-    document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && isOpen()) { set(false); btn.focus(); } });
-    narrow.addEventListener('change', () => { if (!narrow.matches) set(false); });
+    fill();
   }
 
   function topCap(label) {
@@ -308,8 +336,10 @@ const PF = (() => {
     };
     addEventListener('scroll', crumb, { passive: true }); addEventListener('resize', crumb); withToc.addEventListener('change', crumb); crumb();
     const place = () => { if (!main) return; const r = main.getBoundingClientRect(); if (r.width) cap.style.left = `${Math.round(r.left + r.width / 2)}px`; };
-    const show = () => { if (on) return; on = true; cap.classList.add('on'); btn.removeAttribute('tabindex'); };
-    const hide = () => { if (!on) return; on = false; cap.classList.remove('on'); btn.setAttribute('tabindex', '-1'); };
+    // 좁은 화면(<1280px)은 이 캡슐 대신 아래 [≡] 위의 동그란 [↑](.fab-top)가 같은 때에 나타나고 사라짐(html.pf-top-on — doc.css)
+    const fabTop = () => document.querySelector('.fab-top');
+    const show = () => { if (on) return; on = true; cap.classList.add('on'); btn.removeAttribute('tabindex'); root.classList.add('pf-top-on'); fabTop()?.removeAttribute('tabindex'); };
+    const hide = () => { if (!on) return; on = false; cap.classList.remove('on'); btn.setAttribute('tabindex', '-1'); root.classList.remove('pf-top-on'); fabTop()?.setAttribute('tabindex', '-1'); };
     const tick = () => {
       pend = 0;
       const y = scrollY, dy = y - lastY;

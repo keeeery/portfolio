@@ -212,9 +212,12 @@ code { font-family: var(--mono); font-size: .88em; background: var(--accent-soft
 .mmd .mmd-screen a { cursor: pointer; }
 .mmd .mmd-print { display: none; }   /* 인쇄용 흰 종이 그림(@media print에서 화면용 대신 보임) */
 .mmd-bar { contain: inline-size; display: flex; flex-wrap: wrap; align-items: flex-start; justify-content: space-between; gap: 6px 12px; margin-top: 6px; font-size: 13px; }
+.mmd-src { flex: 1 1 0; min-width: 0; }   /* 원문 패널은 doc.js(sizeSrc)가 본문 칸 폭으로 펼침 — 막대 폭은 그대로, [크게 보기]는 오른쪽에 */
 .mmd-src summary { color: var(--muted); cursor: pointer; font-weight: 600; }
-.mmd-src pre { margin: 8px 0 0; max-height: 320px; overflow: auto; background: var(--code-bg); border: 1px solid var(--line); border-radius: 8px; }
-.mmd-src pre code { display: block; padding: 10px 12px; font-size: 12.5px; color: var(--body); background: none; white-space: pre; word-break: normal; }
+/* 원문 패널: 패널(pre)은 테두리·둥근 모서리만, 스크롤은 안쪽 code가 맡아 세로 스크롤바가 패널 안 여백에 들어감.
+   패널 폭을 넘는 줄은 줄바꿈(가로 스크롤 없음) */
+.mmd-src pre { margin: 8px 0 0; padding: 4px; overflow: hidden; background: var(--code-bg); border: 1px solid var(--line); border-radius: 8px; }
+.mmd-src pre code { display: block; max-height: 312px; overflow-y: auto; overflow-x: hidden; padding: 6px 8px; font-size: 12.5px; color: var(--body); background: none; white-space: pre-wrap; overflow-wrap: anywhere; word-break: normal; }
 .mmd-zoom { font: inherit; font-size: 13px; font-weight: 700; color: var(--accent-ink); background: none; border: 0; cursor: pointer; padding: 0; }
 .pf-mmd-error { font-family: var(--mono); font-size: 13px; white-space: pre-wrap; color: #F97066; }
 
@@ -223,38 +226,55 @@ code { font-family: var(--mono); font-size: .88em; background: var(--accent-soft
 .arrive { animation: pf-arrive 2s ease-out; border-radius: 6px; }
 @keyframes pf-arrive { from { background: color-mix(in srgb, var(--accent) 22%, transparent); } to { background: transparent; } }
 
-/* ── 떠 있는 단추·카드: [맨 위로] 캡슐(.cap-pill) · 아래 빠른 이동 캡슐(.doc-fab)이 같은 모양 ──
+/* ── 떠 있는 단추·카드: [맨 위로] 캡슐(.cap-pill) · 아래 동그란 단추(.doc-fab)가 같은 모양 ──
    카드색·외곽선 --line을 반투명(72%) + 흐림으로, 그림자 하나. 오른쪽 칸 카드(.rail-card)도 같은 모양. 안의 단추는 바탕·테두리 없는 글자 단추(높이 36 · 13px · 마우스를 올리면 옅은 회색) */
 :root { --float-bg: color-mix(in srgb, var(--surface) 72%, transparent); --float-blur: blur(24px) saturate(1.6); --float-line: var(--line); --float-shadow: 0 10px 30px -12px var(--shadow); --rail-bleed: 24px; }
 /* 밝은 화면: 테마 그림자색(--shadow)이 아주 옅어서(.08) 떠 있는 카드·캡슐에는 따로 조금 진한 두 겹 그림자 */
 :root[data-pf-mode="light"] { --float-shadow: 0 12px 32px -12px rgb(20 22 30 / .22), 0 2px 6px rgb(20 22 30 / .06); }
-.doc-fab { border: 1px solid var(--float-line); background: var(--float-bg); -webkit-backdrop-filter: var(--float-blur); backdrop-filter: var(--float-blur); box-shadow: var(--float-shadow); }
-.fab-row > *, .fab-more-in :is(a, button) { display: inline-flex; align-items: center; gap: 4px; min-height: 36px; padding: 0 16px; border: 0; border-radius: 999px; background: transparent;
-               font: inherit; font-size: 13px; font-weight: 700; color: var(--ink); text-decoration: none; white-space: nowrap; cursor: pointer; }
-.fab-row > :hover, .fab-more-in :is(a, button):hover, .fab-row > [aria-expanded="true"] { background: color-mix(in srgb, var(--ink) 8%, transparent); }
-.fab-row > [hidden] { display: none; }
-/* 빠른 이동 캡슐 (< 1280px — 목차가 사라지는 폭): [목차](서랍) [바로가기]. 맨 위로는 화면 위 캡슐이 맡음.
-   [바로가기]를 누르면(.open) 캡슐이 폭은 그대로(단추 줄 폭) 위로 늘어나고, 늘어난 칸(.fab-more)에 링크가 한 줄씩 나타남 — 높이는 grid 0fr → 1fr, 닫으면 거꾸로.
-   모서리 25px = 단추 줄 높이(36 + 위아래 6 + 선)의 절반이라 접혔을 때는 알약, 늘어나면 둥근 사각형.
-   이징 = 오른쪽 칸 카드와 같은 곡선(--rail-ease: 천천히 출발 → 빠르게 → 부드럽게 멈춤), 길이 .34s. 링크 글은 늘어나는 중간부터 서서히 나타나고 접힐 때는 먼저 흐려짐 */
-:root { --fab-dur: .34s; }
-.doc-fab { display: none; position: fixed; right: 16px; bottom: calc(16px + env(safe-area-inset-bottom, 0px)); z-index: 30; flex-direction: column; padding: 6px; border-radius: 25px; }
-.fab-row { display: flex; gap: 2px; }
-.fab-more { display: grid; grid-template-rows: 0fr; width: 0; min-width: 100%; transition: grid-template-rows var(--fab-dur) var(--rail-ease); }   /* 폭 0 + 최소 100% = 단추 줄 폭에 맞춤(링크 글이 캡슐을 넓히지 않음) */
-.fab-more-in { min-height: 0; overflow: hidden; display: grid; opacity: 0; transition: opacity calc(var(--fab-dur) * .5) var(--rail-ease); }
-.doc-fab.open .fab-more { grid-template-rows: 1fr; }
-.doc-fab.open .fab-more-in { opacity: 1; transition: opacity calc(var(--fab-dur) * .6) var(--rail-ease) calc(var(--fab-dur) * .3); max-height: 60vh; overflow-y: auto; }
-.fab-more-in { scrollbar-width: none; } .fab-more-in::-webkit-scrollbar { display: none; }   /* 늘어나는 동안 잠깐 생기는 스크롤 막대를 보이지 않게(링크가 아주 많으면 스크롤은 되고 막대만 숨김) */
-.fab-list { display: grid; padding-bottom: 4px; margin-bottom: 4px; border-bottom: 1px solid var(--line-2); }   /* 링크 줄과 아래 단추 줄 사이 선 */
-.fab-more-in :is(a, button) { justify-content: flex-start; width: 100%; overflow: hidden; text-overflow: ellipsis; }
-.fab-more-in .pf-save-icon { width: 11px; height: 11px; margin: 0 0 0 3px !important; stroke-width: 1.6; opacity: .8; }
-@media (prefers-reduced-motion: reduce) { .fab-more, .fab-more-in, .doc-fab.open .fab-more-in { transition: none; } }
-dialog.toc-dialog { width: min(92vw, 440px); max-height: 82vh; margin: auto; border: 1px solid var(--line); border-radius: var(--r); padding: 16px 16px 20px;
-                    background: var(--surface); color: var(--ink); box-shadow: 0 20px 60px -20px var(--shadow); }
+/* 떠 있는 동그란 단추 (< 1280px — 목차가 사라지는 폭): 아래 [≡](목차 + 바로가기 창), 그 위 [↑](맨 위로). 둘 다 지름 48px · 같은 '떠 있는 단추' 모양 · 사이 10px.
+   [↑]는 위로 스크롤할 때만(html.pf-top-on — PF.topCap이 화면 위 캡슐과 같은 때에 켬) 빠르게 페이드 인(.16s) · 아웃(.12s). 이 폭에서는 화면 위 [맨 위로] 캡슐을 쓰지 않음 */
+:root { --fab-b: 16px; }   /* 단추 줄 아래 끝 = 화면 아래에서 16px(마우스로 쓰는 좁은 화면) — 목차 창의 눌린 [×]도 같은 자리 */
+@media (pointer: coarse) { :root { --fab-b: calc(2px + env(safe-area-inset-bottom, 0px)); } }   /* 터치 기기(휴대폰): 2px — 휴대폰 Safari는 화면 아래 끝이 주소 막대 위라 바짝 내려도 여유가 있음 */
+.doc-fab { display: none; position: fixed; right: 16px; bottom: var(--fab-b); z-index: 30; flex-direction: column; align-items: center; gap: 10px; }
+.doc-fab > :is(a, button) { display: grid; place-items: center; width: 48px; height: 48px; padding: 0; border-radius: 999px; cursor: pointer; color: var(--ink); text-decoration: none; font: inherit;
+               border: 1px solid var(--float-line); background: var(--float-bg); -webkit-backdrop-filter: var(--float-blur); backdrop-filter: var(--float-blur); box-shadow: var(--float-shadow); }
+.doc-fab > :is(a, button):hover { background: color-mix(in srgb, var(--ink) 8%, var(--float-bg)); }
+.doc-fab > :is(a, button):focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+.doc-fab svg { display: block; }
+.fab-top { opacity: 0; visibility: hidden; pointer-events: none; transition: opacity .12s ease, visibility 0s .12s; }
+html.pf-top-on .fab-top { opacity: 1; visibility: visible; pointer-events: auto; transition: opacity .16s ease, visibility 0s; }
+@media (prefers-reduced-motion: reduce) { .fab-top, html.pf-top-on .fab-top { transition: none; } }
+@media screen and (max-width: 1279.98px) { .tcap { display: none !important; } }
+/* 목차 창 아래 '바로가기' 카드(PF.linksPop이 붙임): 목차 목록은 남는 높이에서 줄어들어 안쪽에서 스크롤되고, 카드는 제 높이로 늘 보임. 링크 모양은 오른쪽 칸 카드(.rail-links)와 같음 */
+.toc-dialog-links { flex: none; margin-top: 12px; padding: 14px 16px; border: 1px solid var(--line); border-radius: calc(var(--r) * .8); background: color-mix(in srgb, var(--ink) 3%, transparent); }
+.toc-dialog-links[hidden] { display: none; }
+.toc-dialog-links { padding: 12px 16px; }
+.toc-dialog-links .rail-links { display: flex; flex-wrap: wrap; gap: 8px 18px; }   /* 링크는 가로로 이어 놓고 넘치면 다음 줄로 — 카드가 목차 자리를 덜 차지하게 */
+/* 목차 창(< 1280px, 아래 [≡]로 엶): 창은 화면 전체를 덮는 투명한 틀이고 어두운 막은 ::backdrop. 그 안에
+   ① 패널(.toc-panel) — [≡] 바로 위(10px 간격)에 오른쪽 끝을 맞춰 붙어 나옴. 목차 목록은 남는 높이에서 줄어들어 안쪽에서 스크롤, 아래 '바로가기' 카드는 제 높이
+   ② 눌린 단추(.toc-dlg-fab) — 아래 [≡]와 같은 자리 · 크기로 막 위에 그려 눌려 있음(강조색 칠 + 흰 [×])을 보여 줌. 누르면 닫힘(패널 머리의 [닫기]는 없음).
+   열릴 때 패널은 오른쪽 아래(단추 쪽)에서 빠르게 커지며 나타남(.16s) */
+dialog.toc-dialog { position: fixed; inset: 0; width: auto; height: auto; max-width: none; max-height: none; margin: 0; padding: 0; border: 0; background: transparent; color: var(--ink); overflow: hidden; }
 dialog.toc-dialog::backdrop { background: rgba(0, 0, 0, .7); }
+/* 터치 기기(휴대폰): 목차 창이 열려 있는 동안 뒤 페이지는 스크롤되지 않음(어두운 막 위를 쓸어도 그대로 — 읽던 자리는 유지, 막는 동작은 PF.linksPop).
+   마우스로 쓰는 좁은 화면은 막지 않음(막 위 휠로 뒤 페이지가 스크롤됨). 목차 목록은 끝에 닿아도 뒤로 넘기지 않음 */
+@media (pointer: coarse) { html:has(dialog.toc-dialog[open]), html:has(dialog.toc-dialog[open]) body { overflow: hidden; } dialog.toc-dialog { overscroll-behavior: contain; } }
+.toc-panel { position: absolute; right: 16px; bottom: calc(var(--fab-b) + 58px); width: min(calc(100% - 32px), 440px);
+             max-height: calc(100% - var(--fab-b) - 58px - 16px - env(safe-area-inset-top, 0px)); display: flex; flex-direction: column; overflow: hidden;
+             border: 1px solid var(--line); border-radius: var(--r); padding: 16px 16px 20px; background: var(--surface); box-shadow: 0 20px 60px -20px var(--shadow);
+             transform-origin: calc(100% - 24px) 100%; }
+dialog.toc-dialog[open] .toc-panel { animation: toc-in .16s ease-out both; }
+@keyframes toc-in { from { opacity: 0; transform: translateY(8px) scale(.96); } }
+.toc-dlg-fab { position: absolute; right: 16px; bottom: var(--fab-b); display: grid; place-items: center; width: 48px; height: 48px; padding: 0; border: 1px solid transparent; border-radius: 999px; cursor: pointer;
+               background: var(--accent); color: #fff; box-shadow: var(--float-shadow), inset 0 2px 6px rgb(0 0 0 / .25); }
+.toc-dlg-fab svg { display: block; }
+.toc-dlg-fab:focus-visible { outline: 2px solid #fff; outline-offset: 3px; }
+.toc-dialog-head { min-height: 24px; }
+.toc-panel:focus { outline: none; }   /* 창을 열 때 초점만 받아 둠(보이는 테두리 없음) */   /* [닫기]가 빠진 머리 줄: '목차' 제목만 */
+@media (prefers-reduced-motion: reduce) { dialog.toc-dialog[open] .toc-panel { animation: none; } }
 .toc-dialog-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
 /* 목차 서랍: 서랍 자체는 넘치지 않고(머리는 고정) 목차 목록만 안쪽에서 스크롤 — 스크롤 막대가 둥근 모서리 밖이 아니라 서랍 안쪽 여백 안에 */
-dialog.toc-dialog[open] { display: flex; flex-direction: column; overflow: hidden; }
+dialog.toc-dialog[open] { display: block; }
 .toc-dialog .toc-links { flex: 1 1 auto; min-height: 0; overflow-y: auto; overscroll-behavior: contain; scrollbar-width: thin; padding-right: 4px; }
 .toc-dialog .toc-links a { padding: 8px 10px; font-size: 15px; }
 .toc-dialog .toc-links a.h3 { padding-left: 24px; font-size: 14px; }
@@ -291,7 +311,7 @@ dialog.lightbox::backdrop { background: rgba(10, 11, 14, .82); }
   .doc-page { grid-template-columns: var(--toc-w) minmax(0, 1fr); grid-template-areas: "toc main"; }
   .rail { display: none; }
 }
-@media screen and (max-width: 1279.98px) {          /* 좁은 화면: 한 칸 본문 + 아래 [목차] [바로가기] 캡슐 */
+@media screen and (max-width: 1279.98px) {          /* 좁은 화면: 한 칸 본문 + 아래 동그란 [↑] [≡] 단추 */
   .doc-page { display: block; }
   .toc { display: none; }
   .doc-fab { display: flex; }
@@ -409,7 +429,7 @@ dialog.lightbox::backdrop { background: rgba(10, 11, 14, .82); }
 /* ── 오른쪽 칸 열기·닫기 (PF.railToggle) ──
    단추 하나([카드 닫기 ›] ↔ [카드 열기 ‹], 화살표는 늘 글자 오른쪽)가 카드와 함께 사라지지 않고 제자리에 남아 글자만 바뀜.
    넓은 화면(≥1440px): 늘 보이던 카드를 닫음(html.pf-rail-off — localStorage 'pf-rail'에 남음) → 두 칸 배치, 다시 열면 세 칸.
-   오른쪽 칸이 없는 폭(<1440px)은 이 단추 대신 아래 빠른 이동 캡슐의 [바로가기](링크만).
+   1280px 미만은 이 단추 대신 아래 동그란 [≡] 단추의 목차 창 아래 '바로가기' 카드(링크만).
    단추 자리: ≥1280px에서 오른쪽 칸 맨 위(--rail-y: 머리 줄 아래 --side-gap · 오른쪽 끝 --pad)에 떠 있고, 카드 묶음 맨 위의 빈 줄(.rail-bar)이 그 자리를 비워 둠.
    단추 글자는 목차 제목('목차')과 같은 줄 높이 — 단추 + 카드 묶음 영역 전체가 목차와 같은 높이에서 시작.
  */
