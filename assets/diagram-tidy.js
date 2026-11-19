@@ -1,5 +1,5 @@
 // 다이어그램 다듬기 엔진 — 상세 문서(doc.html)·슬라이드(project.html)의 Mermaid 그림을 다시 그림
-//   화살표를 수직·수평 직선 + 둥근 모서리로, %% 격자 배치, %% 화살표 지목, classDiagram note for 메모, 같은 변 화살표 자리 나누기.
+//   화살표를 수직·수평 직선 + 둥근 모서리로(흐름도·클래스·상태·ER 그림), %% 격자 배치, %% 화살표 지목, classDiagram note for 메모, 같은 변 화살표 자리 나누기.
 //   common.js 다음에 불러오면 PF.orthoEdges · PF.mmdText가 생김. doc.js·project-deck.js는 PF.orthoEdges?.(svg, 원문) 처럼
 //   있을 때만 부르므로, 이 파일을 빼면 Mermaid 기본 그림으로 돌아감.
 //   /portfolio-diagram 스킬(.claude/skills/portfolio-diagram/)이 쓰는 원문 문법은 그 폴더의 SKILL.md에 정리.
@@ -14,13 +14,114 @@
   //     %% 화살표: 곡선                         이 그림은 Mermaid 곡선 그대로(예전처럼 gatherFanIn 손질)
   //     %% 화살표 보내는칸 -> 받는칸: 나감=오른쪽 들어감=오른쪽 거리=20
   //        나감·들어감 = 위/아래/왼쪽/오른쪽(그 변 가운데로), 거리 = 바깥으로 돌아가는 길을 칸에서 몇 px 떨어뜨릴지(기본 24)
+  //        자리 = 나가는 변의 어디서 나갈지(위/아래/왼쪽/오른쪽 = 그 끝에서 14px, 숫자 = 그 변 시작에서 몇 px). 받는 칸이 그 높이(폭)를 덮으면 곧게 이음
+  //        간격 = 같은 두 칸을 잇는 나란한 두 선 사이(기본 24px, 숫자 = px, 40% = 겹치는 폭의 30%·70% 자리). 이것만 적으면 길은 자동 그대로
+  //     %% 격자 열 간격: 120                    격자의 열 사이 최소 간격(기본 40px, 선 글자가 넓으면 그만큼 더)
+  //     %% 격자 맞춤: 아래 · 위                 격자의 같은 줄 칸들을 가운데 대신 아랫변(윗변)으로 맞춤
+  //     %% 선 메모: A -> B: 글<br>글          선 옆에 메모 칸 모양 상자를 띄우고 점선으로 이음(그림에 메모 칸이 있으면 그 열에 맞춤)
+  //     %% 선 글자: 한 줄                       Mermaid가 200px에서 접은 선 글자를 한 줄로 폄(<br>은 그대로)
   //        곡선 = 이 화살표만 Mermaid 곡선 그대로. 칸 이름은 원문의 id(예: Held, WallFragment). 영어 키도 됨(out= in= gap= curve)
   // 클래스 그림의 note for 줄: Mermaid에는 빼고 그리게 하고(배치에 끼지 않게), orthoEdges가 그 칸 위에 붙여 그림
   const NOTE_RE = /^\s*note\s+for\s+(\S+)\s+"([^"]*)"\s*$/gim;
+  // %% 선 메모: A -> B: 글 — 선 옆에 띄우는 메모 상자(격자 줄 간격도 그 높이만큼 벌림)
+  //   `%% 선 메모 왼쪽: A -> B: 글`이면 선 글자 왼쪽에(기본은 오른쪽)
+  const MEMO_RE = /^\s*%%\s*(?:선\s*메모|edge-note)(?:\s+(왼쪽|오른쪽|left|right))?\s*:\s*(\S+)\s*->\s*(\S+)\s*:\s*(.+?)\s*$/gim;
   const mmdText = (src = '') => (/^\s*classDiagram/m.test(src) ? src.replace(NOTE_RE, '%% (메모는 칸 위에 따로 그림)') : src);
+  // 시퀀스 그림: alt·opt·loop 구간 이름([조건]) 아래에 Mermaid가 남기는 빈 줄을 줄여, 이름과 첫 항목 사이를 GAP px로.
+  //   이름보다 아래에 있는 모든 것(글자·선·칸·세로선 끝·그림 높이)을 그만큼 위로 당김. Mermaid 설정값으로는 이 간격이 줄지 않음
+  function tightenSequence(svg, src = '') {
+    const GAP = 14;
+    const top = (el) => { try { return el.getBBox().y; } catch { return +el.getAttribute('y') || 0; } };
+    const bottom = (el) => { try { const b = el.getBBox(); return b.y + b.height; } catch { return +el.getAttribute('y') || 0; } };
+    const shiftBelow = (T, d) => {
+      const num = (el, a) => +el.getAttribute(a);
+      svg.querySelectorAll('line').forEach((l) => ['y1', 'y2'].forEach((a) => { if (num(l, a) >= T) l.setAttribute(a, num(l, a) - d); }));
+      svg.querySelectorAll('rect').forEach((r) => {
+        const y = num(r, 'y'), h = num(r, 'height');
+        if (isNaN(y) || isNaN(h)) return;
+        if (y >= T) r.setAttribute('y', y - d); else if (y + h >= T) r.setAttribute('height', Math.max(0, h - d));
+      });
+      svg.querySelectorAll('text, tspan').forEach((t) => { const y = num(t, 'y'); if (t.hasAttribute('y') && y >= T) t.setAttribute('y', y - d); });
+      svg.querySelectorAll('circle').forEach((c) => { const y = num(c, 'cy'); if (y >= T) c.setAttribute('cy', y - d); });
+      const pairs = (s) => s.replace(/(-?[\d.]+)\s*,\s*(-?[\d.]+)/g, (m, x, y) => `${x},${+y >= T ? +y - d : y}`);
+      svg.querySelectorAll('polygon').forEach((p) => p.setAttribute('points', pairs(p.getAttribute('points') || '')));
+      svg.querySelectorAll('path').forEach((p) => {
+        const dd = p.getAttribute('d') || '';
+        if (/[a-z]/.test(dd.replace(/e-?\d/g, ''))) return;                 // 상대 좌표 경로는 건드리지 않음
+        p.setAttribute('d', dd.replace(/([MLCQST])([^MLCQSTHVZA]*)/g, (m, c, rest) => {
+          const n = rest.trim().split(/[\s,]+/).filter(Boolean).map(Number);
+          for (let i = 1; i < n.length; i += 2) if (n[i] >= T) n[i] -= d;
+          return `${c}${n.reduce((a, v, i) => a + (i % 2 ? ',' : i ? ' ' : '') + v, '')} `;
+        }));
+      });
+      const vb = svg.viewBox?.baseVal;
+      if (vb && vb.height) svg.setAttribute('viewBox', `${vb.x} ${vb.y} ${vb.width} ${vb.height - d}`);
+    };
+    // %% 글자 자리: <메시지 글자> = <참여자A> <참여자B> — 그 메시지 글자를 두 참여자 세로선 사이 가운데에 두고,
+    //   사이가 글자 폭 + 양쪽 12px보다 좁으면 B 쪽부터 오른쪽 전부를 밀어 넓힘(긴 화살표의 글자가 중간 세로선에 걸칠 때)
+    const shiftRight = (T, d) => {
+      const num = (el, a) => +el.getAttribute(a);
+      const msgs = [...svg.querySelectorAll('text.messageText')], mlines = [...svg.querySelectorAll('line[class^=messageLine]')];
+      const centred = msgs.map((t, i) => { const l = mlines[i]; return l && Math.abs(num(t, 'x') - (num(l, 'x1') + num(l, 'x2')) / 2) < 1 ? l : null; });
+      svg.querySelectorAll('line').forEach((l) => ['x1', 'x2'].forEach((a) => { if (num(l, a) >= T) l.setAttribute(a, num(l, a) + d); }));
+      svg.querySelectorAll('rect').forEach((r) => {
+        const x = num(r, 'x'), w = num(r, 'width');
+        if (isNaN(x) || isNaN(w)) return;
+        if (x >= T) r.setAttribute('x', x + d); else if (x + w >= T) r.setAttribute('width', w + d);
+      });
+      svg.querySelectorAll('text, tspan').forEach((t) => { const x = num(t, 'x'); if (t.hasAttribute('x') && x >= T) t.setAttribute('x', x + d); });
+      svg.querySelectorAll('circle').forEach((c) => { const x = num(c, 'cx'); if (x >= T) c.setAttribute('cx', x + d); });
+      const pairs = (s) => s.replace(/(-?[\d.]+)\s*,\s*(-?[\d.]+)/g, (m, x, y) => `${+x >= T ? +x + d : x},${y}`);
+      svg.querySelectorAll('polygon').forEach((p) => p.setAttribute('points', pairs(p.getAttribute('points') || '')));
+      svg.querySelectorAll('path').forEach((p) => {
+        const dd = p.getAttribute('d') || '';
+        if (/[a-z]/.test(dd.replace(/e-?\d/g, ''))) return;
+        p.setAttribute('d', dd.replace(/([MLCQST])([^MLCQSTHVZA]*)/g, (m, c, rest) => {
+          const n = rest.trim().split(/[\s,]+/).filter(Boolean).map(Number);
+          for (let i = 0; i < n.length; i += 2) if (n[i] >= T) n[i] += d;
+          return `${c}${n.reduce((a, v, i) => a + (i % 2 ? ',' : i ? ' ' : '') + v, '')} `;
+        }));
+      });
+      msgs.forEach((t, i) => { const l = centred[i]; if (l) t.setAttribute('x', (num(l, 'x1') + num(l, 'x2')) / 2); });   // 화살표 가운데 글자는 늘어난 화살표의 가운데로
+      const vb = svg.viewBox?.baseVal;
+      if (vb && vb.width) {
+        svg.setAttribute('viewBox', `${vb.x} ${vb.y} ${vb.width + d} ${vb.height}`);
+        if (svg.style.maxWidth && !svg.style.maxWidth.endsWith('%')) svg.style.maxWidth = `${vb.width}px`;
+      }
+    };
+    for (const m of src.matchAll(/^\s*%%\s*(?:글자\s*자리|label-between)\s*:\s*(.+?)\s*=\s*(\S+)\s+(\S+)\s*$/gim)) {
+      const t = [...svg.querySelectorAll('text.messageText')].find((o) => o.textContent.trim() === m[1].trim());
+      const life = (n) => svg.querySelector(`line[class*="actor-line"][name="${CSS.escape(n)}"]`);
+      let a = life(m[2]), b = life(m[3]);
+      if (!t || !a || !b) continue;
+      if (+a.getAttribute('x1') > +b.getAttribute('x1')) [a, b] = [b, a];
+      const need = t.getBBox().width + 24, have = +b.getAttribute('x1') - +a.getAttribute('x1');
+      if (need > have) {                                                   // B 참여자 칸(위·아래)의 왼쪽 끝부터 밀어서 칸이 늘어나지 않게
+        const bx = +b.getAttribute('x1');
+        const lefts = [...svg.querySelectorAll('rect')].filter((r) => /actor/.test(r.getAttribute('class') || '') && +r.getAttribute('x') < bx && +r.getAttribute('x') + +r.getAttribute('width') > bx).map((r) => +r.getAttribute('x'));
+        const edge = Math.min(bx, ...lefts) - 0.5;
+        shiftRight(Math.max(edge, +a.getAttribute('x1') + 1), need - have);
+      }
+      t.setAttribute('x', (+a.getAttribute('x1') + +b.getAttribute('x1')) / 2);
+    }
+    const items = () => [...svg.querySelectorAll('text.messageText, text.noteText, text.labelText, text.loopText, text.actor')];
+    const labels = [...svg.querySelectorAll('text.loopText')].sort((a, b) => top(a) - top(b));
+    // 왼쪽 위 구간 종류 이름표(alt·opt·loop 탭, polygon.labelBox)는 당기지 않음 — 구간 이름이 탭 아래 끝보다 위에 오면(boxMargin을 줄였을 때)
+    //   탭의 아래 꼭짓점까지 함께 당겨 탭이 테두리 위로 뒤집히던 것을 막음: 당기는 경계를 그 탭 아래 끝 밑으로
+    const tabs = [...svg.querySelectorAll('polygon.labelBox')];
+    for (const lab of labels) {
+      const lb = bottom(lab);
+      const T = Math.max(lb, ...tabs.filter((p) => top(p) <= lb).map(bottom).filter((b) => b < lb + GAP)) + 1;
+      const next = items().filter((t) => t !== lab && top(t) > T).map(top).sort((a, b) => a - b)[0];
+      if (next == null || next - lb <= GAP + 0.5) continue;
+      shiftBelow(T, next - lb - GAP);
+    }
+    return true;
+  }
   function orthoEdges(svg, src = '') {
     const type = svg?.getAttribute('aria-roledescription') || '';
-    if (!/flowchart|class|state/.test(type)) return false;
+    if (type === 'sequence') { tightenSequence(svg, src); return false; }          // 시퀀스 그림: 구간 이름 아래 간격만 줄이고 화살표는 그대로
+    if (!/flowchart|class|state|^er$/.test(type)) return false;                // er = erDiagram(표 칸 = entity)
     const SIDE = { 위: 't', 아래: 'b', 왼쪽: 'l', 오른쪽: 'r', top: 't', bottom: 'b', left: 'l', right: 'r' };
     const rules = [];
     for (const m of src.matchAll(/^\s*%%\s*(?:화살표|arrow)\s+(\S+)\s*(?:->|-->|→)\s*(\S+?)\s*:\s*(.+)$/gim)) {
@@ -31,6 +132,8 @@
         else if (/^(?:나감|out)$/i.test(k) && SIDE[v]) r.out = SIDE[v];
         else if (/^(?:들어감|in)$/i.test(k) && SIDE[v]) r.in = SIDE[v];
         else if (/^(?:거리|gap)$/i.test(k) && !isNaN(+v)) r.gap = +v;
+        else if (/^(?:자리|at)$/i.test(k) && v) r.at = v;
+        else if (/^(?:간격|spread)$/i.test(k) && /^\d+(?:\.\d+)?%?$/.test(v || '')) r.spread = v;   // 같은 두 칸을 잇는 나란한 두 선 사이(px, 또는 겹치는 폭의 %)
       }
       rules.push(r);
     }
@@ -62,10 +165,25 @@
       });
       return x2 > x1 && y2 > y1 ? { x: x1, y: y1, width: x2 - x1, height: y2 - y1 } : null;
     };
+    if (/^\s*%%\s*(?:선\s*글자|labels?)\s*:\s*(?:한\s*줄|one-?line)\s*$/im.test(src)) oneLineLabels();
     placeGrid();
+    // %% 선 글자: 한 줄 — Mermaid가 200px 폭에서 접은 선 글자를 한 줄로 폄(원문의 <br>은 그대로 줄을 나눔). 칸·선 배치보다 먼저
+    function oneLineLabels() {
+      svg.querySelectorAll('g.edgeLabel foreignObject').forEach((fo) => {
+        const div = fo.querySelector(':scope > div');
+        if (!div || !div.textContent.trim()) return;
+        Object.assign(div.style, { whiteSpace: 'nowrap', maxWidth: 'none', width: 'auto', display: 'inline-block' });
+        fo.setAttribute('width', '4000');
+        const w = Math.ceil(div.scrollWidth), h = Math.ceil(div.scrollHeight);
+        if (!w || !h) return;
+        fo.setAttribute('width', w); fo.setAttribute('height', h);
+        fo.parentNode?.setAttribute('transform', `translate(${-w / 2}, ${-h / 2})`);
+      });
+    }
     const noteBoxes = placeNotes();
     // %% 격자: A B | C D — 적은 칸을 줄(|)·열 순서로 바둑판처럼 놓음(같은 줄은 흐름도·상태 그림이면 가운데, 클래스 그림이면 윗변을 맞추고, 같은 열은 가운데를 맞춤)
     //   한 줄에 같은 이름을 이어 적으면(A A A) 그 칸이 그 열들에 걸쳐 놓이고, 네모 칸이면 걸친 폭만큼 늘림(아래에 길게 까는 칸)
+    //   같은 열에 여러 줄 이어 적으면(A - | A - | A -) 그 칸이 그 줄들에 걸쳐 가운데에 놓이고, 그 칸과 잇는 선은 가로 직선(키는 원문에서 정함)
     //   칸 사이는 선 위 글자가 들어갈 만큼 벌림. 화살표는 마주 보는 변끼리 잇고(같은 줄·열이면 직선),
     //   대각선 자리끼리는 열 사이 빈 곳으로 꺾어 감. 적지 않은 칸은 그대로
     function placeGrid() {
@@ -76,17 +194,19 @@
         const b = shapeBox(g);
         if (!b) return null;
         const m = toRoot(g), p1 = tp(m, { x: b.x, y: b.y }), p2 = tp(m, { x: b.x + b.width, y: b.y + b.height });
-        return { g, name: (/^(?:flowchart|classId|state)-(.+)-\d+$/.exec(g.id) || [])[1] || g.id, l: Math.min(p1.x, p2.x), r: Math.max(p1.x, p2.x), t: Math.min(p1.y, p2.y), b: Math.max(p1.y, p2.y) };
+        return { g, name: (/^(?:flowchart|classId|state|entity)-(.+)-\d+$/.exec(g.id) || [])[1] || g.id, l: Math.min(p1.x, p2.x), r: Math.max(p1.x, p2.x), t: Math.min(p1.y, p2.y), b: Math.max(p1.y, p2.y) };
       }).filter(Boolean);
       const cell = new Map();
       rows.forEach((r, ri) => r.forEach((name, ci) => {
         const nd = nodes.find((o) => o.name === name);
         if (!nd) return;
         const c = cell.get(nd);
-        if (c && c.ri === ri && c.ce === ci - 1) c.ce = ci;               // 같은 줄에 이어 적은 이름 → 여러 열에 걸침
-        else cell.set(nd, { ri, ci, ce: ci });
+        if (c && c.ri === ri && c.re === ri && c.ce === ci - 1) c.ce = ci; // 같은 줄에 이어 적은 이름 → 여러 열에 걸침
+        else if (c && c.ci === ci && c.ce === ci && c.re === ri - 1) c.re = ri; // 같은 열에 이어 적은 이름 → 여러 줄에 걸침
+        else cell.set(nd, { ri, ci, ce: ci, re: ri });
       }));
       const overlapCol = (a, b) => a.ci <= b.ce && b.ci <= a.ce;
+      const overlapRow = (a, b) => a.ri <= b.re && b.ri <= a.re;
       if (cell.size < 2) return;
       const labs = [...svg.querySelectorAll('g.edgeLabel')].filter((g) => g.textContent.trim()).map((g) => {
         let w = 0, h = 0;
@@ -103,10 +223,10 @@
         let pts; try { pts = JSON.parse(atob(p.getAttribute('data-points'))); } catch { return; }
         if (!pts?.length || !p.id) return;
         const m = toRoot(p), c0 = cell.get(nodeAt0(tp(m, pts[0]))), c1 = cell.get(nodeAt0(tp(m, pts.at(-1))));
-        if (c0 && c1 && c0.ri === c1.ri) sameRowEdge.set(p.id, [c0.ci, c1.ci]);
+        if (c0 && c1 && overlapRow(c0, c1)) sameRowEdge.set(p.id, [c0.ci, c1.ci]);
       });
       const nc = Math.max(...rows.map((r) => r.length)), colW = Array(nc).fill(0), rowH = rows.map(() => 0);
-      cell.forEach(({ ri, ci, ce }, nd) => { if (ci === ce) colW[ci] = Math.max(colW[ci], nd.r - nd.l); rowH[ri] = Math.max(rowH[ri], nd.b - nd.t); });
+      cell.forEach(({ ri, ci, ce, re }, nd) => { if (ci === ce) colW[ci] = Math.max(colW[ci], nd.r - nd.l); if (ri === re) rowH[ri] = Math.max(rowH[ri], nd.b - nd.t); });
       // 묶음(subgraph): 원문의 subgraph … end 안에 적힌 칸을 그 묶음 칸으로 보고, 옮기기 전 테두리와 칸 사이 여백을 재 둠
       const groups = [];
       for (const m of src.matchAll(/^\s*subgraph\s+([^\s\["]+)[^\n]*\n([\s\S]*?)^\s*end\s*$/gim)) {
@@ -139,22 +259,27 @@
         if (a && b && cell.has(a) && cell.has(b)) ends.set(p.id, [a, b]);
       });
       // 열 사이마다 따로: 바로 옆 열끼리 잇는 같은 줄 선의 글자만큼(최소 40px). 여러 열을 건너는 선의 글자는 사이의 빈 칸 위에 놓임
-      const colGaps = Array(Math.max(0, nc - 1)).fill(40);
+      const endRoom = type === 'er' ? 40 : 0;                               // ER: 선 양 끝 관계 기호 자리만큼 칸 사이를 더 벌려 선 글자가 기호에 붙지 않게
+      //   (줄 사이는 위아래 두 끝의 기호가 모두 세로로 서므로 64px — 글자가 두 기호 사이 빈 곳에 들어가게)
+      const colGapMin = +(/^\s*%%\s*(?:격자\s*열\s*간격|grid-col-gap)\s*:\s*(\d+)\s*$/im.exec(src)?.[1] || 40);   // %% 격자 열 간격: N — 열 사이 최소 간격(px)
+      const colGaps = Array(Math.max(0, nc - 1)).fill(colGapMin);
       labs.forEach((l) => {
         const c = sameRowEdge.get(l.id);
         if (!c || Math.abs(c[0] - c[1]) !== 1) return;
         const i = Math.min(c[0], c[1]);
-        let need = l.w + 32;
+        let need = l.w + 32 + endRoom;
         const e = ends.get(l.id);
         if (colEdge(i) && e) {
           const [L, R] = cell.get(e[0]).ci < cell.get(e[1]).ci ? e : [e[1], e[0]];
-          need = l.w + 72 + Math.abs((colW[i] - (L.r - L.l)) - (colW[i + 1] - (R.r - R.l))) / 2;
+          need = l.w + 56;                                                  // 묶음 사이를 건너는 선: 글자는 두 묶음 테두리 사이 가운데에 놓이므로(아래 선 글자 자리) 양쪽 여백 16px + 글자 앞뒤 12px만
         }
         colGaps[i] = Math.max(colGaps[i], need);
       });
       // 줄 사이마다 따로: 기본 40px, 바로 위아래 칸을 잇는 선의 글자가 있으면 그만큼(+묶음 경계면 테두리 여백까지).
       //   격자 칸끼리가 아닌 선의 글자(묶음·칸 밖)는 예전처럼 모든 줄 사이에 반영
       const rowGaps = Array(Math.max(0, rows.length - 1)).fill(40);
+      const memoFs = parseFloat(((typeof PF.mermaidConfig === 'function' ? PF.mermaidConfig({}) : {}).themeVariables || {}).fontSize) || 16;
+      const memoRules = [...src.matchAll(MEMO_RE)].map((m) => ({ from: m[2], to: m[3], h: m[4].split(/<br\s*\/?>/i).filter((t) => t.trim()).length * memoFs * 1.5 + 30 }));
       labs.forEach((l) => {
         if (sameRowEdge.has(l.id)) return;
         const e = ends.get(l.id);
@@ -164,7 +289,9 @@
         const j = Math.min(r0, r1);
         // 같은 열에서 묶음 경계를 넘는 선: 글자는 줄 사이 가운데에 놓이므로, 아래 묶음 이름표(위 여백) 몫을 양쪽에 두어 글자가 이름표에 붙지 않게
         const titleRoom = Math.max(0, ...groups.filter((gr) => Math.min(...gr.members.map((o) => cell.get(o)?.ri ?? Infinity)) === j + 1).map((gr) => gr.pad.t));
-        rowGaps[j] = Math.max(rowGaps[j], l.h + (rowEdge(j) && overlapCol(cell.get(e[0]), cell.get(e[1])) ? Math.max(72, 40 + 2 * titleRoom) : 32));
+        rowGaps[j] = Math.max(rowGaps[j], l.h + (endRoom && 64) + (rowEdge(j) && overlapCol(cell.get(e[0]), cell.get(e[1])) ? Math.max(72, 40 + 2 * titleRoom) : 32));
+        const memo = memoRules.find((r) => r.from === e[0].name && r.to === e[1].name);   // %% 선 메모가 붙는 선: 메모 상자 높이 + 위아래 12px
+        if (memo) rowGaps[j] = Math.max(rowGaps[j], memo.h + 24);
       });
       // 걸친 칸이 걸친 열들보다 넓으면 그 열들을 고르게 넓힘
       cell.forEach(({ ci, ce }, nd) => {
@@ -173,15 +300,24 @@
         const more = (nd.r - nd.l) - have;
         if (more > 0) for (let i = ci; i <= ce; i++) colW[i] += more / (ce - ci + 1);
       });
+      // 여러 줄에 걸친 칸이 걸친 줄들보다 키가 크면 그 줄들을 고르게 높임
+      cell.forEach(({ ri, re }, nd) => {
+        if (ri === re) return;
+        const have = rowH.slice(ri, re + 1).reduce((a, c) => a + c, 0) + rowGaps.slice(ri, re).reduce((a, c) => a + c, 0);
+        const more = (nd.b - nd.t) - have;
+        if (more > 0) for (let i = ri; i <= re; i++) rowH[i] += more / (re - ri + 1);
+      });
       const x0 = Math.min(...[...cell.keys()].map((n) => n.l)), y0 = Math.min(...[...cell.keys()].map((n) => n.t));
       const colX = colW.map((_, i) => x0 + colW.slice(0, i).reduce((a, c) => a + c, 0) + colGaps.slice(0, i).reduce((a, c) => a + c, 0));
       const rowY = rowH.map((_, i) => y0 + rowH.slice(0, i).reduce((a, c) => a + c, 0) + rowGaps.slice(0, i).reduce((a, c) => a + c, 0));
       // 흐름도·상태 그림은 줄마다 가운데를 맞춤 — 키가 다른 옆 칸(마름모·여러 줄 칸)과 잇는 선이 꺾이지 않게.
       //   클래스 그림은 칸 위 메모 자리 때문에 윗변을 맞춤(마름모가 있는 줄만 가운데)
       const midRow = rowH.map(() => !/class/.test(type));
+      const alignBottom = /^\s*%%\s*(?:격자\s*맞춤|grid-align)\s*:\s*(?:아래|bottom)\s*$/im.test(src);   // %% 격자 맞춤: 아래 — 같은 줄 칸들의 아랫변을 맞춤
+      const alignTop = /^\s*%%\s*(?:격자\s*맞춤|grid-align)\s*:\s*(?:위|top)\s*$/im.test(src);         // %% 격자 맞춤: 위 — 같은 줄 칸들의 윗변을 맞춤
       cell.forEach(({ ri }, nd) => { if (nd.g.querySelector(':scope > polygon, :scope > g > polygon')) midRow[ri] = true; });
       const old = new Map(), at = new Map();
-      cell.forEach(({ ri, ci, ce }, nd) => {
+      cell.forEach(({ ri, ci, ce, re }, nd) => {
         old.set(nd, { ...nd });
         let w = nd.r - nd.l;
         const spanW = colX[ce] + colW[ce] - colX[ci];
@@ -193,7 +329,8 @@
             const cx = (nd.l + nd.r) / 2; nd.l = cx - spanW / 2; nd.r = cx + spanW / 2; w = spanW;
           }
         }
-        const h = nd.b - nd.t, l = colX[ci] + (spanW - w) / 2, t = rowY[ri] + (midRow[ri] ? (rowH[ri] - h) / 2 : 0);
+        const h = nd.b - nd.t, spanH = rowY[re] + rowH[re] - rowY[ri];     // 여러 줄에 걸친 칸은 걸친 줄들의 가운데에
+        const l = colX[ci] + (spanW - w) / 2, t = rowY[ri] + (re > ri ? (spanH - h) / 2 : alignBottom ? rowH[ri] - h : alignTop ? 0 : midRow[ri] ? (rowH[ri] - h) / 2 : 0);
         const dx = l - nd.l, dy = t - nd.t;
         nd.g.setAttribute('transform', `translate(${dx.toFixed(2)},${dy.toFixed(2)}) ${nd.g.getAttribute('transform') || ''}`.trim());
         at.set(nd, { l, t, r: l + w, b: t + h });
@@ -208,7 +345,7 @@
         if (!s0 || !s1 || s0 === s1 || (!at.has(s0) && !at.has(s1))) return;
         const S = at.get(s0) || old.get(s0) || s0, T = at.get(s1) || old.get(s1) || s1;
         const c0 = cell.get(s0), c1 = cell.get(s1);
-        const sameRow = c0 && c1 && c0.ri === c1.ri, sameCol = c0 && c1 && overlapCol(c0, c1);
+        const sameRow = c0 && c1 && overlapRow(c0, c1), sameCol = c0 && c1 && overlapCol(c0, c1);
         const mx = (b) => (b.l + b.r) / 2, my = (b) => (b.t + b.b) / 2;
         let way;
         if (sameCol && !sameRow) {
@@ -218,8 +355,10 @@
           way = [{ x: x ?? mx(S), y: down ? S.b : S.t }, { x: x ?? mx(T), y: down ? T.t : T.b }];
         } else {
           const right = T.l >= S.r, down = my(T) > my(S);
-          const A = { x: right ? S.r : S.l, y: sameRow ? my(S) : down ? S.b - 16 : S.t + 16 };
-          const B = { x: right ? T.l : T.r, y: sameRow ? my(T) : down ? T.t + 16 : T.b - 16 };
+          const tall0 = c0 && c0.re > c0.ri, tall1 = c1 && c1.re > c1.ri;   // 여러 줄에 걸친 칸과 잇는 선은 낮은 쪽 칸의 가운데로 곧게
+          const y = sameRow ? (tall0 && !tall1 ? my(T) : tall1 && !tall0 ? my(S) : null) : null;
+          const A = { x: right ? S.r : S.l, y: sameRow ? y ?? my(S) : down ? S.b - 16 : S.t + 16 };
+          const B = { x: right ? T.l : T.r, y: sameRow ? y ?? my(T) : down ? T.t + 16 : T.b - 16 };
           const gx = (A.x + B.x) / 2;
           way = sameRow ? [A, B] : [A, { x: gx, y: A.y }, { x: gx, y: B.y }, B];
         }
@@ -356,9 +495,9 @@
       const b = shapeBox(g);
       if (!b) return;
       const m = toRoot(g), p1 = tp(m, { x: b.x, y: b.y }), p2 = tp(m, { x: b.x + b.width, y: b.y + b.height });
-      const name = (/^(?:flowchart|classId|state)-(.+)-\d+$/.exec(g.id) || [])[1] || g.id;
+      const name = (/^(?:flowchart|classId|state|entity)-(.+)-\d+$/.exec(g.id) || [])[1] || g.id;
       const round = !g.classList.contains('cluster') && !!g.querySelector(':scope > polygon, :scope > circle, :scope > ellipse, :scope > g > polygon, :scope > g > circle');
-      boxes.push({ name, l: Math.min(p1.x, p2.x), t: Math.min(p1.y, p2.y), r: Math.max(p1.x, p2.x), b: Math.max(p1.y, p2.y), cluster: g.classList.contains('cluster'), round });
+      boxes.push({ name, l: Math.min(p1.x, p2.x), t: Math.min(p1.y, p2.y), r: Math.max(p1.x, p2.x), b: Math.max(p1.y, p2.y), cluster: g.classList.contains('cluster'), round, memo: g.classList.contains('statediagram-note') });
     });
     noteBoxes.forEach((nb) => { const b = boxes.find((o) => `note:${o.name}` === nb.name); if (b) { b.t = Math.min(b.t, nb.t); b.l = Math.min(b.l, nb.l); b.r = Math.max(b.r, nb.r); } });   // 메모 + 칸 = 한 덩어리
     const near = (p, pad = 6) => boxes.filter((b) => p.x >= b.l - pad && p.x <= b.r + pad && p.y >= b.t - pad && p.y <= b.b + pad)
@@ -513,6 +652,16 @@
         let so = sideOf(A, e.sb), si = sideOf(B, e.tb);
         if (rule.out) { so = rule.out; A = sidePoint(e.sb, so); }
         if (rule.in) { si = rule.in; B = sidePoint(e.tb, si); }
+        if (rule.at) {                                                     // 자리: 나가는 변을 따라 붙는 점을 옮기고, 받는 변이 그 줄을 덮으면 같은 줄로
+          const v = axisOf(so) === 'v', k = v ? 'x' : 'y', lo = v ? e.sb.l : e.sb.t, hi = v ? e.sb.r : e.sb.b;
+          const at = /^(?:위|왼쪽|top|left)$/i.test(rule.at) ? lo + 14 : /^(?:아래|오른쪽|bottom|right)$/i.test(rule.at) ? hi - 14 : !isNaN(+rule.at) ? lo + +rule.at : null;
+          if (at != null) {
+            A = { ...A, [k]: Math.max(lo + 4, Math.min(hi - 4, at)) };
+            const tlo = v ? e.tb.l : e.tb.t, thi = v ? e.tb.r : e.tb.b;
+            if (axisOf(si) === axisOf(so) && A[k] > tlo + 4 && A[k] < thi - 4) B = { ...B, [k]: A[k] };
+            e.atFixed = true;
+          }
+        }
         e.poly = sidedRoute(A, so, B, si, e.sb, e.tb, rule.gap ?? 24);
         e.fixed = true;
         continue;
@@ -613,22 +762,63 @@
     }
     // 같은 두 칸을 오가는 화살표 2개: 겹치는 폭 안에 나란한 직선 두 줄로, 선 위 글자는 각자 바깥쪽으로 비켜 놓음
     //   (세로선이면 왼쪽 선의 글자는 왼쪽으로, 오른쪽 선의 글자는 오른쪽으로 — 글자가 자기 선은 덮고 옆 선은 덮지 않게)
+    // 가로로 마주 보는 두 칸이 서로 다른 묶음(또는 한쪽만 묶음 안)이면: 묶음 테두리(상대 칸이 묶음 밖이면 그 칸 변) 사이 빈 곳의 가운데 x.
+    //   선 글자를 선 가운데가 아니라 여기에 둠(예: 클라이언트 묶음 → 서버 묶음 화살표의 글자가 두 묶음 사이 정가운데). 해당 없으면 null
+    const gapMidX = (a, b) => {
+      const groupOf = (nb) => boxes.filter((bx) => bx.cluster && (nb.l + nb.r) / 2 > bx.l && (nb.l + nb.r) / 2 < bx.r && (nb.t + nb.b) / 2 > bx.t && (nb.t + nb.b) / 2 < bx.b)
+        .sort((u, v) => (u.r - u.l) * (u.b - u.t) - (v.r - v.l) * (v.b - v.t))[0];
+      const [Ln, Rn] = (a.l + a.r) < (b.l + b.r) ? [a, b] : [b, a];
+      const gl = groupOf(Ln), gr = groupOf(Rn);
+      if (gl === gr) return null;
+      const holds = (g, nb) => g && (nb.l + nb.r) / 2 > g.l && (nb.l + nb.r) / 2 < g.r;
+      const lo = gl && !holds(gl, Rn) ? gl.r : Ln.r, hi = gr && !holds(gr, Ln) ? gr.l : Rn.l;
+      return hi > lo ? (lo + hi) / 2 : null;
+    };
     const pairs = new Map();
     edges.forEach((e) => { const k = pairKey(e); if (!pairs.has(k)) pairs.set(k, []); pairs.get(k).push(e); });
     for (const list of pairs.values()) {
-      if (list.length !== 2 || list.some((e) => ruleFor(e))) continue;
+      // 자리=로 정한 오가는 짝이 둘 다 곧은 나란한 선이면: 선은 그대로 두고 글자만 자동 짝처럼 두 선 사이 가운데에서 양쪽으로, 같은 높이(너비)로 나란히
+      if (list.length === 2 && list.every((e) => e.atFixed && e.poly?.length >= 2)) {
+        const axis = (e) => e.poly.every((q) => Math.abs(q.x - e.poly[0].x) < 0.5) ? 'v' : e.poly.every((q) => Math.abs(q.y - e.poly[0].y) < 0.5) ? 'h' : null;
+        const ax = axis(list[0]);
+        if (ax && axis(list[1]) === ax) {
+          const k = ax === 'v' ? 'x' : 'y', o = ax === 'v' ? 'y' : 'x';
+          const pair = [...list].sort((a, c) => a.poly[0][k] - c.poly[0][k]);
+          const lo = Math.max(...pair.map((e) => Math.min(...e.poly.map((q) => q[o])))), hi = Math.min(...pair.map((e) => Math.max(...e.poly.map((q) => q[o]))));
+          const own = pair.map((e) => labelBoxes.find((lb) => lb.id && lb.id === e.p.id));
+          if (hi > lo && pair[1].poly[0][k] - pair[0].poly[0][k] > 1) {
+            const mid = (lo + hi) / 2;
+            const placed = own.map((lb, i) => {
+              if (!lb) return null;
+              const w = lb.r - lb.l, h = lb.b - lb.t, c = (pair[0].poly[0][k] + pair[1].poly[0][k]) / 2;   // 두 선 사이 가운데에서 3px씩(자동 짝과 같은 간격)
+              if (ax === 'v') { const l = i ? c + 3 : c - 3 - w; return { l, r: l + w, t: mid - h / 2, b: mid + h / 2 }; }
+              const t = i ? c + 3 : c - 3 - h; return { l: mid - w / 2, r: mid + w / 2, t, b: t + h };
+            });
+            const over = (nb, ob) => nb.r > ob.l + 1 && nb.l < ob.r - 1 && nb.b > ob.t + 1 && nb.t < ob.b - 1;
+            if (!placed.some((nb) => nb && (labelBoxes.some((lb) => !own.includes(lb) && over(nb, lb)) || boxes.some((bx) => !bx.cluster && over(nb, bx))))) {
+              pair.forEach((e, i) => { if (placed[i]) { Object.assign(own[i], placed[i]); e.labelAt = { x: (placed[i].l + placed[i].r) / 2, y: (placed[i].t + placed[i].b) / 2 }; } });
+            }
+          }
+        }
+        continue;
+      }
+      const pr = list.length === 2 && ruleFor(list[0]);
+      const spreadOnly = pr && pr.spread && !pr.out && !pr.in && !pr.at && !pr.curve;
+      if (list.length !== 2 || (list.some((e) => ruleFor(e)) && !spreadOnly)) continue;
       const ov = overlapOf(list[0].sb, list[0].tb);
       if (!ov || ov.hi - ov.lo < 12) continue;
       const k = ov.v ? 'x' : 'y', mean = (e) => e.pts.reduce((a, q) => a + q[k], 0) / e.pts.length;
       const pair = [...list].sort((a, c) => mean(a) - mean(c));             // Mermaid가 벌려 둔 쪽(왼·위 / 오른·아래)을 그대로
-      const c = (ov.lo + ov.hi) / 2, g = Math.min(24, ov.hi - ov.lo) / 2;
+      // %% 화살표 A -> B: 간격=40% — 두 선을 겹치는 폭의 30%·70% 자리에(가운데에서 양쪽으로 그 반씩). 숫자만 쓰면 px
+      const want = spreadOnly ? (/%$/.test(pr.spread) ? (ov.hi - ov.lo) * parseFloat(pr.spread) / 100 : +pr.spread) : 0;
+      const c = (ov.lo + ov.hi) / 2, g = (spreadOnly ? Math.min(want, ov.hi - ov.lo - 8) : Math.min(24, ov.hi - ov.lo)) / 2;
       const lines = pair.map((e, i) => straight(e.pts[0], e.pts.at(-1), e.sb, e.tb, i ? c + g : c - g));
       const ids = pair.map((e) => e.p.id);
       if (lines.some((l, i) => !l || hits(l, [pair[i].sb, pair[i].tb]) || crossesLabel(l, ...ids))) continue;
       const own = pair.map((e) => labelBoxes.find((lb) => lb.id && lb.id === e.p.id));
       const placed = own.map((lb, i) => {
         if (!lb) return null;
-        const w = lb.r - lb.l, h = lb.b - lb.t, L = lines[i], mid = ov.v ? (L[0].y + L[1].y) / 2 : (L[0].x + L[1].x) / 2;
+        const w = lb.r - lb.l, h = lb.b - lb.t, L = lines[i], mid = ov.v ? (L[0].y + L[1].y) / 2 : gapMidX(pair[i].sb, pair[i].tb) ?? (L[0].x + L[1].x) / 2;
         if (ov.v) { const l = i ? c + 3 : c - 3 - w; return { l, r: l + w, t: mid - h / 2, b: mid + h / 2 }; }
         const t = i ? c + 3 : c - 3 - h; return { l: mid - w / 2, r: mid + w / 2, t, b: t + h };
       });
@@ -644,7 +834,7 @@
     //   직선(두 칸을 한 줄로 잇는 선)은 옮긴 자리가 상대 칸 폭 밖이면 그대로 둠
     const spots = new Map();
     for (const e of edges) {
-      if (e.skip || !e.poly || e.poly.length < 2 || e.pairDone) continue;
+      if (e.skip || !e.poly || e.poly.length < 2 || e.pairDone || e.atFixed) continue;
       [[0, e.sb], [1, e.tb]].forEach(([end, box]) => {
         if (box.round || box.cluster) return;
         const P = end ? e.poly.at(-1) : e.poly[0], side = sideOf(P, box), k = axisOf(side) === 'v' ? 'x' : 'y';
@@ -652,6 +842,24 @@
         if (!spots.has(key)) spots.set(key, []);
         spots.get(key).push({ e, end, box, side, k });
       });
+    }
+    // ER: 위·아래 변에서 나란히 나가는 두 선 중 곧은 세로선의 글자(선 가운데)가 옆 선의 세로 토막과 같은 높이에 오면,
+    //   두 선 사이를 그 글자 폭의 반 + 12px 이상 벌림. 같은 칸의 위·아래 변은 같은 간격으로 맞춤(칸마다 하나)
+    const vNeed = new Map();
+    if (type === 'er') for (const list of spots.values()) {
+      if (list.length < 2 || list[0].k !== 'x') continue;
+      const vRun = ({ e, end }) => {                                       // 붙는 점부터 처음 꺾이기 전까지의 세로 범위
+        const pts = end ? [...e.poly].reverse() : e.poly, x0 = pts[0].x;
+        const q = pts.find((o) => Math.abs(o.x - x0) >= 0.5) || pts.at(-1);
+        return [Math.min(pts[0].y, q.y), Math.max(pts[0].y, q.y)];
+      };
+      for (const it of list) {
+        const pl = it.e.poly, own = labelBoxes.find((lb) => lb.id && lb.id === it.e.p.id);
+        if (!own || !pl.every((q) => Math.abs(q.x - pl[0].x) < 0.5)) continue;   // 글자가 있는 곧은 세로선만
+        const cy = (pl[0].y + pl.at(-1).y) / 2, h = own.b - own.t, w = own.r - own.l;
+        if (list.some((o) => o !== it && (([t, b]) => b > cy - h / 2 - 4 && t < cy + h / 2 + 4)(vRun(o))))
+          vNeed.set(it.box, Math.max(vNeed.get(it.box) || 0, w / 2 + 12));
+      }
     }
     for (const list of spots.values()) {
       if (list.length < 2) continue;
@@ -661,9 +869,12 @@
         return (pts.find((q) => Math.abs(q[k] - base) >= 0.5) || pts.at(-1))[k];
       };
       list.sort((a, c) => turnOf(a) - turnOf(c));
-      const gap = Math.min(14, (hi - lo) / (list.length + 1));
+      const gap = Math.min(type === 'er' ? Math.max(40, (v && vNeed.get(box)) || 0) : 14, (hi - lo) / (list.length + 1));   // ER은 선 끝 관계 기호(까마귀발)가 넓어 더 벌림
+      // 화살표 하나 + 상태 그림 메모 점선 하나가 한 변에 붙으면: 화살표는 변 가운데 그대로, 메모 점선만 비켜 놓음(맞은편 변 화살표와 높이를 맞추게)
+      const isMemo = (it) => (it.end ? it.e.sb : it.e.tb).memo;
+      const memoOnly = list.length === 2 && list.filter(isMemo).length === 1;
       list.forEach((it, i) => {
-        const off = (i - (list.length - 1) / 2) * gap;
+        const off = memoOnly ? (isMemo(it) ? (i ? gap : -gap) : 0) : (i - (list.length - 1) / 2) * gap;
         if (Math.abs(off) < 0.5) return;
         const pts = it.end ? [...it.e.poly].reverse() : [...it.e.poly], base = pts[0][k], to = base + off;
         let n = 0;
@@ -676,6 +887,7 @@
         it.e.poly = it.end ? pts.reverse() : pts;
       });
     }
+    const placedLabels = [];                                             // 이 아래에서 자리를 정한 선 글자 상자
     for (const e of edges) {
       if (e.skip || !e.poly) continue;
       const poly = tidy(e.poly);
@@ -690,36 +902,55 @@
         d += ` L${L({ x: c.x - (c.x - a.x) / l1 * r, y: c.y - (c.y - a.y) / l1 * r })} Q${L(c)} ${L({ x: c.x + (n.x - c.x) / l2 * r, y: c.y + (n.y - c.y) / l2 * r })}`;
       }
       e.p.setAttribute('d', `${d} L${L(poly.at(-1))}`);
-      // 선 위 글자: 새 선에서 가장 가까운 자리로
+      // 선 위 글자: 기본은 선 길이의 가운데. 칸·다른 선·이미 놓은 글자와 겹칠 때만 같은 선을 따라 가장 가까운 빈 자리로 조금 옮김
+      //   (오가는 짝·같은 변 되돌이처럼 앞에서 자리를 정해 둔 글자는 그 자리 그대로)
       const id = e.p.id && CSS.escape(e.p.id);
       const lab = id && svg.querySelector(`.edgeLabels [data-id="${id}"]`)?.closest('g.edgeLabel');
       if (lab && lab.textContent.trim() && lab.transform.baseVal.numberOfItems) {
-        const here = tp(toRoot(lab), { x: 0, y: 0 }), { p, d: dist } = nearestOn(poly, here);
-        let to = e.labelAt || (p && dist > 2 ? p : null);                   // 오가는 짝은 정해 둔 바깥쪽 자리로
-        // 옮길 자리에서 글자가 칸과 겹치면(꺾인 선의 끝이 칸 옆일 때) 칸과 겹치지 않는 가장 긴 토막의 가운데로,
-        //   그런 토막이 없으면 같은 선을 따라 칸과 4px 이상 떨어진 가장 가까운 자리로
-        const own = !e.labelAt && labelBoxes.find((lb) => lb.id && lb.id === e.p.id);
-        if (own && (to || p)) {
-          const at = to || p, w = own.r - own.l, h = own.b - own.t;
-          const boxAt = (c) => ({ l: c.x - w / 2, r: c.x + w / 2, t: c.y - h / 2, b: c.y + h / 2 });
-          const hit = (c) => { const nb = boxAt(c); return boxes.some((bx) => !bx.cluster && nb.r > bx.l - 4 && nb.l < bx.r + 4 && nb.b > bx.t - 4 && nb.t < bx.b + 4); };
-          if (hit(at)) {
-            let best = null, bd = Infinity, bl = 0;
-            for (let i = 1; i < poly.length; i++) {
-              const a = poly[i - 1], c = poly[i], L = Math.hypot(c.x - a.x, c.y - a.y), mid = { x: (a.x + c.x) / 2, y: (a.y + c.y) / 2 };
-              if (L > bl && !hit(mid)) { bl = L; best = mid; }
-            }
-            for (let i = 1; !best && i < poly.length; i++) {
-              const a = poly[i - 1], c = poly[i], L = Math.hypot(c.x - a.x, c.y - a.y);
-              for (let s = 0; s <= L; s += 4) {
-                const q = { x: a.x + (c.x - a.x) * (s / (L || 1)), y: a.y + (c.y - a.y) * (s / (L || 1)) };
-                const dq = Math.hypot(q.x - at.x, q.y - at.y);
-                if (dq < bd && !hit(q)) { bd = dq; best = q; }
-              }
-            }
-            if (best) to = best;
+        let to = e.labelAt || null;
+        const own = labelBoxes.find((lb) => lb.id && lb.id === e.p.id);
+        if (!e.labelAt && own && poly.length >= 2) {
+          const w = own.r - own.l, h = own.b - own.t;
+          const segs = [];                                                  // 선을 따라 4px마다 [가운데에서의 길이 차, 점]
+          let centre = 0, longest = -1, run = 0;                            // 가운데 = 가장 긴 곧은 토막의 가운데(곧은 선이면 선 한가운데)
+          for (let i = 1; i < poly.length; i++) {
+            const L = Math.hypot(poly[i].x - poly[i - 1].x, poly[i].y - poly[i - 1].y);
+            if (L > longest + 0.5) { longest = L; centre = run + L / 2; }
+            run += L;
           }
-        }
+          if (poly.length === 2 && Math.abs(poly[0].y - poly[1].y) < 0.5) {   // 묶음 사이를 건너는 가로 직선: 글자는 두 묶음 사이 빈 곳의 가운데(gapMidX)
+            const gx = gapMidX(e.sb, e.tb);
+            if (gx != null) centre = Math.abs(gx - poly[0].x);
+          }
+          run = 0;
+          for (let i = 1; i < poly.length; i++) {
+            const a = poly[i - 1], c = poly[i], L = Math.hypot(c.x - a.x, c.y - a.y);
+            for (let s = 0; s <= L; s += 4) segs.push([Math.abs(run + s - centre), { x: a.x + (c.x - a.x) * (s / (L || 1)), y: a.y + (c.y - a.y) * (s / (L || 1)) }]);
+            run += L;
+          }
+          segs.sort((u, v) => u[0] - v[0]);
+          const boxAt = (c) => ({ l: c.x - w / 2, r: c.x + w / 2, t: c.y - h / 2, b: c.y + h / 2 });
+          const onBox = (nb) => boxes.some((bx) => (bx.cluster                // 묶음은 테두리에 걸칠 때만(안·밖에 온전히 있으면 괜찮음)
+            ? nb.r > bx.l - 4 && nb.l < bx.r + 4 && nb.b > bx.t - 4 && nb.t < bx.b + 4 && !(nb.l > bx.l + 4 && nb.r < bx.r - 4 && nb.t > bx.t + 4 && nb.b < bx.b - 4)
+            : nb.r > bx.l - 6 && nb.l < bx.r + 6 && nb.b > bx.t - 6 && nb.t < bx.b + 6));   // 칸과는 6px 띄움
+          const onLab = (nb) => placedLabels.some((o) => nb.r > o.l - 4 && nb.l < o.r + 4 && nb.b > o.t - 4 && nb.t < o.b + 4);
+          const onLine = (nb) => edges.some((o) => o !== e && !o.skip && o.poly && o.poly.some((c, i) => {
+            if (!i) return false;
+            const a = o.poly[i - 1], l = Math.min(a.x, c.x), r = Math.max(a.x, c.x), tt = Math.min(a.y, c.y), b = Math.max(a.y, c.y);
+            return r > nb.l - 2 && l < nb.r + 2 && b > nb.t - 2 && tt < nb.b + 2;
+          }));
+          // ER 그림: 선 양 끝의 관계 기호(동그라미·까마귀발·두 줄)는 칸 밖으로 약 26px 뻗어 나오므로 그 자리도 피함(모든 선의 끝)
+          const onMark = (nb) => type === 'er' && edges.some((o) => !o.skip && o.poly && o.poly.length >= 2 && [[o.poly[0], o.poly[1]], [o.poly.at(-1), o.poly.at(-2)]].some(([P, Q]) => {
+            const L = Math.hypot(Q.x - P.x, Q.y - P.y) || 1, k = Math.min(28, L), E = { x: P.x + (Q.x - P.x) / L * k, y: P.y + (Q.y - P.y) / L * k };
+            return nb.r > Math.min(P.x, E.x) - 9 && nb.l < Math.max(P.x, E.x) + 9 && nb.b > Math.min(P.y, E.y) - 9 && nb.t < Math.max(P.y, E.y) + 9;
+          }));
+          const pick = (bad) => segs.find(([, q]) => !bad(boxAt(q)))?.[1];
+          to = pick((nb) => onBox(nb) || onLab(nb) || onMark(nb) || onLine(nb))   // 칸·글자·관계 기호·다른 선 모두 피한 가장 가운데에 가까운 자리
+            || pick((nb) => onBox(nb) || onLab(nb) || onMark(nb))             // 안 되면 다른 선은 지나가도 되게
+            || pick((nb) => onBox(nb) || onLab(nb))
+            || pick(onBox) || segs[0][1];
+          placedLabels.push(boxAt(to)); Object.assign(own, boxAt(to));   // 뒤의 묶음 테두리 넓히기도 새 자리로
+        } else if (e.labelAt && own) placedLabels.push({ l: own.l, r: own.r, t: own.t, b: own.b });
         if (to) {
           const q = tp(toRoot(lab.parentNode).inverse(), to);
           lab.setAttribute('transform', `translate(${q.x.toFixed(2)}, ${q.y.toFixed(2)})`);
@@ -751,6 +982,89 @@
       }
       labelBoxes.push({ l: R.l, t: R.t, r: R.r, b: R.b, cluster: true });
     });
+    // %% 선 메모: A -> B: 글 — 선 옆에 메모 칸과 같은 모양의 상자를 띄우고 점선으로 이음(Mermaid 메모는 칸에만 붙음)
+    //   기준점은 그 선의 글자 오른쪽 끝(글자가 없으면 선의 가장 긴 토막 가운데). 그림에 메모 칸이 있으면 그 열(왼쪽 끝)에 맞춤
+    for (const mm of src.matchAll(MEMO_RE)) {
+      const e = edges.find((o) => !o.skip && o.poly && o.sb.name === mm[2] && o.tb.name === mm[3]);
+      if (!e) continue;
+      const leftSide = /^(?:왼쪽|left)$/i.test(mm[1] || '');
+      const lines = mm[4].split(/<br\s*\/?>/i).map((t) => t.trim()).filter(Boolean);
+      if (!lines.length) continue;
+      const NS = 'http://www.w3.org/2000/svg';
+      const ref = svg.querySelector('g.statediagram-note .nodeLabel, g.statediagram-note text');
+      const cs = ref ? getComputedStyle(ref) : null;
+      const tv = (typeof PF.mermaidConfig === 'function' ? PF.mermaidConfig({ print: !!svg.closest('.mmd-print') }) : {}).themeVariables || {};
+      const fs = parseFloat(cs?.fontSize) || parseFloat(tv.fontSize) || 16, ff = cs?.fontFamily || tv.fontFamily || 'sans-serif', lh = fs * 1.5;
+      const ctx = document.createElement('canvas').getContext('2d');
+      ctx.font = `${fs}px ${ff}`;
+      const w = Math.max(...lines.map((t) => ctx.measureText(t).width)) + 30, h = lines.length * lh + 30;
+      let ax, ay;
+      const lab = e.p.id && svg.querySelector(`.edgeLabels [data-id="${CSS.escape(e.p.id)}"]`)?.closest('g.edgeLabel');
+      try {
+        if (lab && lab.textContent.trim()) {
+          const bb = lab.getBBox(), m = toRoot(lab), a = tp(m, { x: bb.x, y: bb.y }), z = tp(m, { x: bb.x + bb.width, y: bb.y + bb.height });
+          ax = leftSide ? Math.min(a.x, z.x) : Math.max(a.x, z.x); ay = (a.y + z.y) / 2;
+        }
+      } catch { /* 숨긴 상자 */ }
+      if (ax == null) {
+        let best = -1;
+        for (let i = 1; i < e.poly.length; i++) {
+          const P = e.poly[i - 1], Q = e.poly[i], L = Math.hypot(Q.x - P.x, Q.y - P.y);
+          if (L > best) { best = L; ax = (P.x + Q.x) / 2; ay = (P.y + Q.y) / 2; }
+        }
+      }
+      const memos = boxes.filter((b) => b.memo && (leftSide ? b.r < ax : b.l > ax));                 // 같은 쪽 메모 칸 열에 맞춤
+      let l = leftSide ? Math.min(ax - 40, memos.length ? Math.max(...memos.map((b) => b.r)) : Infinity) - w
+        : Math.max(ax + 40, memos.length ? Math.min(...memos.map((b) => b.l)) : -Infinity);
+      let top = ay - h / 2;
+      // 다른 선 글자와 겹치면 그 글자 바깥(6px)으로 더 밀어냄
+      const labRects = [...svg.querySelectorAll('g.edgeLabel')].filter((gl) => gl !== lab && gl.textContent.trim()).map((gl) => {
+        try { const bb = gl.getBBox(), m = toRoot(gl), a = tp(m, { x: bb.x, y: bb.y }), z = tp(m, { x: bb.x + bb.width, y: bb.y + bb.height }); return { l: Math.min(a.x, z.x), r: Math.max(a.x, z.x), t: Math.min(a.y, z.y), b: Math.max(a.y, z.y) }; } catch { return null; }
+      }).filter((o) => o && o.r > o.l);
+      // 같은 열의 메모 칸과 24px 띄움 — 메모 칸이 아래에 있으면 위로, 위에 있으면 아래로 비킴(점선은 상자 높이 안에서 가로로)
+      const MEMO_GAP = 24;
+      memos.forEach((b) => {
+        if (!(b.r > l && b.l < l + w && b.b + MEMO_GAP > top && b.t - MEMO_GAP < top + h)) return;
+        top = (b.t + b.b) / 2 > ay ? Math.min(top, b.t - MEMO_GAP - h) : Math.max(top, b.b + MEMO_GAP);
+      });
+      if (ay < top + 10 || ay > top + h - 10) top = Math.max(ay - h + 10, Math.min(ay - 10, top));   // 점선이 상자 모서리를 벗어나지 않게
+      // 다른 선의 세로 토막이 상자를 지나가도 그 선 바깥(12px)으로 밀어냄
+      const vSegs = [];
+      edges.forEach((o) => { if (o !== e && !o.skip && o.poly) for (let i = 1; i < o.poly.length; i++) { const P = o.poly[i - 1], Q = o.poly[i]; if (Math.abs(P.x - Q.x) < 0.5) vSegs.push({ l: P.x, r: P.x, t: Math.min(P.y, Q.y), b: Math.max(P.y, Q.y), seg: true }); } });
+      // 반대쪽에 메모 칸이 있으면 그 칸과 가장 가까운 세로선 사이 거리를 이쪽에도 똑같이(좌우 대칭)
+      let segPad = 12;
+      boxes.filter((b) => b.memo && (leftSide ? b.l > ax : b.r < ax)).forEach((b) => {
+        const near = vSegs.filter((o) => o.b > b.t && o.t < b.b && (leftSide ? o.l < b.l : o.l > b.r)).map((o) => (leftSide ? b.l - o.l : o.l - b.r));
+        if (near.length) segPad = Math.max(segPad, Math.min(...near));
+      });
+      for (let pass = 0; pass < 8; pass++) {
+        const hit = labRects.find((o) => o.r + 6 > l && o.l - 6 < l + w && o.b + 6 > top && o.t - 6 < top + h)
+          || vSegs.find((o) => o.l + segPad > l + 0.5 && o.l - segPad < l + w - 0.5 && o.b > top && o.t < top + h);
+        if (!hit) break;
+        const pad = hit.seg ? segPad : 6;
+        l = leftSide ? hit.l - pad - w : hit.r + pad;
+      }
+      const link = document.createElementNS(NS, 'path');
+      link.setAttribute('class', 'transition note-edge pf-edge-memo-link');
+      link.setAttribute('d', `M${ax.toFixed(2)},${ay.toFixed(2)} L${(leftSide ? l + w : l).toFixed(2)},${ay.toFixed(2)}`);
+      link.setAttribute('style', 'fill:none');
+      const g = document.createElementNS(NS, 'g');
+      g.setAttribute('class', 'statediagram-note pf-edge-memo');
+      const rect = document.createElementNS(NS, 'rect');
+      Object.entries({ x: l, y: top, width: w, height: h, fill: tv.noteBkgColor || '#fff5ad', stroke: tv.noteBorderColor || '#aaaa33', 'stroke-width': 1 })
+        .forEach(([k, v]) => rect.setAttribute(k, typeof v === 'number' ? v.toFixed(2) : v));
+      const text = document.createElementNS(NS, 'text');
+      Object.entries({ 'text-anchor': 'middle', 'dominant-baseline': 'central', 'font-family': ff, 'font-size': fs, fill: tv.noteTextColor || tv.textColor || '#333' }).forEach(([k, v]) => text.setAttribute(k, v));
+      lines.forEach((t, i) => {
+        const ts = document.createElementNS(NS, 'tspan');
+        ts.setAttribute('x', (l + w / 2).toFixed(2)); ts.setAttribute('y', (top + 15 + lh * i + lh / 2).toFixed(2));
+        ts.textContent = t;
+        text.append(ts);
+      });
+      g.append(rect, text);
+      svg.append(link, g);
+      labelBoxes.push({ l, t: top, r: l + w, b: top + h });
+    }
     // 바깥으로 돌아간 선·글자가 그림 테두리 밖으로 나가면 그림 영역을 넓힘
     const vb = svg.viewBox?.baseVal;
     if (vb && vb.width) {

@@ -8,7 +8,7 @@
   audit    <폴더>                                 발표 덱의 미리보기 배치 점검(PFScene.report().audit)
   compare  <전.svg> <후.svg> <결과.png> [--vertical] [--light] [--title-before 글] [--title-after 글]
                                                   전후를 나란히 그린 비교 이미지
-  snapshot <이름> [폴더 ...]                      모든 그림의 선 모양을 저장(렌더러를 고치기 전후 비교용)
+  snapshot <이름> [폴더 ...]                      모든 그림의 선 모양·선 글자 자리를 저장(렌더러를 고치기 전후 비교용)
   diffsnap <이름1> <이름2>                        두 스냅샷에서 선 모양이 달라진 그림
   env                                             찾은 Chrome·파이썬
   list     [폴더 ...]                             기술 문서마다 Mermaid 그림 목록(번호·줄·절·종류·첫 칸) — 전체·한 프로젝트 작업의 차례
@@ -45,7 +45,8 @@ f.onload = async () => {
     const svgs = [...w.document.querySelectorAll('.mmd-screen svg')];
     if (mode === 'snapshot') {
       out.list = svgs.map((s, i) => ({ i, t: (s.querySelector('g.node')?.textContent || '').trim().slice(0, 24),
-        d: [...s.querySelectorAll('path[data-points]')].map((p) => p.getAttribute('d')).join('|') }));
+        d: [...s.querySelectorAll('path[data-points]')].map((p) => p.getAttribute('d')).join('|')
+          + '#' + [...s.querySelectorAll('g.edgeLabel')].map((g) => g.getAttribute('transform') || '').join('|') }));   // 선 글자 자리도 비교
       return done(out);
     }
     const mark = q.get('m'), svg = svgs.find((s) => s.textContent.includes(mark));
