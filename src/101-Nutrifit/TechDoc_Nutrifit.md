@@ -15,7 +15,7 @@
 
 ### 1.1 애플리케이션 소개
 
-![홈 화면 — 일일 권장·섭취·잔여 칼로리, 3대 영양소 섭취량과 식사 기록](images/home.png) ![음식 인식 결과 — FoodLens SDK가 사진에서 인식한 음식과 양에 따른 칼로리](images/photo-analysis.png)
+![시작 화면 — 포크와 접시를 원 안에 담은 Nutrifit 앱 아이콘과 이름](images/splash-logo.png) ![홈 화면 — 일일 권장·섭취·잔여 칼로리, 3대 영양소 섭취량과 식사 기록](images/home.png)
 
 **Nutrifit**은 신체 정보와 식사 기록을 바탕으로 영양소 섭취 현황과 다음 식사의 후보를 제공하는 Android 헬스케어 애플리케이션입니다.
 앱은 음식 사진을 찍으면 종류와 양을 자동으로 인식하는 기능(FoodLens SDK)과 수동 입력을 제공하고, 기록을 휴대폰 안에 저장합니다.
@@ -34,6 +34,8 @@ flowchart TB
 ```
 
 이 다이어그램은 사용자 정보를 입력한 뒤 식사 기록 → 홈 화면 → 다음 식사 추천을 반복하는 앱 사용 흐름을 도식화한 것입니다.
+
+**사용자 정보를 입력한 뒤에는 식사 기록 → 홈 → 다음 식사 추천이 반복됩니다.**
 
 - **사용자 정보:** 키·몸무게·나이·성별·활동량으로 하루 영양소 목표를 계산하고, 선호 음식 종류는 추천 가중치에 씁니다.
 - **식사 기록:** 사진을 찍으면 FoodLens SDK가 음식 종류와 양을 인식하고, 수동 입력은 앱의 음식 목록에서 골라 중량과 아침·점심·저녁을 입력합니다.
@@ -63,7 +65,7 @@ flowchart TB
 
 팀은 5명이며, 각자 맡은 부분은 다음과 같습니다. 코드 작업은 저장소의 커밋 기록을 기준으로 적었습니다.
 
-- **나** — 추천 서버(식품 데이터 정제, 영양소 목표 계산, 코사인 유사도 추천, Flask `server.py`와 JSON 응답), 홈의 식사 기록 표시, 주간 통계 차트(`CustomLineChart`·`CustomBarChart`), 두 식단 추천 화면과 서버 요청
+- **나** — 추천 서버, 앱의 식사 기록·주간 통계·두 식단 추천 화면과 서버 연동
 - **팀원 1** — Autoencoder 모델 실험, README, 버튼·레이아웃 수정
 - **팀원 2** — 음식 사진 인식 API 연동, 사용자 정보 입력과 SQLite 저장, 선호 음식 입력, 사용자 수동 입력과 입력 데이터의 JSON 저장, 시작 화면
 - **팀원 3** — 카메라·메인·추천·통계 화면의 레이아웃 개선
@@ -97,9 +99,11 @@ flowchart TB
 
 이 다이어그램은 앱의 식사 기록과 사용자 정보가 JSON으로 서버에 전달되고, 서버가 정제한 식품 데이터와 비교해 추천 후보를 돌려주는 전체 흐름을 도식화한 것입니다.
 
-이 그림에서 볼 것은 **앱은 기록을 저장하고 결과를 보여 주기만 하고, 추천 계산은 모두 서버가 맡는다**는 점입니다.
+**앱은 기록을 저장하고 결과를 보여 주기만 하고, 추천 계산은 모두 서버가 맡습니다.**
 
 앱은 사진 인식과 수동 입력을 모두 내부 저장소의 식사 파일에 기록합니다. 사진 인식은 `CameraActivity`가 FoodLens SDK에서 결과를 받아 파일에 저장한 뒤 `CameraResultActivity`를 엽니다. 수동 입력은 팀원 2가 구현한 `UserFoodCalculate`가 앱의 SQLite 음식 목록을 조회해 입력한 중량에 맞게 영양소를 계산합니다. 사용자 정보는 `UserInformActivity`가 SQLite에 저장한 뒤 `user_data.json`으로 내보냅니다. `CameraActivity`·`CameraResultActivity`·`UserInformActivity`는 팀원 2가 처음 만들었고, 이후 제가 일부를 고쳤습니다.
+
+![음식 인식 결과 — FoodLens SDK가 사진에서 인식한 음식과 양에 따른 칼로리](images/photo-analysis.png)
 
 ```mermaid
 %%{init: {"flowchart": {"padding": 8, "subGraphTitleMargin": {"top": 0, "bottom": 10}}}}%%
@@ -130,6 +134,8 @@ flowchart TB
 ```
 
 이 다이어그램은 앱 안에서 사진 인식·수동 입력·사용자 정보가 각각의 JSON 파일에 저장되고, 화면과 추천 요청이 그 파일을 읽어 서버와 주고받는 구성을 도식화한 것입니다.
+
+**앱의 기능들이 서로 직접 부르지 않고, JSON 파일을 통해 데이터를 주고받습니다.**
 
 `CameraResultActivity`는 화면에 최근 수정된 식사 파일을 표시하고, 추천을 요청할 때는 오늘 날짜의 식사 파일을 모두 합칩니다. `RecommendFragment`는 오늘 날짜로 검색된 첫 파일의 배열만 전송하며, 응답 JSON에 음식이 10개 이상 있으면 두 식단으로 나눠 표시합니다. 공개 서버의 응답 형식과 후보 수는 §4.2에 정리했습니다.
 
@@ -176,6 +182,8 @@ erDiagram
 
 이 다이어그램은 앱 내부 JSON과 추천 요청의 구조를 도식화한 것입니다. `nutrition`은 음식 항목 안의 객체입니다. 사진 인식은 FoodLens 응답의 키를 유지하고 수동 입력은 `carbohydrate`, `fiber`, `vitaminA`, `vitaminC` 등을 사용합니다. Flask는 `user[0]`과 `foods`를 읽고 `nutrition`과 `eatAmount`로 섭취량을 차감합니다.
 
+**사진 인식과 수동 입력이 같은 `nutrition` 객체에 담기지만, 키 이름은 서로 다릅니다.**
+
 소스: [CameraActivity.java](https://github.com/keeeery/Nutrifit/blob/21991464c454283cf069188a4f5b7351b37b458e/app/src/main/java/com/nutrifit/CameraActivity.java#L183-L269), [UserFoodCalculate.java](https://github.com/keeeery/Nutrifit/blob/21991464c454283cf069188a4f5b7351b37b458e/app/src/main/java/com/nutrifit/UserFoodCalculate.java#L72-L119), [UserInformActivity.java](https://github.com/keeeery/Nutrifit/blob/21991464c454283cf069188a4f5b7351b37b458e/app/src/main/java/com/nutrifit/UserInformActivity.java#L193-L237), [CameraResultActivity.java](https://github.com/keeeery/Nutrifit/blob/21991464c454283cf069188a4f5b7351b37b458e/app/src/main/java/com/nutrifit/CameraResultActivity.java#L126-L188), [RecommendFragment.java](https://github.com/keeeery/Nutrifit/blob/21991464c454283cf069188a4f5b7351b37b458e/app/src/main/java/com/nutrifit/RecommendFragment.java#L57-L133), [server.py](https://github.com/keeeery/Nutrifit_Recommendation/blob/5b5e78c33435370b8980b64656b5418ba254b184/server.py#L110-L155).
 
 ---
@@ -202,6 +210,8 @@ flowchart TB
 ```
 
 이 다이어그램은 신체 정보로 계산한 영양소 목표에서 섭취량을 빼고 가중치를 곱한 뒤, 음식 벡터와의 코사인 유사도로 음식군별 후보를 고르는 순서를 도식화한 것입니다.
+
+**부족한 양에 가중치를 곱한 벡터 하나로, 음식군마다 가장 비슷한 음식을 고릅니다.**
 
 ```python
 # server.py — 서버 시작 때 영양 데이터를 대표식품명·식품대분류명별 평균으로 묶기
@@ -259,11 +269,12 @@ return df.sort_values(by="추천점수", ascending=False).head(1)
 **모델을 쓸까 — 수치 벡터 유사도를 API 경로로**
 
 추천을 휴대폰에서 돌릴지 서버에서 돌릴지 고민할 때(§3.4), 휴대폰에서 학습 모델을 돌리기 어려워 모델 기반 방식을 배제했습니다.
+추천 계산을 서버로 옮긴 뒤에도 모델 방식으로 돌아가지 않았습니다. 서버는 pandas·numpy·scikit-learn만으로 동작했는데, 모델을 쓰려면 TensorFlow를 서버에 올리고 실행할 때마다 학습하거나 학습한 모델을 저장해 불러오는 과정을 더해야 했기 때문입니다.
 
 | 방법 | 장점 | 비용 |
 |---|---|---|
-| Autoencoder로 음식 특징 학습 (팀원 1의 별도 실험) | — | 휴대폰에서 학습 모델을 돌리기 어려움 |
-| 수치 벡터 유사도를 API 경로로 사용 (채택) | — | 추천 품질은 미측정 |
+| Autoencoder로 음식 특징 학습 (팀원 1의 별도 실험) | — | 휴대폰에서 학습 모델을 돌리기 어렵고, 서버에서도 TensorFlow와 모델 학습·저장 과정을 더해야 함 |
+| 수치 벡터 유사도를 API 경로로 사용 (채택) | 서버가 pandas·numpy·scikit-learn만으로 동작 | 추천 품질은 미측정 |
 
 ![model_based_filtering.py(Autoencoder 실험) 실행 결과 — 10 epoch 학습 손실과 추천 음식](images/console-autoencoder.png)
 
@@ -300,7 +311,7 @@ Request request = new Request.Builder()
 ```
 
 `enqueue`로 비동기 요청하고, 응답 문자열은 UI 스레드로 넘겨 파싱한 뒤 두 식단 UI에 나누어 표시합니다.
-응답 배열은 밥(0·1)·국(2·3)·반찬(4~9) 순서로 두 개씩 와야 하며, 짝수 번째를 식단 1, 홀수 번째를 식단 2로 나눕니다.
+응답 배열은 밥(0·1)·국(2·3)·반찬(4~9) 순서로 두 개씩 와야 하며, 앱이 이를 두 식단으로 나눕니다(§3.3).
 오류 응답은 앱에서 성공 여부를 확인해 Toast로 알립니다.
 
 ```mermaid
@@ -330,6 +341,8 @@ sequenceDiagram
 ```
 
 이 다이어그램은 앱이 사용자 정보와 식사 기록을 서버에 보내고, 받은 추천을 두 식단으로 나누어 표시하는 요청과 응답의 순서를 도식화한 것입니다.
+
+**앱은 추천을 계산하지 않고, 서버가 준 결과를 두 식단으로 나누어 보여 주기만 합니다.**
 
 ![추천 화면 — 서버 응답을 추천 식단 두 개로 나누어 표시한 화면](images/recommend.png)
 

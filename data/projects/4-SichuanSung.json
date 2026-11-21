@@ -230,7 +230,7 @@
         "points": [
           {
             "label": "",
-            "text": "이 그림에서 볼 것은 `CardManager`가 연결 판정은 `PathFinder`에, 제거·클리어 검사는 `GameManager`에, 선택 표시는 `Card`에 맡기는 조율자라는 점입니다.",
+            "text": "`CardManager`가 연결 판정은 `PathFinder`에, 제거·클리어 검사는 `GameManager`에, 선택 표시는 `Card`에 맡기는 조율자입니다.",
             "verbatim": true
           }
         ],
@@ -537,7 +537,7 @@
         "points": [
           {
             "label": "",
-            "text": "이 그림에서 볼 것은 `CardManager`가 연결 판정은 `PathFinder`에, 제거·클리어 검사는 `GameManager`에, 선택 표시는 `Card`에 맡기는 조율자라는 점입니다.",
+            "text": "`CardManager`가 연결 판정은 `PathFinder`에, 제거·클리어 검사는 `GameManager`에, 선택 표시는 `Card`에 맡기는 조율자입니다.",
             "verbatim": true
           }
         ],
@@ -769,6 +769,6 @@
         "visuals": [{"kind": "mermaid", "n": 1, "fp": "stateDiagram-v2"}]
       }
     ],
-    "applied": "08bea39ff0e30ef7"
+    "applied": "bea41b6cccf3ed06"
   }
 }

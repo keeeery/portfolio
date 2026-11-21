@@ -538,25 +538,21 @@
           "text": "3.7 고민과 선택",
           "verbatim": true
         },
-        "lead": {
-          "text": "서버 권위 구조는 제가 제안했습니다.",
-          "verbatim": true
-        },
+        "lead": null,
         "sectionPath": [
           "3. 여럿이 함께 캐고 무너뜨리는 지형",
           "3.7 고민과 선택"
         ],
-        "points": [
-          {
-            "label": "이유",
-            "text": "서버는 \"지형의 변경\"만 알도록 하는 것이 멀티플레이 레이턴시를 줄일 수 있다고 판단했기 때문입니다.",
-            "verbatim": true
-          }
-        ],
+        "points": [],
         "visuals": [
           {
             "kind": "table",
             "n": 1,
+            "fp": "방법|장점|비용"
+          },
+          {
+            "kind": "table",
+            "n": 2,
             "fp": "선택|이점|비용"
           }
         ]

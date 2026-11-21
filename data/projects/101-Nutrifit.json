@@ -245,7 +245,11 @@
             "caption": {
               "text": "음식 인식 결과 — FoodLens SDK가 사진에서 인식한 음식과 양에 따른 칼로리",
               "verbatim": true
-            }
+            },
+            "sectionPath": [
+              "1. 프로젝트 개요",
+              "1.5 전체 구조"
+            ]
           },
           {
             "kind": "image",
@@ -326,7 +330,7 @@
           "verbatim": true
         },
         "lead": {
-          "text": "이 그림에서 볼 것은 앱은 기록을 저장하고 결과를 보여 주기만 하고, 추천 계산은 모두 서버가 맡는다는 점입니다.",
+          "text": "앱은 기록을 저장하고 결과를 보여 주기만 하고, 추천 계산은 모두 서버가 맡습니다.",
           "verbatim": true
         },
         "sectionPath": [

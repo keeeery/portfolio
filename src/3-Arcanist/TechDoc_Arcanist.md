@@ -42,7 +42,7 @@ flowchart TB
 
 이 다이어그램은 전투 중 패링으로 카드 게이지를 얻어 카드를 쓰고, 방을 클리어하면 보상 카드로 덱을 구성하며, 사망하면 체크포인트로 돌아오는 게임 루프를 도식화한 것입니다.
 
-이 그림에서 볼 것은 **모든 화살표가 전투로 돌아오고, 패링 성공이 카드 게이지와 카드 사용을 거쳐 다시 전투를 이어 가는 수단이 된다**는 점입니다.
+**모든 화살표가 전투로 돌아오고, 패링 성공이 카드 게이지와 카드 사용을 거쳐 다시 전투를 이어 가는 수단이 됩니다.**
 
 - **진행:** 타이틀 → 인트로 → 일반 방 2개 → 보스 방(고대 수호 골렘). 방의 적을 모두 쓰러뜨리면 출구의 오벨리스크가 열리고, 보상 카드 3장 중 1장을 고른 뒤 오벨리스크 안에서 덱을 편성합니다.
 - **조작:** 이동·점프(더블 점프)·대시·달리기(스태미나 소비)·공격(D, 연속 입력으로 콤보)·패링, 카드 사용은 Q/W/E.
@@ -107,7 +107,7 @@ flowchart TB
 
 이 다이어그램은 §1.1의 게임 진행을 맡는 주요 클래스를 전투·카드·방과 저장 세 묶음으로 나누고, 공격·카드 효과·패링 보상·체크포인트 복귀로 이어지는 관계를 도식화한 것입니다. 각 묶음의 세부 구조는 §2.1(전투)·§3.3(카드)·§6.1(방과 저장)에 있습니다.
 
-이 그림에서 볼 것은 **기본 공격과 카드 효과가 모두 같은 `HitBox → HitResolver` 경로로 피해를 주고**, 패링에 성공하면 그 결과가 `CardSystem`의 카드 게이지로 이어진다는 점입니다.
+**기본 공격과 카드 효과가 모두 같은 `HitBox → HitResolver` 경로로 피해를 주고, 패링에 성공하면 그 결과가 `CardSystem`의 카드 게이지로 이어집니다.**
 
 **AI를 활용한 곳** — 인벤토리 코드 정리(§4.4). 나눌 파일과 기준값은 직접 정하고, 코드를 옮기는 일만 맡겼습니다.
 
@@ -159,7 +159,7 @@ flowchart TB
 전투는 `CombatSystem.To` 호출 안에서 즉시 피해를 적용하는 방식입니다(이 방식을 고른 이유는 §2.5).
 HitResolver는 넉백·스턴을, HitBox는 피격 FX와 타격 연출을 담당합니다.
 
-이 그림에서 볼 것은 **`HitBox`가 맞은 대상을 `HitTargetTracker`에 먼저 기록해 중복 타격을 거르고, 통과한 공격만 `HitResolver`가 패링 또는 피해로 해결한다**는 점입니다.
+**`HitBox`가 맞은 대상을 `HitTargetTracker`에 먼저 기록해 중복 타격을 거르고, 통과한 공격만 `HitResolver`가 패링 또는 피해로 해결합니다.**
 
 소스: [HitBox.cs](https://github.com/keeeery/Arcanist/blob/main/Assets/02.%20Scripts/03.%20CombatSystem/HitBox.cs), [HitResolver.cs](https://github.com/keeeery/Arcanist/blob/main/Assets/02.%20Scripts/03.%20CombatSystem/HitResolver.cs), [HitTargetTracker.cs](https://github.com/keeeery/Arcanist/blob/main/Assets/02.%20Scripts/03.%20CombatSystem/HitTargetTracker.cs).
 
@@ -207,7 +207,7 @@ if (playerController != null && playerController.IsParryWindowOpen)
 4. Applied일 때만 타격 연출
 
 - **패링은 피해 전달 전에 반환하지만 중복 기록 뒤에 발생합니다.** 따라서 단발 공격은 패링된 HurtBox도 기록되어 같은 활성 구간에서 다시 피해를 주지 않습니다.
-- **`SuccessParry`는 패링 창을 닫고 게이지를 추가하며 성공 애니메이션·화면 효과를 실행합니다.** 패링을 카드 수급과 연결한 핵심 플레이 흐름입니다.
+- **`SuccessParry`가 패링을 카드 게이지로 이어 줍니다(성공 연출은 §2.4).** 패링을 카드 수급과 연결한 핵심 플레이 흐름입니다.
 
 > **남은 과제** — 다단 공격은 `multiHitInterval` 이후 재시도가 가능하므로 방어 후 재접촉 동작을 따로 검증해야 합니다(§8.3).
 
@@ -347,7 +347,7 @@ flowchart TB
 
 이 다이어그램은 편성 덱의 카드가 드로우 더미 → 손패 → 버림 더미를 돌고, 드로우 더미가 바닥나면 버림 더미를 섞어 되돌리는 카드 순환을 도식화한 것입니다.
 
-이 그림에서 볼 것은 **사용한 카드도 버림 더미에 모였다가 다시 섞여 돌아오므로, 편성한 덱의 카드가 전투 내내 계속 순환한다**는 점입니다.
+**사용한 카드도 버림 더미에 모였다가 다시 섞여 돌아오므로, 편성한 덱의 카드가 전투 내내 계속 순환합니다.**
 
 게이지 충전 외에도 덱 초기화 여부, `CardHandUI.IsBusy`, 빈 슬롯 유무를 확인합니다.
 드로우 시도 직전에 `BeginNextGaugeCycle()`을 호출해 다음 게이지 주기를 시작합니다.
@@ -390,7 +390,7 @@ flowchart TB
 
 이 다이어그램은 카드 사용과 대상 선택의 구조를 도식화한 것입니다. 카드 효과는 §2의 `HitBox`로 이어집니다.
 
-이 그림에서 볼 것은 **쓸 수 있는지 확인하는 `CardUseValidator`와 효과를 실행하는 `CardSkillExecutor`가 나뉘어 있고, 둘 다 같은 `CardTargetResolver`로 대상을 찾는다**는 점입니다.
+**쓸 수 있는지 확인하는 `CardUseValidator`와 효과를 실행하는 `CardSkillExecutor`가 나뉘어 있고, 둘 다 같은 `CardTargetResolver`로 대상을 찾습니다.**
 
 소스: [CardRuntimeDeck.cs](https://github.com/keeeery/Arcanist/blob/main/Assets/02.%20Scripts/04.%20CardSystem/CardRuntimeDeck.cs), [CardSkillExecutor.cs](https://github.com/keeeery/Arcanist/blob/main/Assets/02.%20Scripts/04.%20CardSystem/CardSkillExecutor.cs), [CardUseValidator.cs](https://github.com/keeeery/Arcanist/blob/main/Assets/02.%20Scripts/04.%20CardSystem/CardUseValidator.cs).
 
@@ -430,7 +430,7 @@ sequenceDiagram
 
 이 다이어그램은 카드 사용 시 사용 가능 여부를 확인한 뒤 애니메이션 이벤트 시점에 효과를 발동하는 차례를 도식화한 것입니다.
 
-이 그림에서 볼 것은 **카드는 사용이 승인된 순간 버림 더미로 가지만, 효과는 애니메이션 이벤트가 온 뒤에야 나가고 그때 대상을 다시 찾는다**는 점입니다.
+**카드는 사용이 승인된 순간 버림 더미로 가지만, 효과는 애니메이션 이벤트가 온 뒤에야 나가고 그때 대상을 다시 찾습니다.**
 
 효과를 입력 시점이 아니라 애니메이션 이벤트 시점에 실행하도록 나눈 이유는 연출입니다.
 시전 모션이 지나고 실제로 주문을 내뻗는 순간에 효과가 나가야 어색하지 않고 자연스럽다고 판단했습니다.
@@ -579,6 +579,7 @@ foreach (CardData card in candidates)
 전체 카드 목록은 보유하되 덱에 없는 카드 → 덱에 있는 카드 → 미보유 카드 순으로 보여 주고, 더블 클릭과 끌어 놓기 모두 같은 추가·제거 함수로 편성합니다.
 슬롯과 드래그 아이콘은 재사용해 목록을 갱신할 때마다 전부 만들고 지우지 않습니다. 오벨리스크 밖에서 연 인벤토리는 열람 전용이라 편성 검사 없이 닫힙니다.
 슬롯 목록·안내 메시지를 나누는 정리에서 나눌 파일과 최대 덱 장수 기준(`PlayerInventory.MaxDeckCardCount`)은 직접 정했고, 코드를 새 파일로 옮기는 일은 AI 코딩 에이전트에 맡겼습니다.
+옮긴 뒤에는 편성 화면을 직접 써 보며 더블 클릭·끌어 놓기 편성과 장수·비용 제한 경고가 정리 전과 같게 동작하는지 확인했습니다.
 
 ![미획득 카드의 툴팁 — 카드 정보와 ‘미획득’ 표시](images/card-tooltip-locked.png)
 
@@ -640,7 +641,7 @@ stateDiagram-v2
 Idle 기본 대기시간은 1.2초, 근접 X축 거리 기준은 3입니다.
 근접 범위 밖에서는 레이저와 팔 발사를 `Random.Range(0, 2)`로 선택합니다.
 
-이 그림에서 볼 것은 **모든 공격 패턴이 끝나면 Idle로 돌아오고, 다음 패턴은 Idle에서 플레이어와의 거리로 고른다**는 점입니다.
+**모든 공격 패턴이 끝나면 Idle로 돌아오고, 다음 패턴은 Idle에서 플레이어와의 거리로 고릅니다.**
 
 ![고대 수호 골렘의 레이저 패턴](images/boss-combat-zoom.png)
 
@@ -705,7 +706,7 @@ stateDiagram-v2
 
 이 다이어그램은 일반 적(해골 병사)이 `EnemyStateMachine`에서 Idle·Patrol·Attack 사이를 오가는 상태 전이를 도식화한 것입니다. 피격·기절 중에는 상태 머신 진행이 멈추고, 기절이 끝나면 Idle로 돌아갑니다.
 
-이 그림에서 볼 것은 **추적과 공격이 한 상태(Attack) 안에 있어, 감지가 풀리기 전까지는 거리에 따라 쫓거나 공격하기를 반복한다**는 점입니다.
+**추적과 공격이 한 상태(Attack) 안에 있어, 감지가 풀리기 전까지는 거리에 따라 쫓거나 공격하기를 반복합니다.**
 
 ![일반 적(해골 병사)이 공격을 시작하는 장면](images/monster-start-attack-crop.png)
 
@@ -769,7 +770,7 @@ sequenceDiagram
 
 이 다이어그램은 체크포인트로 돌아갈 때 `CheckPointManager`가 암전 → 방 로드 → 플레이어 리스폰 → 페이드 인 순서로 복구하는 차례를 도식화한 것입니다.
 
-이 그림에서 볼 것은 **방 로드와 플레이어 리스폰이 모두 화면이 어두워진 사이에 끝나고, 페이드 인과 함께 입력이 돌아온다**는 점입니다.
+**방 로드와 플레이어 리스폰이 모두 화면이 어두워진 사이에 끝나고, 페이드 인과 함께 입력이 돌아옵니다.**
 
 ### 6.2 클리어한 방의 적 재생성 생략
 
@@ -822,7 +823,7 @@ stateDiagram-v2
 
 이 다이어그램은 방의 진행 상태(Ready → Combat → Reward → Cleared)와, 전투 클리어(`roomCleared`)가 참인 상태와 보상 획득(`rewardObtained`)이 저장되는 때를 도식화한 것입니다.
 
-이 그림에서 볼 것은 **적 전멸(Reward)과 보상 선택(Cleared)이 서로 다른 단계라서, 적을 모두 쓰러뜨린 뒤 돌아와도 보상 전이면 보상 단계부터 다시 시작한다**는 점입니다.
+**적 전멸(Reward)과 보상 선택(Cleared)이 서로 다른 단계라서, 적을 모두 쓰러뜨린 뒤 돌아와도 보상 전이면 보상 단계부터 다시 시작합니다.**
 
 ### 6.3 부활 시 체력·카드 초기화
 

@@ -346,7 +346,7 @@
           },
           {
             "label": "구현",
-            "text": "`SuccessParry`는 패링 창을 닫고 게이지를 추가하며 성공 애니메이션·화면 효과를 실행합니다.",
+            "text": "`SuccessParry`가 패링을 카드 게이지로 이어 줍니다(성공 연출은 §2.4).",
             "verbatim": true
           },
           {
