@@ -17,7 +17,7 @@
     },
     {
       "label": "기간",
-      "value": "2026.05 (며칠간 제작)"
+      "value": "2026.05, 약 5일"
     },
     {
       "label": "인원",
@@ -164,7 +164,7 @@
         "layout": "overview",
         "tab": "개요",
         "title": {"text": "1.1 게임 소개", "verbatim": true},
-        "lead": {"text": "사천성은 같은 그림의 카드 두 장을 연결해 제거하는 Unity 2D 퍼즐 개인 프로젝트입니다.", "verbatim": true},
+        "lead": {"text": "사천성은 같은 그림의 카드 두 장을 연결해 제거하는 2D 퍼즐 게임입니다.", "verbatim": true},
         "sectionPath": ["1. 프로젝트 개요", "1.1 게임 소개"],
         "points": [
           {
@@ -187,13 +187,13 @@
       {
         "key": "why",
         "chapter": "overview",
-        "layout": "full",
+        "layout": "visual",
         "tab": "개요",
         "title": {"text": "1.2 개발 의도", "verbatim": true},
         "lead": null,
         "sectionPath": ["1. 프로젝트 개요", "1.2 개발 의도"],
         "points": [],
-        "visuals": [{"kind": "table", "n": 1, "fp": "문제|구현 방향"}]
+        "visuals": [{"kind": "mermaid", "n": 1, "fp": "flowchart TB", "sectionPath": ["1. 프로젝트 개요", "1.1 게임 소개"]}]
       },
       {
         "key": "env",
@@ -359,7 +359,7 @@
         "tab": "구현",
         "title": {"text": "5. 게임 진행·결과·최고 기록 저장", "verbatim": true},
         "lead": {"text": "최고 기록은 기록이 없거나 더 빠르게 완료했을 때만 갱신합니다.", "verbatim": true},
-        "sectionPath": ["5. 게임 진행·결과·최고 기록 저장"],
+        "sectionPath": ["5. 게임 진행·결과·최고 기록 저장", "5.1 진행·결과·최고 기록"],
         "points": [],
         "visuals": [
           {"kind": "table", "n": 1, "fp": "경과 시간|평가"},
@@ -373,7 +373,7 @@
         "tab": "결과",
         "title": {"text": "5. 게임 진행·결과·최고 기록 저장", "verbatim": true},
         "lead": null,
-        "sectionPath": ["5. 게임 진행·결과·최고 기록 저장"],
+        "sectionPath": ["5. 게임 진행·결과·최고 기록 저장", "5.1 진행·결과·최고 기록"],
         "points": [],
         "visuals": [
           {
@@ -397,9 +397,9 @@
         "chapter": "progress",
         "layout": "overview",
         "tab": "선택",
-        "title": {"text": "진행 흐름을 상태 머신 대신 bool과 코루틴으로", "verbatim": true},
+        "title": {"text": "5.2 고민과 선택 — 진행 흐름을 상태 머신 대신 bool과 코루틴으로", "verbatim": true},
         "lead": {"text": "여섯 단계의 진행을 `GameManager`의 bool 네 개와 진행 코루틴으로 조율합니다.", "verbatim": false},
-        "sectionPath": ["5. 게임 진행·결과·최고 기록 저장", "진행 흐름을 상태 머신 대신 bool과 코루틴으로"],
+        "sectionPath": ["5. 게임 진행·결과·최고 기록 저장", "5.2 고민과 선택 — 진행 흐름을 상태 머신 대신 bool과 코루틴으로"],
         "points": [
           {"label": "이유", "text": "처음 끝까지 만들어 본 게임이었기 때문에, 당시 다룰 수 있던 bool과 코루틴으로 진행 흐름을 구성했습니다.", "verbatim": true},
           {
@@ -434,7 +434,7 @@
         "layout": "overview",
         "tab": "개요",
         "title": {"text": "1.1 게임 소개", "verbatim": true},
-        "lead": {"text": "사천성은 같은 그림의 카드 두 장을 연결해 제거하는 Unity 2D 퍼즐 개인 프로젝트입니다.", "verbatim": true},
+        "lead": {"text": "사천성은 같은 그림의 카드 두 장을 연결해 제거하는 2D 퍼즐 게임입니다.", "verbatim": true},
         "sectionPath": ["1. 프로젝트 개요", "1.1 게임 소개"],
         "points": [
           {
@@ -457,13 +457,13 @@
       {
         "key": "why",
         "chapter": "overview",
-        "layout": "full",
+        "layout": "visual",
         "tab": "개요",
         "title": {"text": "1.2 개발 의도", "verbatim": true},
         "lead": null,
         "sectionPath": ["1. 프로젝트 개요", "1.2 개발 의도"],
         "points": [],
-        "visuals": [{"kind": "table", "n": 1, "fp": "문제|구현 방향"}]
+        "visuals": [{"kind": "mermaid", "n": 1, "fp": "flowchart TB", "sectionPath": ["1. 프로젝트 개요", "1.1 게임 소개"]}]
       },
       {
         "key": "env",
@@ -628,7 +628,7 @@
         "tab": "구현",
         "title": {"text": "5. 게임 진행·결과·최고 기록 저장", "verbatim": true},
         "lead": {"text": "최고 기록은 기록이 없거나 더 빠르게 완료했을 때만 갱신합니다.", "verbatim": true},
-        "sectionPath": ["5. 게임 진행·결과·최고 기록 저장"],
+        "sectionPath": ["5. 게임 진행·결과·최고 기록 저장", "5.1 진행·결과·최고 기록"],
         "points": [],
         "visuals": [
           {"kind": "table", "n": 1, "fp": "경과 시간|평가"},
@@ -642,7 +642,7 @@
         "tab": "결과",
         "title": {"text": "5. 게임 진행·결과·최고 기록 저장", "verbatim": true},
         "lead": null,
-        "sectionPath": ["5. 게임 진행·결과·최고 기록 저장"],
+        "sectionPath": ["5. 게임 진행·결과·최고 기록 저장", "5.1 진행·결과·최고 기록"],
         "points": [],
         "visuals": [
           {
@@ -666,9 +666,9 @@
         "chapter": "progress",
         "layout": "overview",
         "tab": "선택",
-        "title": {"text": "진행 흐름을 상태 머신 대신 bool과 코루틴으로", "verbatim": true},
+        "title": {"text": "5.2 고민과 선택 — 진행 흐름을 상태 머신 대신 bool과 코루틴으로", "verbatim": true},
         "lead": {"text": "여섯 단계의 진행을 `GameManager`의 bool 네 개와 진행 코루틴으로 조율합니다.", "verbatim": false},
-        "sectionPath": ["5. 게임 진행·결과·최고 기록 저장", "진행 흐름을 상태 머신 대신 bool과 코루틴으로"],
+        "sectionPath": ["5. 게임 진행·결과·최고 기록 저장", "5.2 고민과 선택 — 진행 흐름을 상태 머신 대신 bool과 코루틴으로"],
         "points": [
           {"label": "이유", "text": "처음 끝까지 만들어 본 게임이었기 때문에, 당시 다룰 수 있던 bool과 코루틴으로 진행 흐름을 구성했습니다.", "verbatim": true},
           {
@@ -696,6 +696,6 @@
         "visuals": [{"kind": "table", "n": 1, "fp": "구현 결과|기술적으로 다룬 내용"}]
       }
     ],
-    "applied": "dacff1bd77419afc"
+    "applied": "783bdfeee0540487"
   }
 }

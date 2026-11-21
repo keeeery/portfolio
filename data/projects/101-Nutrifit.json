@@ -196,7 +196,7 @@
           "verbatim": true
         },
         "lead": {
-          "text": "Nutrifit은 신체 정보와 식사 기록을 바탕으로 영양소 섭취 현황과 다음 식사의 후보를 제공하는 Android 프로젝트입니다.",
+          "text": "Nutrifit은 신체 정보와 식사 기록을 바탕으로 영양소 섭취 현황과 다음 식사의 후보를 제공하는 Android 헬스케어 애플리케이션입니다.",
           "verbatim": true
         },
         "sectionPath": [
@@ -277,7 +277,7 @@
       {
         "key": "why",
         "chapter": "overview",
-        "layout": "full",
+        "layout": "visual",
         "tab": "개요",
         "title": {
           "text": "1.2 개발 의도",
@@ -291,9 +291,13 @@
         "points": [],
         "visuals": [
           {
-            "kind": "table",
+            "kind": "mermaid",
             "n": 1,
-            "fp": "문제|구현 방향"
+            "fp": "flowchart TB",
+            "sectionPath": [
+              "1. 프로젝트 개요",
+              "1.1 애플리케이션 소개"
+            ]
           }
         ]
       },
