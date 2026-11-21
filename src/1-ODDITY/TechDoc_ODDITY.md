@@ -734,7 +734,7 @@ Animator의 원래 속도와 Rigidbody의 운동 상태를 저장하고,
 `TimeFreezeHologram.shader`는 도입한 홀로그램 셰이더(Knife Hologram Shader Unlit)의 Forward 패스를 바탕으로 두 가지를 더한 셰이더입니다.
 
 첫째는 **높이로 쓸어 올리는 마스크**입니다. 
-`TimeFreezeOverlayFeature`가 오브젝트마다 진행도와 높이 범위를 전역 값으로 넘기고, 높이 범위는 그리는 렌더러들의 바운드를 합쳐 매 프레임 다시 재므로 움직이는 Skinned Mesh에도 맞습니다.
+`TimeFreezeOverlayFeature`가 오브젝트마다 진행도와 높이 범위를 전역 값으로 넘기고, 높이 범위는 그리는 렌더러들의 바운드를 합쳐 매 프레임 다시 재므로 움직이는 SkinnedMesh에도 맞습니다.
 셰이더는 진행도로 보이는 높이를 정해 그 위의 픽셀을 버리고, 경계 폭에 걸쳐 경계 색으로 물들며 옅어지게 합니다.
 진행도 0에서는 하나도 보이지 않고 1에서 꼭대기까지 다 보이도록 위쪽에 경계 폭만큼 여유를 둡니다.
 진행도는 시간에 따라 일정하게 오르고, 보이는 높이에는 이징을 걸어 막이 덮이고 걷히는 속도에 변화를 줍니다.
@@ -998,7 +998,6 @@ erDiagram
 
 이 다이어그램은 임무 데이터의 `Reward`가 보상 표의 `RewardId`를 가리켜 보상 줄 여럿과 이어지는 임무 표와 보상 표의 연결을 도식화한 것입니다.
 
-임무가 없는 테스트 씬에서는 Inspector에 지정한 대체 RewardId를 사용합니다.
 
 ### 6.3 이어하기의 칩·장착 복원
 
@@ -1020,7 +1019,6 @@ sequenceDiagram
 
 이 다이어그램은 이어하기에서 저장 파일로 칩을 복원할 때, 장착 요청을 대기 목록에 보관했다가 새 씬의 플레이어가 초기화된 뒤 스탯 보너스·스킬 슬롯에 반영하는 차례를 도식화한 것입니다.
 
-처음에는 새 플레이어의 `Start`에서만 적용해 이미 살아 있는 플레이어에는 반영되지 않는 경우가 있어, `sceneLoaded`에서도 대기 장착을 적용하도록 보완했습니다.
 
 ### 6.4 고민과 선택
 
@@ -1273,8 +1271,8 @@ UI가 프리팹이 아니라 여러 씬에 직접 배치되어 값도 제각각�
 |---|---|---|
 | 규칙 정하기 | — | HUD 프리팹을 기준 스타일로 삼고, 해상도가 바뀌어도 UI 크기는 유지한 채 위치만 옮기며, 글꼴은 Pretendard로 통일하는 것과 위의 창 공통 규칙을 정함. 팀원이 만든 창까지 바뀌는 작업이라 팀과 협의한 뒤 전체에 적용 |
 | 범위 정하기 | 모든 UI의 기준 해상도를 하나로 바꿀 때 고쳐야 할 곳을 조사해, 코드에 박힌 크기 값 100여 곳(대부분 팀원 코드)을 찾음 | 기준 해상도 통일은 접고, X 버튼 크기가 창마다 달랐던 원인부터 확인해 원인인 0.65 배율이 걸린 임무 창 세 개로 범위를 좁힘 |
-| 첫 구현 | 도구를 만들고 "컴파일 오류 없음"이라고 보고 | AI가 "컴파일 오류 없음"이라고 보고한 첫 버전은 Unity 콘솔에서 오류가 났는데, 확인해 보니 AI 쪽 컴파일 확인이 실제로는 실행되지 않고 있었습니다. |
-| 적용 뒤 점검 | `UICanvasScaleBaker`로 창 배율을 굽고 안쪽 값에 0.65를 곱함 | 적용한 뒤에는 겹치거나 어긋난 곳을 다시 점검해, X 버튼 크기에까지 0.65가 곱해진 문제를 찾아 고쳤습니다. |
+| 첫 구현 | 도구를 만들고 "컴파일 오류 없음"이라고 보고 | AI가 "컴파일 오류 없음"이라고 보고한 첫 버전은 Unity 콘솔에서 오류가 났고, 확인해 보니 AI 쪽 컴파일 확인이 실제로는 실행되지 않고 있었음 |
+| 적용 뒤 점검 | `UICanvasScaleBaker`로 창 배율을 굽고 안쪽 값에 0.65를 곱함 | 적용한 뒤에는 겹치거나 어긋난 곳을 다시 점검해, X 버튼 크기에까지 0.65가 곱해진 문제를 찾아 고침 |
 | HUD 프리팹 변환 | `HUDPrefabBuilder` 첫 버전으로 씬의 HUD를 프리팹으로 바꿈 | 씬에서 `DeathScreen`·`BossIntroTitle`이 빠진 것을 발견해 씬을 되돌리고, 기존 오브젝트를 새로 만들지 않고 그대로 프리팹 인스턴스로 바꾸는 지금 방식으로 고침 |
 
 소스: [UIPopIn.cs](https://github.com/keeeery/ODDITY/blob/main/Assets/Scripts/10.%20UI/UIPopIn.cs), [UILineReveal.cs](https://github.com/keeeery/ODDITY/blob/main/Assets/Scripts/10.%20UI/UILineReveal.cs), [UIGlitch.cs](https://github.com/keeeery/ODDITY/blob/main/Assets/Scripts/10.%20UI/UIGlitch.cs), [UIStaggerReveal.cs](https://github.com/keeeery/ODDITY/blob/main/Assets/Scripts/10.%20UI/UIStaggerReveal.cs), [ResultBanner.cs](https://github.com/keeeery/ODDITY/blob/main/Assets/Scripts/10.%20UI/ResultBanner.cs), [BossRewardPanel.cs](https://github.com/keeeery/ODDITY/blob/main/Assets/Scripts/11.%20Reward/BossRewardPanel.cs), [UICloseButton.cs](https://github.com/keeeery/ODDITY/blob/main/Assets/Scripts/10.%20UI/UICloseButton.cs), [TitleMenuButton.cs](https://github.com/keeeery/ODDITY/blob/main/Assets/Scripts/10.%20UI/Title/TitleMenuButton.cs), [UIStyleUnifier.cs](https://github.com/keeeery/ODDITY/blob/main/Assets/Scripts/10.%20UI/Editor/UIStyleUnifier.cs), [UICanvasScaleBaker.cs](https://github.com/keeeery/ODDITY/blob/main/Assets/Scripts/10.%20UI/Editor/UICanvasScaleBaker.cs), [VectorShape.cs](https://github.com/keeeery/ODDITY/blob/main/Assets/Scripts/10.%20UI/VectorShape.cs), [VectorPanel.cs](https://github.com/keeeery/ODDITY/blob/main/Assets/Scripts/10.%20UI/VectorPanel.cs).
@@ -1359,7 +1357,7 @@ return IsSyllable(next) && Choseong[Cho(next)] == Jongseong[qj]; // 다음 글�
 ### 9.1 개요 — 전투 피드백의 갈래와 셰이더 구성
 
 맞혔는지·맞았는지·얼마나 셌는지, 보스가 지금 어떤 상태인지, 공격이 언제 들어오는지를 HUD 숫자만이 아니라 화면 가장자리·카메라·시간 배율·보스의 몸과 주변 효과로 보여 줍니다.
-절은 전투가 흘러가는 순서대로, 보스 등장 → 공격 예고 → 플레이어 피격과 기상 → 보스가 받은 피해와 쓰러짐 순서로 놓았습니다.
+전투가 흘러가는 순서대로, 보스 등장 → 공격 예고 → 플레이어 피격과 기상 → 보스가 받은 피해와 쓰러짐 순서로 설명합니다.
 
 §8.1의 규칙대로 대부분의 연출은 실제 시간으로 진행해 히트스톱 중에도 보입니다.
 마무리 일격의 충격과 사망 홀로그램처럼 슬로모션에 맞춰 느려져야 하는 연출만 게임 시간으로 진행합니다.
@@ -1539,9 +1537,8 @@ return HitTier.Weak;
 | `BossRoarWave` | 포효 순간 발밑에서 수평으로 퍼지는 화면 굴절 고리를 시간차로 여러 겹 터뜨려 밀어내는 범위를 보여 주고, 머리에서 카메라 쪽으로 퍼지는 고리와 바닥 흙먼지를 더함 |
 | `BossFootDust` | 점프·홉 착지 순간 두 발에서 고리 먼지·바닥 충격파·흙 파편·늦게 피어오르는 큰 먼지, 돌진 중에는 달린 거리마다 발을 번갈아 뒤로 차올림 |
 
-![차르카로사우루스 보스의 포효 — 발밑에서 퍼지는 고리](images/boss-roar.gif) ![페르데로스 보스의 돌진과 이어지는 내려찍기 — 발밑에서 일어나는 흙먼지](images/foot-dust.gif)
+![차르카로사우루스 보스의 포효 — 발밑과 입 쪽에서 퍼지는 파동 고리](images/boss-roar.gif) ![페르데로스 보스의 돌진과 이어지는 내려찍기 — 발밑에서 일어나는 흙먼지](images/foot-dust.gif)
 
-포효 고리는 `ForceRipple.shader`로 그리며, 이미 퍼진 바닥 고리는 제자리에 남고 머리 쪽 고리만 보스를 따라갑니다.
 보스는 `FixedUpdate`에서 움직여 프레임마다 이동량이 들쭉날쭉하므로, 돌진 먼지는 속도 대신 달린 거리로 간격을 셉니다.
 
 #### 마무리 일격과 사망 연출
@@ -1552,18 +1549,17 @@ return HitTier.Weak;
 ```mermaid
 %%{init: {"flowchart": {"rankSpacing": 20, "nodeSpacing": 24, "padding": 8}}}%%
 flowchart TB
-    Finish[마무리 일격] --> Stop[히트스톱 / 윤곽 번쩍임 / 큰 흔들림]
-    Stop --> Slow[월드 슬로모션 / FOV 줌 펀치 / 큰 충격·입자]
-    Slow --> Recover[월드는 서서히 원래 속도 / 플레이어·카메라 회전은 느린 채 남음]
-    Recover --> Fall[쓰러짐 / 흙먼지·흔들림 / 몸에서 빛 입자 / 카메라가 천천히 물러남]
-    Fall --> Shed[같은 자세의 홀로그램으로 바뀐 뒤 아래에서 위로 지워짐]
-    Shed --> Done[완료 알림 → 보상창 / 플레이어 속도 복구]
+    Finish[마무리 일격] --> Stop["<div style=width:406px;white-space:nowrap>히트스톱 / 윤곽 번쩍임 / 큰 흔들림</div>"]
+    Stop --> Slow["<div style=width:406px;white-space:nowrap>월드 슬로모션 / FOV 줌 펀치 / 큰 충격·입자</div>"]
+    Slow --> Recover["<div style=width:406px;white-space:nowrap>월드는 서서히 원래 속도 / 플레이어·카메라 회전은 느린 채 남음</div>"]
+    Recover --> Fall["<div style=width:406px;white-space:nowrap>쓰러짐 / 흙먼지·흔들림 / 몸에서 빛 입자 / 카메라가 천천히 물러남</div>"]
+    Fall --> Shed["<div style=width:406px;white-space:nowrap>같은 자세의 홀로그램으로 바뀐 뒤 아래에서 위로 지워짐</div>"]
+    Shed --> Done["<div style=width:406px;white-space:nowrap>완료 알림 → 보상창 / 플레이어 속도 복구</div>"]
 ```
 
 이 다이어그램은 마무리 일격의 히트스톱·슬로모션부터 쓰러짐과 홀로그램 소멸, 보상창이 열리기까지의 연출 순서를 도식화한 것입니다.
 
 `SlowMotion`은 `HitStop.BaseTimeScale`을 바꿔 히트스톱과 겹쳐도 서로 덮어쓰지 않고, 물리가 끊겨 보이지 않도록 `fixedDeltaTime`도 배율에 맞춰 줄였다가 되돌립니다.
-월드가 원래 속도로 돌아오는 동안 플레이어·카메라 회전은 같은 곡선으로 일부만 돌아와 남고, 보상창이 열릴 때 풀립니다.
 `BossDeathShed`는 SkinnedMesh의 지금 자세를 메시로 구워 도입한 홀로그램 셰이더의 머티리얼로 같은 자리에 그립니다.
 홀로그램이 다 나타나면 원본을 끄고 몸 콜라이더를 트리거로 바꿔, 보이지 않는 몸에 플레이어가 막히지 않으면서 사망 잔재 입자(`BossDeathResidue`)는 부위 표면에서 계속 나오게 합니다.
 같은 홀로그램 굽기는 공용 클래스(`HologramShell`)로 분리해 휴머노이드의 순간이동 연출(`HumanoidHologramWarp`)에서도 재사용합니다.
@@ -1604,7 +1600,7 @@ MSAA 마스크로 가장자리 표현을 보완하며, 시간 정지 오버레�
 ```mermaid
 %%{init: {"flowchart": {"padding": 8}}}%%
 flowchart TB
-    Boss[보스 불투명 서브메시 /<br>커버리지·깊이] --> Player{플레이어와<br>화면에서 겹침?}
+    Boss[보스 불투명 서브메시 /<br>커버리지·깊이] --> Player{플레이어와<br>화면에서 겹치는가}
     Player -->|예| PMask[플레이어 마스크 /<br>보스에 가려짐·<br>맨 앞에 보임]
     Player -->|아니오| Black[검은 텍스처로<br>대체]
     Boss --> Ignore[무시할 레이어 깊이 /<br>수련장 벽]
@@ -1691,18 +1687,18 @@ UV가 없는 생성 콘크리트 파편에는 `TriplanarRock.shader`가 오브�
 ```mermaid
 %%{init: {"flowchart": {"padding": 8}}}%%
 flowchart TB
-    Check["매 프레임 보스 부위와 겹침 검사"] --> Deep{"깊이 겹쳤고<br>맞는 중 아님?"}
+    Check["매 프레임<br>보스 부위와 겹침 검사"] --> Deep{"깊이 겹쳤고<br>맞는 중이 아닌가"}
     Deep -->|아니오| Stay["밀지 않음"]
     Deep -->|예| Start{"빼낼 때인가"}
     Start -->|아니오 · 통과 중| Stay
-    Start -->|예| Pinched{"양쪽에<br>끼었나"}
+    Start -->|예| Pinched{"양쪽에<br>끼었는가"}
     Pinched -->|예| Escape["16방향 중 가장 가깝게<br>빠지는 쪽으로 탈출"]
-    Pinched -->|아니오| Passing{"보스가<br>지나가는 중?"}
+    Pinched -->|아니오| Passing{"보스가<br>지나가는 중인가"}
     Passing -->|예| Side["보스 진행 방향의<br>옆으로 비켜섬"]
     Passing -->|아니오| Push["겹친 반대쪽으로<br>밀어냄"]
-%% 격자: Check Deep Stay | - Start - | Escape Pinched - | Side Passing Push
+%% 격자: Check Deep - | - Start Stay | Escape Pinched - | Side Passing Push
 %% 화살표 Check -> Deep: 나감=오른쪽 들어감=왼쪽
-%% 화살표 Start -> Stay: 나감=오른쪽 들어감=아래
+%% 화살표 Deep -> Stay: 나감=오른쪽 들어감=위
 ```
 
 이 다이어그램은 플레이어가 보스 몸과 겹쳤을 때 매 프레임 통과시킬지, 밀어낼지, 옆으로 비켜설지, 끼인 곳에서 빠져나갈지를 고르는 판단 순서를 도식화한 것입니다(`PlayerController.PushOutOfBodies`). 보스가 밀고 들어온 부위는 충돌을 끄고 떨어진 부위는 되돌리며, 빼낼 때는 이동 입력·보스 정지·오래 겹침 중 하나일 때입니다. 세 갈래 모두 `CharacterController.Move`로 한 프레임에 조금씩 움직여 벽은 뚫지 않습니다.

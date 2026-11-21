@@ -313,7 +313,7 @@ return false;
 flowchart TB
     TSV["TSV 파일"] --> Reader["TerrainTsvReader<br/>헤더를 DTO 필드에 매핑"]
     Reader --> DTO["DTO 목록"]
-    DTO --> Check{"범위·중복·참조 검사"}
+    DTO --> Check{"범위·중복·참조<br>검사를 통과했는가"}
     Check -->|실패| Error["InvalidDataException<br/>로딩 오류"]
     Check -->|통과| Def["Def 생성 / Dictionary 보관"]
     Def --> Use["TryGet·IReadOnlyCollection으로 조회"]
@@ -474,7 +474,7 @@ flowchart TB
     end
     subgraph Server["서버"]
         Check["채굴 검증"]
-        Ok{"검증 통과"}
+        Ok{"검증을<br>통과했는가"}
         Commit["지형 변경 확정<br>+ 아이템 드롭"]
     end
     Req --> Check
@@ -1117,10 +1117,10 @@ ExploreVisionRadius(playerCell);
 
 인게임 준비 완료는 WebSocket 연결 직후가 아니라 다음 조건이 충족된 뒤 보냅니다.
 
-1. 핸드셰이크가 완료되고 연결이 열려 있음.
-2. 맵 세션의 데이터 버전 검사를 통과함.
-3. 로컬 초기 지형 Snapshot이 적용됨.
-4. 아직 `player.ready`를 보내지 않음.
+1. 핸드셰이크가 완료되고 연결이 열려 있음
+2. 맵 세션의 데이터 버전 검사를 통과함
+3. 로컬 초기 지형 Snapshot이 적용됨
+4. 아직 `player.ready`를 보내지 않음
 
 서버 `MarkPlayerReady()`는 준비 ID를 집합에 넣고 기대 인원이 모였을 때
 준비 지연과 카운트다운을 더한 미래 시작 시각을 확정합니다.
