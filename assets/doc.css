@@ -196,7 +196,8 @@ code { font-family: var(--mono); font-size: .88em; background: var(--accent-soft
 .md .pf-figure-row img { flex: 1 1 0; min-width: 0; width: 0; }
 
 .md .pf-figure { margin: 20px 0; }
-.md .pf-figure img { display: block; max-width: 100%; height: auto; border-radius: calc(var(--r) * .5); border: 1px solid var(--line); cursor: zoom-in; }
+/* 테두리는 폭을 차지하지 않는 box-shadow로 — 본문 폭(720px)과 같은 그림이 1:1로 그려져 1px 선·디더링이 뭉개지지 않게(직접 고친 부분) */
+.md .pf-figure img { display: block; max-width: 100%; height: auto; border-radius: calc(var(--r) * .5); box-shadow: 0 0 0 1px var(--line); cursor: zoom-in; }
 .md img { cursor: zoom-in; }
 /* 크기 정보가 없는 그림이 늦게 들어올 때 스크롤 고정의 기준이 되지 않게 → 바로 아래 제목·글이 기준이 되어 제자리에 머묾(doc.js hold()와 함께) */
 .md :is(.pf-figure, img, .table-wrap:has(img)) { overflow-anchor: none; }
