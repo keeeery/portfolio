@@ -15,6 +15,7 @@ try { window.mermaid?.initialize({ startOnLoad: false }); } catch (_) { /* */ }
   const root = document.getElementById('app');
   const html = document.documentElement;
   const errors = [];
+  const secRefs = { linked: 0, unresolved: [] };   // 본문 "§번호" → 같은 번호 제목 링크(③-2) 결과 — 직접 고친 부분
   let resolveReady;
   const whenReady = new Promise((r) => { resolveReady = r; });
   const report = () => {
@@ -26,6 +27,7 @@ try { window.mermaid?.initialize({ startOnLoad: false }); } catch (_) { /* */ }
                 pending: imgs.filter((i) => !i.complete).map((i) => i.getAttribute('src')) },
       diagrams: { total: figs.length, failed: figs.filter((f) => !f.querySelector('.mermaid svg')).map((f) => f.dataset.label || '') },
       errors, strings: PF.stringsReport(),
+      sectionRefs: { linked: secRefs.linked, unresolved: [...secRefs.unresolved] },
     };
   };
   window.PFDoc = Object.assign(window.PFDoc || {}, { whenReady: () => whenReady, report });
@@ -284,6 +286,11 @@ try { window.mermaid?.initialize({ startOnLoad: false }); } catch (_) { /* */ }
     frag.querySelectorAll('a[href]').forEach((a) => classifyMdLink(a, isRelative, decode));
     doc.replaceChildren(frag);
 
+    // ③-2 본문의 절 참조 "§2.6"·"§10" → 같은 번호로 시작하는 제목(H2·H3 "2.6 …"·"10. …")으로 가는 링크 — 직접 고친 부분.
+    //   원문 md는 그대로 두고 화면에서만 잇습니다. 번호가 맞는 제목이 없으면 글자 그대로 두고 report().sectionRefs.unresolved에 남김.
+    //   코드·다이어그램·제목·이미 링크인 글자는 건드리지 않음. "§2.1~2.4"처럼 § 없는 뒤 번호는 잇지 않음
+    linkSectionRefs(doc, headings);
+
     // ④ 제목 찾기(#sec=<절 제목> 딥링크용, PF.resolveHeading: 정확히 일치 → 앞부분 양방향 일치, 여럿이면 문서 순서상 첫 번째)
     const list = headings.map((h) => ({ text: htext(h), el: h }));
     const resolve = (title) => PF.resolveHeading(list, title)?.el || null;
@@ -488,6 +495,43 @@ try { window.mermaid?.initialize({ startOnLoad: false }); } catch (_) { /* */ }
     const pres = [...doc.querySelectorAll('pre')].filter((x) => !x.closest('.mmd-src'));
     pres.forEach((pre) => { fade(pre); pre.addEventListener('scroll', () => fade(pre), { passive: true }); });
     addEventListener('resize', () => pres.forEach(fade));
+  }
+
+  function linkSectionRefs(doc, headings) {
+    const byNum = new Map();
+    headings.forEach((h) => {
+      if (h.tagName !== 'H2' && h.tagName !== 'H3') return;
+      const m = /^(\d+(?:\.\d+)*)\.?\s/.exec(htext(h));
+      if (m && !byNum.has(m[1])) byNum.set(m[1], h);
+    });
+    const SKIP = 'a,code,pre,h1,h2,h3,h4,h5,h6,.mermaid,svg,script,style';
+    const walker = document.createTreeWalker(doc, NodeFilter.SHOW_TEXT, {
+      acceptNode: (n) => (n.nodeValue.includes('§') && !n.parentElement.closest(SKIP)) ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_REJECT,
+    });
+    const nodes = [];
+    while (walker.nextNode()) nodes.push(walker.currentNode);
+    const RE = /§\s?(\d+(?:\.\d+)*)/g;
+    nodes.forEach((node) => {
+      const text = node.nodeValue;
+      const out = document.createDocumentFragment();
+      let last = 0, any = false, m;
+      RE.lastIndex = 0;
+      while ((m = RE.exec(text))) {
+        const h = byNum.get(m[1]);
+        if (!h) { if (!secRefs.unresolved.includes(m[0])) secRefs.unresolved.push(m[0]); continue; }
+        out.append(text.slice(last, m.index));
+        const a = document.createElement('a');
+        a.className = 'sec-ref';
+        a.href = `#${h.id}`;
+        a.textContent = m[0];
+        a.title = htext(h);
+        out.append(a);
+        last = m.index + m[0].length; any = true; secRefs.linked++;
+      }
+      if (!any) return;
+      out.append(text.slice(last));
+      node.replaceWith(out);
+    });
   }
 
   function classifyMdLink(a, isRelative, decode) {

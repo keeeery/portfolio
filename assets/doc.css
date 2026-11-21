@@ -165,6 +165,9 @@ code { font-family: var(--mono); font-size: .88em; background: var(--accent-soft
 .md li::marker { color: var(--faint); }
 .md strong { color: var(--ink); font-weight: 700; }
 .md a { color: var(--accent-ink); text-underline-offset: 3px; }
+/* 본문 "§번호" 자동 링크(doc.js linkSectionRefs) — 본문 글자색 그대로, 옅은 점선 밑줄만. 올리면 강조색 — 직접 고친 부분 */
+.md a.sec-ref { color: inherit; text-decoration: underline dotted; text-decoration-color: color-mix(in srgb, currentColor 40%, transparent); text-decoration-thickness: 1px; }
+.md a.sec-ref:hover, .md a.sec-ref:focus-visible { color: var(--accent-ink); text-decoration-style: solid; text-decoration-color: currentColor; }
 .md hr { border: 0; border-top: 1px solid var(--line); margin: 36px 0; }
 .md blockquote { margin: 18px 0; padding: 12px 18px; background: var(--accent-soft); border-left: 3px solid var(--accent); border-radius: 0 calc(var(--r) * .5) calc(var(--r) * .5) 0; }
 .md blockquote p { color: var(--ink); margin: 6px 0; }
