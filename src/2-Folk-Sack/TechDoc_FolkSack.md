@@ -20,7 +20,7 @@
 
 ![Folk Sack 로고와, 지상 마을의 상점 아래 지하에서 세 플레이어가 광물 타일을 채굴하는 화면](images/cover-village-mining-logo.png)
 
-**Folk Sack**은 Unity 2D 멀티플레이 채굴 게임입니다. 플레이어는 지하 지형을 채굴하고 광물을 수집하며,
+**Folk Sack**은 2D 멀티플레이 채굴 게임입니다. 플레이어는 지하 지형을 채굴하고 광물을 수집하며,
 지상에서 자원을 판매하거나 장비와 사용 아이템을 구매합니다.
 지지 구조가 사라진 지형은 물리 청크로 낙하하고, 플레이어는 충돌 피해나 매몰 위험에 노출됩니다.
 제한 시간과 보유 골드 등 게임 진행 조건은 서버 상태를 기준으로 공유합니다.
@@ -36,6 +36,8 @@ flowchart TB
 %% 격자: Mine Risk | Sell End | Shop -
 %% 화살표 Shop -> Mine: 나감=왼쪽 들어감=왼쪽
 ```
+
+이 다이어그램은 지하에서 채굴하고 지상에서 판매·구매한 뒤 다시 내려가는 게임 루프와, 붕괴 위험과 게임 종료 조건을 도식화한 것입니다.
 
 - **진행:** 로비에서 방에 들어가 준비를 마치면 카운트다운 뒤 시작합니다. 제한 시간이 끝나거나 목표 골드에 이르면 끝나고, 실제 보유 골드로 승자를 정합니다.
 - **맵:** 같은 시드로 모든 플레이어에게 같은 맵이 생성됩니다. 깊이에 따라 Ground·Dirt·Stone·DeepStone 구간이 있고, 동굴·변칙 지형·광물 군집이 배치됩니다.
@@ -87,7 +89,7 @@ flowchart TB
 - **여러 덩어리가 동시에 떨어짐** → 덩어리마다 번호(`CollapseID`)와 담당 플레이어를 따로 둡니다(§3.3).
 - **떨어진 덩어리가 자리 잡자마자 다시 무너질 수 있음** → 서버가 배치를 확정한 뒤 다시 검사합니다(§3.4).
 - **땅을 파서 공간을 만들었는데 깔림이 풀리지 않음** → 물리 충돌 정보가 갱신될 때까지 기다린 뒤 다시 판정합니다(§8.2).
-- **서버가 거절한 아이템을 쓴 것처럼 보임** → 거절되면 쿨타임을 취소하고 서버 상태로 되돌립니다(§5.4).
+- **서버가 거절한 아이템을 쓴 것처럼 보임** → 거절되면 쿨타임을 취소하고 서버 상태로 되돌립니다(§5.3).
 - **이미 가 본 곳과 지금 보이는 곳이 섞임** → 탐험 기록과 현재 시야를 따로 저장합니다(§6).
 
 ### 1.3 개발 환경
@@ -95,7 +97,7 @@ flowchart TB
 | 항목 | 내용 |
 |---|---|
 | 장르 | 2D 멀티플레이 채굴 |
-| 기간 | 2026.08 — 2026.09 |
+| 기간 | 2026.08 — 2026.09, 약 2주 |
 | 인원 | 3인 |
 | 엔진 | Unity `6000.3.15f1`, URP `17.3.0` |
 | 언어 | C# |
@@ -121,6 +123,10 @@ flowchart TB
 - **팀원 2** — 그래픽·UI 그래픽·애니메이션·사운드·타격 연출, 캐릭터 이동 충돌 초기 구현, 서버 초기 구조
 
 강사님은 서버 리팩토링에서 채굴 요청의 Revision 대조를 없애는 작업과, 굴착 요청별 대기, 낙하 취소·매몰 정리를 도와주셨습니다.
+
+**AI를 활용한 곳:** 붕괴 동작을 먼저 확인한 첫 프로토타입(§2.6), 매몰 판정의 코드 반영(§4.4). 판정 기준과 최종 결정은 직접 정했습니다.
+
+이 문서에서 깊게 다루는 것은 세 가지입니다 — 같은 시드로 모두에게 같은 맵을 만드는 생성(§2), 여럿이 캐고 무너뜨리는 지형의 동기화(§3·§8.1), 낙하 지형의 충돌과 매몰(§4). 인벤토리·지도·로비 흐름(§5~§7)은 짧게 다룹니다.
 
 ### 1.5 전체 구조
 
@@ -155,6 +161,10 @@ flowchart TB
 %% 화살표 GS -> Room: 나감=오른쪽 들어감=오른쪽
 ```
 
+이 다이어그램은 클라이언트가 입력·물리·표시를, 서버가 공유 상태 확정을 맡고, 두 쪽이 같은 TSV·시드로 초기 맵을 만드는 전체 구조를 도식화한 것입니다.
+
+이 그림에서 볼 것은 두 가지입니다. 지형·인벤토리를 바꾸는 요청은 모두 서버의 `GameSession`이 확정하고 클라이언트는 방송받은 결과만 반영한다는 점, 그리고 클라이언트와 서버가 **같은 TSV·시드로 각자 초기 맵을 만든다**는 점입니다.
+
 ---
 
 ## 2. 같은 시드로 모두에게 같은 맵 생성
@@ -176,6 +186,8 @@ flowchart TB
     Mineral --> Spawn["지상 스폰 영역 / 지점"]
     Spawn --> Map["TerrainMapFile"]
 ```
+
+이 다이어그램은 시드 프로필과 깊이 구간에서 시작해 동굴·변칙 지형·광물·스폰 영역을 차례로 적용해 맵 파일을 만드는 생성 순서를 도식화한 것입니다.
 
 생성 순서 자체가 결과를 결정하는 규칙입니다.
 동굴을 뚫은 후 광물을 붙이는 순서나 난수 호출 순서가 달라지면 같은 시드여도 맵이 달라질 수 있습니다.
@@ -307,6 +319,8 @@ flowchart TB
     Def --> Use["TryGet·IReadOnlyCollection으로 조회"]
 %% 격자: TSV - | Reader - | DTO - | Check Error | Def - | Use -
 ```
+
+이 다이어그램은 TSV 파일을 DTO로 읽고 검사를 통과한 값만 Def로 만들어 조회하는 데이터 경로와, 검사에 실패하면 로딩 오류로 처리하는 갈림을 도식화한 것입니다.
 
 | 구분 | DTO | Def |
 |---|---|---|
@@ -471,6 +485,8 @@ flowchart TB
     %% 격자: Req Check | Fail Ok | Apply Commit
 ```
 
+이 다이어그램은 클라이언트의 채굴 요청을 서버가 검증해 확정 결과를 방송하거나, 오류 응답으로 그 요청의 대기를 해제하는 흐름을 도식화한 것입니다.
+
 | 계층 | 역할 |
 |---|---|
 | `TerrainManager` | 좌표 조회·굴착 접근, 권위 Batch 적용, 지형 변경 이벤트 |
@@ -481,6 +497,8 @@ flowchart TB
 | `Room` | 지형 명령 순서와 확정 메시지 방송 큐 관리 |
 
 이 파이프라인을 만들며 겪은 멀티플레이 멈춤 문제와 해결 과정은 8.1에 있습니다.
+
+![사파이어를 채굴 중인 플레이어와 타일 내구도가 소모되어 표시된 균열](images/mining-hit-crack.png)
 
 ### 3.2 모두에게 같은 순서로 반영되는 채굴 결과
 
@@ -515,6 +533,8 @@ sequenceDiagram
         C->>C: 해당 요청 대기 해제
     end
 ```
+
+이 다이어그램은 채굴 요청이 `RoomClient`에서 서버 `GameSession`까지 전달되어, 성공하면 확정 Batch를 받아 지형에 적용하고 실패하면 그 요청의 대기만 해제하는 차례를 도식화한 것입니다.
 
 Batch는 `BaseRevision`, `ResultRevision`, 셀 변경 목록을 가집니다.
 앞선 변경이 아직 적용되지 않은 Batch는 `SortedDictionary`에 보관하고 연속 적용을 시도합니다.
@@ -876,25 +896,13 @@ int damage = Mathf.CeilToInt(baseDamage * damageMultiplier);
 
 소스: [PlayerController.cs](https://github.com/keeeery/Folk-Sack/blob/main/Assets/02.%20Scripts/Player/PlayerController.cs), [PlayerCollisionMove.cs](https://github.com/keeeery/Folk-Sack/blob/main/Assets/02.%20Scripts/Player/PlayerCollisionMove.cs), [PlayerTerrainState.cs](https://github.com/keeeery/Folk-Sack/blob/main/Assets/02.%20Scripts/Player/PlayerTerrainState.cs), [FallDamageDetector.cs](https://github.com/keeeery/Folk-Sack/blob/main/Assets/02.%20Scripts/Character/Health/FallDamageDetector.cs), [PlayerHp.cs](https://github.com/keeeery/Folk-Sack/blob/main/Assets/02.%20Scripts/Character/Health/PlayerHp.cs).
 
-#### 칠 때 흔들리는 지형 연출
-
-이 소절의 타격 흔들림(`TerrainTileHitEffect`), 균열 표시(`TerrainCrackOverlayManager`), 셀 표시 위치 이동(`TrySetCellVisualOffset()`)은 팀원 2가 구현한 부분입니다.
-
-`TerrainGridWorld.TrySetCellVisualOffset()`은 셀의 Mesh 정점·자원 표시·균열 표시 위치만 움직입니다. `TerrainGridData` 좌표와 내구도, 경계 Collider는 바꾸지 않습니다. Chunk마다 셀의 시작 정점 인덱스를 캐시하고, 연출로 바뀐 정점은 `visualDirtyChunks`에 모아 `LateUpdate()`에서 반영합니다.
-
-`TerrainTileHitEffect`는 셀별 Tween을 관리하고 같은 셀의 이전 연출을 종료한 뒤 새 타격을 재생합니다. Tween 초기화 전후 `UnityEngine.Random.state`를 보관·복원하여 흔들림 연출이 전역 난수 상태에 영향을 남기지 않도록 합니다. 이는 맵 생성용 `System.Random`과는 별도 난수 경계입니다.
-
-균열은 손상률 20·40·60·80% 중 통과한 가장 높은 단계로 표시합니다. `TerrainCrackOverlayManager`는 손상 셀만 `SpriteRenderer`를 가지며, 회복·제거되어 표시가 필요 없으면 비활성화해 Stack에 반환합니다. 기본 지형 Mesh와 달리 광물 자원과 균열은 별도 View를 사용합니다.
-
-![사파이어를 채굴 중인 플레이어와 타일 내구도가 소모되어 표시된 균열](images/mining-hit-crack.png)
-
 #### 필드 아이템도 붕괴에서 탈출시키기
 
 `WorldItemDrop`도 `IFallingTerrainEscapeTarget`을 구현합니다. 청크가 아이템 위를 덮는 경우 같은 CollapseID의 처리를 중복하지 않고, 현재 열에서 좌우로 거리를 늘려 빈 후보를 찾습니다. 후보는 아이템 Bounds가 Grid와 겹치지 않고 청크의 수직 낙하 경로에서도 벗어나야 합니다. 낙하 중 탈출에는 이동 경로의 빈 공간도 검사합니다.
 
 탈출 중에는 Trigger와 무중력 상태로 `SmoothDamp` 이동하고, 도착 위치가 여전히 비어 있으면 중력과 일반 충돌을 복원합니다. 서버 Batch로 지형이 새로 배치된 뒤 이미 아이템이 겹쳤다면 다음 물리 갱신에서 다시 빈 위치를 찾아 즉시 분리합니다. 아이템의 물리 이동은 클라이언트 표시에서만 일어나며, 서버와 연속으로 동기화하지 않습니다.
 
-소스: [TerrainGridWorld.cs](https://github.com/keeeery/Folk-Sack/blob/main/Assets/02.%20Scripts/TerrainCollapse/TerrainGridWorld.cs), [TerrainTileHitEffect.cs](https://github.com/keeeery/Folk-Sack/blob/main/Assets/02.%20Scripts/TerrainCollapse/TerrainTileHitEffect.cs), [TerrainCrackOverlayManager.cs](https://github.com/keeeery/Folk-Sack/blob/main/Assets/02.%20Scripts/TerrainCollapse/TerrainCrackOverlayManager.cs), [WorldItemDrop.cs](https://github.com/keeeery/Folk-Sack/blob/main/Assets/02.%20Scripts/Item/WorldItemDrop.cs).
+소스: [TerrainGridWorld.cs](https://github.com/keeeery/Folk-Sack/blob/main/Assets/02.%20Scripts/TerrainCollapse/TerrainGridWorld.cs), [WorldItemDrop.cs](https://github.com/keeeery/Folk-Sack/blob/main/Assets/02.%20Scripts/Item/WorldItemDrop.cs).
 
 ### 4.4 고민과 선택
 
@@ -915,7 +923,7 @@ int damage = Mathf.CeilToInt(baseDamage * damageMultiplier);
 
 ## 5. 인벤토리·아이템·상점
 
-이 장은 먼저 게임에 어떤 아이템이 있고 플레이어가 무엇을 하는지(§5.1), 아이템을 다룰 때 서버에 보내는 요청이 무엇인지(§5.2)를 한눈에 정리한 뒤, 요청별 처리를 자세히 설명합니다(§5.3~§5.6).
+이 장은 게임에 어떤 아이템이 있고 플레이어가 무엇을 하는지(§5.1), 아이템 요청을 서버가 어떻게 확정하고 화면에 반영하는지(§5.2)를 정리합니다.
 
 ### 5.1 아이템 구성과 역할
 
@@ -933,6 +941,8 @@ int damage = Mathf.CeilToInt(baseDamage * damageMultiplier);
 | 광물·원석 | 석탄·황동·은광석·금광석, 사파이어·루비·다이아몬드 원석 | 타일을 캐면 떨어지고, 지상 스폰 구역으로 돌아오면 자동으로 팔려 골드가 됩니다 | 종류마다 무게(2~5)가 있어, 무게 제한까지만 들고 다닐 수 있습니다 |
 
 골드로 장비를 바꾸고 사용 아이템을 사서 더 깊이 내려가는 것이 §1.1 게임 루프의 "판매 → 상점" 부분입니다.
+
+![다이너마이트로부터 도망치는 두 플레이어](images/dynamite-throw.png)
 
 ### 5.2 아이템 요청과 서버 전체 상태로 교체
 
@@ -983,27 +993,13 @@ sequenceDiagram
 서버가 확정한 상태를 클라이언트의 로컬 무게 제한으로 거절하지 않도록 처리합니다.
 장착 곡괭이도 `EquippedPickaxeItemID`로 별도 적용합니다.
 
-### 5.3 서버 인벤토리의 화면 표시
+HUD는 `ItemChanged`를 구독해 목록 전체를 다시 그립니다.
+서버 스냅샷을 모델에 반영하는 경로와 `PlayerInventoryHudPresenter`는 제가 구현했고, `InventoryView`는 팀원 2가 처음 만든 것을 대부분 고쳐 썼습니다. HUD 그래픽과 체력 바는 팀원 2가, 곡괭이 슬롯과 쿨타임 표시는 팀원 1이 만들었습니다.
+판매·구매·획득도 같은 경로입니다. 가격과 구역·거리·수용량 검사는 서버가 확정하고, 클라이언트의 할인 표시도 같은 규칙을 씁니다.
 
-```csharp
-// RoomClient.HandleInventorySnapshot() — 권위 스냅샷으로 인벤토리 모델 교체
-playerInventory.ReplaceWithSnapshot(
-    quantities,
-    message.CurrentWeight,
-    message.MaxWeight);
+소스: [GameSession.cs](https://github.com/KooHoo-Dev/3rd-TeamProject-KH-Server/blob/main/HelloServer/Game/GameSession.cs), [PlayerSellController.cs](https://github.com/keeeery/Folk-Sack/blob/main/Assets/02.%20Scripts/Item/Inventory/PlayerSellController.cs).
 
-// 장착 상태는 별도 장비 모델에 적용
-localPickaxeInventory.ApplyAuthoritativePickaxe(message.EquippedPickaxeItemID);
-```
-
-HUD Presenter는 `ItemChanged`를 구독해 표시 데이터를 정렬하고 `InventoryView.Render()`로 전달합니다.
-아이템 한 종류만 바뀌어도 변경 이벤트마다 전체 목록을 정렬해 다시 표시합니다.
-
-서버 스냅샷을 모델에 반영하는 경로와 `PlayerInventoryHudPresenter`는 제가 구현했습니다.
-`InventoryView`는 팀원 2가 처음 만든 뒤 제가 대부분 고쳐 썼고,
-HUD 그래픽·프리팹과 체력 바(`HealthBarView`)는 팀원 2가, 곡괭이 슬롯(`PickaxeSlotView`)과 쿨타임 표시(`ItemCooldownIndicator`)는 팀원 1이 만들었습니다.
-
-### 5.4 아이템 사용 거절과 쿨타임
+### 5.3 아이템 사용 거절과 쿨타임
 
 아이템 쿨타임(`ItemController`)은 팀원 1이 만들었고, 서버가 사용을 거절하면 예상 쿨타임을 취소하는 처리는 제가 더했습니다.
 
@@ -1021,95 +1017,7 @@ if (message == null || string.IsNullOrEmpty(message.RequestId) ||
 itemReadyTime.Remove(pending.ItemID);
 ```
 
-### 5.5 경제 기능의 서버 확정
-
-지상 스폰 구역의 자동 판매, 사망 보관함·골드 드롭, 인벤토리 무게 제한,
-상점 구매·장비 강화·수용량 변경이 서버 인벤토리 상태와 연결됩니다.
-클라이언트의 할인 표시와 실제 서버 가격 계산에 같은 규칙을 적용합니다.
-서버 획득 처리는 DropID·대기 시간·거리·수량·수용량을 검사하고 성공 시 드롭 제거와 인벤토리를 확정합니다.
-판매는 스폰 구역·생존·게임 진행 조건과 금액 overflow를 검사합니다.
-상점은 기존 장비와의 차액과 구매 기록을 서버에서 처리하고, 가격도 서버가 확정합니다.
-
-### 5.6 세부 구현
-
-#### 장착 곡괭이와 모은 광물의 분리 집계
-
-서버는 장착 곡괭이를 일반 소모 아이템의 수량과 구분해 `EquippedPickaxeItemID`로 관리합니다.
-구매 시 다음 장비의 채굴력이 현재보다 높아야 하며,
-차액은 `Math.Max(0, 새 장비 가격 - 현재 장비 가격)`으로 계산합니다.
-일반 아이템은 수량과 무게에 추가하지만 장비는 장착 ID를 교체합니다.
-획득 가능 무게도 장착 장비 기준으로 검사하므로 강화와 수용량 증가가 같은 상태에 연결됩니다.
-
-상점 세션 시작은 되돌리기 기록을 비웁니다.
-일반 아이템 구매 기록은 실제 지불한 금액과 수량을 Stack에 저장하며,
-되돌리기 때 현재 테이블 가격을 다시 계산하지 않고 저장한 금액을 반환합니다.
-장비 구매는 일반 소모품의 되돌리기 기록에 넣지 않습니다.
-
-서버는 Undo 처리에서 기록을 먼저 `TryPop()`한 다음 아이템 수량과 환불 overflow를 검사합니다.
-그래서 검사에 실패하면 그 기록은 이미 빠져 있어, 같은 되돌리기를 다시 시도할 수 없습니다.
-UI의 구매 취소 표시와 서버가 허용하는 범위를 함께 맞출 필요가 있습니다.
-
-자동 판매는 스폰 구역에 들어가는 상태 변화를 기준으로 요청합니다.
-`PlayerSellController`는 판매 요청 직전에 `SendLocalPlayerStateNow()`를 같은 송신 큐에 넣어,
-서버가 이전 위치로 구역 검사를 하는 차이를 줄입니다.
-판매·획득이 서버 권위라고 해도 플레이어 좌표 자체는 클라이언트 보고값이라는 경계는 유지됩니다.
-
-소스: [GameSession.cs](https://github.com/KooHoo-Dev/3rd-TeamProject-KH-Server/blob/main/HelloServer/Game/GameSession.cs), [PlayerSellController.cs](https://github.com/keeeery/Folk-Sack/blob/main/Assets/02.%20Scripts/Item/Inventory/PlayerSellController.cs).
-
-#### 팀 아이템 연동 — 사용 전 미리보기와 확정 뒤 결과
-
-아이템마다 하는 일은 §5.1에 정리했습니다. 아이템 고유 동작과 연출은 팀 구현을 포함하며,
-온라인 경로에서는 요청 전 입력·미리보기와 서버 확정 뒤 피드백을 연결합니다.
-
-| 아이템 | 로컬 준비·표시 | 확정 결과 연결 |
-|---|---|---|
-| 다이너마이트 | 조준 방향·중력으로 점선 궤적과 끝점 표시 | 투척 메시지의 초기 속도로 물리 비행, 소유 클라이언트가 퓨즈 후 폭발 위치 요청 |
-| 지뢰 | 셀 설치와 감지 활성화 지연·점멸 | 온라인 감지에서 로컬 플레이어 거리를 보고 폭발 요청, 거절 시 재시도 허용 |
-| 포션 | 사망·최대 체력 등 사용 가능 조건 확인 | 사용 성공 뒤 효과음과 회복 팝업 표시 |
-| 탐지기 | 파동·자원 마커 표시 | 서버가 반환한 셀을 월드 위치로 바꾸어 거리순으로 연출 |
-| 횃불 | 셀 설치와 Light2D 표시 | 활성 횃불 목록·변경 이벤트로 시야 갱신 연결 |
-
-다이너마이트의 미리보기는 일정 시간 간격의 등가속도 계산입니다.
-궤적 계산에 지형 충돌 반사나 첫 충돌 위치 검사가 없으므로,
-강조점은 실제 착탄점이 아니라 표시 시간 구간의 끝점입니다.
-
-![다이너마이트로부터 도망치는 두 플레이어](images/dynamite-throw.png)
-
-`Detector`는 서버 확정 응답마다 별도 파동 코루틴을 시작합니다.
-오프라인 프리뷰용 코루틴 슬롯을 공유하지 않아,
-연속된 확정 응답이 앞 응답의 표시를 취소하는 문제를 피합니다.
-자원 결과가 없어도 파동을 재생하고 별도 시스템 메시지를 표시합니다.
-
-`GridOccupancy<T>`는 타입별 셀 점유 테이블입니다.
-지뢰끼리·횃불끼리의 중복을 추적하며, 다른 타입끼리는 같은 셀에 있을 수 있습니다.
-`TorchLight`는 지형 변경 이벤트에서 설치 셀이 다시 지형으로 막혔는지 확인해 제거하고,
-점유 등록·활성 광원 목록·시야 변경 알림을 정리합니다.
-
-#### 남은 구현 차이 — 다이너마이트 확정 뒤 로컬 지형 변경
-
-지뢰의 `ExplodeFromServer()`는 폭발 표시만 생성하지만,
-다이너마이트의 같은 메서드는 `ExplosiveBase.Detonate()`를 호출합니다.
-이 공통 함수는 표시 외에 `TerrainManager.RequestRemoveCell()`을 통한 로컬 지형 손상도 실행합니다.
-해당 지형 API에는 온라인 모드 차단 조건이 없으므로,
-서버 폭발 Batch와 별개로 로컬 지형을 다시 변경할 가능성이 있습니다.
-
-체력은 온라인 `PlayerHp.TakeDamage()`가 로컬 확정을 막으므로 중복으로 깎이지 않습니다.
-남는 문제는 폭발 확정 뒤 지뢰는 표시 전용 경로를, 다이너마이트는 지형 손상까지 하는 경로를 쓴다는 차이입니다.
-여러 클라이언트의 폭발 Batch 적용 순서·타일 내구도 차이를 함께 검증할 부분입니다.
-
-소스: [DynamiteItem.cs](https://github.com/keeeery/Folk-Sack/blob/main/Assets/02.%20Scripts/Item/Usable/DynamiteItem.cs), [DynamiteExplosive.cs](https://github.com/keeeery/Folk-Sack/blob/main/Assets/02.%20Scripts/Item/Usable/DynamiteExplosive.cs), [ExplosiveBase.cs](https://github.com/keeeery/Folk-Sack/blob/main/Assets/02.%20Scripts/Item/Usable/ExplosiveBase.cs), [Detector.cs](https://github.com/keeeery/Folk-Sack/blob/main/Assets/02.%20Scripts/Item/Usable/Detector.cs), [GridOccupancy.cs](https://github.com/keeeery/Folk-Sack/blob/main/Assets/02.%20Scripts/Item/Usable/GridOccupancy.cs).
-
-#### 요청마다 다른 서버 확인 항목
-
-필드 아이템 획득은 서버가 DropID와 수량·획득 대기 시간·수용량을 관리합니다. 거리 판정은 요청에 담긴 아이템 좌표와 서버가 보관한 플레이어 좌표 사이에서 수행합니다. 서버는 드롭 생성 좌표와 요청 좌표를 대조하지 않으므로, 클라이언트 물리로 움직인 드롭 위치를 그대로 믿습니다.
-
-다이너마이트 폭발 요청은 소유자, 퓨즈 종료 시각의 허용 오차, 투척 속도·퓨즈로 계산한 최대 이동 범위를 검사합니다. 서버가 탄도를 재현하지는 않습니다. 지뢰는 설치자 대신 요청한 감지자의 생존 여부와 감지 범위에 여유 거리를 더한 조건을 확인합니다. 회복량과 낙하 피해량에는 클라이언트가 보고한 값이 들어가므로, 피해 근거는 지형·인벤토리만큼 서버가 확정하지 않습니다.
-
-온라인 아이템 사용의 소모량은 서버 결과로 반영하지만, 연결이 끊어진 경우의 로컬 대체 경로는 기능마다 다릅니다. `PickaxeItem`은 RoomClient가 존재하면 준비·연결 전 로컬 지형 확정을 막는 반면, `ItemController`의 액티브 아이템은 연결 여부로 온라인·오프라인 경로를 선택합니다. 연결이 끊긴 뒤의 입력 정책은 하나로 정리해 검증해야 합니다.
-
-소스: [GameSession.cs](https://github.com/KooHoo-Dev/3rd-TeamProject-KH-Server/blob/main/HelloServer/Game/GameSession.cs), [ItemController.cs](https://github.com/keeeery/Folk-Sack/blob/main/Assets/02.%20Scripts/Item/ItemController.cs), [PickaxeItem.cs](https://github.com/keeeery/Folk-Sack/blob/main/Assets/02.%20Scripts/Item/PickaxeItem.cs).
-
-### 5.7 고민과 선택
+### 5.4 고민과 선택
 
 | 선택 | 이유 | 확인할 제약 |
 |---|---|---|
@@ -1118,7 +1026,7 @@ UI의 구매 취소 표시와 서버가 허용하는 범위를 함께 맞출 필
 | 아이템 데이터와 표시 분리 | ItemID와 공통 데이터로 슬롯·상점 표현 | 클라이언트/서버 Item 테이블 버전 일치 필요 |
 
 인벤토리는 지형 데이터에 비해 크기가 작아, 바뀐 부분만 보내지 않고 서버 스냅샷을 통째로 교체해도 문제가 없다고 판단했습니다.
-표시도 아이템 한 종류만 바뀌면 전체 목록을 `ItemID` 순으로 정렬해 다시 그립니다(§5.3).
+표시도 아이템 한 종류만 바뀌면 전체 목록을 `ItemID` 순으로 정렬해 다시 그립니다(§5.2).
 플레이어가 슬롯 순서를 직접 바꾸는 기능을 넣지 않아 지켜야 할 순서가 없으므로, 이 방식을 문제 삼지 않았습니다.
 슬롯 변경 기능을 넣지 않은 것은, 아래로 파 내려가는 플레이에서 화면 아래의 인벤토리 슬롯을 마우스로 다루게 하면 의도치 않은 클릭 실수가 나올 수 있다고 보았기 때문입니다.
 슬롯은 숫자 키(1~0) 또는 마우스 휠 스크롤로 고릅니다.
@@ -1154,40 +1062,13 @@ ExploreVisionRadius(playerCell);
 
 ### 6.3 세부 구현
 
-#### 가 본 곳과 지금 보이는 곳의 계산
-
-누적 탐험은 `visionRadius` 안의 원형 후보를 순회하며 `HasLineOfSight()`로 차폐를 검사합니다.
-새로 탐험한 셀만 `CellsExplored`에 전달합니다.
-현재 관측은 플레이어와 활성 횃불 각각에서 상하좌우 광선을 뻗고,
-빈 셀에서는 제한된 횟수로 직각 방향을 전환해 통로를 따라 영역을 더합니다.
-지형이 있는 셀은 표시 영역에 넣은 뒤 그 방향의 확장을 멈춥니다.
-
-`currentObservedCells`는 갱신할 때 새 관측 결과로 교체하고,
-이미 탐험한 정보는 `ExplorationMapData.TryExplore()`가 유지합니다.
-
-| 갱신 신호 | 필요한 이유 |
-|---|---|
-| 플레이어의 Grid 셀 이동 | 같은 셀 안의 미세 이동마다 전체 재계산하지 않음 |
-| `TerrainChanged` | 정지 중 채굴·낙하로 열린 시야 반영 |
-| 횃불 변경 | 광원 배치 결과를 현재 관측에 반영 |
-| 탐험 초기화·복원 | 표시 계층이 새 데이터와 다시 연결될 시점 알림 |
-
-관측 반경과 방향 전환 횟수는 이 방식의 범위 제한입니다.
-횃불마다 시야를 추가하므로 비용은 광원 수·반경·통로 형상에 영향을 받습니다.
-
-소스: [PlayerExplorationController.cs](https://github.com/keeeery/Folk-Sack/blob/main/Assets/02.%20Scripts/Exploration/PlayerExplorationController.cs), [ExplorationMapData.cs](https://github.com/keeeery/Folk-Sack/blob/main/Assets/02.%20Scripts/Exploration/ExplorationMapData.cs).
-
-#### 두 겹의 안개와 전체 지도 보기
-
-월드 안개는 탐험 이력과 현재 시야를 두 Mesh 계층으로 표현합니다. `ExplorationForWorldView`는 32×32 셀 Chunk를 사용하고, 이전·새 관측 셀이 속한 Chunk를 dirty 집합에 모읍니다. 관측 범위를 떠난 탐험 지역도 현재 시야 안개에는 다시 가려지며, 지상과 기반암·스폰 플랫폼은 표시 예외로 둡니다.
-
-미니맵은 같은 Grid를 색상 배열로 바꿔 Texture2D에 표시합니다. 셀이 바뀌면 CPU 색상을 갱신하지만, `MinimapView.ApplyPixels()`는 전체 배열을 `SetPixels32()`·`Apply()`로 올리므로 GPU에는 매번 전체 텍스처가 전송됩니다.
-
-Tab 전체 지도는 프레임 Mask와 지도 콘텐츠의 RectTransform을 구분하고, 원래 앵커·피벗·위치를 보관했다가 복원합니다. 확대 시 커서 아래 지점이 유지되도록 줌 전후 배율로 pan을 보정하며, 이동 범위는 확대된 콘텐츠 크기로 제한합니다. 전체 지도는 원격 플레이어 마커를 탐험 여부와 별개로 표시하고, 결과 화면의 어둡게 표시 상태도 Tab 개폐와 별도로 관리합니다.
+누적 탐험은 시야 반경 안의 셀을 직선 시야(`HasLineOfSight`)로 검사해 새로 본 셀만 기록하고, 현재 관측은 플레이어와 횃불에서 상하좌우로 뻗어 통로를 따라 넓힙니다.
+월드 안개는 탐험 이력과 현재 시야를 두 겹 Mesh로 그리고, Tab 전체 지도는 커서 아래 지점을 유지하며 확대합니다.
+미니맵은 셀이 바뀔 때마다 텍스처 전체를 GPU로 다시 올리는 비용이 남아 있습니다.
 
 ![전체 지도(Tab)에 탐험한 구역과 플레이어 위치 마커가 표시된 화면](images/full-map.png)
 
-소스: [ExplorationForWorldView.cs](https://github.com/keeeery/Folk-Sack/blob/main/Assets/02.%20Scripts/Exploration/ExplorationForWorldView.cs), [TerrainMinimapPresenter.cs](https://github.com/keeeery/Folk-Sack/blob/main/Assets/03.%20UI/Scripts/TerrainMinimapPresenter.cs), [MinimapView.cs](https://github.com/keeeery/Folk-Sack/blob/main/Assets/03.%20UI/Scripts/MinimapView.cs).
+소스: [PlayerExplorationController.cs](https://github.com/keeeery/Folk-Sack/blob/main/Assets/02.%20Scripts/Exploration/PlayerExplorationController.cs), [ExplorationMapData.cs](https://github.com/keeeery/Folk-Sack/blob/main/Assets/02.%20Scripts/Exploration/ExplorationMapData.cs), [ExplorationForWorldView.cs](https://github.com/keeeery/Folk-Sack/blob/main/Assets/02.%20Scripts/Exploration/ExplorationForWorldView.cs), [MinimapView.cs](https://github.com/keeeery/Folk-Sack/blob/main/Assets/03.%20UI/Scripts/MinimapView.cs).
 
 ### 6.4 고민과 선택
 
@@ -1228,20 +1109,11 @@ Tab 전체 지도는 프레임 Mask와 지도 콘텐츠의 RectTransform을 구�
 
 ### 7.3 세부 구현
 
-이 절의 로비·대기방·메뉴·설정·채팅·승자 표시 코드는 제가 구현했고, 이 화면들의 그래픽과 레이아웃은 팀원 2가 만들었습니다.
+이 절의 로비·대기방·채팅·승자 표시 코드는 제가 구현했고, 이 화면들의 그래픽과 레이아웃은 팀원 2가 만들었습니다.
 
 #### 모두 준비돼야 시작하는 로비
 
-로비의 참가자 상태에도 Revision이 있지만 지형 Revision과는 별개입니다.
-`LobbyHub.BroadcastStateAsync()`는 참가자 목록과 수신 대상을 잠금 안에서 구성하고,
-방송할 상태 번호를 증가시킨 뒤 잠금 밖에서 각 소켓에 송신합니다.
-클라이언트는 `lastStateRevision`보다 낮은 상태를 버려 오래된 목록이 최신 UI를 덮지 않도록 합니다.
-비교가 `<`이므로 같은 Revision은 다시 처리될 수 있습니다.
-
-호스트의 시작·추방 권한에는 HostToken을 사용합니다.
-상태 메시지에서 토큰은 호스트에게만 넣고,
-게임 종료 뒤 재대기방에서는 참가자 목록과 현재 WebSocket 연결 상태를 구분해 고스트 슬롯을 표시합니다.
-호스트 추방은 로비 슬롯 정리와 인게임 연결 종료까지 연결합니다.
+로비 참가자 목록에도 상태 번호를 붙여 오래된 목록이 최신 화면을 덮지 않게 하고, 호스트의 시작·추방에는 HostToken을 씁니다.
 
 인게임 준비 완료는 WebSocket 연결 직후가 아니라 다음 조건이 충족된 뒤 보냅니다.
 
@@ -1256,7 +1128,6 @@ Tab 전체 지도는 프레임 Mask와 지도 콘텐츠의 RectTransform을 구�
 
 !['게임 시작 대기중' 타이머와 네 플레이어가 지상에 모인 화면, '모든 플레이어가 준비되었습니다' 채팅창 시스템 메시지](images/lobby-ready-wait.png)
 
-같은 준비 통지가 다시 와도 집합이므로 인원 수가 중복 증가하지 않습니다.
 
 #### 다른 플레이어의 움직임 표시
 
@@ -1272,55 +1143,15 @@ transform.position = new Vector3(next.x, next.y, current.z);
 ```
 
 서버 timestamp 기반 보간 버퍼나 이동 예측 없이, 최신 목표 위치로 다가가는 단순한 표시 방식입니다.
-원격 채굴 애니메이션 이벤트는 지형·인벤토리를 다시 변경하지 않고 효과음만 재생합니다.
-판정과 원격 연출이 같은 애니메이션 신호를 통해 중복 실행되지 않도록 경계를 둡니다.
 
 소스: [LobbyHub.cs](https://github.com/KooHoo-Dev/3rd-TeamProject-KH-Server/blob/main/HelloServer/Network/LobbyHub.cs), [LobbySocketClient.cs](https://github.com/keeeery/Folk-Sack/blob/main/Assets/02.%20Scripts/Networking/LobbySocketClient.cs), [RemotePlayerView.cs](https://github.com/keeeery/Folk-Sack/blob/main/Assets/02.%20Scripts/Networking/RemotePlayerView.cs), [RemotePlayerAnimationView.cs](https://github.com/keeeery/Folk-Sack/blob/main/Assets/02.%20Scripts/Networking/RemotePlayerAnimationView.cs).
 
-#### 멀티플레이 중 메뉴·설정 창
-
-`PauseMenuController`는 메뉴·설정·결과 창의 활성 상태를 모달 입력 차단 조건으로 제공합니다.
-`PlayerInputReader`는 채팅 입력 중이거나 모달이 열리면 빈 입력을 전달합니다.
-메뉴를 열 때 게임 전체 `Time.timeScale`을 0으로 바꾸지는 않으므로,
-화면을 연 플레이어의 입력 차단과 서버 게임 진행의 정지는 별개입니다.
-상점을 Esc로 닫은 같은 프레임에 일시정지 메뉴가 다시 열리지 않도록 상점의 닫힘 상태도 확인합니다.
-
-`SettingsController`는 UI가 처음 열리는 시점과 설정 적용 시점을 분리합니다.
-비활성 설정 창의 Awake를 기다리지 않고 `BeforeSceneLoad`에서 저장된 화면·볼륨 값을 적용합니다.
-창 모드에서만 선택한 해상도를 사용하고, 전체화면 계열은 현재 모니터 해상도를 사용합니다.
-
-PlayerPrefs 키에는 `Application.dataPath`의 Hash128을 접두어로 넣습니다.
-같은 제품명의 여러 빌드를 다른 경로에서 실행할 때 설정이 섞이는 문제를 줄이는 방식입니다.
-같은 경로의 빌드를 덮어쓰면 설정을 유지하며,
-같은 실행 파일을 다른 폴더로 옮기면 별도 설정 키를 사용하게 됩니다.
-
-#### 팀 오디오 연동 — 위치 효과음·변형 클립·볼륨 적용
-
-`GameSound`는 `SoundCue`를 Resources 클립 또는 변형 클립 폴더에 연결합니다.
-변형이 여러 개면 바로 이전 인덱스를 제외하고 선택해 같은 소리의 연속 재생을 줄입니다.
-붕괴 효과음에는 짧은 재생 간격을 두어 같은 종류가 동시에 과하게 겹치는 것을 제한합니다.
-
-효과음 위치의 Z를 활성 AudioListener 평면에 맞추고,
-월드 XY 거리의 선형 감쇠를 사용합니다.
-메뉴·로비·인게임별 배경음은 씬 로드 이벤트에서 선택하며,
-배경음 AudioSource는 씬을 넘어 유지합니다.
-마스터·음악·효과음 볼륨은 별도 값으로 적용합니다.
-
-일반 효과음은 매번 임시 GameObject·AudioSource를 생성하고 재생 후 제거합니다.
-파편 등 다른 객체와 달리 오디오 보이스는 풀링하지 않습니다.
-반복음은 반환받은 AudioSource를 `StopLoop()`로 종료하는 별도 수명 경로를 가집니다.
-
-소스: [PauseMenuController.cs](https://github.com/keeeery/Folk-Sack/blob/main/Assets/03.%20UI/Scripts/PauseMenuController.cs), [SettingsController.cs](https://github.com/keeeery/Folk-Sack/blob/main/Assets/03.%20UI/Scripts/SettingsController.cs), [PlayerInputReader.cs](https://github.com/keeeery/Folk-Sack/blob/main/Assets/02.%20Scripts/Player/PlayerInputReader.cs), [GameSound.cs](https://github.com/keeeery/Folk-Sack/blob/main/Assets/02.%20Scripts/GameSound.cs).
-
 #### 대기방 프리뷰·채팅·승자 표시
 
-대기방 아바타는 게임용 Prefab을 비활성 부모 아래 생성한 뒤 MonoBehaviour·물리·AudioSource를 끄고 Animator만 Idle로 표시합니다. 게임용 Prefab 재사용과 게임플레이 진입을 분리한 경로입니다. 슬롯 색상은 `MaterialPropertyBlock`으로 적용하고 같은 팔레트를 인게임 플레이어와 공유합니다.
-
-채팅은 로비·인게임 연결을 선택해 보내며 입력을 200자로 제한합니다. `ChatPanelView`는 최근 100개 메시지를 Queue로 보관하고 닉네임·본문의 꺾쇠를 이스케이프해 텍스트 마크업으로 해석되는 것을 막습니다. 입력 중·포인터가 올라간 상태는 화면 페이드 및 게임 입력 차단에 별도로 연결됩니다.
+대기방 아바타는 게임용 Prefab을 Animator만 켠 채 재사용해 보여 주고, 채팅은 최근 100개만 보관하며 꺾쇠를 이스케이프해 마크업으로 해석되지 않게 합니다.
+시간 종료 승자는 팔지 않은 광물을 빼고 실제 골드로 정하며, 골드가 같으면 모두 승자로 표시합니다.
 
 ![대기실 화면 — 네 플레이어 슬롯의 아바타와 오른쪽 채팅창, '호스트가 게임을 시작할 때까지 기다리는 중입니다' 안내](images/lobby-room-chat.png)
-
-시간 종료 승자는 판매되지 않은 광물의 평가액을 포함하지 않고 실제 골드로 결정합니다. 최고 골드가 같으면 해당 플레이어를 모두 승자로 지정합니다. 결과 UI의 순위도 같은 골드에는 같은 순위를 주고 다음 순위를 건너뛰는 방식으로 표시합니다. 목표 골드 종료 역시 골드 아이템 수량을 기준으로 합니다.
 
 ![게임 종료 결과 창](images/game-result.png)
 
@@ -1410,6 +1241,8 @@ flowchart TB
     end
     Before ~~~ After
 ```
+
+이 다이어그램은 리팩터링 전에는 지형 Gate가 모든 소켓 송신이 끝날 때까지 유지됐고, 리팩터링 후에는 큐에 등록한 뒤 Gate를 풀고 별도 방송 루프가 송신하도록 바뀐 차이를 도식화한 것입니다.
 
 | 수정 | 변경한 처리 | 결과 구조 |
 |---|---|---|
@@ -1542,7 +1375,8 @@ else
 - **Revision 누락 복구**: 미래 Batch 버퍼링만으로 영구 누락을 해결할 수 없습니다. 재접속·재동기화 시나리오 검증이 필요합니다.
 - **방송 적체**: 무제한 `Channel`의 큐 길이와 느린 연결에 대한 운영 정책을 측정해야 합니다.
 - **UI·시야 할당**: 전체 인벤토리 표시 재구성과 시야 컬렉션 생성이 있습니다. 병목 여부는 Profiler에서 판단해야 합니다.
-- **다이너마이트 로컬 지형 변경**: 서버 폭발 확정 뒤에도 로컬 지형을 다시 바꿀 수 있는 경로가 남아 있습니다(§5.6).
+- **상점 되돌리기 순서**: 서버가 되돌리기 기록을 먼저 꺼낸 뒤 수량·환불을 검사해, 검사에 실패하면 같은 되돌리기를 다시 할 수 없습니다(§5).
+- **다이너마이트 로컬 지형 변경**: 서버 폭발 확정 뒤에도 로컬 지형을 다시 바꿀 수 있는 경로가 남아 있습니다(§5).
 - **지형 표현 방식의 근거**: 셀마다 객체를 두던 방식의 로드 시간·프레임 저하는 팀원 환경에서 확인했지만 수치로 남기지 않았습니다(§2.6).
 - **추가 검증**: 소유자 퇴장, 늦은 확정·취소 메시지, 장시간 부하에서의 안정성 검증이 필요합니다.
 

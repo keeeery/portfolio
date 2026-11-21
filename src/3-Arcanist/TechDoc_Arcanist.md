@@ -39,6 +39,8 @@ flowchart TB
 %% 화살표 Gauge -> Use: 나감=위 들어감=오른쪽
 ```
 
+이 다이어그램은 전투 중 패링으로 카드 게이지를 얻어 카드를 쓰고, 방을 클리어하면 보상 카드로 덱을 구성하며, 사망하면 체크포인트로 돌아오는 게임 루프를 도식화한 것입니다.
+
 - **진행:** 타이틀 → 인트로 → 일반 방 2개 → 보스 방(고대 수호 골렘). 방의 적을 모두 쓰러뜨리면 출구의 오벨리스크가 열리고, 보상 카드 3장 중 1장을 고른 뒤 오벨리스크 안에서 덱을 편성합니다.
 - **조작:** 이동·점프(더블 점프)·대시·달리기(스태미나 소비)·공격(D, 연속 입력으로 콤보)·패링, 카드 사용은 Q/W/E.
 - **카드 게이지:** 시간이 지나면 한 칸씩 차고, 패링에 성공하면 칸이 더해집니다. 가득 차고 빈 슬롯이 있으면 덱에서 카드 1장을 뽑습니다.
@@ -66,7 +68,7 @@ flowchart TB
 | 항목 | 내용 |
 |---|---|
 | 장르 | 2D 액션 플랫포머 |
-| 기간 | 2026.06 — 2026.07 |
+| 기간 | 2026.06 — 2026.07, 약 2주 |
 | 인원 | 1인 |
 | 엔진 | Unity `6000.3.15f1`, URP `17.3.0` |
 | 언어 | C# |
@@ -103,6 +105,14 @@ flowchart TB
     Resolver -->|패링 성공 → 게이지| Card
 %% 격자: Combat - Inv | Resolver - Card | Hit - Exec | Player Player Player | Save Check Room
 ```
+
+이 다이어그램은 전투·카드·방과 저장 세 묶음의 주요 클래스와, 공격·카드 효과·패링 보상·체크포인트 복귀로 이어지는 관계를 도식화한 것입니다.
+
+이 그림에서 볼 것은 **기본 공격과 카드 효과가 모두 같은 `HitBox → HitResolver` 경로로 피해를 주고**, 패링에 성공하면 그 결과가 `CardSystem`의 카드 게이지로 이어진다는 점입니다.
+
+**AI를 활용한 곳:** 인벤토리 코드 정리(§4.4). 나눌 파일과 기준값은 직접 정하고, 코드를 옮기는 일만 맡겼습니다.
+
+이 문서에서 깊게 다루는 것은 전투와 패링(§2), 카드 순환과 스킬(§3), 방 전환과 체크포인트 복원(§6·§7)입니다. 인벤토리·보상(§4)과 이동·적 행동(§5)은 짧게 다룹니다.
 
 ---
 
@@ -365,6 +375,8 @@ flowchart TB
 %% 화살표 Discard -> Draw: 나감=오른쪽 들어감=오른쪽 거리=84
 ```
 
+이 다이어그램은 편성 덱의 카드가 드로우 더미 → 손패 → 버림 더미를 돌고, 드로우 더미가 바닥나면 버림 더미를 섞어 되돌리는 카드 순환을 도식화한 것입니다.
+
 게이지 충전 외에도 덱 초기화 여부, `CardHandUI.IsBusy`, 빈 슬롯 유무를 확인합니다.
 드로우 시도 직전에 `BeginNextGaugeCycle()`을 호출해 다음 게이지 주기를 시작합니다.
 덱 동기화 시 기존 손패를 통째로 초기화하지 않고 드로우·버림 목록에서 빠진 카드를 제거합니다.
@@ -590,30 +602,14 @@ currentCell = Mathf.Min(totalCells, gaugeCells.Length);
 보상 추첨은 보유·중복 카드를 제외한 후보에 카드별 등급 가중치를 적용합니다.
 
 `PlayerInventory`는 보유 카드와 편성 카드를 분리하고 `OnInventoryChanged`로 변경을 알립니다.
-이 이벤트는 카드 추가·편성 전환·제거·새 카드 확인처럼 목록이 바뀌는 곳마다 발생하고, 구독하는 쪽은 둘입니다.
-`CardSystem`은 전투에서 쓰는 런타임 덱을 편성 덱과 맞추고, `InventoryWindow`는 인벤토리 화면을 다시 그립니다.
-둘 다 `OnEnable`에서 구독하고 `OnDisable`에서 해제하므로, 꺼진 창이나 비활성 객체는 알림을 받지 않습니다.
-`InventoryWindow`는 카드를 확인함으로 표시하는 동안 `suppressInventoryRefresh`로 자기 화면 갱신을 잠시 멈춰, 자기가 일으킨 변경으로 화면을 한 번 더 그리지 않습니다.
-보상 카드는 보유 목록에만 추가되고 덱에는 자동 편성되지 않습니다(`GrantReward`가 `AddCard(selectedCard, false)` 호출).
+전투 덱(`CardSystem`)과 인벤토리 화면(`InventoryWindow`)이 이 알림을 각각 구독해 따라옵니다.
 
 소스: [PlayerInventory.cs](https://github.com/keeeery/Arcanist/blob/main/Assets/02.%20Scripts/06.%20Inventory/PlayerInventory.cs), [CardSystem.cs](https://github.com/keeeery/Arcanist/blob/main/Assets/02.%20Scripts/04.%20CardSystem/CardSystem.cs), [InventoryWindow.cs](https://github.com/keeeery/Arcanist/blob/main/Assets/02.%20Scripts/06.%20Inventory/InventoryWindow.cs), [RewardController.cs](https://github.com/keeeery/Arcanist/blob/main/Assets/02.%20Scripts/08.%20Reward/RewardController.cs).
 
 ### 4.2 편성 규칙
 
-소스 기본값은 최소 6장, 덱 비용 8~14, 최대 20장입니다.
+`CanCompleteDeckEdit`가 최소 장수와 비용 범위를 함께 검사하고, 추가에 실패하면 이유를 `DeckEditFailure`로 돌려줍니다.
 씬의 실제 값은 Inspector에 저장된 설정을 따릅니다.
-`CardData.Cost`는 Common/Rare/Epic/Legendary에 각각 1/2/4/6을 반환합니다.
-`CanCompleteDeckEdit`에서 최소 장수와 비용 범위를 함께 판단합니다.
-InventoryWindow는 선택(`InventorySelection`), 정렬(`InventoryCardSorter`), 조건 표시(`DeckConditionView`), 슬롯 목록(`InventorySlotList`)을 조합합니다.
-
-추가·검증 API는 실패 이유를 `DeckEditFailure`로 반환합니다.
-
-| API | 용도 |
-|---|---|
-| `CanAddToDeck(CardData cardData)` | 편성 가능 여부만 검사 |
-| `TryAddToDeck(CardData cardData)` | 검사 후 실제 추가, 결과 반환 |
-| `CanCompleteDeckEdit()` | 최소 장수와 비용 범위 충족 여부 반환 |
-| `AddCard(CardData cardData, bool addToDeck = true)` | 보유 목록 추가 및 선택적 덱 편성 |
 
 ![전체 카드와 플레이어 카드 덱 편성 화면(최소 카드 수·마력 조건 표시)](images/deck-inventory.png)
 
@@ -645,39 +641,11 @@ foreach (CardData card in candidates)
 
 ### 4.4 전체 카드 목록과 더블 클릭·드래그 드롭 편성
 
-#### 클릭·더블 클릭·끌어 놓기 편성
-
-전체 카드 목록은 보유하되 덱에 없는 카드 → 덱에 있는 카드 → 미보유 카드 순으로 나눠 표시합니다.
-미보유 카드도 도감처럼 확인할 수 있으나, 드래그 시작과 편성은 보유 여부를 검사합니다.
-슬롯의 단일 클릭은 선택, 더블 클릭은 편성 전환이며 드래그 드롭도 같은 InventoryWindow의 추가·제거 함수로 연결합니다.
-
-드래그 아이콘은 처음 필요할 때 하나 만들고 이후 비활성화해 재사용합니다.
-드래그 중에는 원본 슬롯의 blocksRaycasts를 끄므로 드롭 영역이 입력을 받을 수 있고,
-종료·비활성화에서는 원본 투명도와 입력 상태를 복구합니다.
-`InventorySlotList`도 표시 슬롯을 재사용하여 목록 갱신마다 전부 파괴·생성하는 경로를 줄입니다.
-
-기존 인벤토리 작업에서는 슬롯 목록·안내 메시지 책임을 분리하고, 카드 데이터 조회의 리플렉션을 공개 목록 API로 바꾸었습니다.
-정적 데이터는 `CardDatabase.AllCards`로 명시적으로 읽게 해 조회 경로를 단순하게 했습니다.
-덱 최대 슬롯 수도 UI의 별도 수치 대신 PlayerInventory 설정에 맞추도록 연결했습니다.
-이 정리에서 나눌 파일은 직접 만들어 두고, 최대 덱 장수의 기준도 `PlayerInventory.MaxDeckCardCount` 하나로 정해 값을 Inspector에서 직접 설정했습니다.
-코드를 새 파일로 옮기는 일과 InventoryWindow가 그 값을 참조하도록 바꾸는 일은 AI 코딩 에이전트에 맡겼습니다.
-
-#### 오벨리스크 안에서만 하는 편성과 닫기 조건
-
-일반 인벤토리 열기에서는 출구 영역에 있는지에 따라 `SetDeckEditMode`를 설정합니다.
-오벨리스크 안에서는 아래 방향키로 편집 모드를 열 수 있습니다.
-편집 가능 모드의 종료는 최소 장수와 비용 조건을 만족해야 하며, 실패하면 경고와 흔들림을 보여 줍니다.
-열람 전용 모드는 이 편성 검사 없이 닫을 수 있습니다.
-
-툴팁은 카드 정보와 미획득 상태를 전달받고, 커서의 남은 화면 여유에 따라 pivot을 바꾼 뒤 Canvas 경계 안으로 보정합니다.
-Tooltip CanvasGroup은 raycast를 막지 않으며, 슬롯이 비활성화되거나 마우스가 나가면 숨깁니다.
-새 카드 표시는 내부 HashSet으로 관리하며, 키는 CardData.CardId가 아니라 asset 이름입니다.
+전체 카드 목록은 보유하되 덱에 없는 카드 → 덱에 있는 카드 → 미보유 카드 순으로 보여 주고, 더블 클릭과 끌어 놓기 모두 같은 추가·제거 함수로 편성합니다.
+슬롯과 드래그 아이콘은 재사용해 목록을 갱신할 때마다 전부 만들고 지우지 않습니다. 오벨리스크 밖에서 연 인벤토리는 열람 전용이라 편성 검사 없이 닫힙니다.
+슬롯 목록·안내 메시지를 나누는 정리에서 나눌 파일과 최대 덱 장수 기준(`PlayerInventory.MaxDeckCardCount`)은 직접 정했고, 코드를 새 파일로 옮기는 일은 AI 코딩 에이전트에 맡겼습니다.
 
 ![미획득 카드의 툴팁 — 카드 정보와 ‘미획득’ 표시](images/card-tooltip-locked.png)
-
-보상 선택은 `isSelectingReward`로 중복 입력을 막고 비선택 카드를 페이드한 뒤 중앙 이동·퇴장 연출 후 지급합니다.
-한 라운드의 선택이 끝나야 남은 라운드를 줄이고 다음 후보를 추첨합니다.
-다음 라운드에서는 이전 UI를 지우고 한 프레임을 사이에 둬 레이아웃을 갱신합니다.
 
 소스: [InventorySlotList.cs](https://github.com/keeeery/Arcanist/blob/main/Assets/02.%20Scripts/06.%20Inventory/InventorySlotList.cs), [CardDragHandler.cs](https://github.com/keeeery/Arcanist/blob/main/Assets/02.%20Scripts/06.%20Inventory/CardDragHandler.cs), [TooltipController.cs](https://github.com/keeeery/Arcanist/blob/main/Assets/02.%20Scripts/07.%20Tooltip/TooltipController.cs), [OverlayInputHandler.cs](https://github.com/keeeery/Arcanist/blob/main/Assets/02.%20Scripts/05.%20Overlay/OverlayInputHandler.cs).
 
@@ -780,17 +748,8 @@ protected override void OnDisable()
 
 #### 플레이어 이동과 벽·바닥 충돌
 
-`CharacterController2D`는 Rigidbody2D를 Kinematic으로 설정하고 자체 중력·점프 횟수·대시 타이머를 관리합니다.
-외부 입력은 `SetMoveInput`, `RequestJump`, `RequestDash`, `AddExternalMovement`로 받고 실제 이동은 FixedUpdate에 모읍니다.
-점프 요청은 다음 물리 갱신에 소비되며, 착지 후 점프 횟수를 초기화합니다.
-
-수평·수직 이동량을 각각 BoxCast로 검사하고 `skinWidth`를 남겨 이동을 제한한 뒤 MovePosition을 호출합니다.
-지면 확인도 BoxCast를 사용합니다. 대시 중에는 수직 속도를 끄고 시작 y 위치를 유지합니다.
-이는 Dynamic Rigidbody의 힘·마찰을 그대로 이용하는 이동과 다른, 명령 기반 충돌 이동 구조입니다(선택 이유는 5.5).
-
-방향·대시 쿨타임은 이동 런타임이, 달리기 자원·회복 지연은 SprintRuntime이 맡습니다.
-이처럼 플레이어 조율 컴포넌트에서 계산과 연출을 분리하면 입력 차단·사망·리스폰에서 같은 초기화 진입점을 사용할 수 있습니다.
-다만 콜라이더 크기·collisionLayer·skinWidth 설정과 경사·모서리 통과 동작은 실제 맵에서 확인해야 합니다.
+`CharacterController2D`는 Rigidbody2D를 Kinematic으로 두고 자체 중력·점프 횟수·대시 타이머를 관리하며, 수평·수직 이동량을 각각 BoxCast로 검사하고 `skinWidth`를 남겨 이동을 제한한 뒤 MovePosition을 호출합니다(선택 이유는 §5.5).
+방향·대시 쿨타임은 이동 런타임이, 달리기 자원은 SprintRuntime이 맡아 입력 차단·사망·리스폰에서 같은 초기화 진입점을 씁니다.
 
 ![플레이어 대시 이펙트](images/dash-fx-crop.png)
 
@@ -800,13 +759,8 @@ protected override void OnDisable()
 
 #### 콤보 입력 창과 패링 판정 창
 
-플레이어 공격 상태는 초 단위 타이머 대신 Animator의 normalizedTime(애니메이션 진행률)으로 입력 창을 구분합니다.
-진행률 0.35 미만에서는 이전 공격 예약을 지우고, 0.35 초과~0.75 미만에서 다음 D 입력을 받습니다.
-공격 중 이동은 일반 이동의 0.75배로 전달해 모션과 이동을 동시에 조율합니다.
-
-패링 상태는 Enter에서 판정 창을 열고 이동을 멈춥니다.
-진행률 0.8 이상에서 판정 창을 닫으며, Exit에서도 다시 닫아 다른 상태로 빠져나갈 때 열려 있는 판정을 정리합니다.
-판정 창을 닫는 시점(진행률 0.8)은 직접 플레이 테스트를 하며, 애니메이션과 어긋나 보이지 않으면서 난이도가 적절한 값을 찾아 정했습니다.
+공격·패링 상태는 초 단위 타이머 대신 Animator의 진행률(normalizedTime)로 입력 창을 나눕니다. 콤보는 진행률 0.35~0.75 사이에서 다음 입력을 받습니다.
+패링 판정 창은 진행률 0.8에서 닫는데, 이 값은 직접 플레이 테스트를 하며 애니메이션과 어긋나 보이지 않으면서 난이도가 적절한 값을 찾아 정했습니다.
 
 #### 일반 적의 순찰·추적·공격
 
@@ -841,15 +795,6 @@ stateDiagram-v2
 
 ![일반 적(해골 병사)이 공격을 시작하는 장면](images/monster-start-attack-crop.png)
 
-EnemyCombat은 공격 쿨타임과 2종 공격 인덱스를 선택하고 Animator 트리거를 설정합니다.
-원거리 발사는 애니메이션 이벤트에서 전달되며, 대상의 x 위치에 따라 좌우 방향으로 풀 투사체를 초기화합니다.
-피격·기절은 상태 머신 Tick보다 앞에서 처리해 이동·공격 진행을 잠시 막습니다.
-기절 종료를 소비한 뒤 Idle로 돌려보내 행동 재개 지점을 명시합니다.
-
-이동은 Rigidbody가 있으면 수평 속도만 바꾸고 수직 속도는 유지합니다.
-없을 때만 Transform.Translate를 사용하며, 이동 여부가 바뀔 때만 Animator의 이동 bool을 갱신합니다.
-이는 매 프레임 같은 애니메이션 값을 반복 설정하는 경로를 줄이는 구성입니다.
-
 소스: [AttackState.cs](https://github.com/keeeery/Arcanist/blob/main/Assets/02.%20Scripts/01.%20Player/States/AttackState.cs), [ParryState.cs](https://github.com/keeeery/Arcanist/blob/main/Assets/02.%20Scripts/01.%20Player/States/ParryState.cs), [EnemyStateMachine.cs](https://github.com/keeeery/Arcanist/blob/main/Assets/02.%20Scripts/02.%20Enemy/EnemyStateMachine.cs), [EnemyCombat.cs](https://github.com/keeeery/Arcanist/blob/main/Assets/02.%20Scripts/02.%20Enemy/EnemyCombat.cs).
 
 ### 5.5 고민과 선택
@@ -876,13 +821,8 @@ EnemyCombat은 공격 쿨타임과 2종 공격 인덱스를 선택하고 Animato
 | 일반 적 감지 결과 캐시 | 매 프레임 감지 계산을 반복하지 않음 | 감지 간격만큼 판단 지연 가능 |
 | 컴포넌트 기반 보스 상태 | 상태별 Collider·연출 참조를 Inspector에서 설정 | 프리팹 구성과 상태 타입 등록 규칙 필요 |
 
-일반 적은 플레이어와의 거리(감지·공격 범위)로 Idle/Patrol/Attack을 전이하고 공격 패턴이 하나뿐이라, 상태마다 오브젝트를 추가해야 하는 Mono 기반 상태 머신 대신 순수 C# 상태 머신(`EnemyStateMachine`)으로 만들었습니다.
-
-보스는 근접·레이저·팔 발사처럼 여러 공격 패턴을 갖기 때문에, 패턴마다 상태 컴포넌트를 두는 구조가 개발과 관리에 유리하다고 판단했습니다.
-상태가 컴포넌트이므로 Collider·프리팹·지속시간을 Inspector에서 직접 연결하기 쉽습니다.
-대신 상태별 GameObject가 필요하며 동일 타입 상태를 여러 개 등록하면 Dictionary 키가 중복됩니다.
-또한 대기 상태의 `SelectPattern`은 플레이어 참조를 직접 역참조하므로 타겟 연결이 전제됩니다.
-패턴 종료는 일부 시간 기반이고, 공격 발동은 애니메이션 이벤트 기반입니다.
+일반 적은 거리만으로 Idle/Patrol/Attack을 오가고 공격 패턴이 하나뿐이라 상태마다 오브젝트가 필요 없는 순수 C# 상태 머신(`EnemyStateMachine`)으로 만들었습니다.
+보스는 근접·레이저·팔 발사처럼 패턴이 여럿이라, 패턴마다 상태 컴포넌트를 두고 Collider·프리팹·지속시간을 Inspector에서 연결하는 쪽이 관리에 유리하다고 판단했습니다.
 
 소스: [BossController.cs](https://github.com/keeeery/Arcanist/blob/main/Assets/02.%20Scripts/02.%20Enemy/Boss/BossController.cs), [GolemMeleeState.cs](https://github.com/keeeery/Arcanist/blob/main/Assets/02.%20Scripts/02.%20Enemy/Boss/Golem/GolemMeleeState.cs).
 
@@ -919,6 +859,8 @@ sequenceDiagram
     Check->>Player: Respawn(position, hp)
     Check->>Fade: 페이드 인, 입력 복원
 ```
+
+이 다이어그램은 체크포인트로 돌아갈 때 `CheckPointManager`가 암전 → 방 로드 → 플레이어 리스폰 → 페이드 인 순서로 복구하는 차례를 도식화한 것입니다.
 
 ### 6.2 클리어한 방의 적 재생성 생략
 
@@ -989,18 +931,12 @@ Animator를 재바인딩하고 체력을 복원하며 `ResetRuntimeCardsForRespa
 
 ### 6.4 Pause·Inventory·Reward의 입력 차단과 UI 연출
 
-#### 메뉴·옵션·인트로와 시간 기준
-
 Pause·Inventory·Reward는 timeScale을 0으로 하고 키보드 입력을 차단합니다.
 OverlayMotion과 보상 선택은 unscaled time으로 진행하여 정지된 게임 안에서도 UI 연출을 완료합니다.
 Overlay 종료와 체크포인트 복귀는 입력·timeScale 복원을 함께 처리합니다.
+옵션은 화면 모드·해상도와 마스터 볼륨을 PlayerPrefs에 저장하고, 인트로는 그림·자막을 차례로 재생하되 스킵하면 마지막 장면과 진행 안내로 보냅니다.
 
 ![일시정지 메뉴](images/pause-menu.png)
-
-옵션은 전체화면 여부·창모드 해상도 인덱스와 마스터 볼륨을 PlayerPrefs에 저장합니다.
-전체화면은 현재 디스플레이 해상도의 FullScreenWindow, 창모드는 설정 목록의 해상도를 사용합니다.
-AudioManager는 AudioListener.volume으로 마스터 음량을 적용하고, BGM 교체 시 기존 곡을 내린 뒤 새 곡을 올립니다.
-BGM 보간은 scaled time을 쓰므로 게임이 일시정지되면 페이드도 멈춥니다.
 
 ![옵션 — 화면(해상도·전체화면)](images/option-screen.png)
 
@@ -1008,27 +944,7 @@ BGM 보간은 scaled time을 쓰므로 게임이 일시정지되면 페이드도
 
 ![타이틀 화면](images/title-menu.png)
 
-인트로는 그림·자막 배열을 차례대로 재생하고 마지막 장면에서 진행 입력을 기다립니다.
-스킵은 즉시 전투 씬으로 이동하지 않고 마지막 장면과 진행 안내로 보내는 방식입니다.
-체크포인트가 있는 씬에서는 초기 연출을 생략할 수 있고, 보스 씬은 별도 항상 재생 목록으로 구분합니다.
-
 소스: [RoomController.cs](https://github.com/keeeery/Arcanist/blob/main/Assets/02.%20Scripts/09.%20Room/RoomController.cs), [Obelisk.cs](https://github.com/keeeery/Arcanist/blob/main/Assets/02.%20Scripts/09.%20Room/Obelisk.cs), [OptionWindowController.cs](https://github.com/keeeery/Arcanist/blob/main/Assets/02.%20Scripts/05.%20Overlay/OptionWindowController.cs), [IntroSceneController.cs](https://github.com/keeeery/Arcanist/blob/main/Assets/02.%20Scripts/00.%20Main%2C%20Intro/IntroSceneController.cs).
-
-#### 메뉴 입력 차단과 그림자·카메라·배경
-
-메뉴와 복귀 경로는 `SimpleInput.IsKeyBoardInputBlocked`를 설정하지만,
-래퍼에서 이 값을 검사하는 함수는 수평·수직 축 입력뿐입니다.
-`GetKeyDown/GetKey/GetKeyUp`은 차단 플래그를 공통 검사하지 않고 Keyboard 상태를 반환합니다.
-따라서 이 플래그만으로는 카드·대시·패링 같은 키 입력이 모두 막히지 않습니다.
-메뉴에서 실제로 막히는 입력은 timeScale과 각 상태 조건까지 함께 보고 확인해야 합니다.
-
-그림자·카메라·배경은 별도 시각 계층으로 동작합니다.
-그림자는 부모에서 분리한 뒤 아래 방향 NonAlloc Raycast의 지면 위치에 놓고 높이에 따라 가로 크기를 줄입니다.
-카메라는 플레이어의 프레임 간 이동량으로 방향과 이동 여부를 얻고, 앞보기 위치와 이동/정지 줌 크기를 보간합니다.
-ParallaxLayer는 카메라 이동 차이에 비율을 적용하고 자식 배경 조각을 전체 폭만큼 재배치합니다.
-이들은 게임 판정용 충돌 이동과 다른 표시 책임이며, 순간이동·일시정지·카메라 타겟 변경 시 동작을 함께 확인해야 합니다.
-
-소스: [SimpleInput.cs](https://github.com/keeeery/Arcanist/blob/main/Assets/02.%20Scripts/99.%20Utilities/SimpleInput.cs), [PlayerShadowProjector.cs](https://github.com/keeeery/Arcanist/blob/main/Assets/02.%20Scripts/01.%20Player/PlayerShadowProjector.cs), [PlayerCameraController.cs](https://github.com/keeeery/Arcanist/blob/main/Assets/02.%20Scripts/10.%20VFX/PlayerCameraController.cs), [ParallaxLayer.cs](https://github.com/keeeery/Arcanist/blob/main/Assets/02.%20Scripts/09.%20Room/ParallaxLayer.cs).
 
 ### 6.5 고민과 선택
 
@@ -1233,6 +1149,7 @@ Save(player);
 - 저장 파일: 손상 파일 복구와 저장 형식 변경 대응이 없습니다.
 - 체크포인트 저장 빈도: 클리어된 방의 체크포인트 영역 안에 있는 동안 `OnTriggerStay2D`가 보상 획득 전까지 저장을 반복하고, 저장은 매번 파일에 씁니다. 호출 빈도를 줄이는 방안은 아직 적용하지 않았습니다.
 - 카드 데이터: 카드 에셋 30개 중 8개는 효과 참조가 비어 있습니다. 필수 시스템을 먼저 완성하기 위해 구현을 미룬 카드로, 다음 콘텐츠 확장 과제입니다(§3.1).
+- 입력 차단 범위: 메뉴가 쓰는 `SimpleInput.IsKeyBoardInputBlocked`는 수평·수직 축 입력에만 걸려, 카드·대시·패링 같은 키 입력은 timeScale과 각 상태 조건으로 막히는지 따로 확인해야 합니다.
 - 카드 환불: 애니메이션 발동 시점에 타겟이 사라져 실행이 취소되면 카드를 돌려받지 못합니다. 테스트·시연에서 재현되지 않아 우선순위를 낮췄고, 진입점이 확인되면 처리할 과제입니다(§3.3).
 
 다음 통합 동작은 Editor에서 더 확인해야 합니다.
