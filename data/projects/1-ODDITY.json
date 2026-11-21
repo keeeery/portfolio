@@ -34,7 +34,7 @@
     "RendererFeature",
     "DOTween",
     "오브젝트 풀",
-    "FSM"
+    "상태 머신"
   ],
   "links": {
     "github": "https://github.com/keeeery/ODDITY",
@@ -74,9 +74,9 @@
     },
     {
       "title": "몰입을 깨지 않고 정보를 주는 조준점",
-      "what": "화면 중앙 조준점에 ○로 들기 가능 여부, +로 기본 공격 사거리 안 적의 유무, ×로 공격 적중 여부를 겹치지 않게 표시하여 시선 옮김 없이 전투 관련 정보를 알 수 있게 합니다.",
+      "what": "화면 중앙 조준점에 링으로 들기 가능 여부, +로 기본 공격 사거리 안 적의 유무, ×로 공격 적중 여부를 함께 표시하여 시선 옮김 없이 전투 관련 정보를 알 수 있게 합니다.",
       "how": "`Crosshair`가 염동력 대상의 들기 가능 여부, 기본 공격과 같은 광선·사거리의 적 판정, `CombatManager` 처리 결과의 실제 피해를 읽어 `VertexHelper` 메시로 표시를 그립니다.",
-      "why": "조준점 하나에 들기·사거리·적중 표시를 겹쳐 시선을 화면 중앙에 둔 채 행동 가능 여부를 읽게 했습니다. 대신 표시끼리 겹치지 않도록 ○·+·×의 반지름과 각도를 나눴습니다.",
+      "why": "조준점 하나에 들기·사거리·적중 표시를 겹쳐 시선을 화면 중앙에 둔 채 행동 가능 여부를 읽게 했습니다. 링·짧은 선은 큰 반지름에서 투명하게 시작해 조여들며 나타납니다.",
       "section": "조준점이 지금 할 수 있는 행동을 보여 줌",
       "image": {
         "src": "images/crosshair-hit.png",
@@ -108,7 +108,8 @@
         "src": "images/finishing-blow.png",
         "w": 1170,
         "h": 878,
-        "caption": "마무리 일격 섬광과 파티클"
+        "caption": "마무리 일격 섬광과 파티클",
+        "pinned": true
       }
     }
   ],
@@ -123,13 +124,13 @@
       "section": "2.7 맞혔을 때만 부서지는 물체"
     },
     {
-      "title": "이어하기 후 칩 목록과 실제 장착 효과 불일치",
-      "problem": "이어하기 후 칩 목록과 실제 장착 효과가 일치하지 않았습니다. 이미 시작한 플레이어가 살아 있는 상태에서 목록을 복원하면 `Start`가 다시 실행되지 않는 경우도 있었습니다.",
-      "cause": "저장 목록 복원과 플레이어 초기화 순서가 달라, 목록을 읽는 시점에 플레이어 스탯이 준비되지 않을 수 있었습니다.",
-      "solution": "장착 요청을 보관했다가 플레이어 생성 이후 적용하고, 살아 있는 인벤토리를 추적해 `sceneLoaded`에서도 대기 장착을 적용하도록 보완했습니다.",
-      "result": "이어하기 시 이미 초기화가 끝난 플레이어가 있는 경우에도 장착이 반영됩니다.",
-      "lesson": "",
-      "section": "6.3 이어하기의 칩·장착 복원"
+      "title": "보스 몸체와 플레이어가 겹치는 문제",
+      "problem": "보스는 플레이어를 뚫고 지나가고 플레이어는 보스에게 막히도록 만들려 했는데, 플레이어가 보스 몸 안쪽으로 들어가거나, 겹칠 때 무작정 밀어내면 물리적으로 말이 안 되는 움직임이 나오고, 대형 보스의 배 아래쪽으로 들어가면 무적이 되었습니다.",
+      "cause": "",
+      "solution": "보스가 밀고 들어온 부위는 충돌을 끄고 떨어진 부위는 되돌립니다. 빼낼 때는 양쪽에 끼었으면 16방향 중 가장 가깝게 빠지는 쪽으로 탈출하고, 보스가 지나가는 중이면 옆으로 비켜서고, 아니면 겹친 반대쪽으로 밀어냅니다. 세 갈래 모두 `CharacterController.Move`로 한 프레임에 조금씩 움직여 벽은 뚫지 않습니다.",
+      "result": "",
+      "lesson": "2D에서는 고려할 필요도 없던 문제였지만, 3D에서는 생각보다 고려할 문제가 많았습니다.",
+      "section": "10.1 가장 오래 붙잡은 문제 — 보스 몸체와 플레이어 자세"
     },
     {
       "title": "씬 전환 후 배치된 플레이어가 제거되는 문제",
@@ -153,30 +154,29 @@
     ],
     "regrets": [
       "파편 풀을 사용하더라도 고갈 시 생성·물리 시뮬레이션·배치 검사의 비용은 남습니다.",
-      "염동력 탐색 버퍼가 가득 차는 환경, 시간 정지와 풀 반환·재활성화가 겹치는 상황은 통합 동작을 확인하지 못했습니다.",
+      "플레이어가 없는 타이틀에서의 `Instance` 호출, 휴머노이드 분신이 남은 상태의 로비 복귀, 임무의 보상 확인·목록 제거·저장 복원은 실제 플레이로 통합 동작을 더 확인해야 합니다.",
       "저장 파일의 버전 변환·백업이 없습니다.",
-      "씬 전환의 전체 실패 복구와 비동기 취소가 없습니다."
+      "씬 전환 실패 복구와 반복 전환도 실제 플레이로 더 확인해야 합니다."
     ],
     "plans": [
       "GC·프레임 시간 개선량 측정",
-      "탐색 버퍼 포화, 시간 정지와 풀 반환·재활성화가 겹치는 상황의 통합 동작 확인",
+      "타이틀·로비 복귀·임무 보상과 저장 복원 경로의 통합 동작 확인",
       "저장 파일의 버전 변환·백업 (추가 과제)",
-      "씬 전환 실패 복구·비동기 취소, 장시간 플레이·장면 전환 반복 검증"
+      "씬 전환 실패 복구와 반복 전환 검증"
     ]
   },
   "deck": {
     "chapters": [
       {"key": "intro", "title": "프로젝트 개요", "sectionPath": ["1. 프로젝트 개요"]},
-      {"key": "psy", "title": "기능 A — 물리 기반 염동력", "sectionPath": ["2. 물리 기반 염동력"]},
-      {"key": "debris", "title": "기능 B — 부서진 조각을 다시 쓰는 파편", "sectionPath": ["3. 부서진 조각을 다시 쓰는 파편"]},
-      {"key": "time", "title": "기능 C — 플레이어만 움직이는 시간 정지", "sectionPath": ["4. 플레이어만 움직이는 시간 정지"]},
-      {"key": "boss", "title": "기능 D — 보스 패턴과 전투 판정", "sectionPath": ["5. 보스 패턴과 전투 판정"]},
-      {"key": "growth", "title": "기능 E — 칩·스킬·임무와 보상·저장", "sectionPath": ["6. 칩·스킬·임무와 보상·저장"]},
-      {"key": "scene", "title": "기능 F — 월드·UI·소리가 함께 전환되는 씬 로딩", "sectionPath": ["7. 월드·UI·소리가 함께 전환되는 씬 로딩"]},
-      {"key": "ui", "title": "기능 G — UI/UX ① 화면 UI와 조작", "sectionPath": ["8. UI/UX ① 화면 UI와 조작"]},
-      {"key": "fx", "title": "기능 G — UI/UX ② 전투 피드백과 비주얼 효과", "sectionPath": ["9. UI/UX ② 전투 피드백과 비주얼 효과"]},
-      {"key": "troubleshooting", "title": "트러블슈팅", "sectionPath": ["10. 트러블슈팅"]},
-      {"key": "result", "title": "결과와 배운 점", "sectionPath": ["11. 결과와 배운 점"]}
+      {"key": "psy", "title": "물리 기반 염동력", "sectionPath": ["2. 물리 기반 염동력"]},
+      {"key": "debris", "title": "부서진 조각을 다시 쓰는 파편", "sectionPath": ["3. 부서진 조각을 다시 쓰는 파편"]},
+      {"key": "time", "title": "플레이어만 움직이는 시간 정지", "sectionPath": ["4. 플레이어만 움직이는 시간 정지"]},
+      {"key": "boss", "title": "보스 패턴과 전투 판정", "sectionPath": ["5. 보스 패턴과 전투 판정"]},
+      {"key": "growth", "title": "칩·스킬·임무와 보상·저장", "sectionPath": ["6. 칩·스킬·임무와 보상·저장"]},
+      {"key": "scene", "title": "월드·UI·소리가 함께 전환되는 씬 로딩", "sectionPath": ["7. 월드·UI·소리가 함께 전환되는 씬 로딩"]},
+      {"key": "ui", "title": "UI/UX ① 화면 UI와 조작", "sectionPath": ["8. UI/UX ① 화면 UI와 조작"]},
+      {"key": "fx", "title": "UI/UX ② 전투 피드백과 비주얼 효과", "sectionPath": ["9. UI/UX ② 전투 피드백과 비주얼 효과"]},
+      {"key": "troubleshooting", "title": "트러블슈팅", "sectionPath": ["10. 트러블슈팅"]}
     ],
     "slides": [
       {
@@ -193,17 +193,6 @@
           {"label": "", "text": "임무는 차르카로사우루스, 페르데로스, 휴머노이드 보스의 전투 씬으로 연결됩니다.", "verbatim": true}
         ],
         "visuals": [{"kind": "mermaid", "n": 1, "fp": "flowchart TB", "sectionPath": ["1. 프로젝트 개요", "1.1 게임 소개"]}]
-      },
-      {
-        "key": "role",
-        "chapter": "intro",
-        "layout": "full",
-        "tab": "개요",
-        "title": {"text": "1.4 담당 범위", "verbatim": true},
-        "lead": {"text": "칩 배치와 스킬 전략, 공용 전투 이벤트, 플레이어 이동과 보스 판단 기반은 팀이 함께 만든 구조입니다.", "verbatim": true},
-        "sectionPath": ["1. 프로젝트 개요", "1.4 담당 범위"],
-        "points": [],
-        "visuals": [{"kind": "table", "n": 1, "fp": "영역|직접 구현·보완한 내용|팀 기반과의 관계"}]
       },
       {
         "key": "psy-control",
@@ -247,20 +236,6 @@
         ]
       },
       {
-        "key": "psy-shatter",
-        "chapter": "psy",
-        "layout": "code",
-        "tab": "구현",
-        "title": {"text": "2.7 맞혔을 때만 부서지는 물체", "verbatim": true},
-        "lead": {"text": "이벤트가 처리되기 전에는 방어·무적 등으로 실제 피해가 발생했는지 알 수 없으므로, 자신이 요청한 이벤트의 결과를 확인한 뒤 파편화합니다.", "verbatim": true},
-        "sectionPath": ["2. 물리 기반 염동력", "2.7 맞혔을 때만 부서지는 물체"],
-        "points": [
-          {"label": "", "text": "같은 프레임에 다른 공격이 처리되어도 이벤트 인스턴스를 비교해 자신의 타격 결과만 사용합니다.", "verbatim": true},
-          {"label": "", "text": "보스가 생성한 물체의 벽 충돌이나 외부 공격에 의한 파편화는 별도 경로로 처리합니다.", "verbatim": true}
-        ],
-        "visuals": [{"kind": "code", "n": 1, "fp": "// PsychokinesisObject.HandleDamageExecuted() — 자신이 요청한 피해 이"}]
-      },
-      {
         "key": "debris-pool",
         "chapter": "debris",
         "layout": "code",
@@ -288,10 +263,10 @@
         "layout": "full",
         "tab": "선택",
         "title": {"text": "3.5 고민과 선택", "verbatim": true},
-        "lead": {"text": "파편을 어떻게 만들지는 세 가지 방법을 견줬습니다.", "verbatim": true},
+        "lead": {"text": "파편을 어떻게 만들까 — 미리 만든 파편 형태를 크기별로 조합", "verbatim": true},
         "sectionPath": ["3. 부서진 조각을 다시 쓰는 파편", "3.5 고민과 선택"],
         "points": [],
-        "visuals": [{"kind": "table", "n": 1, "fp": "방법|판단"}]
+        "visuals": [{"kind": "table", "n": 1, "fp": "방법|장점|비용"}]
       },
       {
         "key": "local-time",
@@ -381,7 +356,7 @@
         "lead": {"text": "단차가 없는 앞의 두 맵은 이것으로 충분했지만, 단차와 구멍이 있는 휴머노이드 맵에는 다음 보정을 제가 더했습니다.", "verbatim": true},
         "sectionPath": ["5. 보스 패턴과 전투 판정", "5.7 고민과 선택"],
         "points": [],
-        "visuals": [{"kind": "table", "n": 1, "fp": "보정|견준 방법|고른 방법과 이유"}]
+        "visuals": [{"kind": "table", "n": 1, "fp": "고민|대안|고른 방법과 이유"}]
       },
       {
         "key": "reward-link",
@@ -412,13 +387,7 @@
         "title": {"text": "6.3 이어하기의 칩·장착 복원", "verbatim": true},
         "lead": {"text": "저장 파일에는 칩 ID·모양 셀·장착 여부·배치 원점·회전·스킬 슬롯과 수락 임무 ID를 기록합니다.", "verbatim": true},
         "sectionPath": ["6. 칩·스킬·임무와 보상·저장", "6.3 이어하기의 칩·장착 복원"],
-        "points": [
-          {
-            "label": "",
-            "text": "처음에는 새 플레이어의 Start에서만 적용해 이미 살아 있는 플레이어에는 반영되지 않는 경우가 있어, sceneLoaded에서도 대기 장착을 적용하도록 보완했습니다.",
-            "verbatim": true
-          }
-        ],
+        "points": [{"label": "", "text": "정의 데이터와 플레이 중 보유 상태를 나눠, 저장된 ID를 테이블 기준으로 복원하고 테이블에서 사라진 항목은 건너뜁니다.", "verbatim": true}],
         "visuals": [{"kind": "mermaid", "n": 1, "fp": "sequenceDiagram"}]
       },
       {
@@ -508,31 +477,6 @@
         "edited": true
       },
       {
-        "key": "chip-search",
-        "chapter": "ui",
-        "layout": "code",
-        "tab": "구현",
-        "title": {"text": "초성으로도 찾는 칩 이름 검색", "verbatim": true},
-        "lead": {"text": "1차 시연에서도 \"필터가 있어도 원하는 칩을 찾기 어렵다\"는 피드백을 받았습니다(§11.2).", "verbatim": true},
-        "sectionPath": ["8. UI/UX ① 화면 UI와 조작", "8.5 증강 칩 창의 조작 편의", "초성으로도 찾는 칩 이름 검색"],
-        "points": [{"label": "구현", "text": "이 완화 규칙은 검색어의 마지막 글자에만 적용해, 이미 입력한 앞 글자들까지 느슨하게 맞추지 않습니다.", "verbatim": true}],
-        "visuals": [
-          {"kind": "table", "n": 1, "fp": "검색어|찾는 이름|판정 근거"},
-          {"kind": "code", "n": 1, "fp": "// KoreanSearch.IsTypingToward() — 조합 중인 글자 q가 계속 치면 n이 되는지"}
-        ]
-      },
-      {
-        "key": "player-hit",
-        "chapter": "fx",
-        "layout": "full",
-        "tab": "구조",
-        "title": {"text": "9.4 플레이어 전투 피드백 — 피격 강도와 빠른 기상", "verbatim": true},
-        "lead": {"text": "플레이어가 맞았을 때는 피격 강도에 따라 연출의 겹을 늘립니다.", "verbatim": true},
-        "sectionPath": ["9. UI/UX ② 전투 피드백과 비주얼 효과", "9.4 플레이어 전투 피드백 — 피격 강도와 빠른 기상"],
-        "points": [],
-        "visuals": [{"kind": "table", "n": 1, "fp": "피격|화면 가장자리|체력바|카메라|히트스톱"}]
-      },
-      {
         "key": "boss-tier",
         "chapter": "fx",
         "layout": "code",
@@ -562,11 +506,7 @@
         },
         "sectionPath": ["9. UI/UX ② 전투 피드백과 비주얼 효과", "9.6 외곽선과 가림 — 안 보이는 대상을 드러내기", "서로 가리는 보스와 플레이어 — 가려진 쪽을 드러내는 두 가지 표현"],
         "points": [
-          {
-            "label": "문제",
-            "text": "1차 시연에서 강사·동료 수강생·지인 모두에게 \"들고 있는 물체가 시야를 가려 보스의 움직임을 볼 수 없다\"는 피드백을 받았습니다(§11.2).",
-            "verbatim": true
-          },
+          {"label": "문제", "text": "1차 시연에서 가장 많이 받은 피드백도 들고 있는 물체가 보스를 가린다는 것이었습니다(§11.2).", "verbatim": true},
           {
             "label": "구현",
             "text": "처음에는 보스에 가려진 플레이어의 외곽선만 그렸고, 이후 같은 RendererFeature에 다른 물체에 가려진 보스 부분을 반투명 실루엣으로 채우는 패스를 추가했습니다.",
@@ -605,40 +545,18 @@
       {
         "key": "body-overlap",
         "chapter": "troubleshooting",
-        "layout": "overview",
+        "layout": "problem",
         "tab": "문제 해결",
         "title": {"text": "10.1 가장 오래 붙잡은 문제 — 보스 몸체와 플레이어 자세", "verbatim": true},
         "lead": {"text": "보스는 플레이어를 뚫고 지나가고, 플레이어는 보스에게 막히도록 만들려고 했습니다.", "verbatim": true},
         "sectionPath": ["10. 트러블슈팅", "10.1 가장 오래 붙잡은 문제 — 보스 몸체와 플레이어 자세"],
         "points": [
           {"label": "문제", "text": "플레이어가 보스 몸 안쪽으로 들어가짐", "verbatim": true},
-          {"label": "문제", "text": "겹칠 때 무작정 밀어내도록 하면 물리적으로 말이 안 되는 움직임이 나옴", "verbatim": true},
           {"label": "문제", "text": "대형 보스의 배 아래쪽으로 들어가면 무적이 됨", "verbatim": true},
+          {"label": "해결", "text": "§5.6의 부위별 충돌 무시·측면 이동·16방향 탈출 검사 구조로 구현했습니다.", "verbatim": false},
           {"label": "배운 점", "text": "2D에서는 고려할 필요도 없던 문제였지만, 3D에서는 생각보다 고려할 문제가 많았습니다.", "verbatim": true}
         ],
-        "visuals": []
-      },
-      {
-        "key": "minimap-overlay",
-        "chapter": "troubleshooting",
-        "layout": "problem",
-        "tab": "문제 해결",
-        "title": {"text": "10.2 시간 정지 효과가 미니맵에도 보이던 문제", "verbatim": true},
-        "lead": null,
-        "sectionPath": ["10. 트러블슈팅", "10.2 시간 정지 효과가 미니맵에도 보이던 문제"],
-        "points": [],
-        "visuals": [{"kind": "table", "n": 1, "fp": "단계|내용"}]
-      },
-      {
-        "key": "load-fade",
-        "chapter": "troubleshooting",
-        "layout": "problem",
-        "tab": "문제 해결",
-        "title": {"text": "10.3 씬 로드 직후 화면·소리 연출이 끊겨 보이던 문제", "verbatim": true},
-        "lead": null,
-        "sectionPath": ["10. 트러블슈팅", "10.3 씬 로드 직후 화면·소리 연출이 끊겨 보이던 문제"],
-        "points": [],
-        "visuals": [{"kind": "table", "n": 1, "fp": "단계|내용"}]
+        "visuals": [{"kind": "mermaid", "n": 1, "fp": "flowchart TB"}]
       },
       {
         "key": "player-scope",
@@ -647,7 +565,7 @@
         "tab": "문제 해결",
         "title": {"text": "로비로 오면 플레이어가 사라지던 버그", "verbatim": true},
         "lead": null,
-        "sectionPath": ["10. 트러블슈팅", "10.4 그 밖에 해결한 문제", "로비로 오면 플레이어가 사라지던 버그"],
+        "sectionPath": ["10. 트러블슈팅", "10.2 그 밖에 해결한 문제", "로비로 오면 플레이어가 사라지던 버그"],
         "points": [
           {
             "label": "문제",
@@ -667,17 +585,6 @@
           {"label": "결과", "text": "고친 뒤 보스 전투에서 로비로 다시 넘어와 플레이어가 그대로 남아 있는 것을 확인했습니다.", "verbatim": true}
         ],
         "visuals": [{"kind": "code", "n": 1, "fp": "// SingletonBase<T>.Instance — 기존 객체 검색 직후, 자동 생성 직전"}]
-      },
-      {
-        "key": "feedback",
-        "chapter": "result",
-        "layout": "full",
-        "tab": "결과",
-        "title": {"text": "11.2 1차 시연 피드백과 반영", "verbatim": true},
-        "lead": {"text": "가장 많이 나온 피드백은 들고 있는 물체가 보스를 가려 움직임을 볼 수 없다는 시야 문제였고, 강사·동료 수강생·지인 모두에게서 나왔습니다.", "verbatim": true},
-        "sectionPath": ["11. 결과와 배운 점", "11.2 1차 시연 피드백과 반영"],
-        "points": [],
-        "visuals": [{"kind": "table", "n": 1, "fp": "받은 피드백|준 사람|반영|본문"}]
       }
     ],
     "base": [
@@ -695,17 +602,6 @@
           {"label": "", "text": "임무는 차르카로사우루스, 페르데로스, 휴머노이드 보스의 전투 씬으로 연결됩니다.", "verbatim": true}
         ],
         "visuals": [{"kind": "mermaid", "n": 1, "fp": "flowchart TB", "sectionPath": ["1. 프로젝트 개요", "1.1 게임 소개"]}]
-      },
-      {
-        "key": "role",
-        "chapter": "intro",
-        "layout": "full",
-        "tab": "개요",
-        "title": {"text": "1.4 담당 범위", "verbatim": true},
-        "lead": {"text": "칩 배치와 스킬 전략, 공용 전투 이벤트, 플레이어 이동과 보스 판단 기반은 팀이 함께 만든 구조입니다.", "verbatim": true},
-        "sectionPath": ["1. 프로젝트 개요", "1.4 담당 범위"],
-        "points": [],
-        "visuals": [{"kind": "table", "n": 1, "fp": "영역|직접 구현·보완한 내용|팀 기반과의 관계"}]
       },
       {
         "key": "psy-control",
@@ -749,20 +645,6 @@
         ]
       },
       {
-        "key": "psy-shatter",
-        "chapter": "psy",
-        "layout": "code",
-        "tab": "구현",
-        "title": {"text": "2.7 맞혔을 때만 부서지는 물체", "verbatim": true},
-        "lead": {"text": "이벤트가 처리되기 전에는 방어·무적 등으로 실제 피해가 발생했는지 알 수 없으므로, 자신이 요청한 이벤트의 결과를 확인한 뒤 파편화합니다.", "verbatim": true},
-        "sectionPath": ["2. 물리 기반 염동력", "2.7 맞혔을 때만 부서지는 물체"],
-        "points": [
-          {"label": "", "text": "같은 프레임에 다른 공격이 처리되어도 이벤트 인스턴스를 비교해 자신의 타격 결과만 사용합니다.", "verbatim": true},
-          {"label": "", "text": "보스가 생성한 물체의 벽 충돌이나 외부 공격에 의한 파편화는 별도 경로로 처리합니다.", "verbatim": true}
-        ],
-        "visuals": [{"kind": "code", "n": 1, "fp": "// PsychokinesisObject.HandleDamageExecuted() — 자신이 요청한 피해 이"}]
-      },
-      {
         "key": "debris-pool",
         "chapter": "debris",
         "layout": "code",
@@ -790,10 +672,10 @@
         "layout": "full",
         "tab": "선택",
         "title": {"text": "3.5 고민과 선택", "verbatim": true},
-        "lead": {"text": "파편을 어떻게 만들지는 세 가지 방법을 견줬습니다.", "verbatim": true},
+        "lead": {"text": "파편을 어떻게 만들까 — 미리 만든 파편 형태를 크기별로 조합", "verbatim": true},
         "sectionPath": ["3. 부서진 조각을 다시 쓰는 파편", "3.5 고민과 선택"],
         "points": [],
-        "visuals": [{"kind": "table", "n": 1, "fp": "방법|판단"}]
+        "visuals": [{"kind": "table", "n": 1, "fp": "방법|장점|비용"}]
       },
       {
         "key": "local-time",
@@ -883,7 +765,7 @@
         "lead": {"text": "단차가 없는 앞의 두 맵은 이것으로 충분했지만, 단차와 구멍이 있는 휴머노이드 맵에는 다음 보정을 제가 더했습니다.", "verbatim": true},
         "sectionPath": ["5. 보스 패턴과 전투 판정", "5.7 고민과 선택"],
         "points": [],
-        "visuals": [{"kind": "table", "n": 1, "fp": "보정|견준 방법|고른 방법과 이유"}]
+        "visuals": [{"kind": "table", "n": 1, "fp": "고민|대안|고른 방법과 이유"}]
       },
       {
         "key": "reward-link",
@@ -914,13 +796,7 @@
         "title": {"text": "6.3 이어하기의 칩·장착 복원", "verbatim": true},
         "lead": {"text": "저장 파일에는 칩 ID·모양 셀·장착 여부·배치 원점·회전·스킬 슬롯과 수락 임무 ID를 기록합니다.", "verbatim": true},
         "sectionPath": ["6. 칩·스킬·임무와 보상·저장", "6.3 이어하기의 칩·장착 복원"],
-        "points": [
-          {
-            "label": "",
-            "text": "처음에는 새 플레이어의 Start에서만 적용해 이미 살아 있는 플레이어에는 반영되지 않는 경우가 있어, sceneLoaded에서도 대기 장착을 적용하도록 보완했습니다.",
-            "verbatim": true
-          }
-        ],
+        "points": [{"label": "", "text": "정의 데이터와 플레이 중 보유 상태를 나눠, 저장된 ID를 테이블 기준으로 복원하고 테이블에서 사라진 항목은 건너뜁니다.", "verbatim": true}],
         "visuals": [{"kind": "mermaid", "n": 1, "fp": "sequenceDiagram"}]
       },
       {
@@ -1008,31 +884,6 @@
         "visuals": [{"kind": "table", "n": 1, "fp": "도구|하는 일"}]
       },
       {
-        "key": "chip-search",
-        "chapter": "ui",
-        "layout": "code",
-        "tab": "구현",
-        "title": {"text": "초성으로도 찾는 칩 이름 검색", "verbatim": true},
-        "lead": {"text": "1차 시연에서도 \"필터가 있어도 원하는 칩을 찾기 어렵다\"는 피드백을 받았습니다(§11.2).", "verbatim": true},
-        "sectionPath": ["8. UI/UX ① 화면 UI와 조작", "8.5 증강 칩 창의 조작 편의", "초성으로도 찾는 칩 이름 검색"],
-        "points": [{"label": "구현", "text": "이 완화 규칙은 검색어의 마지막 글자에만 적용해, 이미 입력한 앞 글자들까지 느슨하게 맞추지 않습니다.", "verbatim": true}],
-        "visuals": [
-          {"kind": "table", "n": 1, "fp": "검색어|찾는 이름|판정 근거"},
-          {"kind": "code", "n": 1, "fp": "// KoreanSearch.IsTypingToward() — 조합 중인 글자 q가 계속 치면 n이 되는지"}
-        ]
-      },
-      {
-        "key": "player-hit",
-        "chapter": "fx",
-        "layout": "full",
-        "tab": "구조",
-        "title": {"text": "9.4 플레이어 전투 피드백 — 피격 강도와 빠른 기상", "verbatim": true},
-        "lead": {"text": "플레이어가 맞았을 때는 피격 강도에 따라 연출의 겹을 늘립니다.", "verbatim": true},
-        "sectionPath": ["9. UI/UX ② 전투 피드백과 비주얼 효과", "9.4 플레이어 전투 피드백 — 피격 강도와 빠른 기상"],
-        "points": [],
-        "visuals": [{"kind": "table", "n": 1, "fp": "피격|화면 가장자리|체력바|카메라|히트스톱"}]
-      },
-      {
         "key": "boss-tier",
         "chapter": "fx",
         "layout": "code",
@@ -1062,11 +913,7 @@
         },
         "sectionPath": ["9. UI/UX ② 전투 피드백과 비주얼 효과", "9.6 외곽선과 가림 — 안 보이는 대상을 드러내기", "서로 가리는 보스와 플레이어 — 가려진 쪽을 드러내는 두 가지 표현"],
         "points": [
-          {
-            "label": "문제",
-            "text": "1차 시연에서 강사·동료 수강생·지인 모두에게 \"들고 있는 물체가 시야를 가려 보스의 움직임을 볼 수 없다\"는 피드백을 받았습니다(§11.2).",
-            "verbatim": true
-          },
+          {"label": "문제", "text": "1차 시연에서 가장 많이 받은 피드백도 들고 있는 물체가 보스를 가린다는 것이었습니다(§11.2).", "verbatim": true},
           {
             "label": "구현",
             "text": "처음에는 보스에 가려진 플레이어의 외곽선만 그렸고, 이후 같은 RendererFeature에 다른 물체에 가려진 보스 부분을 반투명 실루엣으로 채우는 패스를 추가했습니다.",
@@ -1104,40 +951,18 @@
       {
         "key": "body-overlap",
         "chapter": "troubleshooting",
-        "layout": "overview",
+        "layout": "problem",
         "tab": "문제 해결",
         "title": {"text": "10.1 가장 오래 붙잡은 문제 — 보스 몸체와 플레이어 자세", "verbatim": true},
         "lead": {"text": "보스는 플레이어를 뚫고 지나가고, 플레이어는 보스에게 막히도록 만들려고 했습니다.", "verbatim": true},
         "sectionPath": ["10. 트러블슈팅", "10.1 가장 오래 붙잡은 문제 — 보스 몸체와 플레이어 자세"],
         "points": [
           {"label": "문제", "text": "플레이어가 보스 몸 안쪽으로 들어가짐", "verbatim": true},
-          {"label": "문제", "text": "겹칠 때 무작정 밀어내도록 하면 물리적으로 말이 안 되는 움직임이 나옴", "verbatim": true},
           {"label": "문제", "text": "대형 보스의 배 아래쪽으로 들어가면 무적이 됨", "verbatim": true},
+          {"label": "해결", "text": "§5.6의 부위별 충돌 무시·측면 이동·16방향 탈출 검사 구조로 구현했습니다.", "verbatim": false},
           {"label": "배운 점", "text": "2D에서는 고려할 필요도 없던 문제였지만, 3D에서는 생각보다 고려할 문제가 많았습니다.", "verbatim": true}
         ],
-        "visuals": []
-      },
-      {
-        "key": "minimap-overlay",
-        "chapter": "troubleshooting",
-        "layout": "problem",
-        "tab": "문제 해결",
-        "title": {"text": "10.2 시간 정지 효과가 미니맵에도 보이던 문제", "verbatim": true},
-        "lead": null,
-        "sectionPath": ["10. 트러블슈팅", "10.2 시간 정지 효과가 미니맵에도 보이던 문제"],
-        "points": [],
-        "visuals": [{"kind": "table", "n": 1, "fp": "단계|내용"}]
-      },
-      {
-        "key": "load-fade",
-        "chapter": "troubleshooting",
-        "layout": "problem",
-        "tab": "문제 해결",
-        "title": {"text": "10.3 씬 로드 직후 화면·소리 연출이 끊겨 보이던 문제", "verbatim": true},
-        "lead": null,
-        "sectionPath": ["10. 트러블슈팅", "10.3 씬 로드 직후 화면·소리 연출이 끊겨 보이던 문제"],
-        "points": [],
-        "visuals": [{"kind": "table", "n": 1, "fp": "단계|내용"}]
+        "visuals": [{"kind": "mermaid", "n": 1, "fp": "flowchart TB"}]
       },
       {
         "key": "player-scope",
@@ -1146,7 +971,7 @@
         "tab": "문제 해결",
         "title": {"text": "로비로 오면 플레이어가 사라지던 버그", "verbatim": true},
         "lead": null,
-        "sectionPath": ["10. 트러블슈팅", "10.4 그 밖에 해결한 문제", "로비로 오면 플레이어가 사라지던 버그"],
+        "sectionPath": ["10. 트러블슈팅", "10.2 그 밖에 해결한 문제", "로비로 오면 플레이어가 사라지던 버그"],
         "points": [
           {
             "label": "문제",
@@ -1166,19 +991,8 @@
           {"label": "결과", "text": "고친 뒤 보스 전투에서 로비로 다시 넘어와 플레이어가 그대로 남아 있는 것을 확인했습니다.", "verbatim": true}
         ],
         "visuals": [{"kind": "code", "n": 1, "fp": "// SingletonBase<T>.Instance — 기존 객체 검색 직후, 자동 생성 직전"}]
-      },
-      {
-        "key": "feedback",
-        "chapter": "result",
-        "layout": "full",
-        "tab": "결과",
-        "title": {"text": "11.2 1차 시연 피드백과 반영", "verbatim": true},
-        "lead": {"text": "가장 많이 나온 피드백은 들고 있는 물체가 보스를 가려 움직임을 볼 수 없다는 시야 문제였고, 강사·동료 수강생·지인 모두에게서 나왔습니다.", "verbatim": true},
-        "sectionPath": ["11. 결과와 배운 점", "11.2 1차 시연 피드백과 반영"],
-        "points": [],
-        "visuals": [{"kind": "table", "n": 1, "fp": "받은 피드백|준 사람|반영|본문"}]
       }
     ],
-    "applied": "a8bf10bead30e12c"
+    "applied": "791e26f7f09ab47f"
   }
 }

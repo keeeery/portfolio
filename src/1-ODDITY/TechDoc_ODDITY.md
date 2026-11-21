@@ -1,6 +1,7 @@
 # ODDITY — 초능력 보스 액션 게임 기술 문서
 
 > **한 줄 소개**: 주변 물체를 들어 휘두르거나 던지고, 초능력 스킬을 조합해 보스와 싸우는 3D 액션 게임
+>
 > **구현 범위**: 염동력 시스템, 파편 생성·풀링, 시간 정지, 보스 투하·투척·충격파 패턴·공격 예고·피격 판정·그로기, 보상, 카메라·렌더링·각종 연출, UI/UX
 
 | 구분 | 시스템 | 핵심 내용 | 절 |
@@ -10,7 +11,7 @@
 | 핵심 C | 선택적 시간 제어 | 오브젝트별 시간·물리·애니메이션 제어와 염동력 예외 처리 | §4 |
 | 보조 D | 보스 전투와 연출 | 공통 공격 패턴, 그로기, 부위 판정, 공격 예고와 카메라 피드백 | §5 · §10.1 |
 | 보조 E | 증강 칩·스킬·임무·보상 | 팀 공통 성장 구조에 스킬·보상·저장 경로 연결 | §6 |
-| 보조 F | 씬 전환과 플레이 흐름 | 화면·UI·소리 전환, 로딩 대기, 새 게임·이어하기 | §7 · §10.3 · §10.4 |
+| 보조 F | 씬 전환과 플레이 흐름 | 화면·UI·소리 전환, 로딩 대기, 새 게임·이어하기 | §7 · §10.2 |
 | 핵심 G ① | UI/UX — 화면 UI와 조작 | 상황별 조준점·키 안내·시스템 메시지, HUD 시인성, 창 연출·스타일 통일, 칩 이름 한글 검색, 환경설정 | §8 |
 | 핵심 G ② | UI/UX — 전투 피드백과 비주얼 효과 | 피해 구간별 피격 연출, 보스 상태 연출, 공격 예고의 박자, 타이틀·등장 연출 | §9 |
 
@@ -109,7 +110,7 @@ UI/UX는 공격 예고와 HUD·미니맵, 화면·UI·소리가 함께 바뀌는
 2. **시간 정지**(§4) — 게임 전체가 아니라 물체마다 따로 도는 시간과, 정지 중에도 든 물체만 움직이는 예외
 3. **UI/UX와 전투 피드백**(§8·§9) — 지금 할 수 있는 행동과 피격 강도를 화면에서 바로 읽게 하는 UI, 셰이더로 만든 연출
 
-보스 전투(§5), 칩·보상·저장(§6), 씬 전환(§7)은 직접 만든 부분과 고민과 선택 위주로 짧게 다룹니다.
+보스 전투(§5), 칩·보상·저장(§6), 씬 전환(§7)은 직접 만든 부분 위주로 짧게 다룹니다.
 
 ### 1.5 전체 구조
 
@@ -345,9 +346,7 @@ sequenceDiagram
 
 이 다이어그램은 물체를 들 때 원래 물리·충돌·시간 정지 상태를 저장해 바꾸고, 놓을 때 저장한 값으로 되돌리는 차례를 도식화한 것입니다.
 
-드는 순간 속도를 0으로 만들고 각감쇠를 높여 물체가 손 앞에서 덜 흔들리게 하며, Rigidbody `excludeLayers`에는 홀딩 중 제외 레이어를 더합니다.
 플레이어와의 충돌은 물체·플레이어 콜라이더 쌍마다 원래 무시 여부를 저장해 두었다가 쌍별로 되돌립니다.
-피격 트리거는 휘두르기 여유 범위만큼 넓히고, 들고 있는 동안에는 투척 피해와 벽 파편화를 모두 끕니다.
 
 물체의 피격 판정은 몸체 콜라이더가 아니라 별도 레이어(`PsychokinesisHit`)의 트리거로 합니다.
 보스 Rigidbody는 염동력 물체 레이어와 물리 충돌하지 않으므로, 이 트리거는 몬스터 레이어하고만 반응하도록 두었습니다.
@@ -383,12 +382,7 @@ Shatter();
 
 ![좌클릭으로 손을 뻗을 때 손바닥에서 출발해 앞으로 날아가는 기본 공격(염동파) 탄과 고리 효과(에디터 씬 뷰)](images/force-wave.gif)
 
-착탄 주변 물체는 `ForcePush`로 밀어냅니다.
-가벼운 물체는 `SweepTest`로 이동 가능한 거리를 먼저 제한하고 Fixed 갱신 Tween으로 이동시킨 뒤,
-종료 속도와 회전 속도를 Rigidbody에 넘깁니다. 무거운 물체나 이동 공간이 부족한 물체는 제자리에서 흔들립니다.
-착탄 범위의 적·플레이어에는 이 물체 밀어내기를 적용하지 않습니다.
-
-탄·고리 효과와 발사 상태는 자체 Stack으로 재사용하고, 효과별 값은 `MaterialPropertyBlock`으로 전달합니다.
+착탄 주변 물체는 `ForcePush`로 밀어내되, `SweepTest`로 이동 가능한 거리를 먼저 제한하고 무겁거나 공간이 없는 물체는 제자리에서 흔들기만 합니다.
 
 소스: [PsychokinesisForceWave.cs](https://github.com/keeeery/ODDITY/blob/main/Assets/Scripts/3.%20Psychokinesis/PsychokinesisForceWave.cs), [ForcePush.cs](https://github.com/keeeery/ODDITY/blob/main/Assets/Scripts/3.%20Psychokinesis/ForcePush.cs).
 
@@ -416,9 +410,6 @@ damage = Mathf.Max(1, Mathf.RoundToInt(combatEntity.CurrentStats.Atk * atkScale 
 groggy = Mathf.RoundToInt(damage * objectGroggyScale);
 ```
 
-위 발췌는 피해 오버라이드 경로입니다. 휘두르기·투척은 같은 계산 함수로 연결되지만,
-피해 요청을 허용하는 도착·속도·충돌 조건은 각 조작의 판정에 남아 있습니다.
-
 ### 2.9 보스·지형과 맞물리는 물체
 
 전투 공간의 물체는 플레이어만 쓰는 소품이 아니라 보스의 이동·공격과도 반응합니다.
@@ -436,28 +427,35 @@ groggy = Mathf.RoundToInt(damage * objectGroggyScale);
 생성 유예 중에 닿은 보스 부위는 한 번 떨어질 때까지 계속 무시해 유예가 끝나는 순간 발밑에 겹쳐 있던 물체가 바로 부서지지 않게 합니다.
 플레이어가 물체를 들면 유예를 해제해 원래 규칙으로 돌아갑니다.
 
-벽 파편화는 던진 물체가 날아가다 스친 다른 파편이나 플레이어에는 반응하지 않고, `Wall` 레이어에 처음 닿을 때만 일어납니다.
-
-띄우기는 범위 안 물체를 Kinematic으로 바꿔 무작위 높이만큼 DOTween으로 올린 뒤, Tween이 끝나면 Kinematic을 풀어 중력으로 떨어뜨립니다.
-플레이어가 들고 있거나 이미 Kinematic인 물체는 제외합니다.
-풀 파편은 크기별 풀의 부모 아래에서, 맵 배치 물체는 활성 목록에서 찾아 같은 물체를 두 번 띄우지 않습니다.
-
 소스: [PsychokinesisObject.cs](https://github.com/keeeery/ODDITY/blob/main/Assets/Scripts/3.%20Psychokinesis/PsychokinesisObject.cs), [BossFragmentLift.cs](https://github.com/keeeery/ODDITY/blob/main/Assets/Scripts/6.%20Boss/BossFragmentLift.cs), [PsychokinesisFallZone.cs](https://github.com/keeeery/ODDITY/blob/main/Assets/Scripts/8.%20Environmental%20Mechanics/PsychokinesisFallZone.cs).
 
 ### 2.10 고민과 선택
 
-| 선택 | 이점 | 비용·제약 |
+**물체를 어떻게 손 앞에 붙들까 — Dynamic Rigidbody**
+
+염동력으로 다루는 물체는 벽이나 다른 물체에 부딪히며 밀리고, 무게감이 느껴지고, 던진 뒤에도 자연스러운 궤적을 그리는 등 현실적인 물리 법칙을 따라 움직이도록 구현하고자 했습니다. 그래서 Transform을 손 위치로 직접 옮기지 않고, 처음부터 Dynamic Rigidbody에 위치 오차로 가속도를 주는 방식(§2.4)을 택했습니다.
+
+성능은 에디터 Stats 창의 FPS로 확인했습니다. 테스트 씬에서 물체 하나를 든 상태로 약 300 FPS였습니다(개발 환경 기준). 게임 설계상 수많은 물체가 동시에 물리 운동을 하는 상황은 나오지 않아, 이후에도 성능 문제는 없을 것으로 판단하고 이 구조를 유지한 채 추종 수치를 튜닝했습니다.
+
+> **남은 과제** — GC·프레임 시간은 프로파일러로 따로 측정하지 않았습니다(§11.3).
+
+당시에는 이 방식 하나로 정했고, 다른 방법과의 비교는 돌아보며 정리했습니다.
+
+| 방법 | 장점 | 비용 |
 |---|---|---|
-| Transform 직접 이동 대신 가속도 추종 | Rigidbody를 유지하며 움직임과 공격 연결 | 질량·감쇠·상한 튜닝과 충돌 정책 필요 |
+| Transform을 손 위치로 직접 옮기기 | 원하는 위치에 정확히 붙음 | 벽·다른 물체에 부딪혀도 밀리지 않고 뚫고 지나가며, 던진 뒤의 궤적을 따로 만들어야 함 |
+| Kinematic Rigidbody를 `MovePosition`으로 옮기기 | 위치를 정확히 제어하면서 충돌 판정은 받음 | 다른 물체에 밀리거나 무게감이 생기지 않고, 던질 때 Dynamic으로 바꿔야 함 |
+| Dynamic Rigidbody에 위치 오차로 가속도 주기 (채택) | 부딪히면 밀리고, 무게감과 던진 뒤의 자연스러운 궤적이 나옴 | 질량·감쇠·상한 튜닝과 충돌 정책이 필요 |
+
+- **다시 고른다면:** 같은 선택을 하겠습니다.
+
+**그 밖의 선택**
+
+| 선택 | 이점 | 비용 |
+|---|---|---|
 | 화면 중심 우선 후보 선정 | 조준 의도와 대상 선택을 연결 | 가림 검사·카메라 범위 조건 필요 |
 | 실제 피해 결과 후 파편화 | 접촉과 피해 성공을 구분 | 대기 이벤트와 구독 정리 필요 |
 | 들고 있는 동안 충돌·시간 예외 적용 | 플레이어와의 충돌, 정지 세계 속 조작 연결 | 해제·피격·비활성화 시 원래 상태 복원 필요 |
-
-**물체를 어떻게 손 앞에 붙들까 — Dynamic Rigidbody**
-
-- **당시 판단:** 염동력으로 다루는 물체는 벽이나 다른 물체에 부딪히며 밀리고, 무게감이 느껴지고, 던진 뒤에도 자연스러운 궤적을 그리는 등 현실적인 물리 법칙을 따라 움직이도록 구현하고자 했습니다. 그래서 Transform을 손 위치로 직접 옮기지 않고, 처음부터 Dynamic Rigidbody에 위치 오차로 가속도를 주는 방식(§2.4)을 택했습니다.
-- **확인:** 에디터 Stats 창의 FPS로 성능을 확인했습니다. 테스트 씬에서 물체 하나를 든 상태로 약 300 FPS였습니다(개발 환경 기준, GC·프레임 시간은 프로파일러로 따로 측정 안 함 — §11.3). 게임 설계상 수많은 물체가 동시에 물리 운동을 하는 상황은 나오지 않아, 이후에도 성능 문제는 없을 것으로 판단하고 이 구조를 유지한 채 추종 수치를 튜닝했습니다.
-- **다시 고른다면:** 같은 선택을 하겠습니다.
 
 소스: [PsychokinesisController.cs](https://github.com/keeeery/ODDITY/blob/main/Assets/Scripts/3.%20Psychokinesis/PsychokinesisController.cs), [PsychokinesisObject.cs](https://github.com/keeeery/ODDITY/blob/main/Assets/Scripts/3.%20Psychokinesis/PsychokinesisObject.cs).
 
@@ -568,22 +566,6 @@ stateDiagram-v2
 맵에 놓인 염동력 소품 27종(통·탱크·상자·콘솔 등)은 모두 금속 조각으로 부서지고, 벽에서 떨어진 파편이나 보스 패턴이 만든 물체는 콘크리트 파편으로 부서집니다.
 금속 조각은 모양 6종을 모든 소품이 함께 쓰되, 부서지는 소품의 머티리얼을 그대로 입혀 그 소품에서 떨어져 나온 조각처럼 보이게 했습니다.
 
-```mermaid
-%%{init: {"flowchart": {"padding": 8}}}%%
-flowchart TB
-    Shatter["물체가 부서짐"] --> Q{"재질이 있고<br>금속 조각이<br>준비됐는가"}
-    Q -->|예| Metal["<div style=width:124px>금속 조각<br>소품 머티리얼 입힘"]
-    Q -->|아니오| Concrete["<div style=width:124px;height:48px;line-height:48px>콘크리트 작은 파편"]
-    Metal --> Return["<div style=width:260px>안정 → 축소 → 풀로 반환 (§3.3)"]
-    Concrete --> Return
-%% 격자: - Shatter - | - Q - | Metal - Concrete | Return Return Return
-%% 격자 열 간격: 12
-%% 화살표 Q -> Metal: 나감=왼쪽 들어감=위
-%% 화살표 Q -> Concrete: 나감=오른쪽 들어감=위
-```
-
-이 다이어그램은 물체가 부서질 때 재질에 따라 금속 조각과 콘크리트 파편 중 하나로 나뉘어 생성되는 순서를 도식화한 것입니다.
-
 | | 금속 조각 | 콘크리트 작은 파편 |
 |---|---|---|
 | 어떤 물체 | 맵의 염동력 소품 27종 | 벽 파편, 보스 패턴이 만든 물체 |
@@ -593,21 +575,6 @@ flowchart TB
 | 생성 반경 | 0.5m | 0.15m |
 
 ![통·상자·탱크 소품의 원본 모양과, 질량에 따라 3·4·6개로 부서진 금속 조각(원본 저장소의 메시·머티리얼·텍스처로 그린 그림, 게임 화면 아님)](images/prop-shatter.png)
-
-```csharp
-// WallFragmentSpawner.SpawnImpactDebris() — 재질이 있으면 그 머티리얼의 금속 조각으로, 없으면 콘크리트 파편으로
-if (debrisMaterial != null && CanSpawn(metalShardPrefabs, metalShardPool))
-{
-    int shardCount = Mathf.Clamp(Mathf.RoundToInt(mass * metalShardsPerKilogram),
-        MinimumImpactFragmentCount, maxMetalShardCount);
-    SpawnFragments(metalShardPrefabs, metalShardPool, shardCount, point, normal, metalShardSpawnRadius, ImpactSpeedMultiplier, debrisMaterial);
-    return;
-}
-
-int count = Mathf.Clamp(Mathf.RoundToInt(mass * impactFragmentsPerKilogram),
-    MinimumImpactFragmentCount, maxImpactFragmentCount);
-SpawnFragments(smallVisualFragmentPrefabs, smallFragmentPool, count, point, normal, impactSpawnRadius, ImpactSpeedMultiplier);
-```
 
 - 금속 소품은 시야를 덜 가리도록 콘크리트보다 적게 흩뿌립니다.
 - 금속 조각은 판 앞뒤 면의 UV를 0~1로 만들어, 어떤 소품의 머티리얼을 입혀도 원본 텍스처가 조각 면에 입혀집니다.
@@ -619,20 +586,24 @@ SpawnFragments(smallVisualFragmentPrefabs, smallFragmentPool, count, point, norm
 
 ### 3.5 고민과 선택
 
-파편을 어떻게 만들지는 세 가지 방법을 견줬습니다.
+**파편을 어떻게 만들까 — 미리 만든 파편 형태를 크기별로 조합**
 
-| 방법 | 판단 |
-|---|---|
-| 미리 쪼개 둔 벽 오브젝트 에셋 | 에셋에 들어 있는 벽 형태에만 쓸 수 있어 기각 |
-| 실시간 메시 절단 | 초기 기획의 방식(보스가 벽에 돌진하면 그 벽의 메시를 잘라 파편 생성). 프로젝트 기간 안에 깊게 다루면 시간이 너무 많이 들 것 같아 먼저 보류했고, 이후 AI에게 맡긴 데모로 시험해 보니 잘린 모습이 생각보다 자연스럽지 않았으며, 자연스럽게 다듬는 데 다시 시간이 많이 들 것으로 판단해 기각 |
-| 미리 만든 파편 형태를 크기별로 조합 ✓ | 개발 비용이 낮아 먼저 구현했고, 실제 전투에 붙여 보니 생각보다 어색하지 않고 잘 어울려 그대로 확정 |
+| 방법 | 장점 | 비용 |
+|---|---|---|
+| 미리 쪼개 둔 벽 오브젝트 에셋 | — | 에셋에 들어 있는 벽 형태에만 쓸 수 있음 |
+| 실시간 메시 절단 (처음 기획) | 보스가 돌진한 벽의 메시를 잘라 그 벽에서 파편이 나옴 | 깊게 다루면 시간이 너무 많이 들고, 시험해 본 데모에서 잘린 모습이 자연스럽지 않음 |
+| 미리 만든 파편 형태를 크기별로 조합 (채택) | 개발 비용이 낮음 | 파편이 원래 물체의 모양을 따르지 않음 |
+
+실시간 메시 절단은 초기 기획의 방식(보스가 벽에 돌진하면 그 벽의 메시를 잘라 파편 생성)이었습니다.
+프로젝트 기간 안에 깊게 다루면 시간이 너무 많이 들 것 같아 먼저 보류했고, 이후 AI에게 맡긴 데모로 시험해 보니 잘린 모습이 생각보다 자연스럽지 않았으며, 자연스럽게 다듬는 데 다시 시간이 많이 들 것으로 판단해 기각했습니다.
+크기별 조합은 개발 비용이 낮아 먼저 구현했고, 실제 전투에 붙여 보니 생각보다 어색하지 않고 잘 어울려 그대로 확정했습니다.
 
 전투 공간의 물체는 바위 아니면 금속으로 만든 것이라, 물체마다 다른 조각을 만들지 않고 콘크리트·금속 두 가지 조각으로만 나눴습니다(§3.4).
 그래서 파편은 원래 물체의 모양을 따르지 않습니다.
 
-오브젝트 생성·파괴는 비용이 크고, 이 게임은 물체가 부서질 때마다 파편이 자주 생성·파괴됩니다.
-그래서 오브젝트 풀링을 도입하는 것이 바람직하다고 판단했습니다.
-파편 생성 기능을 먼저 구현한 뒤, 바로 크기별 공유 풀에서 꺼내 쓰는 방식으로 붙였습니다.
+**파편을 어떻게 생성하고 정리할까 — 크기별 공유 풀**
+
+파편은 물체가 부서질 때마다 자주 생기고 사라져, 처음부터 크기별 공유 풀에서 꺼내 쓰도록 붙였습니다.
 
 큰·중간 파편과 작은 연출 파편을 나누면 전투에 필요한 물리 물체를 남기면서 연출물은 정리할 수 있습니다.
 작은 파편과 금속 조각은 연출용이라 다른 파편과 겹쳐 생성돼도 허용하고, 빈자리를 찾는 재시도 횟수를 제한하여 연출용 파편에서의 연산 비용을 줄였습니다.
@@ -731,26 +702,9 @@ Animator의 원래 속도와 Rigidbody의 운동 상태를 저장하고,
 
 #### 시간 정지 막 셰이더
 
-`TimeFreezeHologram.shader`는 도입한 홀로그램 셰이더(Knife Hologram Shader Unlit)의 Forward 패스를 바탕으로 두 가지를 더한 셰이더입니다.
-
-첫째는 **높이로 쓸어 올리는 마스크**입니다. 
-`TimeFreezeOverlayFeature`가 오브젝트마다 진행도와 높이 범위를 전역 값으로 넘기고, 높이 범위는 그리는 렌더러들의 바운드를 합쳐 매 프레임 다시 재므로 움직이는 SkinnedMesh에도 맞습니다.
-셰이더는 진행도로 보이는 높이를 정해 그 위의 픽셀을 버리고, 경계 폭에 걸쳐 경계 색으로 물들며 옅어지게 합니다.
-진행도 0에서는 하나도 보이지 않고 1에서 꼭대기까지 다 보이도록 위쪽에 경계 폭만큼 여유를 둡니다.
-진행도는 시간에 따라 일정하게 오르고, 보이는 높이에는 이징을 걸어 막이 덮이고 걷히는 속도에 변화를 줍니다.
-
-```hlsl
-// TimeFreezeHologram.shader — 쓸어 올린 높이 위는 버리고 경계 폭에 걸쳐 드러냄
-float edgeWidth = max( _EdgeWidth, 0.001 );
-float sweepHeight = lerp( _TimeFreezeOverlayBounds.x, _TimeFreezeOverlayBounds.y + edgeWidth, _TimeFreezeOverlayProgress );
-float sweepMask = saturate( ( sweepHeight - WorldPosition.y ) / edgeWidth );
-clip( sweepMask - 0.001 );
-```
-
-둘째는 **정지 순간의 글리치**입니다. 
-정지 직후 짧은 시간(기본 0.35초) 동안 줄어드는 세기를 넘겨, 정점을 노이즈 방향으로 흔들고 막을 깜빡이게 합니다.
-원본 셰이더의 글리치는 키워드로 켜고 끄지만, 이 글리치는 키워드와 상관없이 세기 값으로만 켭니다.
-막이 다 덮여 머티리얼을 교체한 뒤에는 높이 범위를 아주 넓게 넘겨 마스크 없이 전체가 보이게 합니다.
+`TimeFreezeHologram.shader`는 도입한 홀로그램 셰이더(Knife Hologram Shader Unlit)의 Forward 패스에 두 가지를 더했습니다.
+하나는 **높이로 쓸어 올리는 마스크**로, 그리는 렌더러들의 바운드를 매 프레임 다시 재므로 움직이는 SkinnedMesh에도 맞습니다.
+다른 하나는 **정지 직후의 짧은 글리치**로, 원본처럼 키워드로 켜고 끄지 않고 세기 값으로만 켭니다.
 
 소스: [TimeFreezeHologram.shader](https://github.com/keeeery/ODDITY/blob/main/Assets/Shaders/TimeFreezeHologram.shader), [TimeFreezeOverlayFeature.cs](https://github.com/keeeery/ODDITY/blob/main/Assets/Scripts/4.%20Superpower/Time%20Control/TimeFreezeOverlayFeature.cs), [TimeFreezable.cs](https://github.com/keeeery/ODDITY/blob/main/Assets/Scripts/4.%20Superpower/Time%20Control/TimeFreezable.cs).
 
@@ -776,20 +730,22 @@ clip( sweepMask - 0.001 );
 
 **게임 시간을 어떻게 멈출까 — 물체마다 따로 도는 시간**
 
-- **당시 상황:** `Time.timeScale`을 직접 바꾸면 플레이어까지 모두 멈춥니다. 시간 정지 중에도 플레이어와 든 물체는 움직여야 했으므로, 객체마다 시간을 따로 다루는 별도의 시간 체계를 도입했습니다. 처음부터 이 방식이 맞다고 보고 다른 방법은 따로 견주지 않았습니다.
-- **결과:** 이후 팀원이 같은 체계 위에 시간 감속(중첩 배율·중력 보정)을 확장했습니다. 대신 `TimeFreezable`을 붙이거나 그 시계를 넘긴 요소만 멈추므로, 공격 예고 표시나 맵 환경까지 모두 멈추려면 하나씩 연결해야 합니다. 플레이어를 제외한 모든 요소가 정지·감속되는 쪽이 더 좋았을 것이라고 돌아봤습니다.
-- **돌아보며 견준 방법:**
+`Time.timeScale`을 직접 바꾸면 플레이어까지 모두 멈춥니다. 시간 정지 중에도 플레이어와 든 물체는 움직여야 했으므로, 객체마다 시간을 따로 다루는 별도의 시간 체계를 도입했습니다. 처음부터 이 방식이 맞다고 보고 다른 방법은 따로 견주지 않았습니다.
 
-| 방식 | 장점 | 비용 |
+이후 팀원이 같은 체계 위에 시간 감속(중첩 배율·중력 보정)을 확장했습니다. 대신 `TimeFreezable`을 붙이거나 그 시계를 넘긴 요소만 멈추므로, 공격 예고 표시나 맵 환경까지 모두 멈추려면 하나씩 연결해야 합니다. 플레이어를 제외한 모든 요소가 정지·감속되는 쪽이 더 좋았을 것이라고 돌아봤습니다.
+
+돌아보며 견준 방법은 다음과 같습니다.
+
+| 방법 | 장점 | 비용 |
 |---|---|---|
 | 물체마다 따로 도는 시간 (채택) | 멈출 물체만 고르고, 든 물체의 예외와 홀로그램 전환을 물체 단위로 다룰 수 있음 | 정지·감속이 연결한 요소에만 적용되어, 예고 표시·맵 환경까지 멈추려면 하나씩 붙여야 함 |
-| 플레이어만 전용 시간 (다시 고른다면) | 플레이어를 뺀 모든 요소를 게임 시간으로 한 번에 정지·감속해, 예고 표시와 맵 환경까지 완전히 멈추는 연출이 가능 | `timeScale` 0을 쓰는 일시정지 화면처럼 게임 시간 전체를 멈추는 기능과 겹치는 곳에 추가 조치가 필요 |
+| 플레이어만 전용 시간 | 플레이어를 뺀 모든 요소를 게임 시간으로 한 번에 정지·감속해, 예고 표시와 맵 환경까지 완전히 멈추는 연출이 가능 | `timeScale` 0을 쓰는 일시정지 화면처럼 게임 시간 전체를 멈추는 기능과 겹치는 곳에 추가 조치가 필요 |
 
 - **다시 고른다면:** 플레이어만 전용 시간을 쓰는 쪽을 택하고, 일시정지처럼 게임 시간 전체를 멈추는 기능과의 관계를 먼저 정하겠습니다.
 
-그 밖의 선택은 다음과 같습니다.
+**그 밖의 선택**
 
-| 선택 | 이점 | 비용·제약 |
+| 선택 | 이점 | 비용 |
 |---|---|---|
 | 객체별 시간 상태 | 플레이어와 일부 물체를 계속 조작 가능 | 관련 제어 코드가 로컬 시간을 사용해야 함 |
 | 중첩 정지·감속 관리 | 하나의 효과가 끝나도 다른 효과 유지 | 요청·해제의 짝과 비활성화 정리 필요 |
@@ -837,20 +793,6 @@ sequenceDiagram
 지금은 `BossIdleState`가 패턴의 사용 가능 조건·거리·긴급 조건과 가중치로 공격을 고르고, 거리·각도가 맞지 않으면 Chase·Turn으로 조건을 만든 뒤 실행합니다.
 이 위에 직접 보완한 공통 흐름은 공격 예고, 애니메이션 발동 시점, 피격·그로기, 이동·착지와 지면 대응입니다.
 패턴을 벗어날 때는 애니메이션 구독과 남은 공격 예고를 함께 정리합니다.
-
-```csharp
-// BossMeleePattern.OnExit() — 상태를 벗어날 때 애니메이션 구독·루트 모션·트리거와 남은 타격 예고를 정리하고 패턴별 정리 호출
-root.AnimEventListener.OnOccursAnimStateEvent -= OnOccursAnimEvent;
-Animator.applyRootMotion = false;
-Animator.ResetTrigger(trigger);
-for (int index = 0; index < hits.Length; index++)
-{
-    if (hitTelegraphs[index] != null) hitTelegraphs[index].Cancel();
-    hitTelegraphs[index] = null;
-    isLocked[index] = false;
-}
-OnPatternExit();
-```
 
 ![페르데로스 보스의 투하 패턴 — 바닥의 원형 공격 범위 예고](images/boss-drop-pattern.png)
 
@@ -914,7 +856,7 @@ OnPatternExit();
 처음 Dynamic Rigidbody였던 보스가 플레이어와 부딪혀 튀어 오르거나 플레이어를 밟고 올라서는 문제가 있어 팀원이 Kinematic으로 바꿨습니다.
 단차가 없는 앞의 두 맵은 이것으로 충분했지만, 단차와 구멍이 있는 휴머노이드 맵에는 다음 보정을 제가 더했습니다.
 
-| 보정 | 견준 방법 | 고른 방법과 이유 |
+| 고민 | 대안 | 고른 방법과 이유 |
 |---|---|---|
 | 구멍·맵 바깥으로 나가지 않게 | 구멍 둘레에 보이지 않는 벽 세우기 | NavMesh 경계에서 이동량을 자름 — 경로 계산과 따로 움직이는 루트 모션 공격도 함께 막아야 했고, 보스가 구멍을 넘어 도약 공격하는 장면을 살리고 싶어 벽을 세우는 안은 쓰지 않음 |
 | 단차 오르내리기 | 기존 이동 방식 그대로 쓰기 · NavMesh의 Step Height를 바꿔 다시 굽기 | 레이캐스트로 발밑 바닥 높이를 재서 `stepHeight`(1m) 이내 단차만 오르내림 — 단차가 심하지 않아 기존 방식으로 될 것 같았지만 되지 않았고, Step Height 설정으로 새로 구워도 보스 이동 범위가 올바르게 그려지지 않음. Kinematic 몸은 바닥이 밀어 올려 주지 않아 높이를 직접 따라가야 함 |
@@ -1019,9 +961,6 @@ sequenceDiagram
 
 이 다이어그램은 이어하기에서 저장 파일로 칩을 복원할 때, 장착 요청을 대기 목록에 보관했다가 새 씬의 플레이어가 초기화된 뒤 스탯 보너스·스킬 슬롯에 반영하는 차례를 도식화한 것입니다.
 
-
-### 6.4 고민과 선택
-
 정의 데이터와 플레이 중 보유 상태를 나눠, 저장된 ID를 테이블 기준으로 복원하고 테이블에서 사라진 항목은 건너뜁니다.
 저장은 목록이 바뀔 때마다 동기 JSON으로 합니다.
 
@@ -1076,20 +1015,13 @@ if (elapsed >= maxSettleWait)
 }
 ```
 
-위 코드는 대기 루프 중 일부이며 경고 로그는 생략했습니다.
 소스 기본 설정은 최소 암전 0.2초, 0.05초 이하 프레임 5회 연속, 최대 대기 2.5초입니다.
 최대 시간을 넘기면 경고 후 진행해 안정 조건을 무한히 기다리지 않게 합니다.
 
 씬 로드 후 이벤트 구독자의 예외 때문에 화면이 계속 꺼져 있지 않도록 해당 호출도 별도로 처리했습니다.
+고친 뒤 씬 전환에서 화면 켜짐과 소리 페이드가 끊기지 않는 것을 직접 확인했고, 시연 영상에도 담겼습니다.
 
 ![메인 화면에서 새 게임을 고른 뒤 로비로 넘어오는 전환 — 화면이 꺼지고 암전된 사이 로비 씬을 준비한 뒤, 화면이 먼저 켜지고 UI가 이어서 나타남](images/scene-reveal.gif)
-
-### 7.3 고민과 선택
-
-| 선택 | 이점 | 비용·제약 |
-|---|---|---|
-| 화면·UI·소리 전환 통합 | 씬 변경을 하나의 시각·청각 흐름으로 표현 | 서로 다른 Canvas와 오디오 상태 복원 필요 |
-| 안정 프레임 조건 | 로드 직후 긴 프레임과 전환 연출을 분리 | 기기별 조건 튜닝과 상한 필요 |
 
 소스: [SceneLoadManager.cs](https://github.com/keeeery/ODDITY/blob/main/Assets/Scripts/7.%20Arena/SceneLoadManager.cs), [ScreenOffEffect.cs](https://github.com/keeeery/ODDITY/blob/main/Assets/Scripts/10.%20UI/ScreenOffEffect.cs).
 
@@ -1155,20 +1087,12 @@ NPC 상호작용, 증강 칩 관리, 칩 창 조작, 조작 안내 창의 키 �
 
 `SystemMessage`는 입력이 거절됐을 때 그 이유를 한 줄로 알려, 키가 안 눌린 것인지 조건이 안 맞은 것인지 헷갈리지 않게 합니다.
 
-| 상황 | 문구 |
-|---|---|
-| 스킬 슬롯이 비어 있음 | 장착된 스킬이 없습니다. |
-| 스킬 재사용 대기 중 | 재사용 대기시간 중입니다. |
-| 스태미나 부족 | 스태미나가 부족합니다. |
-| 정비소 안에서 공격·스킬 | 정비소에서는 기본 공격을 사용할 수 없습니다. / 정비소에서는 스킬을 사용할 수 없습니다. |
-
 ![시스템 메시지 — 스킬 재사용 대기 중(위)과 정비소 안에서 스킬을 쓰려 할 때(아래)의 주황색 경고 문구](images/system-message.png)
 
 경고는 주황색과 경고 효과음으로, 퀘스트 수락·칩 획득 같은 일반 안내는 흰색으로 표시합니다.
 같은 문구가 연달아 들어오면 새로 띄우지 않고 표시 시간만 늘려 깜빡이지 않게 합니다.
-정비소 안에서는 공격·스킬을 막고 우클릭을 NPC 상호작용으로 넘깁니다.
 
-소스: [Crosshair.cs](https://github.com/keeeery/ODDITY/blob/main/Assets/Scripts/10.%20UI/Crosshair.cs), [KeyHintBuilder.cs](https://github.com/keeeery/ODDITY/blob/main/Assets/Scripts/10.%20UI/KeyHintBuilder.cs), [InteractionPrompt.cs](https://github.com/keeeery/ODDITY/blob/main/Assets/Scripts/10.%20UI/InteractionPrompt.cs), [ChipPanelHotkey.cs](https://github.com/keeeery/ODDITY/blob/main/Assets/Scripts/10.%20UI/ChipPanelHotkey.cs), [ChipControlHint.cs](https://github.com/keeeery/ODDITY/blob/main/Assets/Scripts/4.%20Superpower/1.%20AugmentationChip/UI/ChipControlHint.cs), [ControlGuideWindow.cs](https://github.com/keeeery/ODDITY/blob/main/Assets/Scripts/10.%20UI/ControlGuideWindow.cs), [SystemMessage.cs](https://github.com/keeeery/ODDITY/blob/main/Assets/Scripts/10.%20UI/SystemMessage.cs), [ReadableTextStyle.cs](https://github.com/keeeery/ODDITY/blob/main/Assets/Scripts/10.%20UI/ReadableTextStyle.cs), [RepairShopZone.cs](https://github.com/keeeery/ODDITY/blob/main/Assets/Scripts/9.%20Mission/RepairShopZone.cs).
+소스: [Crosshair.cs](https://github.com/keeeery/ODDITY/blob/main/Assets/Scripts/10.%20UI/Crosshair.cs), [KeyHintBuilder.cs](https://github.com/keeeery/ODDITY/blob/main/Assets/Scripts/10.%20UI/KeyHintBuilder.cs), [SystemMessage.cs](https://github.com/keeeery/ODDITY/blob/main/Assets/Scripts/10.%20UI/SystemMessage.cs).
 
 ### 8.3 HUD 시인성 — 게이지·스킬 슬롯·미니맵·보스 정보
 
@@ -1200,28 +1124,15 @@ NPC 상호작용, 증강 칩 관리, 칩 창 조작, 조작 안내 창의 키 �
 
 미니맵은 위에서 본 장면만 표시하지 않고, `MinimapWalkableBaker`로 플레이어가 설 수 있는 영역의 마스크를 만듭니다.
 
-```mermaid
-%%{init: {"flowchart": {"padding": 8}}}%%
-flowchart TB
-    Bounds[대상 Collider 범위 / 격자] --> Floor[배치 Spherecast / 바닥 높이]
-    Floor --> Space[배치 OverlapCapsule / 몸체 공간]
-    Space --> Reach[선택적으로 연결 영역 탐색]
-    Reach --> Expand[플레이어 반경만큼 확장]
-    Expand --> Mask[R8 텍스처 / 미니맵 표시]
-```
-
-이 다이어그램은 `MinimapWalkableBaker`가 바닥 높이와 몸체 공간을 검사해 플레이어가 설 수 있는 영역을 미니맵 텍스처로 굽는 순서를 도식화한 것입니다.
-
 ![미니맵 이동 영역 마스크를 바닥 높이·몸체 공간·연결 영역·반경 확장 네 단계로 나눠 보인 그림](images/minimap-mask-steps.png)
 
 ![미니맵 — 플레이어가 갈 수 있는 회색 영역 위에 보스와 물체가 마커로 표시됨](images/minimap-north-up.png)
 
-구의 반경으로 작은 틈을 넘고, 캡슐이 들어갈 공간을 검사해 벽 안쪽이나 머리 공간이 없는 칸을 뺀 뒤, 플레이어 반경만큼 넓혀 몸이 닿을 수 있는 가장자리까지 표시합니다.
 물리 검사는 `SpherecastCommand`·`OverlapCapsuleCommand` 배치 Job을 쓰고, 마스크는 씬 시작 시 한 번 굽습니다.
 플레이어의 크기·머리 공간·단차를 지도에 반영합니다.
 원형 지도(`Minimap`)는 카메라 Yaw에 맞춰 돌며, 메인 카메라가 `LateUpdate`에서 회전을 마친 뒤 따라 돌도록 실행 순서를 늦췄습니다.
 
-소스: [VectorBar.cs](https://github.com/keeeery/ODDITY/blob/main/Assets/Scripts/10.%20UI/VectorBar.cs), [SkillSlotGraphic.cs](https://github.com/keeeery/ODDITY/blob/main/Assets/Scripts/10.%20UI/SkillSlotGraphic.cs), [SkillSlotHUD.cs](https://github.com/keeeery/ODDITY/blob/main/Assets/Scripts/10.%20UI/SkillSlotHUD.cs), [MinimapWalkableBaker.cs](https://github.com/keeeery/ODDITY/blob/main/Assets/Scripts/10.%20UI/MinimapWalkableBaker.cs), [MinimapGround.cs](https://github.com/keeeery/ODDITY/blob/main/Assets/Scripts/10.%20UI/MinimapGround.cs), [Minimap.cs](https://github.com/keeeery/ODDITY/blob/main/Assets/Scripts/10.%20UI/Minimap.cs), [BossHUD.cs](https://github.com/keeeery/ODDITY/blob/main/Assets/Scripts/10.%20UI/BossHUD.cs), [PlayerHUD.cs](https://github.com/keeeery/ODDITY/blob/main/Assets/Scripts/10.%20UI/PlayerHUD.cs).
+소스: [VectorBar.cs](https://github.com/keeeery/ODDITY/blob/main/Assets/Scripts/10.%20UI/VectorBar.cs), [SkillSlotGraphic.cs](https://github.com/keeeery/ODDITY/blob/main/Assets/Scripts/10.%20UI/SkillSlotGraphic.cs), [MinimapWalkableBaker.cs](https://github.com/keeeery/ODDITY/blob/main/Assets/Scripts/10.%20UI/MinimapWalkableBaker.cs), [BossHUD.cs](https://github.com/keeeery/ODDITY/blob/main/Assets/Scripts/10.%20UI/BossHUD.cs).
 
 ### 8.4 UI 연출 부품과 스타일 통일
 
@@ -1229,17 +1140,7 @@ flowchart TB
 
 #### 다시 쓰는 연출 부품
 
-창과 결과 화면의 등장 연출은 작은 부품으로 나누어, 화면마다 세기만 바꿔 조합합니다.
-모든 부품은 실제 시간으로 진행해 시간 정지·히트스톱 중에도 열립니다.
-
-| 부품 | 동작 | 쓰는 곳 |
-|---|---|---|
-| `UIPopIn` | 투명도가 차오르며 살짝 작았던 크기가 제자리로 돌아옴 | 켜졌다 꺼지는 창·팝업 전반 |
-| `UILineReveal` | 가운데 1px 선이 좌우로 뻗은 뒤 위아래로 열리고, 닫을 때는 선으로 접힌 뒤 점으로 줄어듦 | 보상창 |
-| `UIGlitch` | 위치가 튀고 깜빡이며 붉은색·청록색 복사본으로 색이 갈라짐. 값은 일정 간격으로만 바꿔 디지털 신호처럼 끊겨 보임 | 보상창(짧고 약하게), 사망 화면(길고 강하게), 메뉴 버튼 |
-| `UIStaggerReveal` | 자식을 일정 간격으로 하나씩 켜며 짧게 깜빡임. 숨긴 동안에는 마우스를 받지 않아 보이지 않는 슬롯에 툴팁이 뜨지 않음 | 보상 슬롯, 사망 화면 문구 |
-| `ResultBanner` | 윗줄이 한 글자씩 찍히고 제목이 흰빛으로 번쩍이며 자리 잡음, 진행 막대를 가운데로 줄임 | 임무 성공(금색)·실패(붉은색, 카운트다운 막대) |
-| `BossIntroTitle` | 수식어와 이름이 옆으로 밀려 들어오며 나타나고 제자리에서 흐려짐 | 보스 등장 연출 |
+창·보상창·사망 화면·결과 배너·보스 이름은 등장 연출 부품 6종(`UIPopIn`·`UILineReveal`·`UIGlitch`·`UIStaggerReveal`·`ResultBanner`·`BossIntroTitle`)을 화면마다 세기만 바꿔 조합합니다.
 
 사망 화면은 히트스톱·슬로모션 → 채도가 빠지고 가장자리가 어두워짐 → 화면 전체와 HUD가 지직거린 뒤 HUD가 사라짐 → 화면이 가로 선으로 접혔다가 점으로 꺼짐 → 문구와 카운트다운 순서로 같은 부품을 더 강하게 씁니다.
 
@@ -1262,6 +1163,7 @@ UI가 프리팹이 아니라 여러 씬에 직접 배치되어 값도 제각각�
 | `UIStyleUnifier` | Final 씬의 최상위 캔버스를 Scale With Screen Size(Expand)로, 글꼴을 Pretendard로, 단색 패널·버튼을 `VectorPanel`로 바꾸고 켜졌다 꺼지는 창에 `UIPopIn`을 붙임 |
 | `HUDPrefabBuilder` | 씬마다 복사돼 있던 HUD를 프리팹으로 만들고, 씬 오브젝트 참조를 경로로 기록했다가 프리팹 인스턴스로 바꾼 뒤 다시 연결 |
 | `UICanvasScaleBaker` | 배율 0.65가 걸린 임무 창의 배율을 1로 바꾸고 그만큼 안쪽 위치·크기·글자에 곱해 겉모습을 유지 |
+| `WindowCloseButtonInstaller` · `WindowTitleBarUnifier` | 환경설정·임무·증강 칩 창에 같은 X 버튼을 두고 제목줄을 맞춤 |
 
 ![같은 규칙으로 맞춘 창 — 임무 목록·임무 이동·조작 가이드·환경설정의 제목줄과 닫기 버튼](images/ui-windows.jpg)
 
@@ -1275,7 +1177,7 @@ UI가 프리팹이 아니라 여러 씬에 직접 배치되어 값도 제각각�
 | 적용 뒤 점검 | `UICanvasScaleBaker`로 창 배율을 굽고 안쪽 값에 0.65를 곱함 | 적용한 뒤에는 겹치거나 어긋난 곳을 다시 점검해, X 버튼 크기에까지 0.65가 곱해진 문제를 찾아 고침 |
 | HUD 프리팹 변환 | `HUDPrefabBuilder` 첫 버전으로 씬의 HUD를 프리팹으로 바꿈 | 씬에서 `DeathScreen`·`BossIntroTitle`이 빠진 것을 발견해 씬을 되돌리고, 기존 오브젝트를 새로 만들지 않고 그대로 프리팹 인스턴스로 바꾸는 지금 방식으로 고침 |
 
-소스: [UIPopIn.cs](https://github.com/keeeery/ODDITY/blob/main/Assets/Scripts/10.%20UI/UIPopIn.cs), [UILineReveal.cs](https://github.com/keeeery/ODDITY/blob/main/Assets/Scripts/10.%20UI/UILineReveal.cs), [UIGlitch.cs](https://github.com/keeeery/ODDITY/blob/main/Assets/Scripts/10.%20UI/UIGlitch.cs), [UIStaggerReveal.cs](https://github.com/keeeery/ODDITY/blob/main/Assets/Scripts/10.%20UI/UIStaggerReveal.cs), [ResultBanner.cs](https://github.com/keeeery/ODDITY/blob/main/Assets/Scripts/10.%20UI/ResultBanner.cs), [BossRewardPanel.cs](https://github.com/keeeery/ODDITY/blob/main/Assets/Scripts/11.%20Reward/BossRewardPanel.cs), [UICloseButton.cs](https://github.com/keeeery/ODDITY/blob/main/Assets/Scripts/10.%20UI/UICloseButton.cs), [TitleMenuButton.cs](https://github.com/keeeery/ODDITY/blob/main/Assets/Scripts/10.%20UI/Title/TitleMenuButton.cs), [UIStyleUnifier.cs](https://github.com/keeeery/ODDITY/blob/main/Assets/Scripts/10.%20UI/Editor/UIStyleUnifier.cs), [UICanvasScaleBaker.cs](https://github.com/keeeery/ODDITY/blob/main/Assets/Scripts/10.%20UI/Editor/UICanvasScaleBaker.cs), [VectorShape.cs](https://github.com/keeeery/ODDITY/blob/main/Assets/Scripts/10.%20UI/VectorShape.cs), [VectorPanel.cs](https://github.com/keeeery/ODDITY/blob/main/Assets/Scripts/10.%20UI/VectorPanel.cs).
+소스: [UIPopIn.cs](https://github.com/keeeery/ODDITY/blob/main/Assets/Scripts/10.%20UI/UIPopIn.cs), [UIGlitch.cs](https://github.com/keeeery/ODDITY/blob/main/Assets/Scripts/10.%20UI/UIGlitch.cs), [ResultBanner.cs](https://github.com/keeeery/ODDITY/blob/main/Assets/Scripts/10.%20UI/ResultBanner.cs), [UIStyleUnifier.cs](https://github.com/keeeery/ODDITY/blob/main/Assets/Scripts/10.%20UI/Editor/UIStyleUnifier.cs), [UICanvasScaleBaker.cs](https://github.com/keeeery/ODDITY/blob/main/Assets/Scripts/10.%20UI/Editor/UICanvasScaleBaker.cs).
 
 ### 8.5 증강 칩 창의 조작 편의
 
@@ -1330,7 +1232,7 @@ return IsSyllable(next) && Choseong[Cho(next)] == Jongseong[qj]; // 다음 글�
 타이틀과 일시정지 메뉴는 같은 설정 창을 씁니다.
 1차 시연에서 PC의 마우스 감도에 따라 카메라 회전이 너무 빠르거나 느리다는 피드백을 받아 카메라 회전 속도 설정을 추가했고, 이때 음소거 토글도 함께 넣었습니다(§11.2).
 
-- **카메라 회전 속도:** Inspector의 `mouseSensitivity`를 덮어쓰지 않고 입력 회전량에 배율로 곱합니다. 슬라이더 0·50·100은 각각 0.25·1·4배라, 중앙값에서 기존 입력량을 유지합니다.
+- **카메라 회전 속도:** Inspector의 `mouseSensitivity`를 덮어쓰지 않고 입력 회전량에 배율로 곱합니다.
 - **음소거:** 볼륨을 0으로 덮어쓰는 대신 음소거 여부를 따로 보관해, 음소거를 풀면 원래 슬라이더 값으로 돌아옵니다. 씬 전환 뒤 볼륨을 되돌릴 때도 음소거 상태를 반영합니다.
 - **일시정지 메뉴:** Esc는 이미 열린 칩·임무 창부터 닫고, 전환 중이거나 보상·사망 화면에서는 메뉴를 열지 않습니다. 메뉴는 게임 시간을 멈추되 BGM은 계속 재생하고, 재개할 때는 히트스톱 상태를 기준으로 시간을 되돌립니다.
 
@@ -1505,7 +1407,6 @@ if (receivedDamage >= atk * mediumHitAtkScale) return HitTier.Medium;
 return HitTier.Weak;
 ```
 
-충격 효과는 히트스톱 중에도 보이도록 실제 시간으로 진행합니다.
 루트 캡슐 기준으로 맞은 지점은 허공일 수 있어, 카메라에서 몸 중심을 바라봤을 때 처음 닿는 부위 표면으로 옮겨 터뜨립니다(§5.4 몸체 기준 타격 지점).
 강한 피격의 빛 입자는 `HitDebris.shader`로 끝이 둥글게 흐려지는 빛줄기처럼 그리고, 미리 곱한 알파로 배경을 눌러 밝은 곳에서도 보이게 합니다.
 
@@ -1524,9 +1425,7 @@ return HitTier.Weak;
 - 각 겹은 쓰는 쪽이 `Begin`/`End`를 짝지어 부르면 가중치가 서서히 오르내리고, 횟수로 세므로 겹쳐 걸어도 안전합니다.
 - 모든 흔들림·반짝이·숨은 보스의 시계(`TimeFreezable`)를 따라 시간 정지 중에는 그 자세로 멈춥니다.
 
-그로기 상태(`BossGroggyState`)는 전용 클립이 없어 Death 클립의 구간을 골라 네 단계로 재생합니다.
-무너지는 순간에는 히트스톱·윤곽 번쩍임·카메라 흔들림, 땅에 닿을 무렵에는 몸이 닿은 자리의 흙먼지와 흔들림, 누운 동안에는 Slump 겹, 일어날 때는 클립을 거꾸로 감아 Idle로 섞습니다.
-누운 몸이 단차 위 바닥에 파묻히지 않도록 `BossLyingGroundFit`이 부위 콜라이더마다 바로 아래 바닥 윗면을 재 가장 많이 파묻힌 만큼 보스를 들어 올리고, 끝나면 원래 높이로 내립니다.
+그로기(`BossGroggyState`)는 전용 클립이 없어 Death 클립의 구간을 네 단계로 나눠 재생하고, 누운 몸이 단차에 파묻히지 않게 `BossLyingGroundFit`으로 높이를 맞춥니다.
 
 #### 포효 음파와 발밑 흙먼지
 
@@ -1566,7 +1465,7 @@ flowchart TB
 
 ![마무리 일격과 사망 연출 — 차르카로사우루스 보스가 쓰러진 뒤 홀로그램으로 바뀌어 사라지는 모습](images/boss-death.gif)
 
-소스: [BossHitFeedback.cs](https://github.com/keeeery/ODDITY/blob/main/Assets/Scripts/6.%20Boss/BossHitFeedback.cs), [HitImpact.cs](https://github.com/keeeery/ODDITY/blob/main/Assets/Scripts/5.%20Combat/HitImpact.cs), [HitDebris.shader](https://github.com/keeeery/ODDITY/blob/main/Assets/Shaders/HitDebris.shader), [BossDizzy.cs](https://github.com/keeeery/ODDITY/blob/main/Assets/Scripts/6.%20Boss/BossDizzy.cs), [BossDizzyStars.cs](https://github.com/keeeery/ODDITY/blob/main/Assets/Scripts/6.%20Boss/BossDizzyStars.cs), [BossDizzyBreath.cs](https://github.com/keeeery/ODDITY/blob/main/Assets/Scripts/6.%20Boss/BossDizzyBreath.cs), [BossGroggyState.cs](https://github.com/keeeery/ODDITY/blob/main/Assets/Scripts/6.%20Boss/1.%20States/BossGroggyState.cs), [BossLyingGroundFit.cs](https://github.com/keeeery/ODDITY/blob/main/Assets/Scripts/6.%20Boss/BossLyingGroundFit.cs), [BossRoarWave.cs](https://github.com/keeeery/ODDITY/blob/main/Assets/Scripts/6.%20Boss/BossRoarWave.cs), [BossFootDust.cs](https://github.com/keeeery/ODDITY/blob/main/Assets/Scripts/6.%20Boss/BossFootDust.cs), [BossDeathState.cs](https://github.com/keeeery/ODDITY/blob/main/Assets/Scripts/6.%20Boss/1.%20States/BossDeathState.cs), [SlowMotion.cs](https://github.com/keeeery/ODDITY/blob/main/Assets/Scripts/5.%20Combat/SlowMotion.cs), [BossDeathShed.cs](https://github.com/keeeery/ODDITY/blob/main/Assets/Scripts/6.%20Boss/BossDeathShed.cs), [BossDeathResidue.cs](https://github.com/keeeery/ODDITY/blob/main/Assets/Scripts/6.%20Boss/BossDeathResidue.cs), [HologramShell.cs](https://github.com/keeeery/ODDITY/blob/main/Assets/Scripts/6.%20Boss/HologramShell.cs).
+소스: [BossHitFeedback.cs](https://github.com/keeeery/ODDITY/blob/main/Assets/Scripts/6.%20Boss/BossHitFeedback.cs), [BossDizzy.cs](https://github.com/keeeery/ODDITY/blob/main/Assets/Scripts/6.%20Boss/BossDizzy.cs), [BossGroggyState.cs](https://github.com/keeeery/ODDITY/blob/main/Assets/Scripts/6.%20Boss/1.%20States/BossGroggyState.cs), [SlowMotion.cs](https://github.com/keeeery/ODDITY/blob/main/Assets/Scripts/5.%20Combat/SlowMotion.cs), [HologramShell.cs](https://github.com/keeeery/ODDITY/blob/main/Assets/Scripts/6.%20Boss/HologramShell.cs).
 
 ### 9.6 외곽선과 가림 — 안 보이는 대상을 드러내기
 
@@ -1587,7 +1486,7 @@ MSAA 마스크로 가장자리 표현을 보완하며, 시간 정지 오버레�
 
 큰 보스와 싸우면 두 가지 가림이 생깁니다.
 보스가 플레이어를 가리면 내 캐릭터의 위치를 놓치고, 염동력으로 들고 있는 물체나 기둥·잔해가 보스를 가리면 보스의 자세와 공격 준비를 읽지 못합니다.
-1차 시연에서 강사·동료 수강생·지인 모두에게 "들고 있는 물체가 시야를 가려 보스의 움직임을 볼 수 없다"는 피드백을 받았습니다(§11.2).
+1차 시연에서 가장 많이 받은 피드백도 들고 있는 물체가 보스를 가린다는 것이었습니다(§11.2).
 처음에는 보스에 가려진 플레이어의 외곽선만 그렸고, 이후 같은 RendererFeature에 **다른 물체에 가려진 보스 부분을 반투명 실루엣으로 채우는 패스**를 추가했습니다.
 
 | 상황 | 표시 | 그리는 조건 |
@@ -1631,7 +1530,7 @@ return half4(_FillColor.rgb, _FillColor.a * alpha);
 반투명 서브메시는 빼고 불투명 부분만 마스크로 그립니다.
 쓰러진 보스는 채우지 않고, 수련장 벽처럼 의도된 가림은 칠하지 않습니다.
 
-| 선택 | 이점 | 비용·제약 |
+| 선택 | 이점 | 비용 |
 |---|---|---|
 | 거리 간격 + 페이드로 가림 판정 | 맞닿은 부위의 깜빡임 감소 | 아주 가까이 붙은 얇은 물체 뒤는 덜 칠해질 수 있음 |
 | 무시할 레이어를 별도 깊이로 그림 | 수련장 벽처럼 의도된 가림은 그대로 둠 | 채우기를 켠 프레임마다 해당 레이어를 한 번 더 그림 |
@@ -1664,10 +1563,16 @@ UV가 없는 생성 콘크리트 파편에는 `TriplanarRock.shader`가 오브�
 
 ### 9.8 고민과 선택
 
-| 선택 | 이점 | 비용·제약 |
+**보스가 받은 피해를 어떻게 세 구간으로 나눌까 — 고정 수치에서 공격력 비율로**
+
+| 방법 | 장점 | 비용 |
 |---|---|---|
-| 보스 피격 구간을 공격자 공격력 비율로 판정 | 칩·보스가 달라도 같은 공격은 같은 강도로 느껴짐 | 구간 배율을 공격 종류별 피해에 맞춰 조정해야 함 |
-| 상태를 HUD 외에 보스 자세로도 표시 | 그로기·기절을 화면 중앙의 보스만 보고도 알 수 있음 | 뼈 구조가 다른 보스마다 기준 뼈를 찾는 처리가 필요함 |
+| 고정 피해 수치로 나누기 (처음 방식) | 피해가 커질수록 연출도 강해져, 성장을 피격 연출로 체감할 수 있음 | 구간마다 세밀한 수치를 정해 적용하기 어려움 |
+| 공격자 공격력과 비교한 배율로 나누기 (채택) | 세밀한 피해 밸런스 없이도 약·중·강이 고르게 나뉨 | 피격 연출만으로는 내가 얼마나 강해졌는지 알 수 없음 |
+
+처음에는 고정 수치로 나눴습니다.
+프로젝트 후반에 스킬을 추가하면서 피해 밸런스를 세밀하게 맞출 시간이 없었고, 그 결과 모든 피격이 강 구간 연출로만 나왔습니다.
+그래서 피해를 공격자의 현재 공격력과 비교하는 방식으로 바꿨습니다(§9.5).
 
 ---
 
@@ -1710,27 +1615,15 @@ flowchart TB
 플레이어 자세도 오래 걸린 부분입니다. 플레이어 모델링과 애니메이션을 모두 상용 에셋으로 사용해 수동으로 맞춰야 하는 부분이 많았습니다.
 염동력 모션을 구현하려면 IK를 쓸 수밖에 없었고, 수치를 계속 맞춰 가며 자연스러운 자세를 찾는 데 시간을 많이 들였습니다.
 
-### 10.2 시간 정지 효과가 미니맵에도 보이던 문제
+### 10.2 그 밖에 해결한 문제
 
-| 단계 | 내용 |
-|---|---|
-| 증상 | 시간 정지 효과가 미니맵에도 표시 |
-| 원인 | 메인 화면과 미니맵의 렌더 범위 차이 |
-| 판단 | 미니맵에 보여도 플레이에 지장은 없지만, 미니맵은 플레이어·보스·물체의 위치를 보여 주는 기능에만 집중하는 것이 맞다고 판단 |
-| 해결 | 카메라별 오버레이 제외 처리 |
-| 결과 | 고친 뒤 시간 정지를 다시 써서 미니맵에 효과가 보이지 않는 것을 확인 |
+#### 시간 정지 효과가 미니맵에도 보이던 문제
 
-### 10.3 씬 로드 직후 화면·소리 연출이 끊겨 보이던 문제
-
-| 단계 | 내용 |
-|---|---|
-| 증상 | 로드 직후 화면이 켜지는 연출과 소리 페이드 인이 끊겨 보임 |
-| 원인 | 로드 직후의 긴 프레임이 연출을 건너뛰게 함(§7.2) |
-| 판단 | 게임 플레이에 영향을 주는 문제는 아니지만, 사소한 부분까지 챙겨 게임의 완성도를 높이려 함 |
-| 해결 | 최소 홀드·안정 프레임 대기와 상한, UI·소리 페이드 분리(§7.2) |
-| 결과 | 고친 뒤 씬 전환에서 화면 켜짐과 소리 페이드가 끊기지 않는 것을 직접 확인, 시연 영상에도 담김 |
-
-### 10.4 그 밖에 해결한 문제
+- **증상:** 시간 정지 효과가 미니맵에도 표시됐습니다.
+- **원인:** 메인 화면과 미니맵의 렌더 범위 차이였습니다.
+- **판단:** 미니맵에 보여도 플레이에 지장은 없지만, 미니맵은 플레이어·보스·물체의 위치를 보여 주는 기능에만 집중하는 것이 맞다고 판단했습니다.
+- **해결:** 카메라별로 오버레이를 제외했습니다.
+- **결과:** 고친 뒤 시간 정지를 다시 써서 미니맵에 효과가 보이지 않는 것을 확인했습니다.
 
 #### 로비로 오면 플레이어가 사라지던 버그
 
@@ -1758,7 +1651,7 @@ if (instance == null && createIfMissing == false)
 - **문제:** 임무를 수락한 뒤 바로 이동하면, 보상 확인 뒤에도 그 임무가 목록에 남았습니다(수정 작업 중 발견, §11.2).
 - **원인:** 임무 이동에는 `MissionUI.RegisterAndMove`의 수락 후 즉시 이동과 `StageMoveUI.MoveToStage`의 수락 목록에서 이동하는 두 진입점이 있습니다. 즉시 이동 경로가 선택한 임무의 `BossName`을 영속 `UIManager.CurrentBossName`에 전달하지 않아, 보상 확인 시 이전 임무 이름이나 빈 이름으로 목록 제거를 요청했습니다.
 - **해결:** 즉시 이동 경로에도 이 전달을 추가했습니다. 보상 확인 때 `BossRewardPanel.Close` → `UIManager.MissionListUpdate` → `MissionListUI.RemoveMission`이 이름이 일치하는 임무를 지우고, `GameSave.Save`가 남은 목록을 기록합니다.
-- **남은 확인:** 두 이동 경로 각각에서 보상 확인·목록 제거·저장 복원까지의 통합 확인은 남은 과제입니다(§11.3).
+- **남은 과제:** 두 이동 경로 각각에서 보상 확인·목록 제거·저장 복원까지의 통합 확인은 남은 과제입니다(§11.3).
 
 #### 사망 후 로비로 갈 때 새 씬이 잠깐 비치던 문제
 
@@ -1813,20 +1706,20 @@ else
 | 받은 피드백 | 준 사람 | 반영 | 본문 |
 |---|---|---|---|
 | 들고 있는 물체가 시야를 가려 보스의 움직임을 볼 수 없어 불편함 | 강사·동료 수강생·지인 | 다른 물체에 가려진 보스 부분을 반투명 실루엣으로 채워 표시 | §9.6 |
-| 보스 전투에서 로비로 넘어오면 플레이어가 로비에 없어, 시점이 씬 카메라의 초기 위치에 고정됨 | 동료 수강생 | 씬 정리 중 조회가 빈 Player를 만들던 경로를 막고 Player를 씬 배치 객체로만 허용 | §10.4 |
+| 보스 전투에서 로비로 넘어오면 플레이어가 로비에 없어, 시점이 씬 카메라의 초기 위치에 고정됨 | 동료 수강생 | 씬 정리 중 조회가 빈 Player를 만들던 경로를 막고 Player를 씬 배치 객체로만 허용 | §10.2 |
 | PC의 마우스 감도에 따라 카메라 회전이 너무 빠르거나 느림 | 동료 수강생·지인 | 환경설정에 카메라 회전 속도(0.25~4배) 추가. 환경설정을 넓히며 편의 기능으로 음소거 토글도 추가 | §8.6 환경설정 |
 | 필터가 있어도 원하는 증강 칩을 찾기 어려움 | 지인 | 초성·조합 중인 글자까지 맞추는 이름 검색과 자동 완성 | §8.5 칩 이름 검색 |
 | 전체 해제 후 다시 배치할 일이 꽤 있는데 전체 해제 기능이 없음 | 동료 수강생·지인 | 장착한 칩을 모두 트레이로 돌려보내는 전체 해제 버튼 | §8.5 칩 이름 검색 |
 | 칩 유형을 색으로 구분했지만 필터는 글자뿐이라 직관적이지 않음 | 동료 수강생·지인 | 필터 글자 뒤에 같은 계열색 음영을 깔아 칩 색과 연결 | §8.5 칩 이름 검색 |
-| 로비에서 E로 칩 창을 열고 우클릭으로 빠른 장착·해제를 하려 했는데 NPC 대화가 먼저 열림 | 지인 | 다른 창이 열려 있으면 NPC 창을 새로 열지 않음 | §10.4 |
+| 로비에서 E로 칩 창을 열고 우클릭으로 빠른 장착·해제를 하려 했는데 NPC 대화가 먼저 열림 | 지인 | 다른 창이 열려 있으면 NPC 창을 새로 열지 않음 | §10.2 |
 
 피드백을 반영하며 직접 찾아 함께 보완한 부분은 다음과 같습니다.
 
 | 발견한 문제 | 계기 | 보완 | 본문 |
 |---|---|---|---|
-| 사망 후 로비로 갈 때 새 씬이 잠깐 비쳤다가 다시 꺼짐 | 시연 중 직접 발견 | 로딩 중에는 사망 화면 자신의 효과만 되돌리고 전환 Canvas를 활성화 | §10.4 |
+| 사망 후 로비로 갈 때 새 씬이 잠깐 비쳤다가 다시 꺼짐 | 시연 중 직접 발견 | 로딩 중에는 사망 화면 자신의 효과만 되돌리고 전환 Canvas를 활성화 | §10.2 |
 | 로비 훈련 공간의 물체 피해 계산이 보스전과 다름 | 수정 작업 중 누락 발견 | 로비 씬도 공격력 기반 피해 오버라이드 사용 | §2.8 |
-| 수락 후 바로 이동한 임무가 보상 확인 뒤에도 목록에 남음 | 수정 작업 중 누락 발견 | 즉시 이동 경로에서도 보스 이름 전달 | §10.4 |
+| 수락 후 바로 이동한 임무가 보상 확인 뒤에도 목록에 남음 | 수정 작업 중 누락 발견 | 즉시 이동 경로에서도 보스 이름 전달 | §10.2 |
 | 시스템 메시지·조작 가이드·환경설정의 용어가 서로 다름 | 환경설정 작업 중 정리 | "기상기" → "빠른 기상", "시점 회전" → "카메라 회전"으로 통일 | — |
 | 바탕이 투명한 버튼에 마우스를 올리면 바탕이 밝아져 글자가 묻힘 | 칩 창 작업 중 추가 개선 | 강조를 테두리 선에만 칠함(`VectorShape.Stroke`) | — |
 
@@ -1866,7 +1759,7 @@ UI/UX에 공을 들인 것은 제 개발 모토가 **"플레이하기 편한 경
 | 히트박스와 몸체 충돌 | 플레이어·보스 히트박스 판정, 보스가 플레이어를 막거나 지나칠 때 Collider를 세분화하고 추가 처리를 해야 함(§5.6, §5.4) |
 | 3인칭 카메라 | 어깨 시점에서는 조준점과 물체 위치를 맞추는 계산(§2.4)과 벽 충돌·보스 근접 시점 처리(§5.5)가 따로 필요함 |
 | 렌더 파이프라인 | 외곽선·가림 실루엣·공격 예고 마스크처럼 화면 효과 하나로 안 되는 표시는 URP RendererFeature로 직접 그려야 함(§9.3, §9.6) |
-| 여러 시간 기준 | 히트스톱·시간 정지·슬로모션과 실제 시간으로 진행할 UI를 구분해 연결해야 함(§4, §9.8) |
+| 여러 시간 기준 | 히트스톱·시간 정지·슬로모션과 실제 시간으로 진행할 UI를 구분해 연결해야 함(§4, §9.5) |
 
 특히 **여러 셰이더를 활용해 연출을 직접 만들어 본 경험**이 인상 깊었습니다(§9.1 「셰이더 한눈에 보기」).
 

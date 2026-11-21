@@ -35,7 +35,7 @@
     "HitBox/HurtBox",
     "오브젝트 풀",
     "Observer",
-    "FSM",
+    "상태 머신",
     "Factory"
   ],
   "links": {
@@ -127,7 +127,7 @@
       "solution": "추가 저장 차단 조건에 `savedRoomCleared`(현재는 `savedRewardObtained`까지)를 확인하고, `OnTriggerStay2D`에서 플레이어가 체크포인트 안에 있는 동안 방이 클리어되면 갱신 저장합니다.",
       "result": "저장된 `roomCleared`가 복귀 루틴의 `skipEnemySpawn` 판단으로 이어집니다.",
       "lesson": "",
-      "section": "7.4 클리어한 방의 적이 다시 나오던 문제"
+      "section": "7.3 클리어한 방의 적이 다시 나오던 문제"
     }
   ],
   "screenshots": [
@@ -200,51 +200,44 @@
       },
       {
         "key": "combat",
-        "title": "기능 A — 충돌 기반 전투와 패링",
+        "title": "충돌 기반 전투와 패링",
         "sectionPath": [
           "2. 충돌 기반 전투와 패링"
         ]
       },
       {
         "key": "card",
-        "title": "기능 B — 카드 순환과 모션 연계 스킬",
+        "title": "카드 순환과 모션 연계 스킬",
         "sectionPath": [
           "3. 카드 순환과 모션 연계 스킬"
         ]
       },
       {
         "key": "inventory",
-        "title": "기능 C — 인벤토리·덱 편성과 카드 보상",
+        "title": "인벤토리·덱 편성과 카드 보상",
         "sectionPath": [
           "4. 인벤토리·덱 편성과 카드 보상"
         ]
       },
       {
         "key": "behavior",
-        "title": "기능 D — 플레이어 이동과 적·보스의 행동",
+        "title": "플레이어 이동과 적·보스의 행동",
         "sectionPath": [
           "5. 플레이어 이동과 적·보스의 행동"
         ]
       },
       {
         "key": "checkpoint",
-        "title": "기능 E — 방 전환과 체크포인트 복원",
+        "title": "방 전환과 체크포인트 복원",
         "sectionPath": [
           "6. 방 전환과 체크포인트 복원"
         ]
       },
       {
         "key": "lifecycle",
-        "title": "대표 문제 해결 — 씬 전환과 객체 생명주기",
+        "title": "트러블슈팅",
         "sectionPath": [
-          "7. 트러블슈팅 — 씬 전환 때 생긴 문제"
-        ]
-      },
-      {
-        "key": "result",
-        "title": "결과와 배운 점",
-        "sectionPath": [
-          "8. 결과와 배운 점"
+          "7. 트러블슈팅"
         ]
       }
     ],
@@ -259,7 +252,7 @@
           "verbatim": true
         },
         "lead": {
-          "text": "2D 액션에 실시간 카드 사용을 결합한 게임입니다.",
+          "text": "Arcanist는 2D 액션에 실시간 카드 사용을 결합한 게임입니다.",
           "verbatim": true
         },
         "sectionPath": [
@@ -292,70 +285,12 @@
         ]
       },
       {
-        "key": "problems",
-        "chapter": "overview",
-        "layout": "full",
-        "tab": "개요",
-        "title": {
-          "text": "1.2 개발 의도",
-          "verbatim": true
-        },
-        "lead": {
-          "text": "본격적으로 만든 첫 개인 게임 프로젝트로, 카드 덱 빌딩과 2D 액션을 결합해 **카드 조합에 따라 전투 방식이 달라지는 게임**을 만들고자 했습니다.",
-          "verbatim": true
-        },
-        "sectionPath": [
-          "1. 프로젝트 개요",
-          "1.2 개발 의도"
-        ],
-        "points": [
-          {
-            "label": "",
-            "text": "그 중심에는 **패링에 성공해 카드 게이지를 얻고**, 그 게이지로 카드를 사용해 전투를 이어 가는 흐름을 두었습니다.",
-            "verbatim": true
-          }
-        ],
-        "visuals": [
-          {
-            "kind": "table",
-            "n": 1,
-            "fp": "문제|구현 방향"
-          }
-        ]
-      },
-      {
-        "key": "flow",
-        "chapter": "overview",
-        "layout": "full",
-        "tab": "구조",
-        "title": {
-          "text": "1.4 전체 구조",
-          "verbatim": true
-        },
-        "lead": {
-          "text": "§1.1의 게임 진행을 맡는 주요 클래스를 전투·카드·방과 저장으로 묶었습니다.",
-          "verbatim": true
-        },
-        "sectionPath": [
-          "1. 프로젝트 개요",
-          "1.4 전체 구조"
-        ],
-        "points": [],
-        "visuals": [
-          {
-            "kind": "mermaid",
-            "n": 1,
-            "fp": "flowchart TB"
-          }
-        ]
-      },
-      {
         "key": "combat-overview",
         "chapter": "combat",
         "layout": "visual",
         "tab": "흐름",
         "title": {
-          "text": "2.1 근접 공격과 패링 판정",
+          "text": "2.1 개요 — 근접 공격과 패링 판정",
           "verbatim": true
         },
         "lead": {
@@ -364,7 +299,7 @@
         },
         "sectionPath": [
           "2. 충돌 기반 전투와 패링",
-          "2.1 근접 공격과 패링 판정"
+          "2.1 개요 — 근접 공격과 패링 판정"
         ],
         "points": [
           {
@@ -374,7 +309,7 @@
           },
           {
             "label": "",
-            "text": "즉 패링은 방어이면서 카드를 얻는 수단이라, 기능 B의 카드 사용으로 이어집니다.",
+            "text": "즉 패링은 방어이면서 카드를 얻는 수단이라, 카드 사용(§3)으로 이어집니다.",
             "verbatim": true
           }
         ],
@@ -383,48 +318,6 @@
             "kind": "mermaid",
             "n": 1,
             "fp": "flowchart TB"
-          }
-        ]
-      },
-      {
-        "key": "multi-hit",
-        "chapter": "combat",
-        "layout": "code",
-        "tab": "구현",
-        "title": {
-          "text": "2.2 한 공격의 중복 타격 제어",
-          "verbatim": true
-        },
-        "lead": {
-          "text": "`HitTargetTracker.TryRegister`는 허용 여부 판단과 기록을 한 번에 수행합니다.",
-          "verbatim": true
-        },
-        "sectionPath": [
-          "2. 충돌 기반 전투와 패링",
-          "2.2 한 공격의 중복 타격 제어"
-        ],
-        "points": [
-          {
-            "label": "구현",
-            "text": "단발 공격은 HashSet 추가 성공 여부를, 다단 공격은 마지막 타격 이후 시간을 사용합니다.",
-            "verbatim": true
-          },
-          {
-            "label": "구현",
-            "text": "`HitBox.OnEnable/Initialize`에서 기록을 비워 풀 재사용 시 이전 공격의 기록이 남지 않게 합니다.",
-            "verbatim": true
-          },
-          {
-            "label": "",
-            "text": "기준은 개체가 아닌 HurtBox이므로 한 개체의 여러 HurtBox는 별도 기록됩니다.",
-            "verbatim": true
-          }
-        ],
-        "visuals": [
-          {
-            "kind": "code",
-            "n": 1,
-            "fp": "// HitTargetTracker.TryRegister() — 다단 히트 여부에 따라 허용 판단과 기록을 "
           }
         ]
       },
@@ -439,7 +332,7 @@
         },
         "lead": {
           "text": "처리 순서는 대상 검증 → TryRegister → Resolve → Applied일 때 타격 연출입니다.",
-          "verbatim": true
+          "verbatim": false
         },
         "sectionPath": [
           "2. 충돌 기반 전투와 패링",
@@ -500,23 +393,13 @@
         },
         "sectionPath": [
           "2. 충돌 기반 전투와 패링",
-          "2.5 체력바와 피격 연출",
+          "2.4 체력바와 화면 연출",
           "패링 성공 연출 — 번쩍임·히트스톱·화면 흔들림"
         ],
         "points": [
           {
-            "label": "구현",
-            "text": "파티클·히트스톱·카메라 흔들림·조명은 `ParryLightEffect` 안에서 함께 시작합니다.",
-            "verbatim": true
-          },
-          {
             "label": "",
-            "text": "히트스톱은 `timeScale`을 0으로 만들지만, 조명 트윈과 카메라 흔들림 예약은 시간 배율과 무관하게 진행되므로 정지 중에도 이어집니다.",
-            "verbatim": true
-          },
-          {
-            "label": "",
-            "text": "소스 기본값에서는 흔들림 지연(0.07초)이 히트스톱(0.05초)보다 길어 정지가 풀린 직후에 흔들림이 시작됩니다.",
+            "text": "히트스톱 중에도 조명 트윈과 카메라 흔들림 예약은 시간 배율을 무시하고 이어집니다.",
             "verbatim": true
           }
         ],
@@ -524,7 +407,7 @@
           {
             "kind": "table",
             "n": 1,
-            "fp": "구성|동작|소스 기본값"
+            "fp": "구성|동작"
           },
           {
             "kind": "image",
@@ -535,78 +418,6 @@
               "text": "패링 성공 순간 — 화면 가장자리 보라색 비네트와 파티클·조명 이펙트",
               "verbatim": true
             }
-          }
-        ]
-      },
-      {
-        "key": "death-sentence",
-        "chapter": "combat",
-        "layout": "visual",
-        "tab": "구현",
-        "title": {
-          "text": "죽음 선고 — 화면 흑백 반전과 느려지는 시간",
-          "verbatim": true
-        },
-        "lead": {
-          "text": "이 함수는 Shader Graph로 만든 화면 흑백 반전 머티리얼(`SG_ScreenInvert`)의 `_Blend`를 켜는 동안 `Time.timeScale`을 낮춥니다.",
-          "verbatim": true
-        },
-        "sectionPath": [
-          "2. 충돌 기반 전투와 패링",
-          "2.5 체력바와 피격 연출",
-          "죽음 선고 — 화면 흑백 반전과 느려지는 시간"
-        ],
-        "points": [
-          {
-            "label": "구현",
-            "text": "반전은 소스 기본값 기준 0.05초, 느려진 시간은 0.08초(배율 0.25) 유지합니다.",
-            "verbatim": true
-          },
-          {
-            "label": "",
-            "text": "`HitStopController`가 복구 값을 1로 고정하는 것과 달리, 이 연출은 직전 `timeScale`·`fixedDeltaTime`을 저장했다가 되돌립니다.",
-            "verbatim": true
-          },
-          {
-            "label": "",
-            "text": "히트스톱이나 일시정지와 겹칠 때의 동작은 이 문서에서 확인하지 않았습니다.",
-            "verbatim": true
-          }
-        ],
-        "visuals": [
-          {
-            "kind": "image",
-            "src": "images/strong-attack-grayscale.png",
-            "w": 1920,
-            "h": 1080,
-            "caption": {
-              "text": "죽음 선고를 사용한 순간의 화면 흑백 반전",
-              "verbatim": true
-            }
-          }
-        ]
-      },
-      {
-        "key": "card-data-choice",
-        "chapter": "card",
-        "layout": "full",
-        "tab": "선택",
-        "title": {
-          "text": "고민과 선택 — 카드별 클래스 대신 실행 클래스와 SO 데이터",
-          "verbatim": true
-        },
-        "lead": null,
-        "sectionPath": [
-          "3. 카드 순환과 모션 연계 스킬",
-          "3.1 Q/W/E 슬롯과 카드 게이지",
-          "고민과 선택 — 카드별 클래스 대신 실행 클래스와 SO 데이터"
-        ],
-        "points": [],
-        "visuals": [
-          {
-            "kind": "table",
-            "n": 1,
-            "fp": "고민|대안|선택과 이유|비용"
           }
         ]
       },
@@ -650,29 +461,6 @@
         ]
       },
       {
-        "key": "flow-card",
-        "chapter": "card",
-        "layout": "full",
-        "tab": "흐름",
-        "title": {
-          "text": "3.3 사용 가능 확인과 모션에 맞춘 발동",
-          "verbatim": true
-        },
-        "lead": null,
-        "sectionPath": [
-          "3. 카드 순환과 모션 연계 스킬",
-          "3.3 사용 가능 확인과 모션에 맞춘 발동"
-        ],
-        "points": [],
-        "visuals": [
-          {
-            "kind": "mermaid",
-            "n": 1,
-            "fp": "flowchart TB"
-          }
-        ]
-      },
-      {
         "key": "card-exec",
         "chapter": "card",
         "layout": "visual",
@@ -682,7 +470,7 @@
           "verbatim": true
         },
         "lead": {
-          "text": "실제 효과는 `CardSkillExecutor.ExecutePending()`에서 발생합니다.",
+          "text": "효과를 입력 시점이 아니라 애니메이션 이벤트 시점에 실행하도록 나눈 이유는 연출입니다.",
           "verbatim": true
         },
         "sectionPath": [
@@ -691,17 +479,12 @@
         ],
         "points": [
           {
-            "label": "구현",
-            "text": "사용 시에는 회복 가능 여부·타겟 존재 여부를 검사하고 `CardSkillExecutor.pendingCard`를 저장합니다.",
-            "verbatim": true
-          },
-          {
-            "label": "구현",
-            "text": "이후 애니메이션 트리거를 재생하고 슬롯에서 카드를 제거하며 버림 더미로 이동합니다.",
-            "verbatim": true
-          },
-          {
             "label": "이유",
+            "text": "시전 모션이 지나고 실제로 주문을 내뻗는 순간에 효과가 나가야 어색하지 않고 자연스럽다고 판단했습니다.",
+            "verbatim": true
+          },
+          {
+            "label": "구현",
             "text": "실행 시점에 타겟을 다시 찾기 때문에, 입력 시점과 애니메이션 발동 시점 사이에 적이 죽은 경우를 구분합니다.",
             "verbatim": true
           }
@@ -720,59 +503,25 @@
         ]
       },
       {
-        "key": "buff-screens",
+        "key": "card-data-choice",
         "chapter": "card",
-        "layout": "screens",
-        "tab": "구현",
+        "layout": "full",
+        "tab": "선택",
         "title": {
-          "text": "3.6 버프 중첩과 지속시간 갱신",
+          "text": "3.8 고민과 선택",
           "verbatim": true
         },
-        "lead": {
-          "text": "서로 다른 ID의 버프는 함께 적용됩니다.",
-          "verbatim": true
-        },
+        "lead": null,
         "sectionPath": [
           "3. 카드 순환과 모션 연계 스킬",
-          "3.6 버프 중첩과 지속시간 갱신"
+          "3.8 고민과 선택"
         ],
-        "points": [
-          {
-            "label": "구현",
-            "text": "`BuffId + ActiveBuffType`이 같으면 새 항목을 쌓지 않고 값과 종료 시각을 Refresh합니다.",
-            "verbatim": true
-          },
-          {
-            "label": "구현",
-            "text": "동일 버프 갱신은 남은 시간에 더하는 방식이 아니라 `현재 시각 + 새 지속시간`으로 종료 시점을 대체합니다.",
-            "verbatim": true
-          },
-          {
-            "label": "",
-            "text": "일회 부활 대기는 별도 플래그로 관리하고, 소모 후 `ActiveBuffType.Invincibility`를 등록합니다.",
-            "verbatim": true
-          }
-        ],
+        "points": [],
         "visuals": [
           {
-            "kind": "image",
-            "src": "images/buff-icons-crop.png",
-            "w": 640,
-            "h": 480,
-            "caption": {
-              "text": "활성 버프 아이콘(좌상단)과 최근 사용 카드 목록(좌측)",
-              "verbatim": true
-            }
-          },
-          {
-            "kind": "image",
-            "src": "images/undead-bless-glow-crop.png",
-            "w": 1264,
-            "h": 948,
-            "caption": {
-              "text": "불사의 축복 발동 — 화면 가장자리 흰색 비네트와 버프 아이콘(좌상단)",
-              "verbatim": true
-            }
+            "kind": "table",
+            "n": 1,
+            "fp": "고민|고른 방법 (대신 쓰지 않은 방법)|이유|비용"
           }
         ]
       },
@@ -873,6 +622,53 @@
         ]
       },
       {
+        "key": "inventory-list",
+        "chapter": "inventory",
+        "layout": "visual",
+        "tab": "구현",
+        "title": {
+          "text": "4.4 전체 카드 목록과 더블 클릭·드래그 드롭 편성",
+          "verbatim": true
+        },
+        "lead": {
+          "text": "전체 카드 목록은 보유하되 덱에 없는 카드 → 덱에 있는 카드 → 미보유 카드 순으로 보여 주고, 더블 클릭과 끌어 놓기 모두 같은 추가·제거 함수로 편성합니다.",
+          "verbatim": true
+        },
+        "sectionPath": [
+          "4. 인벤토리·덱 편성과 카드 보상",
+          "4.4 전체 카드 목록과 더블 클릭·드래그 드롭 편성"
+        ],
+        "points": [
+          {
+            "label": "구현",
+            "text": "슬롯과 드래그 아이콘은 재사용해 목록을 갱신할 때마다 전부 만들고 지우지 않습니다.",
+            "verbatim": true
+          },
+          {
+            "label": "",
+            "text": "오벨리스크 밖에서 연 인벤토리는 열람 전용이라 편성 검사 없이 닫힙니다.",
+            "verbatim": true
+          },
+          {
+            "label": "",
+            "text": "나눌 파일과 최대 덱 장수 기준은 직접 정했고, 코드를 새 파일로 옮기는 일은 AI 코딩 에이전트에 맡겼습니다.",
+            "verbatim": false
+          }
+        ],
+        "visuals": [
+          {
+            "kind": "image",
+            "src": "images/card-tooltip-locked.png",
+            "w": 1920,
+            "h": 1080,
+            "caption": {
+              "text": "미획득 카드의 툴팁 — 카드 정보와 ‘미획득’ 표시",
+              "verbatim": true
+            }
+          }
+        ]
+      },
+      {
         "key": "golem-fsm",
         "chapter": "behavior",
         "layout": "visual",
@@ -927,16 +723,64 @@
         ]
       },
       {
+        "key": "player-move",
+        "chapter": "behavior",
+        "layout": "screens",
+        "tab": "구현",
+        "title": {
+          "text": "플레이어 이동과 벽·바닥 충돌",
+          "verbatim": true
+        },
+        "lead": {
+          "text": "방향·대시 쿨타임은 이동 런타임이, 달리기 자원은 SprintRuntime이 맡아 입력 차단·사망·리스폰에서 같은 초기화 진입점을 씁니다.",
+          "verbatim": true
+        },
+        "sectionPath": [
+          "5. 플레이어 이동과 적·보스의 행동",
+          "5.4 벽·바닥 충돌·콤보 입력 창·적 순찰",
+          "플레이어 이동과 벽·바닥 충돌"
+        ],
+        "points": [
+          {
+            "label": "구현",
+            "text": "`CharacterController2D`는 Rigidbody2D를 Kinematic으로 두고 자체 중력·점프 횟수·대시 타이머를 관리하며, 수평·수직 이동량을 각각 BoxCast로 검사합니다.",
+            "verbatim": false
+          }
+        ],
+        "visuals": [
+          {
+            "kind": "image",
+            "src": "images/dash-fx-crop.png",
+            "w": 800,
+            "h": 600,
+            "caption": {
+              "text": "플레이어 대시 이펙트",
+              "verbatim": true
+            }
+          },
+          {
+            "kind": "image",
+            "src": "images/sprint-fx-crop.png",
+            "w": 900,
+            "h": 675,
+            "caption": {
+              "text": "플레이어 달리기 이펙트",
+              "verbatim": true
+            }
+          }
+        ]
+      },
+      {
         "key": "move-choice",
         "chapter": "behavior",
         "layout": "full",
         "tab": "선택",
         "title": {
-          "text": "플레이어 이동 — 물리 엔진 대신 직접 계산한 이동",
+          "text": "5.5 고민과 선택",
           "verbatim": true
         },
         "lead": {
-          "text": "플레이어 이동을 Dynamic Rigidbody2D의 물리에 맡길 것인가, 직접 계산할 것인가?",
+          "text": "플레이어 이동을 어떻게 계산할까 — 물리 엔진 대신 직접 계산",
           "verbatim": true
         },
         "sectionPath": [
@@ -947,14 +791,14 @@
           {
             "label": "이유",
             "text": "더블 점프·대시 같은 동작을 더할 때 개발자에게는 원하는 움직임을, 플레이어에게는 불편하지 않은 조작감을 주기에 적합하다고 판단했습니다.",
-            "verbatim": true
+            "verbatim": false
           }
         ],
         "visuals": [
           {
             "kind": "table",
             "n": 1,
-            "fp": "구분|[A] Dynamic Rigidbody2D|[B] Kinematic + BoxCast 직접 이동 ✓"
+            "fp": "방법|장점|비용"
           }
         ]
       },
@@ -964,7 +808,7 @@
         "layout": "visual",
         "tab": "흐름",
         "title": {
-          "text": "6.1 체크포인트 저장과 부활",
+          "text": "6.1 개요 — 체크포인트 저장과 부활",
           "verbatim": true
         },
         "lead": {
@@ -973,7 +817,7 @@
         },
         "sectionPath": [
           "6. 방 전환과 체크포인트 복원",
-          "6.1 체크포인트 저장과 부활"
+          "6.1 개요 — 체크포인트 저장과 부활"
         ],
         "points": [
           {
@@ -996,6 +840,72 @@
         ]
       },
       {
+        "key": "skip-spawn",
+        "chapter": "checkpoint",
+        "layout": "code",
+        "tab": "구현",
+        "title": {
+          "text": "6.2 클리어한 방의 적 재생성 생략",
+          "verbatim": true
+        },
+        "lead": null,
+        "sectionPath": [
+          "6. 방 전환과 체크포인트 복원",
+          "6.2 클리어한 방의 적 재생성 생략"
+        ],
+        "points": [
+          {
+            "label": "",
+            "text": "복귀 시작 시 저장 객체를 새 `CheckpointSaveData`로 복사하므로 코루틴 도중 공유 데이터가 변경되어도 복원 대상 값은 유지됩니다.",
+            "verbatim": true
+          },
+          {
+            "label": "",
+            "text": "씬 로드·리스폰 직후에는 일정 시간 체크포인트 저장을 차단합니다.",
+            "verbatim": true
+          }
+        ],
+        "visuals": [
+          {
+            "kind": "code",
+            "n": 1,
+            "fp": "// CheckPointManager.ReturnToCheckpointRoutine() — 방 클리어·플레이"
+          }
+        ]
+      },
+      {
+        "key": "room-state",
+        "chapter": "checkpoint",
+        "layout": "visual",
+        "tab": "흐름",
+        "title": {
+          "text": "6.2 클리어한 방의 적 재생성 생략",
+          "verbatim": true
+        },
+        "lead": {
+          "text": "적 전멸(Reward)과 보상 선택(Cleared)이 서로 다른 단계라서, 적을 모두 쓰러뜨린 뒤 돌아와도 보상 전이면 보상 단계부터 다시 시작합니다.",
+          "verbatim": false
+        },
+        "sectionPath": [
+          "6. 방 전환과 체크포인트 복원",
+          "6.2 클리어한 방의 적 재생성 생략"
+        ],
+        "points": [
+          {
+            "label": "",
+            "text": "‘적 전멸’(`roomCleared`)과 ‘보상 완료’(`rewardObtained`)를 따로 저장하고, 복귀할 때 두 값으로 보상을 다시 받을 방과 이미 마친 방을 구분합니다.",
+            "verbatim": false
+          }
+        ],
+        "visuals": [
+          {
+            "kind": "mermaid",
+            "n": 1,
+            "fp": "stateDiagram-v2"
+          }
+        ]
+      },
+      {
         "key": "singleton-fix",
         "chapter": "lifecycle",
         "layout": "problem",
@@ -1005,42 +915,36 @@
           "verbatim": true
         },
         "lead": {
-          "text": "DontDestroyOnLoad만으로 씬 사이의 유지가 보장된다고 가정했고, 이 가정을 검증하는 데 시간이 걸렸습니다.",
-          "verbatim": false
+          "text": "싱글톤으로 구현한 전투 시스템이 씬 전환 후 작동하지 않는 문제를 겪었습니다.",
+          "verbatim": true
         },
         "sectionPath": [
-          "7. 트러블슈팅 — 씬 전환 때 생긴 문제",
+          "7. 트러블슈팅",
           "7.1 보스 씬에서 전투가 작동하지 않던 문제"
         ],
         "points": [
           {
-            "label": "문제",
-            "text": "보스 씬으로 넘어가면 플레이어와 보스 사이의 전투가 작동하지 않음",
+            "label": "증상",
+            "text": "보스 씬으로 넘어가면 플레이어와 보스 사이의 전투가 작동하지 않았습니다.",
             "verbatim": true
           },
           {
-            "label": "원인",
-            "text": "보스 씬의 `CombatSystem`은 중복 인스턴스로 파괴되고, 이전 씬의 `CombatSystem`만 남아 있었음",
+            "label": "처음 생각",
+            "text": "`CombatSystem`에 `DontDestroyOnLoad`를 적용했으니 그대로 다음 씬으로 넘어가 동작할 것이라고 예상했습니다.",
+            "verbatim": true
+          },
+          {
+            "label": "확인한 상태",
+            "text": "보스 씬의 `CombatSystem`은 중복 인스턴스로 파괴되고, 이전 씬의 `CombatSystem`만 남아 있었습니다.",
             "verbatim": true
           },
           {
             "label": "해결",
-            "text": "종료 플래그는 `OnApplicationQuit()`에서 설정하고, `OnDestroy()`는 참조·초기화 상태만 정리하도록 분리했습니다.",
+            "text": "일반 인스턴스 파괴와 애플리케이션 종료 상태를 분리했습니다.",
             "verbatim": false
-          },
-          {
-            "label": "결과",
-            "text": "종료 중이 아니면 기존 객체 검색 또는 새 인스턴스 생성 가능",
-            "verbatim": true
           }
         ],
-        "visuals": [
-          {
-            "kind": "table",
-            "n": 2,
-            "fp": "구분|변경 전|변경 후"
-          }
-        ]
+        "visuals": []
       },
       {
         "key": "checkpoint-owner",
@@ -1053,22 +957,22 @@
         },
         "lead": null,
         "sectionPath": [
-          "7. 트러블슈팅 — 씬 전환 때 생긴 문제",
+          "7. 트러블슈팅",
           "7.2 이전 씬의 체크포인트로 돌아가면 첫 방부터 다시 시작"
         ],
         "points": [
           {
             "label": "문제",
-            "text": "체크포인트 복귀에서도 씬 전환을 넘어 실행할 작업과 새 씬에서 사용할 참조를 구분해야 했습니다.",
+            "text": "보스 씬에서 죽어 이전 씬의 체크포인트로 돌아가면 그 씬이 첫 방부터 다시 시작되어 체크포인트 위치·체력이 이어지지 않았습니다.",
+            "verbatim": false
+          },
+          {
+            "label": "원인",
+            "text": "1차 시연 시점에는 씬에 속한 `OverlayController`가 복귀 코루틴을 실행했고, 방을 ID로 불러오는 경로도 없었습니다.",
             "verbatim": true
           },
           {
             "label": "해결",
-            "text": "새 `CheckPointManager`는 중복 인스턴스를 제거하고 `DontDestroyOnLoad`를 적용합니다.",
-            "verbatim": true
-          },
-          {
-            "label": "결과",
             "text": "즉 씬을 넘어서 완료해야 하는 코루틴은 유지 객체가 맡고, 씬에 속한 플레이어와 방은 로드 뒤 다시 찾는 구조입니다.",
             "verbatim": true
           }
@@ -1087,13 +991,13 @@
         "layout": "problem",
         "tab": "문제 해결",
         "title": {
-          "text": "7.4 클리어한 방의 적이 다시 나오던 문제",
+          "text": "7.3 클리어한 방의 적이 다시 나오던 문제",
           "verbatim": true
         },
         "lead": null,
         "sectionPath": [
-          "7. 트러블슈팅 — 씬 전환 때 생긴 문제",
-          "7.4 클리어한 방의 적이 다시 나오던 문제"
+          "7. 트러블슈팅",
+          "7.3 클리어한 방의 적이 다시 나오던 문제"
         ],
         "points": [
           {
@@ -1104,16 +1008,11 @@
           {
             "label": "원인",
             "text": "처음 접촉한 시점의 상태와 전투가 끝난 뒤 상태가 다를 수 있다",
-            "verbatim": true
+            "verbatim": false
           },
           {
             "label": "해결",
-            "text": "`OnTriggerStay2D`에서 플레이어가 체크포인트 안에 있는 동안 방이 클리어되면 갱신 저장합니다.",
-            "verbatim": true
-          },
-          {
-            "label": "결과",
-            "text": "저장된 `roomCleared`는 복귀 루틴의 `skipEnemySpawn` 판단으로 이어집니다.",
+            "text": "`OnTriggerStay2D`에서 플레이어가 체크포인트 안에 있는 동안 방이 클리어되면, 보상 획득 전까지 갱신 저장합니다.",
             "verbatim": true
           }
         ],
@@ -1122,29 +1021,6 @@
             "kind": "code",
             "n": 1,
             "fp": "// Checkpoint.OnTriggerStay2D() — 보상 획득 전까지 방이 클리어되면 갱신 저장"
-          }
-        ]
-      },
-      {
-        "key": "result-table",
-        "chapter": "result",
-        "layout": "full",
-        "tab": "결과",
-        "title": {
-          "text": "8.1 구현 결과",
-          "verbatim": true
-        },
-        "lead": null,
-        "sectionPath": [
-          "8. 결과와 배운 점",
-          "8.1 구현 결과"
-        ],
-        "points": [],
-        "visuals": [
-          {
-            "kind": "table",
-            "n": 1,
-            "fp": "결과|핵심 구현|한계"
           }
         ]
       }

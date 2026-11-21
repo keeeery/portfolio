@@ -8,7 +8,7 @@
   "team": {
     "type": "team",
     "size": "5인",
-    "role": "추천 서버(데이터 정제·영양소 목표 계산·코사인 유사도 추천·Flask API)와 Android 통계·추천 화면"
+    "role": "추천 서버(데이터 정제·영양소 목표 계산·코사인 유사도 추천·Flask API)와 Android 홈·주간 통계·두 식단 추천 화면"
   },
   "meta": [
     {
@@ -72,7 +72,7 @@
       "what": "식품 영양성분 CSV에서 대표식품명·식품대분류명과 11개 영양소 열을 골라 추천 후보 테이블을 만듭니다.",
       "how": "서버가 시작할 때 CSV를 한 번 읽어 선택 열의 결측 행을 `dropna()`로 제거하고, 대표식품명·식품대분류명으로 묶어 영양소 평균을 냅니다.",
       "why": "",
-      "section": "2.1 후보 테이블과 코사인 유사도 비교",
+      "section": "2.1 개요 — 식품 데이터로 만든 추천 후보 테이블",
       "image": null
     },
     {
@@ -80,7 +80,7 @@
       "what": "앱이 사용자 정보와 식사 기록을 JSON으로 묶어 Flask `POST /recommend`에 보내고, 추천 후보 응답을 받아 파싱합니다.",
       "how": "`user_data.json`과 식사 파일을 `{ \"user\": [...], \"foods\": [...] }`로 합쳐 OkHttp로 `application/json; charset=utf-8` POST 요청을 만들고, `enqueue`로 비동기 요청한 뒤 응답 문자열을 UI 스레드로 넘겨 파싱합니다.",
       "why": "앱과 추천 계산의 책임을 나누기 위해 JSON 요청을 받는 Flask API로 분리했습니다. 화면과 계산을 따로 바꿀 수 있지만 계약을 양쪽에서 함께 관리해야 합니다.",
-      "section": "3.1 요청과 응답",
+      "section": "3.1 개요 — 요청과 응답",
       "image": {
         "src": "images/recommend.png",
         "w": 1080,
@@ -165,23 +165,16 @@
       },
       {
         "key": "recommend",
-        "title": "기능 A — 부족한 영양소에 맞춘 다음 식사 추천",
+        "title": "부족한 영양소에 맞춘 다음 식사 추천",
         "sectionPath": [
           "2. 부족한 영양소에 맞춘 다음 식사 추천"
         ]
       },
       {
         "key": "link",
-        "title": "기능 B — 앱과 추천 서버 연결·주간 통계",
+        "title": "앱과 추천 서버 연결·주간 통계",
         "sectionPath": [
           "3. 앱과 추천 서버 연결·주간 통계"
-        ]
-      },
-      {
-        "key": "result",
-        "title": "결과와 배운 점",
-        "sectionPath": [
-          "4. 결과와 배운 점"
         ]
       }
     ],
@@ -206,7 +199,12 @@
         "points": [
           {
             "label": "기능",
-            "text": "앱은 FoodLens SDK를 이용한 음식 사진 분석과 수동 입력을 제공하며, 기록을 JSON 파일로 저장합니다.",
+            "text": "앱은 음식 사진을 찍으면 종류와 양을 자동으로 인식하는 기능(FoodLens SDK)과 수동 입력을 제공하고, 기록을 휴대폰 안에 저장합니다.",
+            "verbatim": true
+          },
+          {
+            "label": "",
+            "text": "별도 추천 서버는 공공데이터포털의 「전국통합식품영양성분정보(음식) 표준데이터」와 앱에서 받은 사용자·식사 정보를 이용해 추천을 계산합니다.",
             "verbatim": true
           }
         ],
@@ -220,15 +218,6 @@
               "text": "홈 화면 — 일일 권장·섭취·잔여 칼로리, 3대 영양소 섭취량과 식사 기록",
               "verbatim": true
             }
-          },
-          {
-            "kind": "table",
-            "n": 1,
-            "fp": "직접 구현한 부분|내용",
-            "sectionPath": [
-              "1. 프로젝트 개요",
-              "1.4 담당 범위"
-            ]
           }
         ]
       },
@@ -236,7 +225,7 @@
         "key": "app-screens",
         "chapter": "overview",
         "layout": "screens",
-        "tab": "화면",
+        "tab": "개요",
         "title": {
           "text": "1.1 애플리케이션 소개",
           "verbatim": true
@@ -302,6 +291,32 @@
         ]
       },
       {
+        "key": "team",
+        "chapter": "overview",
+        "layout": "full",
+        "tab": "개요",
+        "title": {
+          "text": "1.4 담당 범위",
+          "verbatim": true
+        },
+        "lead": {
+          "text": "팀은 5명이며, 각자 맡은 부분은 다음과 같습니다.",
+          "verbatim": true
+        },
+        "sectionPath": [
+          "1. 프로젝트 개요",
+          "1.4 담당 범위"
+        ],
+        "points": [],
+        "visuals": [
+          {
+            "kind": "table",
+            "n": 1,
+            "fp": "영역|직접 구현·보완한 내용|팀 기반과의 관계"
+          }
+        ]
+      },
+      {
         "key": "architecture",
         "chapter": "overview",
         "layout": "visual",
@@ -310,7 +325,10 @@
           "text": "1.5 전체 구조",
           "verbatim": true
         },
-        "lead": null,
+        "lead": {
+          "text": "이 그림에서 볼 것은 앱은 기록을 저장하고 결과를 보여 주기만 하고, 추천 계산은 모두 서버가 맡는다는 점입니다.",
+          "verbatim": true
+        },
         "sectionPath": [
           "1. 프로젝트 개요",
           "1.5 전체 구조"
@@ -376,7 +394,7 @@
         "layout": "visual",
         "tab": "구조",
         "title": {
-          "text": "2.1 후보 테이블과 코사인 유사도 비교",
+          "text": "2.1 개요 — 식품 데이터로 만든 추천 후보 테이블",
           "verbatim": true
         },
         "lead": {
@@ -385,7 +403,7 @@
         },
         "sectionPath": [
           "2. 부족한 영양소에 맞춘 다음 식사 추천",
-          "2.1 후보 테이블과 코사인 유사도 비교"
+          "2.1 개요 — 식품 데이터로 만든 추천 후보 테이블"
         ],
         "points": [],
         "visuals": [
@@ -474,7 +492,17 @@
           {
             "kind": "table",
             "n": 1,
-            "fp": "고민|대안|선택과 이유|남은 한계"
+            "fp": "방법|장점|비용"
+          },
+          {
+            "kind": "table",
+            "n": 2,
+            "fp": "방법|장점|비용"
+          },
+          {
+            "kind": "table",
+            "n": 3,
+            "fp": "선택|이점|비용"
           }
         ]
       },
@@ -482,7 +510,7 @@
         "key": "ae-console",
         "chapter": "recommend",
         "layout": "full",
-        "tab": "실험",
+        "tab": "선택",
         "title": {
           "text": "2.3 고민과 선택",
           "verbatim": true
@@ -512,7 +540,7 @@
         "layout": "code",
         "tab": "구현",
         "title": {
-          "text": "3.1 요청과 응답",
+          "text": "3.1 개요 — 요청과 응답",
           "verbatim": true
         },
         "lead": {
@@ -521,12 +549,12 @@
         },
         "sectionPath": [
           "3. 앱과 추천 서버 연결·주간 통계",
-          "3.1 요청과 응답"
+          "3.1 개요 — 요청과 응답"
         ],
         "points": [
           {
             "label": "구현",
-            "text": "enqueue로 비동기 요청하고, 응답 문자열은 UI 스레드로 넘겨 파싱한 뒤 두 식단 UI에 나누어 표시합니다.",
+            "text": "`enqueue`로 비동기 요청하고, 응답 문자열은 UI 스레드로 넘겨 파싱한 뒤 두 식단 UI에 나누어 표시합니다.",
             "verbatim": true
           }
         ],
@@ -539,18 +567,41 @@
         ]
       },
       {
-        "key": "rec-screen",
+        "key": "link-sequence",
         "chapter": "link",
         "layout": "full",
-        "tab": "화면",
+        "tab": "흐름",
         "title": {
-          "text": "3.1 요청과 응답",
+          "text": "3.1 개요 — 요청과 응답",
           "verbatim": true
         },
         "lead": null,
         "sectionPath": [
           "3. 앱과 추천 서버 연결·주간 통계",
-          "3.1 요청과 응답"
+          "3.1 개요 — 요청과 응답"
+        ],
+        "points": [],
+        "visuals": [
+          {
+            "kind": "mermaid",
+            "n": 1,
+            "fp": "sequenceDiagram"
+          }
+        ]
+      },
+      {
+        "key": "rec-screen",
+        "chapter": "link",
+        "layout": "full",
+        "tab": "결과",
+        "title": {
+          "text": "3.1 개요 — 요청과 응답",
+          "verbatim": true
+        },
+        "lead": null,
+        "sectionPath": [
+          "3. 앱과 추천 서버 연결·주간 통계",
+          "3.1 개요 — 요청과 응답"
         ],
         "points": [],
         "visuals": [
@@ -586,7 +637,7 @@
         "points": [
           {
             "label": "구현",
-            "text": "CustomLineChart는 Canvas·Path로 선과 점, 평균선을 그리고, 터치한 위치와 가까운 날의 kcal 말풍선을 화면 안쪽으로 보정해 띄웁니다.",
+            "text": "`CustomLineChart`는 Canvas·Path로 선과 점, 평균선을 그리고, 터치한 위치와 가까운 날의 kcal 말풍선을 화면 안쪽으로 보정해 띄웁니다.",
             "verbatim": true
           }
         ],
@@ -602,7 +653,7 @@
         "key": "stats-screen",
         "chapter": "link",
         "layout": "full",
-        "tab": "화면",
+        "tab": "결과",
         "title": {
           "text": "3.2 주간 통계 차트",
           "verbatim": true
@@ -627,27 +678,83 @@
         ]
       },
       {
-        "key": "result-table",
-        "chapter": "result",
-        "layout": "full",
-        "tab": "결과",
+        "key": "two-menus",
+        "chapter": "link",
+        "layout": "problem",
+        "tab": "문제 해결",
         "title": {
-          "text": "4.1 구현 결과",
+          "text": "3.3 두 식단 칸에 같은 추천이 들어가던 문제",
           "verbatim": true
         },
         "lead": null,
         "sectionPath": [
-          "4. 결과와 배운 점",
-          "4.1 구현 결과"
+          "3. 앱과 추천 서버 연결·주간 통계",
+          "3.3 두 식단 칸에 같은 추천이 들어가던 문제"
         ],
-        "points": [],
-        "visuals": [
+        "points": [
           {
-            "kind": "table",
-            "n": 1,
-            "fp": "구현 결과|핵심 구현"
+            "label": "증상",
+            "text": "추천 화면의 식단 칸 두 개가 모두 같은 결과(같은 밥·국·반찬)로 채워졌습니다.",
+            "verbatim": true
+          },
+          {
+            "label": "원인",
+            "text": "서버가 음식군마다 1개씩 식단 한 벌만 돌려주었고, 앱은 그 한 벌에서 만든 밥·국·반찬 문자열을 식단 1과 식단 2의 칸에 똑같이 넣었습니다.",
+            "verbatim": true
+          },
+          {
+            "label": "해결",
+            "text": "서버 결과 10개를 받아 짝수 번째(0·2·4·6·8)는 식단 1, 홀수 번째(1·3·5·7·9)는 식단 2로 나눴습니다.",
+            "verbatim": true
+          },
+          {
+            "label": "결과",
+            "text": "시연 영상(2025.06.16)의 추천 화면에 서로 다른 두 식단이 표시됩니다(§4.2).",
+            "verbatim": true
           }
-        ]
+        ],
+        "visuals": []
+      },
+      {
+        "key": "server-choice",
+        "chapter": "link",
+        "layout": "overview",
+        "tab": "선택",
+        "title": {
+          "text": "3.4 고민과 선택",
+          "verbatim": true
+        },
+        "lead": {
+          "text": "추천 계산을 어디서 돌릴까 — 휴대폰 대신 서버(AWS EC2)",
+          "verbatim": true
+        },
+        "sectionPath": [
+          "3. 앱과 추천 서버 연결·주간 통계",
+          "3.4 고민과 선택"
+        ],
+        "points": [
+          {
+            "label": "",
+            "text": "첫 학기에는 추천 계산을 휴대폰 안에서 돌릴지, 따로 서버를 두고 돌릴지 정하지 못해 개발 과정에 혼선이 있었습니다.",
+            "verbatim": true
+          },
+          {
+            "label": "",
+            "text": "다음 학기에 서버에서 돌리기로 정하고 AWS EC2에 Ubuntu 서버를 구축했습니다.",
+            "verbatim": true
+          },
+          {
+            "label": "",
+            "text": "그래서 앱은 사용자 정보와 식사 기록만 POST로 보내고, 서버가 계산한 추천 결과를 받아 화면에 보여 줍니다(§1.5).",
+            "verbatim": true
+          },
+          {
+            "label": "",
+            "text": "대신 앱과 서버가 주고받는 키·형식·결과 개수를 양쪽에서 함께 맞춰야 하는 비용이 생겼습니다(§4.2).",
+            "verbatim": true
+          }
+        ],
+        "visuals": []
       }
     ]
   }

@@ -154,8 +154,7 @@
       {"key": "pathfind", "title": "맞는 짝 판정", "sectionPath": ["2. 맞는 짝 판정"]},
       {"key": "select", "title": "카드 선택과 제거 연출", "sectionPath": ["3. 카드 선택과 제거 연출"]},
       {"key": "board", "title": "보드 생성과 자동 재배치", "sectionPath": ["4. 보드 생성과 자동 재배치"]},
-      {"key": "progress", "title": "게임 진행·결과·최고 기록 저장", "sectionPath": ["5. 게임 진행·결과·최고 기록 저장"]},
-      {"key": "result", "title": "결과와 배운 점", "sectionPath": ["6. 결과와 배운 점"]}
+      {"key": "progress", "title": "게임 진행·결과·최고 기록 저장", "sectionPath": ["5. 게임 진행·결과·최고 기록 저장"]}
     ],
     "slides": [
       {
@@ -181,6 +180,13 @@
             "w": 1372,
             "h": 1029,
             "caption": {"text": "메인 화면 — 제한 시간과 게임 시작 방법 안내", "verbatim": true}
+          },
+          {
+            "kind": "image",
+            "src": "images/play-board.png",
+            "w": 1920,
+            "h": 1080,
+            "caption": {"text": "플레이 중인 전체 화면 — 10×10 보드에 남은 카드와 보드 위쪽 테두리를 지나 연결된 두 카드, 아래쪽 별 평가와 남은 시간", "verbatim": true}
           }
         ]
       },
@@ -192,7 +198,14 @@
         "title": {"text": "1.2 개발 의도", "verbatim": true},
         "lead": null,
         "sectionPath": ["1. 프로젝트 개요", "1.2 개발 의도"],
-        "points": [],
+        "points": [
+          {"label": "", "text": "목표한 경험은 시작부터 클리어(또는 시간 초과)와 재도전까지, 플레이어가 반복해서 즐길 수 있는 한 판이었습니다.", "verbatim": true},
+          {
+            "label": "",
+            "text": "원작의 콤보 시스템(N콤보를 채우면 다음 쌍을 확정 제거)과 힌트·한 쌍 제거·재배치 같은 아이템은 넣지 않고, 핵심 연결 규칙과 한 판의 흐름에 집중했습니다.",
+            "verbatim": true
+          }
+        ],
         "visuals": [{"kind": "mermaid", "n": 1, "fp": "flowchart TB", "sectionPath": ["1. 프로젝트 개요", "1.1 게임 소개"]}]
       },
       {
@@ -212,9 +225,15 @@
         "layout": "visual",
         "tab": "구조",
         "title": {"text": "1.4 전체 구조", "verbatim": true},
-        "lead": {"text": "게임 전용 코드는 `Assets/SichuanSung/Scripts`의 5개 클래스로 구성합니다.", "verbatim": true},
+        "lead": {"text": "규모가 작은 단일 씬 게임이라 세 매니저는 직접 참조와 `Instance` 접근으로 연결했습니다.", "verbatim": true},
         "sectionPath": ["1. 프로젝트 개요", "1.4 전체 구조"],
-        "points": [],
+        "points": [
+          {
+            "label": "",
+            "text": "이 그림에서 볼 것은 `CardManager`가 연결 판정은 `PathFinder`에, 제거·클리어 검사는 `GameManager`에, 선택 표시는 `Card`에 맡기는 조율자라는 점입니다.",
+            "verbatim": true
+          }
+        ],
         "visuals": [{"kind": "mermaid", "n": 1, "fp": "classDiagram"}]
       },
       {
@@ -230,6 +249,20 @@
           {"kind": "code", "n": 1, "fp": "// PathFinder.CanConnect() — 위치·방향·회전 수마다 따로 두는 방문 기록과 역추적용 "},
           {"kind": "code", "n": 2, "fp": "// PathFinder.CanConnect() — 목표 카드가 아닌 카드를 만나면 그 방향의 직선 탐색 중"}
         ]
+      },
+      {
+        "key": "path-flow",
+        "chapter": "pathfind",
+        "layout": "visual",
+        "tab": "흐름",
+        "title": {"text": "2.2 꺾은 횟수를 세는 경로 탐색", "verbatim": true},
+        "lead": {"text": "이 탐색의 목적은 최단 경로가 아니라 규칙을 만족하는 경로가 있는지이며, 처음 찾은 경로를 반환합니다.", "verbatim": true},
+        "sectionPath": ["2. 맞는 짝 판정", "2.2 꺾은 횟수를 세는 경로 탐색"],
+        "points": [
+          {"label": "구현", "text": "시작점에서 네 방향을 회전 수 0으로 큐에 넣습니다.", "verbatim": true},
+          {"label": "구현", "text": "목표 카드는 장애물 검사에서 통과를 허용하므로 끝점에 카드가 있다는 이유로 경로가 막히지 않습니다.", "verbatim": true}
+        ],
+        "visuals": [{"kind": "mermaid", "n": 1, "fp": "flowchart TB"}]
       },
       {
         "key": "path-restore",
@@ -268,16 +301,16 @@
         "lead": null,
         "sectionPath": ["2. 맞는 짝 판정", "2.4 고민과 선택"],
         "points": [],
-        "visuals": [{"kind": "table", "n": 1, "fp": "고민|대안|선택과 이유|비용"}]
+        "visuals": [{"kind": "table", "n": 1, "fp": "방법|장점|비용"}, {"kind": "table", "n": 2, "fp": "선택|이점|비용"}]
       },
       {
         "key": "input-boundary",
         "chapter": "select",
         "layout": "screens",
         "tab": "구현",
-        "title": {"text": "3.1 선택 흐름", "verbatim": true},
+        "title": {"text": "3.1 개요 — 선택 흐름", "verbatim": true},
         "lead": {"text": "매칭에 실패하면 첫 카드를 해제하고 두 번째 카드를 다음 첫 카드로 넘겨, 새 카드 하나만 고르면 다시 시도할 수 있습니다.", "verbatim": true},
-        "sectionPath": ["3. 카드 선택과 제거 연출", "3.1 선택 흐름"],
+        "sectionPath": ["3. 카드 선택과 제거 연출", "3.1 개요 — 선택 흐름"],
         "points": [],
         "visuals": [
           {"kind": "code", "n": 1, "fp": "// CardManager.CheckMatch() — 매칭 실패 시 두 번째 카드를 다음 첫 카드로 넘김"},
@@ -304,6 +337,21 @@
         "visuals": [{"kind": "mermaid", "n": 1, "fp": "sequenceDiagram"}]
       },
       {
+        "key": "click-lock",
+        "chapter": "select",
+        "layout": "problem",
+        "tab": "문제 해결",
+        "title": {"text": "3.2 연결선을 먼저 보여준 뒤 제거", "verbatim": true},
+        "lead": null,
+        "sectionPath": ["3. 카드 선택과 제거 연출", "3.2 연결선을 먼저 보여준 뒤 제거"],
+        "points": [
+          {"label": "원인", "text": "연결선을 보여 주는 동안과 제거 연출 동안에도 카드에는 콜라이더가 남아 있어 클릭이 됩니다.", "verbatim": true},
+          {"label": "해결", "text": "`isProcessing`은 연결선 생성 전에 켜서 제거·셔플 중 새 선택을 막습니다.", "verbatim": true},
+          {"label": "결과", "text": "잠금을 넣은 뒤에는 플레이 테스트에서 같은 문제가 다시 나타나지 않았습니다.", "verbatim": true}
+        ],
+        "visuals": [{"kind": "table", "n": 1, "fp": "잠금 없이 클릭할 때|겪은 문제"}]
+      },
+      {
         "key": "remove-choice",
         "chapter": "select",
         "layout": "full",
@@ -312,7 +360,7 @@
         "lead": null,
         "sectionPath": ["3. 카드 선택과 제거 연출", "3.3 고민과 선택"],
         "points": [],
-        "visuals": [{"kind": "table", "n": 1, "fp": "고민|대안|선택과 이유|비용"}]
+        "visuals": [{"kind": "table", "n": 1, "fp": "방법|장점|비용"}, {"kind": "table", "n": 2, "fp": "방법|장점|비용"}]
       },
       {
         "key": "shuffle",
@@ -350,7 +398,7 @@
         "lead": null,
         "sectionPath": ["4. 보드 생성과 자동 재배치", "4.3 고민과 선택"],
         "points": [],
-        "visuals": [{"kind": "table", "n": 1, "fp": "고민|대안|선택과 이유"}]
+        "visuals": [{"kind": "table", "n": 1, "fp": "방법|장점|비용"}, {"kind": "table", "n": 2, "fp": "선택|이점|비용"}]
       },
       {
         "key": "best-record",
@@ -359,7 +407,7 @@
         "tab": "구현",
         "title": {"text": "5. 게임 진행·결과·최고 기록 저장", "verbatim": true},
         "lead": {"text": "최고 기록은 기록이 없거나 더 빠르게 완료했을 때만 갱신합니다.", "verbatim": true},
-        "sectionPath": ["5. 게임 진행·결과·최고 기록 저장", "5.1 진행·결과·최고 기록"],
+        "sectionPath": ["5. 게임 진행·결과·최고 기록 저장", "5.1 개요 — 진행·결과·최고 기록"],
         "points": [],
         "visuals": [
           {"kind": "table", "n": 1, "fp": "경과 시간|평가"},
@@ -373,7 +421,7 @@
         "tab": "결과",
         "title": {"text": "5. 게임 진행·결과·최고 기록 저장", "verbatim": true},
         "lead": null,
-        "sectionPath": ["5. 게임 진행·결과·최고 기록 저장", "5.1 진행·결과·최고 기록"],
+        "sectionPath": ["5. 게임 진행·결과·최고 기록 저장", "5.1 개요 — 진행·결과·최고 기록"],
         "points": [],
         "visuals": [
           {
@@ -395,13 +443,12 @@
       {
         "key": "flow-choice",
         "chapter": "progress",
-        "layout": "overview",
+        "layout": "visual",
         "tab": "선택",
-        "title": {"text": "5.2 고민과 선택 — 진행 흐름을 상태 머신 대신 bool과 코루틴으로", "verbatim": true},
-        "lead": {"text": "여섯 단계의 진행을 `GameManager`의 bool 네 개와 진행 코루틴으로 조율합니다.", "verbatim": false},
-        "sectionPath": ["5. 게임 진행·결과·최고 기록 저장", "5.2 고민과 선택 — 진행 흐름을 상태 머신 대신 bool과 코루틴으로"],
+        "title": {"text": "5.2 고민과 선택", "verbatim": true},
+        "lead": {"text": "진행 흐름을 어떻게 관리할까 — 상태 머신 대신 bool과 코루틴", "verbatim": true},
+        "sectionPath": ["5. 게임 진행·결과·최고 기록 저장", "5.2 고민과 선택"],
         "points": [
-          {"label": "이유", "text": "처음 끝까지 만들어 본 게임이었기 때문에, 당시 다룰 수 있던 bool과 코루틴으로 진행 흐름을 구성했습니다.", "verbatim": true},
           {
             "label": "이유",
             "text": "지금 돌아봐도, 단계가 여섯 개뿐이고 씬도 하나인 게임에 상태 머신을 따로 두는 것은 규모에 비해 과하다고 판단합니다.",
@@ -413,18 +460,7 @@
             "verbatim": true
           }
         ],
-        "visuals": []
-      },
-      {
-        "key": "result-table",
-        "chapter": "result",
-        "layout": "full",
-        "tab": "결과",
-        "title": {"text": "6.1 구현 결과", "verbatim": true},
-        "lead": null,
-        "sectionPath": ["6. 결과와 배운 점", "6.1 구현 결과"],
-        "points": [],
-        "visuals": [{"kind": "table", "n": 1, "fp": "구현 결과|기술적으로 다룬 내용"}]
+        "visuals": [{"kind": "mermaid", "n": 1, "fp": "stateDiagram-v2"}]
       }
     ],
     "base": [
@@ -451,6 +487,13 @@
             "w": 1372,
             "h": 1029,
             "caption": {"text": "메인 화면 — 제한 시간과 게임 시작 방법 안내", "verbatim": true}
+          },
+          {
+            "kind": "image",
+            "src": "images/play-board.png",
+            "w": 1920,
+            "h": 1080,
+            "caption": {"text": "플레이 중인 전체 화면 — 10×10 보드에 남은 카드와 보드 위쪽 테두리를 지나 연결된 두 카드, 아래쪽 별 평가와 남은 시간", "verbatim": true}
           }
         ]
       },
@@ -462,7 +505,14 @@
         "title": {"text": "1.2 개발 의도", "verbatim": true},
         "lead": null,
         "sectionPath": ["1. 프로젝트 개요", "1.2 개발 의도"],
-        "points": [],
+        "points": [
+          {"label": "", "text": "목표한 경험은 시작부터 클리어(또는 시간 초과)와 재도전까지, 플레이어가 반복해서 즐길 수 있는 한 판이었습니다.", "verbatim": true},
+          {
+            "label": "",
+            "text": "원작의 콤보 시스템(N콤보를 채우면 다음 쌍을 확정 제거)과 힌트·한 쌍 제거·재배치 같은 아이템은 넣지 않고, 핵심 연결 규칙과 한 판의 흐름에 집중했습니다.",
+            "verbatim": true
+          }
+        ],
         "visuals": [{"kind": "mermaid", "n": 1, "fp": "flowchart TB", "sectionPath": ["1. 프로젝트 개요", "1.1 게임 소개"]}]
       },
       {
@@ -482,9 +532,15 @@
         "layout": "visual",
         "tab": "구조",
         "title": {"text": "1.4 전체 구조", "verbatim": true},
-        "lead": {"text": "게임 전용 코드는 `Assets/SichuanSung/Scripts`의 5개 클래스로 구성합니다.", "verbatim": true},
+        "lead": {"text": "규모가 작은 단일 씬 게임이라 세 매니저는 직접 참조와 `Instance` 접근으로 연결했습니다.", "verbatim": true},
         "sectionPath": ["1. 프로젝트 개요", "1.4 전체 구조"],
-        "points": [],
+        "points": [
+          {
+            "label": "",
+            "text": "이 그림에서 볼 것은 `CardManager`가 연결 판정은 `PathFinder`에, 제거·클리어 검사는 `GameManager`에, 선택 표시는 `Card`에 맡기는 조율자라는 점입니다.",
+            "verbatim": true
+          }
+        ],
         "visuals": [{"kind": "mermaid", "n": 1, "fp": "classDiagram"}]
       },
       {
@@ -500,6 +556,20 @@
           {"kind": "code", "n": 1, "fp": "// PathFinder.CanConnect() — 위치·방향·회전 수마다 따로 두는 방문 기록과 역추적용 "},
           {"kind": "code", "n": 2, "fp": "// PathFinder.CanConnect() — 목표 카드가 아닌 카드를 만나면 그 방향의 직선 탐색 중"}
         ]
+      },
+      {
+        "key": "path-flow",
+        "chapter": "pathfind",
+        "layout": "visual",
+        "tab": "흐름",
+        "title": {"text": "2.2 꺾은 횟수를 세는 경로 탐색", "verbatim": true},
+        "lead": {"text": "이 탐색의 목적은 최단 경로가 아니라 규칙을 만족하는 경로가 있는지이며, 처음 찾은 경로를 반환합니다.", "verbatim": true},
+        "sectionPath": ["2. 맞는 짝 판정", "2.2 꺾은 횟수를 세는 경로 탐색"],
+        "points": [
+          {"label": "구현", "text": "시작점에서 네 방향을 회전 수 0으로 큐에 넣습니다.", "verbatim": true},
+          {"label": "구현", "text": "목표 카드는 장애물 검사에서 통과를 허용하므로 끝점에 카드가 있다는 이유로 경로가 막히지 않습니다.", "verbatim": true}
+        ],
+        "visuals": [{"kind": "mermaid", "n": 1, "fp": "flowchart TB"}]
       },
       {
         "key": "path-restore",
@@ -538,16 +608,16 @@
         "lead": null,
         "sectionPath": ["2. 맞는 짝 판정", "2.4 고민과 선택"],
         "points": [],
-        "visuals": [{"kind": "table", "n": 1, "fp": "고민|대안|선택과 이유|비용"}]
+        "visuals": [{"kind": "table", "n": 1, "fp": "방법|장점|비용"}, {"kind": "table", "n": 2, "fp": "선택|이점|비용"}]
       },
       {
         "key": "input-boundary",
         "chapter": "select",
         "layout": "screens",
         "tab": "구현",
-        "title": {"text": "3.1 선택 흐름", "verbatim": true},
+        "title": {"text": "3.1 개요 — 선택 흐름", "verbatim": true},
         "lead": {"text": "매칭에 실패하면 첫 카드를 해제하고 두 번째 카드를 다음 첫 카드로 넘겨, 새 카드 하나만 고르면 다시 시도할 수 있습니다.", "verbatim": true},
-        "sectionPath": ["3. 카드 선택과 제거 연출", "3.1 선택 흐름"],
+        "sectionPath": ["3. 카드 선택과 제거 연출", "3.1 개요 — 선택 흐름"],
         "points": [],
         "visuals": [
           {"kind": "code", "n": 1, "fp": "// CardManager.CheckMatch() — 매칭 실패 시 두 번째 카드를 다음 첫 카드로 넘김"},
@@ -573,6 +643,21 @@
         "visuals": [{"kind": "mermaid", "n": 1, "fp": "sequenceDiagram"}]
       },
       {
+        "key": "click-lock",
+        "chapter": "select",
+        "layout": "problem",
+        "tab": "문제 해결",
+        "title": {"text": "3.2 연결선을 먼저 보여준 뒤 제거", "verbatim": true},
+        "lead": null,
+        "sectionPath": ["3. 카드 선택과 제거 연출", "3.2 연결선을 먼저 보여준 뒤 제거"],
+        "points": [
+          {"label": "원인", "text": "연결선을 보여 주는 동안과 제거 연출 동안에도 카드에는 콜라이더가 남아 있어 클릭이 됩니다.", "verbatim": true},
+          {"label": "해결", "text": "`isProcessing`은 연결선 생성 전에 켜서 제거·셔플 중 새 선택을 막습니다.", "verbatim": true},
+          {"label": "결과", "text": "잠금을 넣은 뒤에는 플레이 테스트에서 같은 문제가 다시 나타나지 않았습니다.", "verbatim": true}
+        ],
+        "visuals": [{"kind": "table", "n": 1, "fp": "잠금 없이 클릭할 때|겪은 문제"}]
+      },
+      {
         "key": "remove-choice",
         "chapter": "select",
         "layout": "full",
@@ -581,7 +666,7 @@
         "lead": null,
         "sectionPath": ["3. 카드 선택과 제거 연출", "3.3 고민과 선택"],
         "points": [],
-        "visuals": [{"kind": "table", "n": 1, "fp": "고민|대안|선택과 이유|비용"}]
+        "visuals": [{"kind": "table", "n": 1, "fp": "방법|장점|비용"}, {"kind": "table", "n": 2, "fp": "방법|장점|비용"}]
       },
       {
         "key": "shuffle",
@@ -619,7 +704,7 @@
         "lead": null,
         "sectionPath": ["4. 보드 생성과 자동 재배치", "4.3 고민과 선택"],
         "points": [],
-        "visuals": [{"kind": "table", "n": 1, "fp": "고민|대안|선택과 이유"}]
+        "visuals": [{"kind": "table", "n": 1, "fp": "방법|장점|비용"}, {"kind": "table", "n": 2, "fp": "선택|이점|비용"}]
       },
       {
         "key": "best-record",
@@ -628,7 +713,7 @@
         "tab": "구현",
         "title": {"text": "5. 게임 진행·결과·최고 기록 저장", "verbatim": true},
         "lead": {"text": "최고 기록은 기록이 없거나 더 빠르게 완료했을 때만 갱신합니다.", "verbatim": true},
-        "sectionPath": ["5. 게임 진행·결과·최고 기록 저장", "5.1 진행·결과·최고 기록"],
+        "sectionPath": ["5. 게임 진행·결과·최고 기록 저장", "5.1 개요 — 진행·결과·최고 기록"],
         "points": [],
         "visuals": [
           {"kind": "table", "n": 1, "fp": "경과 시간|평가"},
@@ -642,7 +727,7 @@
         "tab": "결과",
         "title": {"text": "5. 게임 진행·결과·최고 기록 저장", "verbatim": true},
         "lead": null,
-        "sectionPath": ["5. 게임 진행·결과·최고 기록 저장", "5.1 진행·결과·최고 기록"],
+        "sectionPath": ["5. 게임 진행·결과·최고 기록 저장", "5.1 개요 — 진행·결과·최고 기록"],
         "points": [],
         "visuals": [
           {
@@ -664,13 +749,12 @@
       {
         "key": "flow-choice",
         "chapter": "progress",
-        "layout": "overview",
+        "layout": "visual",
         "tab": "선택",
-        "title": {"text": "5.2 고민과 선택 — 진행 흐름을 상태 머신 대신 bool과 코루틴으로", "verbatim": true},
-        "lead": {"text": "여섯 단계의 진행을 `GameManager`의 bool 네 개와 진행 코루틴으로 조율합니다.", "verbatim": false},
-        "sectionPath": ["5. 게임 진행·결과·최고 기록 저장", "5.2 고민과 선택 — 진행 흐름을 상태 머신 대신 bool과 코루틴으로"],
+        "title": {"text": "5.2 고민과 선택", "verbatim": true},
+        "lead": {"text": "진행 흐름을 어떻게 관리할까 — 상태 머신 대신 bool과 코루틴", "verbatim": true},
+        "sectionPath": ["5. 게임 진행·결과·최고 기록 저장", "5.2 고민과 선택"],
         "points": [
-          {"label": "이유", "text": "처음 끝까지 만들어 본 게임이었기 때문에, 당시 다룰 수 있던 bool과 코루틴으로 진행 흐름을 구성했습니다.", "verbatim": true},
           {
             "label": "이유",
             "text": "지금 돌아봐도, 단계가 여섯 개뿐이고 씬도 하나인 게임에 상태 머신을 따로 두는 것은 규모에 비해 과하다고 판단합니다.",
@@ -682,20 +766,9 @@
             "verbatim": true
           }
         ],
-        "visuals": []
-      },
-      {
-        "key": "result-table",
-        "chapter": "result",
-        "layout": "full",
-        "tab": "결과",
-        "title": {"text": "6.1 구현 결과", "verbatim": true},
-        "lead": null,
-        "sectionPath": ["6. 결과와 배운 점", "6.1 구현 결과"],
-        "points": [],
-        "visuals": [{"kind": "table", "n": 1, "fp": "구현 결과|기술적으로 다룬 내용"}]
+        "visuals": [{"kind": "mermaid", "n": 1, "fp": "stateDiagram-v2"}]
       }
     ],
-    "applied": "783bdfeee0540487"
+    "applied": "08bea39ff0e30ef7"
   }
 }
