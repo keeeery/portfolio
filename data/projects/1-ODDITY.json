@@ -139,7 +139,7 @@
       "solution": "`[SceneOnlySingleton]`으로 Player는 씬 배치 객체만 허용하고(없으면 null), `UIManager.Start`의 null 허용과 `HumanoidClone.OnDestroy`의 `Player.IsInitialized` 검사로 정리 경로가 새 플레이어를 만들지 않게 했습니다.",
       "result": "고친 뒤 보스 전투에서 로비로 다시 넘어와 플레이어가 그대로 남아 있는 것을 확인했습니다.",
       "lesson": "",
-      "section": "로비로 오면 플레이어가 사라지던 버그"
+      "section": "10.2 로비로 오면 플레이어가 사라지던 버그"
     }
   ],
   "screenshots": [],
@@ -565,10 +565,10 @@
         "tab": "문제 해결",
         "title": {"text": "로비로 오면 플레이어가 사라지던 버그", "verbatim": true},
         "lead": null,
-        "sectionPath": ["10. 트러블슈팅", "10.2 그 밖에 해결한 문제", "로비로 오면 플레이어가 사라지던 버그"],
+        "sectionPath": ["10. 트러블슈팅", "10.2 로비로 오면 플레이어가 사라지던 버그"],
         "points": [
           {
-            "label": "문제",
+            "label": "증상",
             "text": "이 객체가 새 씬의 Player보다 먼저 싱글톤 참조를 차지하면, 씬에 올바르게 배치된 Player가 중복 객체로 제거되었습니다.",
             "verbatim": true
           },
@@ -971,10 +971,10 @@
         "tab": "문제 해결",
         "title": {"text": "로비로 오면 플레이어가 사라지던 버그", "verbatim": true},
         "lead": null,
-        "sectionPath": ["10. 트러블슈팅", "10.2 그 밖에 해결한 문제", "로비로 오면 플레이어가 사라지던 버그"],
+        "sectionPath": ["10. 트러블슈팅", "10.2 로비로 오면 플레이어가 사라지던 버그"],
         "points": [
           {
-            "label": "문제",
+            "label": "증상",
             "text": "이 객체가 새 씬의 Player보다 먼저 싱글톤 참조를 차지하면, 씬에 올바르게 배치된 Player가 중복 객체로 제거되었습니다.",
             "verbatim": true
           },
@@ -993,6 +993,6 @@
         "visuals": [{"kind": "code", "n": 1, "fp": "// SingletonBase<T>.Instance — 기존 객체 검색 직후, 자동 생성 직전"}]
       }
     ],
-    "applied": "791e26f7f09ab47f"
+    "applied": "b5004c88ffcb62f4"
   }
 }
