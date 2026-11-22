@@ -6,6 +6,7 @@
   <meta name="theme-color" content="#000000">   <!-- 브라우저 막대 색(안드로이드 크롬·예전 iOS). 화면 모드를 바꾸면 syncBarColor()가 바탕색으로 맞춤 -->
   <title>포트폴리오</title>
   <link rel="icon" href="images/favicon.svg" type="image/svg+xml" />
+  <script>/* 탭 아이콘: 브라우저 화면 모드(밝게·어둡게)가 바뀌면 그 자리에서 아이콘 파일을 갈아 끼움. 브라우저는 한 번 그린 탭 아이콘을 다시 그리지 않아 SVG 안의 규칙만으로는 바뀌지 않음 */(function(){var l=document.querySelector('link[rel="icon"]');if(!l||!window.matchMedia)return;var base=l.getAttribute('href').replace(/favicon\.svg$/,''),m=matchMedia('(prefers-color-scheme: dark)');function u(){l.href=base+'favicon-'+(m.matches?'dark':'light')+'.svg';}u();if(m.addEventListener)m.addEventListener('change',u);else if(m.addListener)m.addListener(u);})();</script>
   <!-- 포트폴리오 페이지(기본 페이지) — /portfolio-custom 직접 생성 모드로 만든 새 레이아웃을 기본 주소로 옮긴 것. 예전 고정 렌더러 배치는 classic.html.
        다크 톤, 색은 theme/theme.css · theme-light.css. 배치: theme/layout.json(배치 레퍼런스). 내용은 data/*.json을 실행 중에 읽어 그립니다(내용을 이 파일에 복사하지 않음).
        기능: 탭 제목 · 밝은/어두운 화면 버튼 · [PDF로 저장](A4) · 머리 막대 늘어남(프로젝트명 떠오름) · 기능별 슬라이드 장면 링크 · 링크 표시(외부만 새 탭) ·
@@ -590,11 +591,11 @@
     .nh-sub { color: inherit; font-weight: inherit; opacity: 0; transition: opacity .3s ease; }
     .site-head.in-core .nh-sub { opacity: 1; }
     .pg > .sec.core, #others { scroll-margin-top: var(--ext-bg); }   /* 프로젝트 묶음에서는 머리 막대가 늘어나 있으므로 늘어난 막대 아래 끝에(머리 막대 높이는 html의 scroll-padding-top이 더함) */
-    /* 프로젝트 소개: 위 여백을 늘어난 머리 막대 높이(머리 막대 + 늘어난 띠)만큼 더 두고, 이 절로 이동하면 절 위 끝이 화면 위 끝에 오게
+    /* 프로젝트 소개: 위 여백(5mm 줄임)을 늘어난 머리 막대 높이(머리 막대 + 늘어난 띠)만큼 더 두고, 이 절로 이동하면 절 위 끝이 화면 위 끝에 오게
        (html의 scroll-padding-top만큼 거꾸로 빼서 0) → 늘어난 막대 뒤로 절의 바탕·흐린 그림이 이어지고, 글은 전과 같은 자리에 보임 */
     @media screen {
-      .pg > .sec.proj { padding-top: calc(6rem + var(--top-h) + var(--ext-bg) - 28px); scroll-margin-top: calc(-1 * var(--top-h)); }
-      @media (min-width: 768px) { .pg > .sec.proj { padding-top: calc(8rem + var(--top-h) + var(--ext-bg) - 28px); } }
+      .pg > .sec.proj { padding-top: calc(6rem + var(--top-h) + var(--ext-bg) - 28px - 5mm); scroll-margin-top: calc(-1 * var(--top-h)); }
+      @media (min-width: 768px) { .pg > .sec.proj { padding-top: calc(8rem + var(--top-h) + var(--ext-bg) - 28px - 5mm); } }
     }
     @media screen { .pg > .sec.core .sec-head { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; } }
     /* 프로젝트 바로 가기(.nh-pm): 늘어난 머리 막대 오른쪽에 메뉴와 같은 모양으로 [프로젝트들 · 기타 프로젝트]. 오른쪽 끝은 위 메뉴의 오른쪽 끝(--pm-r)에 맞춤.
@@ -1383,7 +1384,7 @@
     function Intro({ prof }) {
       if (!prof.intro) return null;
       return (
-        <section id="intro" className="py-24 md:py-36">
+        <section id="intro" className="pb-24 md:pb-36 pt-[calc(6rem_-_5mm)] md:pt-[calc(9rem_-_5mm)]">
           <div className="wrap reveal text-center">
             <p className="eyebrow">{t('en.about')}</p>
             <h2 className="sr-only">{t('page.intro')}</h2>
@@ -1572,7 +1573,7 @@
       if (!skills.length && !tools.length) return null;
       return (
         <div className="pg">
-          <section id="stack" className="sec tinted py-24 md:py-32">
+          <section id="stack" className="sec tinted pb-24 md:pb-32 pt-[calc(6rem_-_5mm)] md:pt-[calc(8rem_-_5mm)]">
             <div className="wrap">
               <SecHead en={t('en.skills')} title={t('page.stack')} />
               <ul className="stk">
@@ -1632,7 +1633,7 @@
     function ProjectIntro({ p, no }) {
       const hasCover = p.cover || p.coverLogo;
       return (
-        <section id={`p-${p.id}`} className="sec proj tinted py-24 md:py-32">
+        <section id={`p-${p.id}`} className="sec proj tinted pb-24 md:pb-32 pt-[calc(6rem_-_5mm)] md:pt-[calc(8rem_-_5mm)]">
           {p.cover && <div className="proj-backdrop" aria-hidden="true"><img src={img(p, p.cover)} alt="" decoding="async" /></div>}
           <div className="wrap">
             <SecHead en={no} title={p.title} big />
@@ -1673,7 +1674,7 @@
       if (!hl.length) return null;
       const capOf = (h) => typeof h.image?.caption === 'string' ? h.image.caption : h.image?.caption?.text || '';
       return (
-        <section id={`p-${p.id}-core`} className="sec core pt-24 md:pt-32">
+        <section id={`p-${p.id}-core`} className="sec core pt-[calc(6rem_-_5mm)] md:pt-[calc(8rem_-_5mm)]">
           <div className="wrap">
             <SecHead en={`${no} · ${t('page.features')}`} title={p.title} />
           </div>
@@ -1932,7 +1933,7 @@
     function Others({ cards }) {
       if (!cards.length) return null;
       return (
-        <section id="others" className="sec py-24 md:py-32">
+        <section id="others" className="sec pb-24 md:pb-32 pt-[calc(6rem_-_5mm)] md:pt-[calc(8rem_-_5mm)]">
           <div className="wrap">
             <SecHead en={t('en.others')} title={t('page.others')} />
             <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">{cards.map((c) => <LinkCard key={c.id || c.title} c={c} />)}</div>
@@ -1951,7 +1952,7 @@
       const shortEnv = (x) => x.replace(/^Unity\s+6000\.(\d+)(?:\.\S+)?$/i, 'Unity 6.$1');
       const EnvLine = ({ p }) => envItems(p).map(shortEnv).map((x, i) => <Fragment key={x}>{i > 0 && ' · '}<span className="whitespace-nowrap">{x}</span></Fragment>);   // 항목 하나(ASP.NET Core 등)는 줄바꿈으로 끊지 않음
       return (
-        <section id="glance" className="sec tinted py-24 md:py-32">
+        <section id="glance" className="sec tinted pb-24 md:pb-32 pt-[calc(6rem_-_5mm)] md:pt-[calc(8rem_-_5mm)]">
           <div className="wrap">
             <SecHead en={t('en.glance')} title={t('page.glance')} />
             <ul className="gl">
@@ -2011,7 +2012,7 @@
     function Contact({ prof, all, projects = all, hasOthers = false, linkAll = all, updated }) {
       const links = (prof.links || []).filter((l) => isUrl(l.url));
       return (
-        <footer id="contact" className="sec tinted border-t border-[var(--line)] py-24 md:py-28">
+        <footer id="contact" className="sec tinted border-t border-[var(--line)] pb-24 md:pb-28 pt-[calc(6rem_-_5mm)] md:pt-[calc(7rem_-_5mm)]">
           <div className="wrap cols3">
             <div>
               <p className="eyebrow">{t('en.contact')}</p>

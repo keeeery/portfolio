@@ -296,8 +296,13 @@ try { window.mermaid?.initialize({ startOnLoad: false }); } catch (_) { /* */ }
     const resolve = (title) => PF.resolveHeading(list, title)?.el || null;
     window.PFDoc = Object.assign(window.PFDoc || {}, { resolve });
 
-    const tocHtml = headings.filter((h) => h.tagName === 'H2' || h.tagName === 'H3')
-      .map((h) => `<a class="${h.tagName.toLowerCase()}" href="#${esc(h.id)}">${esc(htext(h))}</a>`).join('');
+    // 직접 수정: 장(h2)마다 그 아래 절(h3)과 함께 .toc-group 묶음으로 — 묶음마다 왼쪽 세로줄, 묶음 사이 간격
+    let tocHtml = '', open = false;
+    headings.filter((h) => h.tagName === 'H2' || h.tagName === 'H3').forEach((h) => {
+      if (h.tagName === 'H2' || !open) { if (open) tocHtml += '</div>'; tocHtml += '<div class="toc-group">'; open = true; }
+      tocHtml += `<a class="${h.tagName.toLowerCase()}" href="#${esc(h.id)}">${esc(htext(h))}</a>`;
+    });
+    if (open) tocHtml += '</div>';
     document.querySelectorAll('.toc-links').forEach((el) => { el.innerHTML = tocHtml; });
 
     // ⑥ 표 → .table-wrap(스크롤 영역), 그림만 있는 문단 → .pf-figure

@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <!-- 페이지 아이콘(셰이더볼), 어두운 브라우저 테마용 — 밝은 원. 페이지가 브라우저 화면 모드를 보고 favicon-light.svg / favicon-dark.svg를 갈아 끼움.
+       모양을 고치면 favicon.svg·favicon-light.svg·favicon-dark.svg 세 파일을 함께 고침 -->
+  <style>.ink { fill: #F2F3F5; }</style>
+  <defs>
+    <mask id="ball"><rect width="32" height="32" fill="#fff"/><circle cx="16" cy="16" r="10.6" fill="#000"/></mask>
+    <mask id="shade"><circle cx="16" cy="16" r="9" fill="#fff"/><circle cx="11.5" cy="11.5" r="8.6" fill="#000"/></mask>
+  </defs>
+  <circle class="ink" cx="16" cy="16" r="16" mask="url(#ball)"/>
+  <circle class="ink" cx="16" cy="16" r="9" mask="url(#shade)"/>
+</svg>
