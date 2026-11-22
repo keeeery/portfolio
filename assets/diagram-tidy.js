@@ -15,6 +15,7 @@
   //     %% 화살표 보내는칸 -> 받는칸: 나감=오른쪽 들어감=오른쪽 거리=20
   //        나감·들어감 = 위/아래/왼쪽/오른쪽(그 변 가운데로), 거리 = 바깥으로 돌아가는 길을 칸에서 몇 px 떨어뜨릴지(기본 24)
   //        자리 = 나가는 변의 어디서 나갈지(위/아래/왼쪽/오른쪽 = 그 끝에서 14px, 숫자 = 그 변 시작에서 몇 px). 받는 칸이 그 높이(폭)를 덮으면 곧게 이음
+  //        글자 = 세로/가로 — 선 글자를 그 방향 토막 중 가장 긴 곳의 가운데에(기본은 모든 토막 중 가장 긴 곳)
   //        간격 = 같은 두 칸을 잇는 나란한 두 선 사이(기본 24px, 숫자 = px, 40% = 겹치는 폭의 30%·70% 자리). 이것만 적으면 길은 자동 그대로
   //     %% 격자 열 간격: 120                    격자의 열 사이 최소 간격(기본 40px, 선 글자가 넓으면 그만큼 더)
   //     %% 격자 맞춤: 아래 · 위                 격자의 같은 줄 칸들을 가운데 대신 아랫변(윗변)으로 맞춤
@@ -134,6 +135,7 @@
         else if (/^(?:거리|gap)$/i.test(k) && !isNaN(+v)) r.gap = +v;
         else if (/^(?:자리|at)$/i.test(k) && v) r.at = v;
         else if (/^(?:간격|spread)$/i.test(k) && /^\d+(?:\.\d+)?%?$/.test(v || '')) r.spread = v;   // 같은 두 칸을 잇는 나란한 두 선 사이(px, 또는 겹치는 폭의 %)
+        else if (/^(?:글자|label)$/i.test(k) && /^(?:세로|가로|vertical|horizontal|v|h)$/i.test(v || '')) r.labelDir = /^(?:세로|vertical|v)$/i.test(v) ? 'v' : 'h';   // 선 글자를 세로(가로) 토막 중 가장 긴 곳에
       }
       rules.push(r);
     }
@@ -913,9 +915,12 @@
           const w = own.r - own.l, h = own.b - own.t;
           const segs = [];                                                  // 선을 따라 4px마다 [가운데에서의 길이 차, 점]
           let centre = 0, longest = -1, run = 0;                            // 가운데 = 가장 긴 곧은 토막의 가운데(곧은 선이면 선 한가운데)
+          const dir = ruleFor(e)?.labelDir;                                 // %% 화살표 …: 글자=세로|가로 — 그 방향 토막 중에서만 고름(없으면 모든 토막)
+          const fits = (a, c) => !dir || (dir === 'v') === (Math.abs(c.x - a.x) < 0.5);
+          const anyFit = poly.some((c, i) => i && fits(poly[i - 1], c) && Math.hypot(c.x - poly[i - 1].x, c.y - poly[i - 1].y) > 0.5);
           for (let i = 1; i < poly.length; i++) {
             const L = Math.hypot(poly[i].x - poly[i - 1].x, poly[i].y - poly[i - 1].y);
-            if (L > longest + 0.5) { longest = L; centre = run + L / 2; }
+            if ((!anyFit || fits(poly[i - 1], poly[i])) && L > longest + 0.5) { longest = L; centre = run + L / 2; }
             run += L;
           }
           if (poly.length === 2 && Math.abs(poly[0].y - poly[1].y) < 0.5) {   // 묶음 사이를 건너는 가로 직선: 글자는 두 묶음 사이 빈 곳의 가운데(gapMidX)
