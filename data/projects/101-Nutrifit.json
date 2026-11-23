@@ -24,7 +24,7 @@
       "value": "5인"
     },
     {
-      "label": "환경",
+      "label": "개발 환경",
       "value": "Android, Java, Python, Flask"
     }
   ],
@@ -330,7 +330,7 @@
           "verbatim": true
         },
         "lead": {
-          "text": "앱은 기록을 저장하고 결과를 보여 주기만 하고, 추천 계산은 모두 서버가 맡습니다.",
+          "text": "앱은 기록을 저장하고 결과를 보여 주며, 추천 계산은 모두 서버가 맡습니다(홈의 일일 권장 칼로리만 앱이 같은 식으로 직접 계산합니다).",
           "verbatim": true
         },
         "sectionPath": [
@@ -558,7 +558,7 @@
         "points": [
           {
             "label": "구현",
-            "text": "`enqueue`로 비동기 요청하고, 응답 문자열은 UI 스레드로 넘겨 파싱한 뒤 두 식단 UI에 나누어 표시합니다.",
+            "text": "`enqueue()`로 비동기 요청하고, 응답 문자열은 UI 스레드로 넘겨 파싱한 뒤 두 식단 UI에 나누어 표시합니다.",
             "verbatim": true
           }
         ],

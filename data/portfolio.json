@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-11-22",
+  "generatedAt": "2026-11-24",
   "profile": {
     "name": "주현진",
     "nameEn": "JU HYUNJIN",
@@ -23,12 +23,16 @@
       "name": "Unity",
       "evidence": [
         {
-          "text": "Input System · Cinemachine · DOTween 활용",
+          "text": "Rigidbody 물리 · Raycast 판정",
           "project": "1-ODDITY"
         },
         {
-          "text": "Rigidbody 물리와 Raycast 판정",
+          "text": "NavMesh 보스 경로 이동",
           "project": "1-ODDITY"
+        },
+        {
+          "text": "Cinemachine · DOTween 연출",
+          "project": "3-Arcanist"
         }
       ]
     },
@@ -36,7 +40,7 @@
       "name": "C#",
       "evidence": [
         {
-          "text": "큐 기반 경로 탐색",
+          "text": "BFS 기반 경로 탐색",
           "project": "4-SichuanSung"
         },
         {
@@ -57,7 +61,11 @@
           "project": "2-Folk-Sack"
         },
         {
-          "text": "ScriptableObject 데이터 정의",
+          "text": "시드 기반 절차적 맵 생성",
+          "project": "2-Folk-Sack"
+        },
+        {
+          "text": "ScriptableObject 게임 데이터 정의",
           "project": "3-Arcanist"
         }
       ]
@@ -66,45 +74,45 @@
       "name": "디자인 패턴",
       "evidence": [
         {
-          "text": "상태 머신 기반 AI·보스 패턴",
+          "text": "상태 머신 기반 적 AI",
           "project": "3-Arcanist"
         },
         {
-          "text": "Observer(C# event)로 인벤토리 변경을 덱·화면에 전달",
+          "text": "중재자로 피해 처리 일원화",
           "project": "3-Arcanist"
         },
         {
-          "text": "오브젝트 풀 재사용",
-          "project": "1-ODDITY"
+          "text": "Factory 생성 · 오브젝트 풀 재사용",
+          "project": "3-Arcanist"
         }
       ]
     },
     {
-      "name": "멀티플레이 · ASP.NET Core · WebSocket",
+      "name": "ASP.NET Core · WebSocket",
       "evidence": [
         {
           "text": "서버 권위 상태 동기화",
           "project": "2-Folk-Sack"
         },
         {
-          "text": "로비·대기방·게임 진행 흐름",
+          "text": "로비 · 대기방 · 게임 진행 흐름",
           "project": "2-Folk-Sack"
         }
       ]
     },
     {
-      "name": "URP 렌더링 · Shader Graph",
+      "name": "URP 렌더링 · 셰이더",
       "evidence": [
         {
-          "text": "Shader Graph 화면 연출",
-          "project": "3-Arcanist"
-        },
-        {
-          "text": "RendererFeature 외곽선·가림 실루엣",
+          "text": "HLSL 셰이더 연출 구현",
           "project": "1-ODDITY"
         },
         {
-          "text": "Light2D 조명 연출",
+          "text": "RendererFeature 외곽선 · 가려진 대상 실루엣",
+          "project": "1-ODDITY"
+        },
+        {
+          "text": "Shader Graph · Light 화면 연출",
           "project": "3-Arcanist"
         }
       ]

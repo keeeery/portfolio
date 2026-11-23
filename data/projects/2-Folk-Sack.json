@@ -24,7 +24,7 @@
       "value": "3인"
     },
     {
-      "label": "환경",
+      "label": "개발 환경",
       "value": "Unity 6000.3.15f1, URP, C#, ASP.NET Core"
     }
   ],
@@ -132,8 +132,8 @@
     {
       "title": "채굴로 공간을 만들었는데 매몰이 풀리지 않는 문제",
       "problem": "채굴하여 공간을 만들었는데 매몰이 풀리지 않음",
-      "cause": "지형 Batch 적용과 Mesh·EdgeCollider 재생성이 같은 순간에 끝나지 않아, 논리 셀 삭제 직후 검사하면 이전 Collider 때문에 아직 갇혔다고 판단",
-      "solution": "프레임 종료까지 기다린 뒤(`WaitForEndOfFrame`) `Physics2D.SyncTransforms()`로 물리 Transform을 동기화하고 매몰 판정을 다시 진행",
+      "cause": "매몰 해제 판정이 논리 셀과 물리 Collider 겹침을 함께 봐서, EdgeCollider 재생성 시점 차이로 한 프레임 더 남은 이전 Collider 때문에 아직 갇혔다고 판단",
+      "solution": "매몰 해제를 물리 Collider 겹침(`IsCurrentSpaceEmpty()`) 대신 논리 셀(`IsGridSpaceEmpty()`) 기준으로 판정",
       "result": "",
       "lesson": "",
       "section": "8.2 채굴해도 풀리지 않던 매몰"
@@ -662,7 +662,7 @@
           "verbatim": true
         },
         "lead": {
-          "text": "이후 제가 `PlayerController`에 몰려 있던 이동·충돌·생명주기·지형 상태 처리를 아래 구성 요소로 나눴습니다.",
+          "text": "이후 `PlayerController`에 몰려 있던 이동·충돌·생명주기·지형 상태 처리를 아래 구성 요소로 나눴습니다.",
           "verbatim": true
         },
         "sectionPath": [
@@ -947,12 +947,12 @@
           },
           {
             "label": "원인",
-            "text": "지형 Batch로 논리 셀을 지운 직후, `TerrainGridWorld`의 Mesh·EdgeCollider가 다시 만들어지기 전에 검사해 이전 Collider 때문에 아직 갇혔다고 판단했습니다.",
+            "text": "지형이 바뀌면 프레임 끝까지 기다린 뒤 매몰을 다시 판정했지만, 해제 판정이 논리 셀과 물리 Collider 겹침을 함께 봤습니다. `TerrainGridWorld`의 EdgeCollider가 다시 만들어지는 시점이 달라 이전 Collider가 한 프레임 더 남았고, 그 때문에 아직 갇혔다고 판단했습니다.",
             "verbatim": true
           },
           {
             "label": "해결",
-            "text": "프레임 끝까지 기다린 뒤 물리 Transform을 동기화하고 매몰을 다시 판정했습니다.",
+            "text": "매몰 해제는 물리 Collider 겹침(`IsCurrentSpaceEmpty()`) 대신 논리 셀(`IsGridSpaceEmpty()`)만 보고 판정하도록 바꿨습니다.",
             "verbatim": true
           },
           {

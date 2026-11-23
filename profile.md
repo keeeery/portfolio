@@ -30,26 +30,28 @@ UI·연출처럼 눈에 띄는 부분부터 입력 타이밍·시인성처럼 �
 > 기술 아래에 `- 문장 (프로젝트 이름)`으로 근거를 직접 적으면, 요약하지 않고 그 문장을 그대로 씁니다(기술 문서에 있는 사실인지만 확인).
 
 - Unity
-  - Input System · Cinemachine · DOTween 활용 (ODDITY)
-  - Rigidbody 물리와 Raycast 판정 (ODDITY)
+  - Rigidbody 물리 · Raycast 판정 (ODDITY)
+  - NavMesh 보스 경로 이동 (ODDITY)
+  - Cinemachine · DOTween 연출 (Arcanist)
 - C#
-  - 큐 기반 경로 탐색 (사천성)
+  - BFS 기반 경로 탐색 (사천성)
   - 이벤트 기반 상태 변경 통지 (Folk Sack)
   - async 비동기 처리 (Folk Sack)
 - 데이터 설계
   - TSV → DTO → Def 데이터 파이프라인 (Folk Sack)
-  - ScriptableObject 데이터 정의 (Arcanist)
+  - 시드 기반 절차적 맵 생성 (Folk Sack)
+  - ScriptableObject 게임 데이터 정의 (Arcanist)
 - 디자인 패턴
-  - 상태 머신 기반 AI·보스 패턴 (Arcanist)
-  - Observer(C# event)로 인벤토리 변경을 덱·화면에 전달 (Arcanist)
-  - 오브젝트 풀 재사용 (ODDITY)
-- 멀티플레이 · ASP.NET Core · WebSocket
+  - 상태 머신 기반 적 AI (Arcanist)
+  - 중재자로 피해 처리 일원화 (Arcanist)
+  - Factory 생성 · 오브젝트 풀 재사용 (Arcanist)
+- ASP.NET Core · WebSocket
   - 서버 권위 상태 동기화 (Folk Sack)
-  - 로비·대기방·게임 진행 흐름 (Folk Sack)
-- URP 렌더링 · Shader Graph
-  - Shader Graph 화면 연출 (Arcanist)
-  - RendererFeature 외곽선·가림 실루엣 (ODDITY)
-  - Light2D 조명 연출 (Arcanist)
+  - 로비 · 대기방 · 게임 진행 흐름 (Folk Sack)
+- URP 렌더링 · 셰이더
+  - HLSL 셰이더 연출 구현 (ODDITY)
+  - RendererFeature 외곽선 · 가려진 대상 실루엣 (ODDITY)
+  - Shader Graph · Light 화면 연출 (Arcanist)
 
 ## 써 본 도구
 

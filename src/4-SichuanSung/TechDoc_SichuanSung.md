@@ -35,7 +35,7 @@ flowchart TB
     Q -->|예 · 연결선 표시 후 두 장 제거| Left{"남은 카드가<br>있는가"}
     Left -->|예 · 막히면 자동 재배치| Pick
     Left -->|아니오| Clear["클리어<br>시간에 따라 별 1~3개<br>최고 기록 저장"]
-%% 격자: Start | Pick | Q | Remove | Left | Clear
+%% 격자: Start | Pick | Q | Left | Clear
 %% 화살표 Q -> Pick: 나감=오른쪽 들어감=오른쪽
 %% 화살표 Left -> Pick: 나감=왼쪽 들어감=왼쪽
 ```
@@ -44,7 +44,7 @@ flowchart TB
 
 ![플레이 중인 전체 화면 — 10×10 보드에 남은 카드와 보드 위쪽 테두리를 지나 연결된 두 카드, 아래쪽 별 평가와 남은 시간](images/play-board.png)
 
-- **보드:** 10×10 칸에 같은 그림 50쌍, 카드 100장을 놓습니다. 처음부터 한 쌍 이상 연결할 수 있는 배치로 시작합니다.
+- **보드:** 10×10 칸에 9종 그림으로 50쌍, 카드 100장을 놓습니다. 같은 그림이면 어느 두 장이든 짝이 됩니다. 처음부터 한 쌍 이상 연결할 수 있는 배치로 시작합니다.
 - **연결 규칙:** 다른 카드를 지나지 않고 가로·세로로 잇되, 최대 두 번까지 꺾을 수 있고 보드 바깥의 빈 테두리를 지나도 됩니다.
 - **재배치:** 연결할 수 있는 쌍이 하나도 없으면 "Reshuffling.." 안내와 함께 남은 카드를 섞습니다.
 - **시간과 평가:** 제한 시간 안에 빨리 끝낼수록 별을 더 받고, 시간을 넘기면 게임 오버입니다. 가장 빠른 클리어 시간은 최고 기록으로 남습니다(§5.1).
@@ -76,7 +76,7 @@ flowchart TB
 classDiagram
     direction LR
     class CardManager {
-        +CheckMatch()
+        -CheckMatch()
     }
     class PathFinder {
         +CanConnect()
@@ -84,7 +84,7 @@ classDiagram
     }
     class GameManager {
         +ShuffleRemainCards()
-        +SaveBestRecord()
+        -SaveBestRecord()
     }
     class Card {
         +Select()
@@ -122,7 +122,7 @@ classDiagram
 
 ### 2.1 개요 — 두 번 이하로 꺾는 연결 판정
 
-`PathFinder.CanConnect`는 두 카드 사이를 다른 카드에 막히지 않고 두 번 이하로 꺾어 연결할 수 있는지 검사합니다.
+`PathFinder.CanConnect()`는 두 카드 사이를 다른 카드에 막히지 않고 두 번 이하로 꺾어 연결할 수 있는지 검사합니다.
 카드 ID가 같은지는 호출자인 `CardManager`가 먼저 확인하고, 경로 함수는 연결 가능 여부만 판단합니다.
 
 실제 카드 영역은 x·y 각각 1~10이며 배열은 12×12입니다.
@@ -135,6 +135,8 @@ classDiagram
 | `LastPath` | 시작부터 끝까지 표시할 격자 좌표 목록 |
 
 ### 2.2 꺾은 횟수를 세는 경로 탐색
+
+![보드 위쪽 영역을 통해 연결된 두 카드](images/path-border.png)
 
 ```csharp
 // PathFinder.CanConnect() — 위치·방향·회전 수마다 따로 두는 방문 기록과 역추적용 부모
@@ -184,14 +186,12 @@ flowchart TB
 %% 화살표 Next -> Block: 나감=위 들어감=오른쪽
 ```
 
-이 다이어그램은 `PathFinder.CanConnect`가 위치·방향·회전 수 상태를 큐로 넓혀 가며 두 번 이하로 꺾어 이어지는 경로를 찾는 순서를 도식화한 것입니다.
-
-![보드 위쪽 영역을 통해 연결된 두 카드](images/path-border.png)
+이 다이어그램은 `PathFinder.CanConnect()`가 위치·방향·회전 수 상태를 큐로 넓혀 가며 두 번 이하로 꺾어 이어지는 경로를 찾는 순서를 도식화한 것입니다.
 
 ### 2.3 판정 경로 복원과 연결선 표시
 
-`SavePath`는 부모 상태를 역으로 따라간 뒤 순서를 뒤집고,
-`CompressPath`는 방향이 바뀌는 지점을 남겨 표시 목록을 줄입니다.
+`SavePath()`는 부모 상태를 역으로 따라간 뒤 순서를 뒤집고,
+`CompressPath()`는 방향이 바뀌는 지점을 남겨 표시 목록을 줄입니다.
 결과는 `LastPath`로 전달되고, `CardManager`가 이 좌표를 연결선으로 바꿉니다.
 
 연결선은 `LineRenderer` 대신 흰 텍스처 Sprite를 늘려 표현합니다.
@@ -225,7 +225,7 @@ flowchart TB
 
 ### 3.1 개요 — 선택 흐름
 
-마우스 클릭 위치를 월드 좌표로 바꾼 뒤 `Physics2D.Raycast`로 카드를 찾습니다.
+마우스 클릭 위치를 월드 좌표로 바꾼 뒤 `Physics2D.Raycast()`로 카드를 찾습니다.
 첫 카드에는 외곽선과 색상 변화를 적용하고, 두 번째 카드의 ID와 연결 경로를 확인합니다.
 매칭에 실패하면 첫 카드를 해제하고 두 번째 카드를 다음 첫 카드로 넘겨, 새 카드 하나만 고르면 다시 시도할 수 있습니다.
 
@@ -238,6 +238,8 @@ firstCard.Select();
 ```
 
 ### 3.2 연결선을 먼저 보여준 뒤 제거
+
+![선택 외곽선이 표시된 두 카드 사이에 연결선이 그려진 순간](images/match-line.png)
 
 ```mermaid
 sequenceDiagram
@@ -255,7 +257,8 @@ sequenceDiagram
     Note over Input: 제거 시간 대기
     Input->>Game: 클리어 검사
     Input->>Path: 아니면 막힘 검사
-    Input->>Input: 필요한 셔플 후 입력 허용
+    Input->>Game: 막혔으면 ShuffleRemainCards
+    Input->>Input: 입력 허용
 ```
 
 이 다이어그램은 연결 판정이 성공하면 입력을 잠그고 연결선을 먼저 보여 준 뒤, 카드 제거·클리어 검사·막힘 검사를 거쳐 입력을 다시 허용하는 차례를 도식화한 것입니다.
@@ -273,8 +276,6 @@ sequenceDiagram
 
 잠금을 넣은 뒤에는 플레이 테스트에서 같은 문제가 다시 나타나지 않았습니다.
 
-![선택 외곽선이 표시된 두 카드 사이에 연결선이 그려진 순간](images/match-line.png)
-
 연출 완료는 각 코루틴을 추적하는 대신 설정 시간만큼 기다리는 방식으로 단순하게 구성했습니다.
 
 ### 3.3 고민과 선택
@@ -288,7 +289,7 @@ sequenceDiagram
 
 **연출 중 입력을 어떻게 다룰까 — `isProcessing` 잠금**
 
-잠금 없이 겪은 문제는 §3.2에 있습니다.
+잠금 없이 겪은 문제는 §3.2에서 설명합니다.
 
 | 방법 | 장점 | 비용 |
 |---|---|---|
@@ -304,7 +305,7 @@ sequenceDiagram
 ### 4.1 개요 — 보드 생성
 
 보드 데이터는 `GameManager.board`가 관리하고, 각 `Card`가 자신의 ID와 격자 좌표를 갖습니다.
-50쌍의 ID를 만들어 총 100장의 카드를 생성하고, ID 목록을 섞어 배치합니다.
+50쌍의 ID를 만들어 총 100장의 카드를 순서대로 놓은 뒤, 재배치(§4.2)와 같은 `ShuffleRemainCards()`로 ID를 섞습니다(처음에는 안내 문구 없이).
 
 ```csharp
 // GameManager.CreateCardIds() — 같은 ID를 두 장씩 넣어 쌍 만들기
@@ -318,11 +319,11 @@ for (int i = 0; i < pairCount; i++)
 
 ### 4.2 이을 짝이 없을 때의 그림 재배치
 
-`IsDeadlocked`는 남은 카드에서 같은 ID의 쌍만 골라 `CanConnect`를 호출하고, 한 쌍이라도 연결되면 즉시 끝냅니다.
+![연결 가능한 쌍이 없어 Reshuffling.. 안내와 함께 남은 카드를 재배치하는 화면](images/reshuffle.png)
+
+`IsDeadlocked()`는 남은 카드에서 같은 ID의 쌍만 골라 `CanConnect()`를 호출하고, 한 쌍이라도 연결되면 즉시 끝냅니다.
 연결 가능한 쌍이 없으면 남은 카드의 **위치는 그대로 두고 ID만 섞습니다.**
 ID의 전체 구성은 유지되므로 기존 짝도 유지됩니다.
-
-![연결 가능한 쌍이 없어 Reshuffling.. 안내와 함께 남은 카드를 재배치하는 화면](images/reshuffle.png)
 
 ```csharp
 // GameManager.ShuffleRemainCards() — 연결 가능한 쌍이 생길 때까지 흔들기·ID 셔플 반복
@@ -377,9 +378,11 @@ while (PathFinder.Instance.IsDeadlocked());
 | 90초 초과~120초 이하 | 별 1개 |
 | 120초 초과 | 게임 오버 |
 
-남은 시간은 분·초 텍스트와 줄어드는 타이머 바로 보여 주고, 10초 이하에서는 빨간색과 흔들림으로 경고합니다.
+![남은 시간이 10초 이하가 되어 타이머가 빨간색으로 바뀐 화면](images/timer-warning.png)
 
-![남은 시간이 10초 미만이 되어 타이머가 빨간색으로 바뀐 화면](images/timer-warning.png)
+남은 시간은 분·초 텍스트와 줄어드는 타이머 바로 보여 주고, 10초 이하에서는 빨간색으로, 마지막 3초와 별이 줄어드는 순간에는 흔들림으로 경고합니다.
+
+![클리어 결과 화면 — 클리어 기록에 따른 별 등급과 이번 기록·최고 기록](images/result-clear.png)
 
 최고 기록은 기록이 없거나 더 빠르게 완료했을 때만 갱신합니다.
 
@@ -394,8 +397,6 @@ if (bestRecord == 0f || clearTime < bestRecord)
 }
 ```
 
-![클리어 결과 화면 — 클리어 기록에 따른 별 등급과 이번 기록·최고 기록](images/result-clear.png)
-
 단일 수치 저장이라 별도 파일 구조 없이 PlayerPrefs를 사용했습니다.
 
 소스: [GameManager.cs](https://github.com/keeeery/Unity_2D_SichuanSung/blob/main/Assets/SichuanSung/Scripts/GameManager.cs), [UIManager.cs](https://github.com/keeeery/Unity_2D_SichuanSung/blob/main/Assets/SichuanSung/Scripts/UIManager.cs).
@@ -406,7 +407,7 @@ if (bestRecord == 0f || clearTime < bestRecord)
 
 진행은 시작 화면 → 카운트다운 → 보드 준비 → 플레이 → 결과 → 재시작의 여섯 단계이고,
 `GameManager`는 이를 `isGameClear`·`IsGameStarted`·`isCountingDown`·`canClick` 네 개의 bool과
-`StartGameSequence`·`RestartGameSequence`·`GameOverSequence` 코루틴으로 조율합니다.
+`StartGameSequence()`·`RestartGameSequence()`·`GameOverSequence()` 코루틴으로 조율합니다.
 
 ```mermaid
 stateDiagram-v2
@@ -445,15 +446,13 @@ stateDiagram-v2
 다만 bool 조합으로 상태를 나타내다 보니, 게임 오버 뒤에도 재시작 입력을 받으려고 `isGameClear`를 `true`로 두는 것처럼
 값 하나가 클리어와 게임 오버를 함께 나타내게 되었습니다.
 
-> **남은 과제:** 같은 구조에서 시간 초과와 제거·재배치가 겹칠 때 코루틴을 한꺼번에 취소하는 경로가 없습니다(§6.2).
-
 ---
 
 ## 6. 결과와 배운 점
 
 ### 6.1 구현 결과
 
-10×10 보드의 같은 그림 50쌍을 두 번 이하로 꺾어 잇고, 막히면 자동으로 섞으며, 제한 시간·별 평가·최고 기록까지 이어지는 한 판을 만들었습니다. 시연 영상은 §1.3에 있습니다.
+10×10 보드의 같은 그림 50쌍(9종 그림)을 두 번 이하로 꺾어 잇고, 막히면 자동으로 섞으며, 제한 시간·별 평가·최고 기록까지 이어지는 한 판을 만들었습니다. 시연 영상은 §1.3에 있습니다.
 
 | 구현 결과 | 핵심 방법 | 자세히 |
 |---|---|---|

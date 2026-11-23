@@ -24,7 +24,7 @@
       "value": "1인"
     },
     {
-      "label": "환경",
+      "label": "개발 환경",
       "value": "Unity 6000.3.15f1, URP, C#"
     }
   ],
@@ -120,7 +120,7 @@
       "src": "images/timer-warning.png",
       "w": 1072,
       "h": 804,
-      "caption": "남은 시간이 10초 미만이 되어 타이머가 빨간색으로 바뀐 화면"
+      "caption": "남은 시간이 10초 이하가 되어 타이머가 빨간색으로 바뀐 화면"
     },
     {
       "src": "images/result-clear.png",
@@ -269,7 +269,7 @@
         "points": [
           {
             "label": "구현",
-            "text": "SavePath는 부모 상태를 역으로 따라간 뒤 순서를 뒤집고, CompressPath는 방향이 바뀌는 지점을 남겨 표시 목록을 줄입니다.",
+            "text": "SavePath()는 부모 상태를 역으로 따라간 뒤 순서를 뒤집고, CompressPath()는 방향이 바뀌는 지점을 남겨 표시 목록을 줄입니다.",
             "verbatim": true
           },
           {"label": "구현", "text": "연결선은 LineRenderer 대신 흰 텍스처 Sprite를 늘려 표현합니다.", "verbatim": true},
@@ -367,7 +367,7 @@
         "points": [
           {
             "label": "구현",
-            "text": "IsDeadlocked는 남은 카드에서 같은 ID의 쌍만 골라 CanConnect를 호출하고, 한 쌍이라도 연결되면 즉시 끝냅니다.",
+            "text": "IsDeadlocked()는 남은 카드에서 같은 ID의 쌍만 골라 CanConnect()를 호출하고, 한 쌍이라도 연결되면 즉시 끝냅니다.",
             "verbatim": true
           },
           {"label": "결과", "text": "초기 보드도 이 과정을 거치므로 처음부터 한 수 이상 둘 수 있는 배치에서 플레이가 시작됩니다.", "verbatim": true}
@@ -423,7 +423,7 @@
             "src": "images/timer-warning.png",
             "w": 1072,
             "h": 804,
-            "caption": {"text": "남은 시간이 10초 미만이 되어 타이머가 빨간색으로 바뀐 화면", "verbatim": true}
+            "caption": {"text": "남은 시간이 10초 이하가 되어 타이머가 빨간색으로 바뀐 화면", "verbatim": true}
           },
           {
             "kind": "image",
@@ -570,7 +570,7 @@
         "points": [
           {
             "label": "구현",
-            "text": "SavePath는 부모 상태를 역으로 따라간 뒤 순서를 뒤집고, CompressPath는 방향이 바뀌는 지점을 남겨 표시 목록을 줄입니다.",
+            "text": "SavePath()는 부모 상태를 역으로 따라간 뒤 순서를 뒤집고, CompressPath()는 방향이 바뀌는 지점을 남겨 표시 목록을 줄입니다.",
             "verbatim": true
           },
           {"label": "구현", "text": "연결선은 LineRenderer 대신 흰 텍스처 Sprite를 늘려 표현합니다.", "verbatim": true},
@@ -667,7 +667,7 @@
         "points": [
           {
             "label": "구현",
-            "text": "IsDeadlocked는 남은 카드에서 같은 ID의 쌍만 골라 CanConnect를 호출하고, 한 쌍이라도 연결되면 즉시 끝냅니다.",
+            "text": "IsDeadlocked()는 남은 카드에서 같은 ID의 쌍만 골라 CanConnect()를 호출하고, 한 쌍이라도 연결되면 즉시 끝냅니다.",
             "verbatim": true
           },
           {"label": "결과", "text": "초기 보드도 이 과정을 거치므로 처음부터 한 수 이상 둘 수 있는 배치에서 플레이가 시작됩니다.", "verbatim": true}
@@ -723,7 +723,7 @@
             "src": "images/timer-warning.png",
             "w": 1072,
             "h": 804,
-            "caption": {"text": "남은 시간이 10초 미만이 되어 타이머가 빨간색으로 바뀐 화면", "verbatim": true}
+            "caption": {"text": "남은 시간이 10초 이하가 되어 타이머가 빨간색으로 바뀐 화면", "verbatim": true}
           },
           {
             "kind": "image",
@@ -757,6 +757,6 @@
         "visuals": [{"kind": "mermaid", "n": 1, "fp": "stateDiagram-v2"}]
       }
     ],
-    "applied": "86cb2772257fed05"
+    "applied": "aabb92ce39f984e7"
   }
 }

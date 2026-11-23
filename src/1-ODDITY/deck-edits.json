@@ -9,16 +9,16 @@
       "tab": "",
       "title": {"text": "에디터 도구로 한 번에 맞춘 UI", "verbatim": true},
       "lead": {"text": "초반에 UI 규칙을 정하지 않아 팀원마다 기준 해상도(1920×1080·3840×2160)와 배율이 다른 창이 쌓였습니다.", "verbatim": true},
-      "sectionPath": ["8. UI/UX ① 화면 UI와 조작", "8.4 UI 연출 부품과 스타일 통일", "에디터 도구로 한 번에 맞춘 UI"],
+      "sectionPath": ["7. UI/UX ① 화면 UI·조작과 씬 전환", "7.4 UI 연출 부품과 스타일 통일", "에디터 도구로 한 번에 맞춘 UI"],
       "points": [
         {"label": "", "text": "규칙은 제가 정하고, 그 규칙을 한 번에 적용하는 에디터 도구는 AI 코딩 에이전트를 활용해 만들었습니다.", "verbatim": false},
         {"label": "", "text": "도구는 다시 실행해도 같은 결과가 되도록 이미 만든 것을 지우고 새로 만들거나, 이미 맞춰진 것은 건너뜁니다.", "verbatim": true},
         {
           "label": "",
-          "text": "AI가 \"컴파일 오류 없음\"이라고 보고한 첫 버전은 Unity 콘솔에서 오류가 났고, 확인해 보니 AI 쪽 컴파일 확인이 실제로는 실행되지 않고 있었음",
+          "text": "Unity 콘솔에서 오류를 찾고, AI의 컴파일 확인이 실제로는 실행되지 않았음을 확인함",
           "verbatim": true
         },
-        {"label": "", "text": "적용한 뒤에는 겹치거나 어긋난 곳을 다시 점검해, X 버튼 크기에까지 0.65가 곱해진 문제를 찾아 고침", "verbatim": true}
+        {"label": "", "text": "X 버튼 크기에까지 0.65가 곱해진 것을 찾아 고침", "verbatim": true}
       ],
       "visuals": [
         {
@@ -38,7 +38,7 @@
       "tab": "",
       "title": {"text": "에디터 도구로 한 번에 맞춘 UI", "verbatim": true},
       "lead": null,
-      "sectionPath": ["8. UI/UX ① 화면 UI와 조작", "8.4 UI 연출 부품과 스타일 통일", "에디터 도구로 한 번에 맞춘 UI"],
+      "sectionPath": ["7. UI/UX ① 화면 UI·조작과 씬 전환", "7.4 UI 연출 부품과 스타일 통일", "에디터 도구로 한 번에 맞춘 UI"],
       "points": [],
       "visuals": [{"kind": "table", "n": 1, "fp": "도구|하는 일"}]
     },
@@ -50,7 +50,7 @@
       "tab": "결과",
       "title": {"text": "서로 가리는 보스와 플레이어 — 가려진 쪽을 드러내는 두 가지 표현", "verbatim": true},
       "lead": {"text": "큰 보스와 싸우면 두 가지 가림이 생깁니다.", "verbatim": true},
-      "sectionPath": ["9. UI/UX ② 전투 피드백과 비주얼 효과", "9.6 외곽선과 가림 — 안 보이는 대상을 드러내기", "서로 가리는 보스와 플레이어 — 가려진 쪽을 드러내는 두 가지 표현"],
+      "sectionPath": ["8. UI/UX ② 전투 피드백과 비주얼 효과", "8.6 외곽선과 가림 — 안 보이는 대상을 드러내기", "서로 가리는 보스와 플레이어 — 가려진 쪽을 드러내는 두 가지 표현"],
       "points": [],
       "visuals": [
         {"kind": "image", "src": "images/occlusion-player-outline.png", "w": 960, "h": 720, "caption": {"text": "보스의 앞발에 가려진 플레이어가 흰 외곽선으로 보이는 화면", "verbatim": true}},

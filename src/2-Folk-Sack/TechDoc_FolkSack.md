@@ -40,7 +40,7 @@ flowchart TB
 
 이 다이어그램은 지하에서 채굴하고 지상에서 판매·구매한 뒤 다시 내려가는 게임 루프와, 붕괴 위험과 게임 종료 조건을 도식화한 것입니다.
 
-- **진행:** 로비에서 방에 들어가 준비를 마치면 카운트다운 뒤 시작합니다. 제한 시간이 끝나거나 목표 골드에 이르면 끝나고, 실제 보유 골드로 승자를 정합니다.
+- **진행:** 로비에서 방에 들어가 호스트가 시작하고, 모든 플레이어가 지형 준비를 마치면 카운트다운 뒤 시작합니다. 제한 시간이 끝나거나 목표 골드에 이르면 끝나고, 실제 보유 골드로 승자를 정합니다.
 - **맵:** 같은 시드로 모든 플레이어에게 같은 맵이 생성됩니다. 깊이에 따라 Ground·Dirt·Stone·DeepStone 구간이 있고, 동굴·변칙 지형·광물 군집이 배치됩니다.
 - **채굴과 판매:** 장착한 곡괭이로 타일을 캐면 광물이 떨어집니다. 인벤토리에는 무게 제한이 있고, 지상 스폰 구역에 돌아오면 자동으로 판매됩니다.
 - **상점:** 골드로 장비와 다이너마이트 같은 사용 아이템을 삽니다.
@@ -104,7 +104,7 @@ flowchart TB
 | 인원 | 3인 |
 | 엔진 | Unity `6000.3.15f1`, URP `17.3.0` |
 | 언어 | C# |
-| 주요 패키지 | Input System `1.19.0`, Newtonsoft Json `3.2.2`, Cinemachine `3.1.7`, DOTween 소스 |
+| 주요 패키지 | Input System `1.19.0`, Newtonsoft Json `3.2.2`, Cinemachine `3.1.7`, DOTween |
 | 서버 | ASP.NET Core (.NET `10.0`) |
 | 통신 | `ClientWebSocket` / ASP.NET Core WebSocket, JSON 메시지 |
 | 데이터 | 클라이언트 StreamingAssets TSV, 서버 Data TSV 및 설정 |
@@ -115,14 +115,14 @@ flowchart TB
 
 팀은 3명이며, 각자 맡은 부분은 다음과 같습니다.
 
-- **나:** 맵 생성·채굴·지형 붕괴와 멀티플레이 동기화(서버 로비·패킷 처리 포함), 낙하 지형 충돌·매몰, 플레이어 조작 책임 분리, UI 스크립트(HUD 연결·로비·메뉴·설정·채팅), 탐험·시야·지도를 맡았습니다.
-- **팀원 1:** 아이템·상점·곡괭이 슬롯·쿨타임·리스폰, 캐릭터 조작 초기 구현(벽 잡기·회피), 밸런스 수치를 맡았습니다.
-- **팀원 2:** 그래픽·UI 그래픽·애니메이션·사운드·타격 연출, 캐릭터 이동 충돌 초기 구현, 서버 초기 구조를 맡았습니다.
+- **나** — 맵 생성·채굴·지형 붕괴와 멀티플레이 동기화(서버 로비·패킷 처리 포함), 낙하 지형 충돌·매몰, 플레이어 조작 책임 분리, UI 스크립트(HUD 연결·로비·메뉴·설정·채팅), 탐험·시야·지도
+- **팀원 1** — 아이템·상점·곡괭이 슬롯·쿨타임·리스폰, 캐릭터 조작 초기 구현(벽 잡기·회피), 밸런스 수치
+- **팀원 2** — 그래픽·UI 그래픽·애니메이션·사운드·타격 연출, 캐릭터 이동 충돌 초기 구현, 서버 초기 구조
 
 | 영역 | 직접 구현·보완한 내용 | 팀 기반과의 관계 |
 |---|---|---|
 | 맵 생성·지형 동기화 | 시드 기반 절차적 맵 데이터 생성, 채굴·붕괴의 서버 확정, 상태 변경·송신 분리, 여러 덩어리의 동시 낙하와 연쇄 붕괴 안정화 | 팀원 2의 서버 초기 구조 위에 구현. 채굴 요청 검사 제거·굴착 요청별 대기·낙하 취소와 매몰 정리는 강사님의 도움 |
-| 낙하 지형·매몰 | 낙하 청크 충돌, 탈출·매몰 판정, 플레이어 조작 책임 분리 | 이동 충돌은 팀원 2, 벽 잡기는 팀원 1이 처음 구현(§4.3) |
+| 낙하 지형·매몰 | 낙하 청크 충돌, 탈출·매몰 판정, 플레이어 조작 책임 분리 | 이동 충돌을 실제 콜라이더 모양 Cast로 고친 것은 팀원 2, 벽 잡기는 팀원 1이 처음 구현(§4.3) |
 | 인벤토리·아이템 연결 | 서버가 확정한 상태를 인벤토리·HUD에 반영, 거절된 사용의 쿨타임 취소 | 아이템·상점·쿨타임은 팀원 1, `InventoryView`는 팀원 2(§5.2·§5.3) |
 | 탐험·지도 | 누적 탐험과 현재 관측, 월드 안개·미니맵·전체 지도 | — |
 | 로비·UI | 로비·대기방·채팅·승자 표시와 HUD·메뉴·설정 코드 | 화면 그래픽과 레이아웃은 팀원 2(§7.3) |
@@ -224,11 +224,11 @@ flowchart TB
 
 ### 2.3 접속 시 같은 맵 재생성
 
+![에디터 씬 뷰로 본 생성된 맵 전체 — 위부터 Ground·Dirt·Stone·DeepStone 구간과 변칙 지형·동굴·광물 군집](images/terrain-seed-map.png)
+
 클라이언트는 `map_session`에서 받은 프로필·시드와 테이블 버전을 확인하고 초기 맵을 재생성합니다.
 `TerrainNetworkAdapter.FromGeneratedMap()`이 생성 결과를 Revision 0의 런타임 스냅샷으로 변환합니다.
 게임 중 채굴·재배치 변경은 이후 서버 Batch로 적용됩니다.
-
-![에디터 씬 뷰로 본 생성된 맵 전체 — 위부터 Ground·Dirt·Stone·DeepStone 구간과 변칙 지형·동굴·광물 군집](images/terrain-seed-map.png)
 
 ```csharp
 // RoomClient.HandleMapSession() — 맵 세션의 프로필 ID·시드로 초기 맵 생성
@@ -396,6 +396,8 @@ erDiagram
 
 약 1만 셀(프로토타입 시험 맵 100×105)의 지형을 어떤 단위로 그리고, 충돌을 어떻게 줄지 정해야 했습니다.
 
+![기술 검증용 프로토타입의 맵 페인터와 시험 맵](images/prototype-collapse.png)
+
 지형 붕괴는 팀 프로젝트에 넣기 전에 별도 프로젝트에서 기술 검증용 프로토타입으로 먼저 만들었습니다.
 지형 일부 파괴 → 공중에 뜬 덩어리 탐색 → Rigidbody2D로 실제 낙하 → 멈춘 위치를 Grid 셀로 다시 기록하는 흐름과 상하좌우 연결 기준은 제가 정해 AI에게 작업 지시서로 정리하게 했고, 지시서를 확인 및 보완하여 AI 코딩 에이전트에 넘겨 Unity Tilemap으로 만들었습니다.
 직접 플레이하며 확인해, 덩어리를 직사각형으로 묶는 바람에 옆 칸에 다시 기록되던 문제는 덩어리를 셀 모양 그대로 만들게 하고, 꼭짓점끼리만 맞닿은 타일은 떨어지도록 기준을 정해 고치게 했습니다.
@@ -404,8 +406,6 @@ AI로 빠르게 만든 프로토타입으로 붕괴 동작을 먼저 확인하�
 이후 강의에서 익힌 데이터 기반 Grid 구조로 Tilemap을 바꾸는 리팩터링을 맡겼는데, 첫 버전은 셀마다 GameObject와 Collider를 만들어 플레이를 누르면 로딩이 오래 걸렸고, 이를 최적화하게 해 아래 Chunk Mesh 방식이 되었습니다.
 리팩터링 결과는 강의에서 익힌 Grid 구조와 무엇이 같고 다른지 설명을 들으며 확인했고, 그 과정에서 빠져 있던 데이터 기반 맵 생성을 찾아 추가하게 했습니다.
 처음 만든 코드에서 저와 팀원이 순환 참조 문제를 발견한 뒤에는 고칠 곳을 짚게 해 직접 고쳤습니다.
-
-![기술 검증용 프로토타입의 맵 페인터와 시험 맵](images/prototype-collapse.png)
 
 | 방법 | 장점 | 비용 |
 |---|---|---|
@@ -480,7 +480,7 @@ flowchart TB
 | `Room` | 지형 명령 순서와 확정 메시지 방송 큐 관리 |
 
 아래에서는 채굴(§3.2), 덩어리 하나의 낙하(§3.3), 여러 덩어리의 동시 낙하(§3.4), 연쇄 붕괴(§3.5), 변경 알림을 보내는 순서(§3.6) 차례로 설명합니다.
-이 구조를 만들며 겪은 멀티플레이 멈춤 문제와 해결 과정은 §8.1에 있습니다.
+이 구조를 만들며 겪은 멀티플레이 멈춤 문제와 해결 과정은 §8.1에서 설명합니다.
 
 ### 3.2 모두에게 같은 순서로 반영되는 채굴 결과
 
@@ -495,11 +495,13 @@ flowchart TB
 %%{init: {"sequence": {"actorMargin": 20, "width": 140, "wrap": true}}}%%
 sequenceDiagram
     participant I as ItemController
+    participant P as PickaxeItem
     participant C as RoomClient
     participant H as TerrainExcavation<br/>PacketHandler
     participant G as GameSession
     participant T as TerrainManager
-    I->>C: RequestExcavation<br/>(targetCell, itemId)
+    I->>P: 곡괭이 사용
+    P->>C: RequestExcavation<br/>(cell, Def.ID)
     C->>H: terrain excavation request<br/>+ RequestId
     H->>G: TryExcavate<br/>(playerId, request)
     alt 검증 성공
@@ -661,12 +663,12 @@ foreach (GridCoord sourceCell in sourceCells)
 
 ### 3.4 여러 덩어리의 동시 낙하
 
+![다른 지형으로부터 고립되어 붕괴·낙하 중인 지형 덩어리](images/falling-chunk.png)
+
 덩어리 여러 개가 동시에 멈추면 배치 요청도 여러 개를 보내야 합니다.
 처음에는 확정을 기다리는 상태를 하나만 두어서, 먼저 보낸 요청을 기다리는 동안 다음 청크의 배치 제안이 버려졌습니다(§8.3).
 그래서 `pendingCollapsePlacementIds`에 `RequestId → CollapseID`를 저장해,
 같은 청크의 요청이 두 번 나가는 것만 막고 다른 청크는 따로 보냅니다.
-
-![다른 지형으로부터 고립되어 붕괴·낙하 중인 지형 덩어리](images/falling-chunk.png)
 
 ```csharp
 // RoomClient.HandlePlacementProposed() — 배치 담당일 때 같은 청크의 중복 요청만 막고 전송
@@ -694,7 +696,7 @@ if (pendingCollapsePlacementIds.ContainsValue(proposal.CollapseId))
 그동안 다른 플레이어의 변경이 들어와도 내 연쇄를 덮어쓰지 않도록,
 내가 맡은 청크를 `HashSet<long> locallyOwnedCollapseIds`로 따로 기억합니다.
 연쇄 횟수 카운터는 단계마다 초기화하지 않습니다. 그래서 `maximumChainCount` 제한이 실제로 쌓여 정해진 횟수에서 멈춥니다.
-이 두 가지를 고친 과정은 §8.4에 있습니다.
+이 두 가지를 고친 과정은 §8.4에서 설명합니다.
 
 ```csharp
 // TerrainCollapseCoordinator.HandleTerrainChanged() — 내가 맡은 배치가 반영되면 연쇄 붕괴 이어 가기
@@ -713,7 +715,7 @@ if (reason == TerrainChangeReason.CollapsePlacement)
 실제 전송은 큐에서 따로 처리합니다.
 
 - 방송 큐(`Unbounded Channel`)는 읽는 쪽이 하나뿐이라, 넣은 순서대로 꺼내 보냅니다.
-- 한 방송은 받는 사람 모두에게 보낼 때까지(`Task.WhenAll`) 기다린 뒤 다음 방송으로 넘어갑니다.
+- 한 방송은 받는 사람 모두에게 보낼 때까지(`Task.WhenAll()`) 기다린 뒤 다음 방송으로 넘어갑니다.
 - 같은 연결로 동시에 보내야 할 때는 멤버마다 둔 `SendLock`으로 하나씩 차례로 보내고, 한 번 보내는 데 3초 제한을 둡니다.
 
 플레이어 입장도 같은 Gate를 씁니다.
@@ -723,8 +725,6 @@ if (reason == TerrainChangeReason.CollapsePlacement)
 
 - 느린 연결 하나가 다음 방송 전체를 늦출 수 있습니다. 보내기 자체에는 3초 제한이 있지만, `SendLock.WaitAsync()`로 차례를 기다리는 시간에는 제한이 없습니다.
 - 큐 크기에 제한이 없어서, 알림이 쌓일 때의 처리(backpressure) 정책이 아직 없습니다.
-
-> **남은 과제:** 방송 큐 길이와 느린 연결에 대한 운영 정책을 측정해야 합니다(§9.2).
 
 소스: [Room.cs](https://github.com/KooHoo-Dev/3rd-TeamProject-KH-Server/blob/main/HelloServer/Network/Room.cs).
 
@@ -755,12 +755,12 @@ if (reason == TerrainChangeReason.CollapsePlacement)
 
 ### 4.1 개요 — 낙하 청크 접촉과 매몰 상태
 
+![낙하 지형에 매몰되어 사망한 플레이어 — 해당 칸에 사망 보관함 타일이 생김](images/burial-death.png)
+
 `FallingTerrainInteraction`은 캐릭터와 낙하 청크의 접촉 결과, 탈출 위치 탐색,
 매몰 상태와 지속 피해 요청을 담당합니다.
 `FallingTerrainContracts`의 계약과 이벤트를 통해 캐릭터 이동·피해 계층에 연결됩니다.
 `PlayerController` 하나에 지형 판정과 피해 로직을 모두 넣지 않는 방향으로 분리했습니다.
-
-![낙하 지형에 매몰되어 사망한 플레이어 — 해당 칸에 사망 보관함 타일이 생김](images/burial-death.png)
 
 ```mermaid
 stateDiagram-v2
@@ -796,7 +796,7 @@ stateDiagram-v2
 | `CollisionImpactRequested`, `BurialImpactRequested`, `BurialDamageRequested` | 충돌·매몰 피해를 외부 어댑터로 전달 |
 | `ResetState()` | 리스폰 등에서 접촉·매몰 상태 정리 |
 
-논리 셀 삭제와 Collider 재생성 시점이 달라 생긴 매몰 판정 문제와 해결은 §8.2에 있습니다.
+논리 셀 삭제와 Collider 재생성 시점이 달라 생긴 매몰 판정 문제와 해결은 §8.2에서 설명합니다.
 
 ### 4.3 낙하 지형과 맞물리는 움직임 — 멈출 칸·이동 충돌·낙하 피해
 
@@ -855,8 +855,8 @@ return collisionCount < bestCollisionCount;
 
 #### 플레이어 이동과 지형 충돌
 
-충돌을 고려한 이동(`Collider2D.Cast`)은 팀원 2가, 벽 잡기는 팀원 1이 처음 구현했습니다.
-이후 제가 `PlayerController`에 몰려 있던 이동·충돌·생명주기·지형 상태 처리를 아래 구성 요소로 나눴습니다.
+플레이어는 실제 콜라이더 모양의 Cast(`Collider2D.Cast()`)와 법선 검사로 지형 충돌을 처리하며 이동하고, 벽을 잡을 수 있습니다.
+이후 `PlayerController`에 몰려 있던 이동·충돌·생명주기·지형 상태 처리를 아래 구성 요소로 나눴습니다.
 
 | 클래스 | 책임 |
 |---|---|
@@ -885,7 +885,7 @@ return collisionCount < bestCollisionCount;
 
 필드 아이템(`WorldItemDrop`)도 같은 탈출 계약(`IFallingTerrainEscapeTarget`)을 구현해, 청크가 덮으면 좌우로 빈 칸을 찾아 옮깁니다.
 
-소스: [TerrainGridWorld.cs](https://github.com/keeeery/Folk-Sack/blob/main/Assets/02.%20Scripts/TerrainCollapse/TerrainGridWorld.cs), [WorldItemDrop.cs](https://github.com/keeeery/Folk-Sack/blob/main/Assets/02.%20Scripts/Item/WorldItemDrop.cs).
+소스: [FallingChunk.cs](https://github.com/keeeery/Folk-Sack/blob/main/Assets/02.%20Scripts/TerrainCollapse/FallingChunk.cs), [FallingTerrainContracts.cs](https://github.com/keeeery/Folk-Sack/blob/main/Assets/02.%20Scripts/Player/FallingTerrainContracts.cs), [WorldItemDrop.cs](https://github.com/keeeery/Folk-Sack/blob/main/Assets/02.%20Scripts/Item/WorldItemDrop.cs).
 
 ### 4.4 고민과 선택
 
@@ -902,7 +902,7 @@ return collisionCount < bestCollisionCount;
 |---|---|---|
 | 충돌할 때마다 플레이어를 밀어내기 | 플레이어가 지형에 갇히지 않음 | 매몰이 생기지 않아 매몰 위험과 간접 PvP가 사라짐 |
 | 닿자마자 매몰 | 탈출 위치를 찾지 않아 판정이 단순함 | 플레이어가 칸의 경계에 걸쳐 있으면, 옆 빈 칸으로 빠져나갈 수 있어 보여도 매몰되어 판정이 직관적이지 않음 |
-| 정해진 거리 안에 빈 칸이 있으면 밀어내고, 없으면 매몰 (채택) | 피할 공간이 있으면 빠져나가고 막히면 매몰되어 매몰 위험이 남음. 청크별 처리 결과를 기억해 반복 충돌을 막음 | 밀어내기를 허용할 거리(`escapeXOffset`)와 검사할 칸의 기준을 정하고 맞춰야 함 |
+| 정해진 거리 안에 빈 칸이 있으면 밀어내고, 없으면 매몰 (채택) | 피할 공간이 있으면 빠져나가고 막히면 매몰되어 매몰 위험이 남음<br>청크별 처리 결과를 기억해 반복 충돌을 막음 | 밀어내기를 허용할 거리(`escapeXOffset`)와 검사할 칸의 기준을 정하고 맞춰야 함 |
 
 밀어낼지 매몰할지를 가르는 판정 기준과 `escapeXOffset` 필드의 의미는 직접 정하고, 코드 반영은 AI 코딩 에이전트에 맡겼습니다.
 `escapeXOffset`은 밀어내기를 허용할 거리를 칸 크기 대비 비율로 나타내며, 그 거리 안에 빈 칸이 있으면 밀어내고 없으면 매몰됩니다.
@@ -916,18 +916,18 @@ return collisionCount < bestCollisionCount;
 
 ### 5.1 개요 — 아이템 구성과 역할
 
+![다이너마이트로부터 도망치는 두 플레이어](images/dynamite-throw.png)
+
 아이템은 세 갈래입니다. 캐는 데 쓰는 **장비(곡괭이)**, 탐험을 돕는 **사용 아이템**, 캐서 모아 파는 **광물·원석**입니다.
-아이템 종류와 효과·수치는 팀원 1이 정했고(§1.4), 이 장에서 제가 다루는 부분은 이 아이템들의 수량·무게·장착 상태를 서버가 확정하고 화면에 반영하는 연결입니다.
+이 장에서 다루는 부분은 아이템의 종류·효과가 아니라, 이 아이템들의 수량·무게·장착 상태를 서버가 확정하고 화면에 반영하는 연결입니다.
 
 | 갈래 | 아이템 | 플레이어가 하는 일 | 인벤토리에서 |
 |---|---|---|---|
-| 장비 | 네 가지 등급의 채굴 키트 | 장착한 곡괭이로 타일 채굴, 등급이 오를수록 채굴력·사거리·수용량 증가 | 하나만 장착 |
+| 장비 | 네 가지 등급의 채굴 키트 | 장착한 곡괭이로 타일 채굴, 등급이 오를수록 채굴력·수용량 증가, 사거리는 은 등급부터 늘어남 | 하나만 장착 |
 | 사용 | 다이너마이트·지뢰·포션·탐지기·횃불 | 던지기·설치·사용 | 수량만큼 사용, 아이템별 쿨타임 |
 | 광물·원석 | 석탄·황동·은·금광석, 사파이어·루비·다이아몬드 | 캐면 드롭, 지상에 돌아오면 자동 판매 | 종류별 무게, 무게 제한까지만 보유 |
 
 골드로 장비를 바꾸고 사용 아이템을 사서 더 깊이 내려가는 것이 §1.1 게임 루프의 "판매 → 상점" 부분입니다.
-
-![다이너마이트로부터 도망치는 두 플레이어](images/dynamite-throw.png)
 
 ### 5.2 아이템 요청과 서버 전체 상태로 교체
 
@@ -968,7 +968,7 @@ sequenceDiagram
 
 `PlayerInventoryHudPresenter`는 `ItemChanged`를 구독해, 인벤토리가 바뀔 때마다 `InventoryView`의 목록 전체를 다시 그립니다.
 
-상점에서도 가격과 구역·거리·수용량은 서버가 검사해 확정합니다. 클라이언트가 보여 주는 할인 가격도 서버와 같은 규칙으로 계산합니다.
+상점에서도 가격과 스폰 구역·판매 품목·골드·무게는 서버가 검사해 확정합니다. 클라이언트가 보여 주는 할인 가격도 서버와 같은 규칙으로 계산합니다.
 
 소스: [GameSession.cs](https://github.com/KooHoo-Dev/3rd-TeamProject-KH-Server/blob/main/HelloServer/Game/GameSession.cs), [PlayerSellController.cs](https://github.com/keeeery/Folk-Sack/blob/main/Assets/02.%20Scripts/Item/Inventory/PlayerSellController.cs).
 
@@ -1051,12 +1051,10 @@ ExploreVisionRadius(playerCell);
 
 ### 6.3 안개와 지도 — 직선 시야 검사와 두 겹 표시
 
-누적 탐험은 시야 반경 안의 셀을 직선 시야(`HasLineOfSight`)로 검사해 새로 본 셀만 기록하고, 현재 관측은 플레이어와 횃불에서 상하좌우로 뻗어 통로를 따라 넓힙니다.
-월드 안개는 탐험 이력과 현재 시야를 두 겹 Mesh로 그리고, Tab 전체 지도는 커서 아래 지점을 유지하며 확대합니다.
-
-> **남은 과제:** 미니맵은 셀이 바뀔 때마다 텍스처 전체를 GPU로 다시 올리는 비용이 남아 있습니다(§9.2).
-
 ![전체 지도(Tab)에 탐험한 구역과 플레이어 위치 마커가 표시된 화면](images/full-map.png)
+
+누적 탐험은 시야 반경 안의 셀을 직선 시야(`HasLineOfSight()`)로 검사해 새로 본 셀만 기록하고, 현재 관측은 플레이어와 횃불에서 상하좌우로 뻗어 통로를 따라 넓힙니다.
+월드 안개는 탐험 이력과 현재 시야를 두 겹 Mesh로 그리고, Tab 전체 지도는 커서 아래 지점을 유지하며 확대합니다.
 
 소스: [PlayerExplorationController.cs](https://github.com/keeeery/Folk-Sack/blob/main/Assets/02.%20Scripts/Exploration/PlayerExplorationController.cs), [ExplorationMapData.cs](https://github.com/keeeery/Folk-Sack/blob/main/Assets/02.%20Scripts/Exploration/ExplorationMapData.cs), [ExplorationForWorldView.cs](https://github.com/keeeery/Folk-Sack/blob/main/Assets/02.%20Scripts/Exploration/ExplorationForWorldView.cs), [MinimapView.cs](https://github.com/keeeery/Folk-Sack/blob/main/Assets/03.%20UI/Scripts/MinimapView.cs).
 
@@ -1070,16 +1068,16 @@ ExploreVisionRadius(playerCell);
 호스트가 게임을 시작하면 게임 화면으로 넘어가 모든 플레이어가 지상에 모이고, 모두 준비되면 카운트다운 뒤 채굴을 시작합니다.
 누군가 목표 골드를 모으거나 제한 시간이 끝나면 게임이 끝나고, 골드가 가장 많은 플레이어가 승자가 됩니다.
 
-로비 WebSocket은 방 목록·입장·준비·채팅·호스트 추방 같은 대기 상태를 관리합니다.
+로비 WebSocket은 방 만들기·방 코드로 입장·채팅·호스트 추방·호스트 시작 같은 대기 상태를 관리합니다.
 게임이 시작되면 `RoomClient`가 로비 세션 정보로 게임 방에 연결하고, 서버 `/room`은 그 로비가 실제로 시작됐는지 검사한 뒤 연결을 허용합니다.
 
 ### 7.2 모두 준비돼야 시작하는 게임
 
+!['게임 시작 대기중' 타이머와 네 플레이어가 지상에 모인 화면, '모든 플레이어가 준비되었습니다' 채팅창 시스템 메시지](images/lobby-ready-wait.png)
+
 준비 완료(`player.ready`)는 연결 직후가 아니라, 서버의 입장 정보(welcome)를 받고 맵 데이터 버전을 확인한 뒤 초기 지형까지 만든 다음 한 번 보냅니다.
 서버 `MarkPlayerReady()`는 기대 인원이 모두 준비되면, 준비 지연과 카운트다운을 더한 미래 시각을 시작 시각으로 확정하고 여기에 게임 길이를 더해 끝나는 시각을 정합니다.
 클라이언트는 이 서버 기준 시각과 로컬 시각 보정값으로 카운트다운과 경과 시간을 표시합니다.
-
-!['게임 시작 대기중' 타이머와 네 플레이어가 지상에 모인 화면, '모든 플레이어가 준비되었습니다' 채팅창 시스템 메시지](images/lobby-ready-wait.png)
 
 소스: [LobbyHub.cs](https://github.com/KooHoo-Dev/3rd-TeamProject-KH-Server/blob/main/HelloServer/Network/LobbyHub.cs), [LobbySocketClient.cs](https://github.com/keeeery/Folk-Sack/blob/main/Assets/02.%20Scripts/Networking/LobbySocketClient.cs).
 
@@ -1089,18 +1087,18 @@ ExploreVisionRadius(playerCell);
 
 다른 플레이어는 위치와 함께 속도·접지·등반·매몰 상태와 행동 메시지를 받아 표현합니다.
 위치는 기본 10Hz(`positionSendRate`)로, 상태가 달라졌을 때 보냅니다.
-`RemotePlayerView`는 보간 버퍼나 이동 예측 없이 최신 목표 위치로 지수 보간하고, 리스폰처럼 순간 이동이 필요하면 `Teleport()`로 맞춥니다.
+`RemotePlayerView`는 보간 버퍼나 이동 예측 없이 최신 목표 위치로 보간하고, 리스폰처럼 순간 이동이 필요하면 `Teleport()`로 맞춥니다.
 
 소스: [RemotePlayerView.cs](https://github.com/keeeery/Folk-Sack/blob/main/Assets/02.%20Scripts/Networking/RemotePlayerView.cs), [RemotePlayerAnimationView.cs](https://github.com/keeeery/Folk-Sack/blob/main/Assets/02.%20Scripts/Networking/RemotePlayerAnimationView.cs).
 
 #### 대기방 프리뷰·채팅·승자 표시
 
-대기방 아바타는 게임용 Prefab을 Animator만 켠 채 재사용해 보여 주고, 채팅은 최근 100개만 보관하며 꺾쇠를 이스케이프해 마크업으로 해석되지 않게 합니다.
-시간 종료 승자는 팔지 않은 광물을 빼고 실제 골드로 정하며, 골드가 같으면 모두 승자로 표시합니다.
-
 ![대기실 화면 — 네 플레이어 슬롯의 아바타와 오른쪽 채팅창, '호스트가 게임을 시작할 때까지 기다리는 중입니다' 안내](images/lobby-room-chat.png)
 
 ![게임 종료 결과 창](images/game-result.png)
+
+대기방 아바타는 게임용 Prefab을 Animator만 켠 채 재사용해 보여 주고, 채팅은 최근 100개만 보관하며 꺾쇠를 이스케이프해 마크업으로 해석되지 않게 합니다.
+시간 종료 승자는 팔지 않은 광물을 빼고 실제 골드로 정하며, 골드가 같으면 모두 승자로 표시합니다.
 
 소스: [LobbyPlayerSlotView.cs](https://github.com/keeeery/Folk-Sack/blob/main/Assets/02.%20Scripts/Networking/LobbyPlayerSlotView.cs), [ChatPanelView.cs](https://github.com/keeeery/Folk-Sack/blob/main/Assets/03.%20UI/Scripts/ChatPanelView.cs), [GameTimerBarView.cs](https://github.com/keeeery/Folk-Sack/blob/main/Assets/03.%20UI/Scripts/GameTimerBarView.cs).
 
@@ -1134,7 +1132,7 @@ ExploreVisionRadius(playerCell);
 
 | 구간 | 잠금 안에서 수행하던 작업 | 대기·처리 비용의 영향 |
 |---|---|---|
-| `GameSession.stateGate`의 C# `lock` | 전체 셀을 DTO로 복사하고 `OrderBy`·`ToList`로 Snapshot 생성 | 복사·정렬·할당이 끝날 때까지 같은 상태 잠금을 사용하는 작업 대기 |
+| `GameSession.stateGate`의 C# `lock` | 전체 셀을 DTO로 복사하고 `OrderBy()`·`ToList()`로 Snapshot 생성 | 복사·정렬·할당이 끝날 때까지 같은 상태 잠금을 사용하는 작업 대기 |
 | `Room.terrainPipelineGate`의 `SemaphoreSlim` | 지형 명령 실행 후 오류·전체 Snapshot 송신 또는 Batch·드롭 방송 완료까지 `await` | 느린 소켓 송신이 다음 지형 명령 시작을 지연시킬 수 있음 |
 | `Room.gate`의 `SemaphoreSlim` | 입장 시 welcome·맵·전체 지형·아이템·인벤토리 메시지 송신과 Join 방송 | 초기 동기화 송신이 입퇴장 처리의 잠금 유지 시간에 포함 |
 
@@ -1169,13 +1167,14 @@ flowchart TB
 |---|---|---|
 | 지형 처리와 송신 분리 | `ExecuteTerrainCommandAsync(Action)`·`EnqueueBroadcast()` | 지형 Gate가 소켓 송신 완료를 기다리지 않음 |
 | Batch 순서 유지 | 단일 reader `Channel`로 방송 순서 관리 | 상태 변경과 결과 큐 등록 순서를 연결 |
-| 입퇴장 송신 구간 분리 | `Room.JoinAsync()`의 상태 처리와 송신 분리 | 멤버 상태 작업과 네트워크 대기의 임계 구간 분리 |
+| 입퇴장 송신 구간 분리 | 당시 `Room.JoinAsync()`의 상태 처리와 송신 분리 | 이후 입장 때 보내는 상태와 방송을 받기 시작하는 시점 사이에 지형이 바뀌지 않도록 입장 송신은 다시 Gate 안에서 처리(§3.6) |
 | Snapshot 생성 비용 범위 축소 | 당시 `CreateTerrainSnapshotMessage()`의 복사·정렬 분리 | 잠금 안에서 상태 복사, 정렬은 잠금 밖으로 이동 |
-| 전체 복구 조건 축소 | 낙하 예약 검증과 오류별 복구 조건 조정 | 예약 충돌 등에서 불필요한 전체 Snapshot 복구를 줄이는 정책 조정 |
+| 전체 복구 조건 축소 | 당시 낙하 예약 검증과 오류별 복구 조건 조정 | 예약 충돌 등에서 불필요한 전체 Snapshot 복구를 줄이는 정책 조정 |
 | 송신 시간 제한 | `SendTimeoutMilliseconds = 3000` | 느리거나 실패한 연결의 송신에 취소·정리 경로 부여 |
 
 핵심 효과는 **소켓 대기가 지형 상태 변경 구간을 붙잡던 결합을 끊은 것**입니다.
-Snapshot 생성의 상태 복사는 여전히 잠금이 필요하고, 방송 큐도 한 메시지를 모든 멤버에게 보낼 때까지 기다리는 비용은 남습니다.
+방송 큐가 한 메시지를 모든 멤버에게 보낼 때까지 기다리는 비용은 남습니다.
+지형 전체 Snapshot 메시지는 이후 서버 리팩토링에서 시드만 보내고 클라이언트가 다시 만드는 구조(§2.3)로 바뀌며 없어졌습니다.
 
 #### 원활해진 다인 플레이와 남은 비용
 
@@ -1183,35 +1182,25 @@ Snapshot 생성의 상태 복사는 여전히 잠금이 필요하고, 방송 큐
 여러 클라이언트에서 원활하게 플레이되는 것을 확인했습니다.
 지연 시간과 처리량의 개선 폭은 별도로 측정하지 않았습니다.
 
-> **남은 과제:** 재접속·중간 참여 때의 지형 복원과 방송 큐 적체는 아직 다루지 못했습니다(§9.2).
-
 ### 8.2 채굴해도 풀리지 않던 매몰
 
 - **증상:** 채굴하여 공간을 만들었는데 매몰이 풀리지 않았습니다.
-- **원인:** 지형 Batch로 논리 셀을 지운 직후, `TerrainGridWorld`의 Mesh·EdgeCollider가 다시 만들어지기 전에 검사해 이전 Collider 때문에 아직 갇혔다고 판단했습니다.
-- **해결:** 프레임 끝까지 기다린 뒤 물리 Transform을 동기화하고 매몰을 다시 판정했습니다.
+- **원인:** 지형이 바뀌면 프레임 끝까지 기다린 뒤 매몰을 다시 판정했지만, 해제 판정이 논리 셀과 물리 Collider 겹침을 함께 봤습니다. `TerrainGridWorld`의 EdgeCollider가 다시 만들어지는 시점이 달라 이전 Collider가 한 프레임 더 남았고, 그 때문에 아직 갇혔다고 판단했습니다.
+- **해결:** 매몰 해제는 물리 Collider 겹침(`IsCurrentSpaceEmpty()`) 대신 논리 셀(`IsGridSpaceEmpty()`)만 보고 판정하도록 바꿨습니다.
 - **결과:** 그 뒤로 채굴해 공간을 만들면 매몰이 풀립니다.
 - **배운 점:** 셀 삭제와 Collider 재생성은 서로 다른 시점입니다(§9.3).
 
 ```csharp
-// FallingTerrainInteraction.ResolvePendingBurialsAfterTerrainSettled() — 프레임 끝까지 기다린 뒤 물리 동기화하고 매몰 판정
+// FallingTerrainInteraction.RecheckBurialAfterTerrainRefresh() — 지형이 바뀐 뒤 매몰을 다시 판정
 yield return new WaitForEndOfFrame();
 Physics2D.SyncTransforms();
 
-if (IsCurrentSpaceEmpty())
-{
-    ReleasePendingBurials(collapseIds);
-}
-else if (TryFindDownwardReleasePosition(out Vector2 releasePosition))
-{
-    character.SetPosition(releasePosition);
-    Physics2D.SyncTransforms();
-    ReleasePendingBurials(collapseIds);
-}
-else
-{
-    EnterBuriedState();
-}
+// 이전 프레임의 엣지콜라이더가 남아 있어도 매몰 상태를 유지하지 않음
+if (IsGridSpaceEmpty(character.CollisionBounds) || TryFindNearbyBurialExit())
+    ExitBuriedState();
+
+// FallingTerrainInteraction.ExitBuriedState() — 매몰 해제도 같은 그리드 기준으로 판정
+if (isBuried == false || IsGridSpaceEmpty(character.CollisionBounds) == false) return;
 ```
 
 ### 8.3 여러 청크가 동시에 떨어지면 뒤 청크가 확정되지 않던 문제
@@ -1263,12 +1252,12 @@ else
 
 | 구현 결과 | 핵심 방법 | 자세히 | 기여 |
 |---|---|---|---|
-| 여러 명이 동시에 캐도 모두에게 같은 지형 | 서버 검증 뒤 Revision 순서대로 Batch 적용 | §3.2 | 팀 (`ApplyAuthoritativeBatch`는 내 기여) |
-| 땅을 조금 파도 멈추지 않는 멀티플레이 | 채굴 요청의 전역 Revision 검사 제거, 바뀐 칸만 적용 | §8.1 | 내 기여 (강사님 도움) |
+| 여러 명이 동시에 캐도 모두에게 같은 지형 | 서버 검증 뒤 Revision 순서대로 Batch 적용 | §3.2 | 팀 (`ApplyAuthoritativeBatch()`는 내 기여) |
+| 땅을 조금 파도 멈추지 않는 멀티플레이 | 채굴 요청의 전역 Revision 검사 제거, 바뀐 칸만 적용 | §8.1 | 원인 분석·개선안은 내 기여, 구현은 강사님 |
 | 느린 연결이 지형 처리를 붙잡지 않는 서버 | 상태 변경·큐 등록과 WebSocket 송신 분리 | §3.6 · §8.1 | 내 기여 (강사님 도움) |
 | 여러 덩어리가 동시에 떨어져도 모두 확정 | 요청별 배치 대기, CollapseID별 소유권 | §3.4 | 내 기여 (강사님 도움) |
 | 서버가 확정한 뒤에만 이어지는 연쇄 붕괴 | 물리 완료 콜백과 연쇄 검사 분리 | §3.5 | 내 기여 |
-| 땅을 파면 풀리는 매몰 | 프레임 끝 대기·물리 동기화 뒤 다시 판정 | §8.2 | 내 기여 (강사님 도움) |
+| 땅을 파면 풀리는 매몰 | 매몰 해제를 Collider 겹침 대신 논리 셀 기준으로 판정 | §8.2 | 내 기여 (강사님 도움) |
 | 거절된 아이템 사용을 되돌리는 HUD | 실패한 요청의 예상 쿨타임 취소, 서버 인벤토리로 교체 | §5.2 · §5.3 | 내 기여 |
 | 멈춰 있어도 지형이 바뀌면 갱신되는 시야 | 지형 변경 플래그로 시야 재계산 | §6.2 | 내 기여 |
 
