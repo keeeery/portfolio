@@ -51,12 +51,36 @@ try { window.mermaid?.initialize({ startOnLoad: false }); } catch (_) { /* */ }
   //   칸마다 폭을 바꿔 가며(화면 밖 복제 표, table-layout:fixed) 칸 안 줄 수와 외톨이 줄(마지막 줄이 2.6em 이하이거나 칸 폭의 20% 미만)을 재고,
   //   표 폭 안에서 '줄 수 + 외톨이 벌점'이 가장 작은 폭 나눔을 고름(동점이면 브라우저 기본 나눔에 가까운 쪽). 고른 폭은 <colgroup class="pf-cols">의 --pf-w로,
   //   CSS(doc.css table.pf-fit)는 화면에서만 적용 — 인쇄는 원래 자동 배치(⑥-2 .print-wide)를 그대로 씀. 표 칸 폭이 바뀌면(창 크기) 다시 나눔.
-  //   그림·코드 블록·칸 합치기가 있는 표, 표 폭에 다 들어가거나(줄바꿈 없음) 최소 폭도 넘치는(가로 스크롤) 표는 건드리지 않음
+  //   그림·코드 블록·열 합치기(colspan)가 있는 표, 표 폭에 다 들어가거나(줄바꿈 없음) 최소 폭도 넘치는(가로 스크롤) 표는 건드리지 않음.
+  //   줄 합치기(rowspan)는 다룸 — 줄마다 칸이 몇 번째 열인지 위에서 내려온 합친 칸을 건너뛰며 셈(colMap), 합친 칸의 줄 수는 한 번만 셈.
+  //   코드 이름 하나만 든 칸(예: 셰이더 표의 `TimeFreezeHologram`)이 두 줄로 꺾이면 줄마다 벌점(NAME_WRAP_COST)을 더해, 폭이 되면 이름은 한 줄로 둠
+  //   (폭이 모자라면 <wbr> 낱말 경계에서 꺾임 — 휴대폰 폭)
+  const nameOnly = (cell) => {                                          // 칸 글이 코드 하나뿐이고 띄어쓰기가 없음
+    const codes = cell.querySelectorAll('code');
+    if (codes.length !== 1) return false;
+    const t = cell.textContent.trim();
+    return t === codes[0].textContent.trim() && !/\s/.test(t);
+  };
+  function colMap(tb) {                                                // 줄마다 [칸 → 열 번호], 표가 고르지 않으면 null
+    const n = tb.rows[0]?.cells.length || 0, busy = new Array(n).fill(0), map = [];
+    for (const row of tb.rows) {
+      const cols = []; let c = 0;
+      for (const cell of row.cells) {
+        while (c < n && busy[c] > 0) c++;
+        if (c >= n || cell.colSpan !== 1) return null;
+        cols.push(c); busy[c] = cell.rowSpan > 1 ? cell.rowSpan : 1; c++;
+      }
+      if (busy.some((b) => b === 0)) return null;                       // 빈 열이 있는 줄(칸 수가 모자람)
+      map.push(cols);
+      for (let i = 0; i < n; i++) busy[i]--;
+    }
+    return map;
+  }
   function fitTables(scope) {
-    const ORPHAN_EM = 2.6, ORPHAN_RATIO = 0.2, ORPHAN_COST = 3, MAX_STEPS = 120;
+    const ORPHAN_EM = 2.6, ORPHAN_RATIO = 0.2, ORPHAN_COST = 3, NAME_WRAP_COST = 6, MAX_STEPS = 120;
     const tables = [...scope.querySelectorAll('.table-wrap > table')].filter((tb) =>
       !tb.querySelector('img, video, iframe, pre, table, .mmd') && tb.rows.length &&
-      [...tb.rows].every((r) => r.cells.length === tb.rows[0].cells.length && [...r.cells].every((c) => c.colSpan === 1 && c.rowSpan === 1)) &&
+      [...tb.rows[0].cells].every((c) => c.rowSpan === 1) && colMap(tb) &&
       tb.rows[0].cells.length >= 2);
     if (!tables.length) return;
     const lineInfo = (cell) => {                                      // 칸 안 줄 수·마지막 줄 폭(px)
@@ -78,7 +102,7 @@ try { window.mermaid?.initialize({ startOnLoad: false }); } catch (_) { /* */ }
     };
     const measure = (tb, box) => {                                    // 칸마다 폭(4px 남짓 간격)별 비용표
       const t = tb.cloneNode(true);
-      t.classList.remove('pf-fit'); t.querySelector(':scope > colgroup.pf-cols')?.remove();
+      t.classList.remove('pf-fit'); t.querySelector(':scope > colgroup.pf-cols')?.remove(); delete t.dataset.pfFit;   // 재기용 복제본에는 '기다리는 중' 표시를 넘기지 않음
       t.style.cssText = 'min-width:0 !important;width:auto;table-layout:auto';
       box.replaceChildren(t);
       const n = t.rows[0].cells.length;
@@ -96,17 +120,20 @@ try { window.mermaid?.initialize({ startOnLoad: false }); } catch (_) { /* */ }
       cols.forEach((c, i) => { c.style.width = `${minC[i]}px`; });
       t.style.width = `${minC.reduce((a, b) => a + b, 0)}px`;
       const adj = widths().map((w, i) => minC[i] - w);
+      const cmap = colMap(t);
+      const names = [...t.rows].map((row) => [...row.cells].map(nameOnly));
       const cost = minC.map(() => []);
       for (let s = 0; s <= Math.max(...K); s++) {
         const ws = minC.map((m, i) => m + Math.min(s, K[i]) * u);
         cols.forEach((c, i) => { c.style.width = `${ws[i] + adj[i]}px`; });
         t.style.width = `${ws.reduce((a, b) => a + b, 0)}px`;
         for (let i = 0; i < n; i++) if (s <= K[i]) cost[i][s] = 0;
-        for (const row of t.rows) [...row.cells].forEach((cell, i) => {
+        [...t.rows].forEach((row, r) => [...row.cells].forEach((cell, j) => {
+          const i = cmap[r][j];
           if (s > K[i]) return;
           const { n: ln, orphan } = lineInfo(cell);
-          cost[i][s] += ln + (orphan ? ORPHAN_COST : 0);
-        });
+          cost[i][s] += ln + (orphan ? ORPHAN_COST : 0) + (names[r][j] && ln > 1 ? NAME_WRAP_COST : 0);   // 한 줄→두 줄에만 벌점(좁은 화면에서 이름 칸이 다른 칸을 짓누르지 않게)
+        }));
       }
       return { n, minC, maxC, u, K, cost, adj };
     };
@@ -159,6 +186,9 @@ try { window.mermaid?.initialize({ startOnLoad: false }); } catch (_) { /* */ }
     let gen = 0;
     const run = async () => {
       const my = ++gen;
+      document.documentElement.dataset.pfTableFit = 'busy';         // 직접 추가: 표 칸 폭을 맞추는 중 — 로딩 그레이박스(page-anchor.js)가 화면 안·위쪽 표(data-pf-fit="wait")가 끝날 때까지 기다림
+      tables.forEach((tb) => { tb.dataset.pfFit = 'wait'; });
+      performance.mark?.('pf-table-fit-start');
       const probe = document.createElement('div');
       probe.className = 'md pf-fit-probe'; probe.setAttribute('aria-hidden', 'true');
       probe.style.cssText = 'position:absolute;left:-200000px;top:0;visibility:hidden;max-width:none;width:auto';
@@ -169,9 +199,12 @@ try { window.mermaid?.initialize({ startOnLoad: false }); } catch (_) { /* */ }
         try { tb._pfFit = measure(tb, probe.firstChild); } catch (err) { tb._pfFit = null; console.warn('[doc] 표 칸 폭 재기 오류:', err); }
         tb._pfFitW = 0;
         apply(tb); ro.observe(tb.parentElement);
+        delete tb.dataset.pfFit;                                     // 이 표는 끝
         await new Promise((ok) => setTimeout(ok, 0));                // 표 사이에 잠깐 쉬어 화면이 멈추지 않게(탭이 뒤에 있어도 진행)
       }
       probe.remove();
+      if (my !== gen) return;                                        // 더 새로 시작한 재기가 남은 표를 맡음(그쪽이 끝낼 때 done)
+      document.documentElement.dataset.pfTableFit = 'done'; performance.mark?.('pf-table-fit-done');
     };
     run();
     document.fonts?.addEventListener('loadingdone', run);             // 글꼴이 늦게 들어오면 다시 잼
@@ -240,20 +273,17 @@ try { window.mermaid?.initialize({ startOnLoad: false }); } catch (_) { /* */ }
           </details>
         </div>
         <article class="md" id="doc"><p class="loading">프로젝트 문서를 불러오는 중…</p></article>
-        <footer class="doc-foot">
-          ${name ? `<p>© ${esc(name)}</p>` : ''}
-          <p>${T('page.browser-note')}</p>
-          ${pf.generatedAt ? `<p>${T('page.last-updated', { date: esc(pf.generatedAt) })}</p>` : ''}
-        </footer>
       </main>
       <aside class="rail" aria-label="프로젝트 정보">
         <section class="rail-card"><p class="rail-title">${T('doc.rail-project')}</p><dl class="rail-meta">${metaRows}</dl></section>
         <section class="rail-card"><p class="rail-title">${T('doc.rail-links')}</p><nav class="rail-links" aria-label="프로젝트 링크">${railLinks.join('')}</nav></section>
-        <section class="rail-card" id="rail-now" aria-live="polite"><p class="rail-title">${T('doc.rail-now')}</p><p class="now-title">—</p><div class="now-body"></div></section>
       </aside>
     </div>
     <div class="doc-fab" role="group" aria-label="빠른 이동"><button type="button" class="fab-toc" aria-haspopup="dialog">${T('name.toc')}</button></div>
     <dialog class="toc-dialog" aria-label="문서 목차"><div class="toc-dialog-head"><p class="toc-title">${T('name.toc')}</p><button type="button" class="btn dlg-close">${T('ui.close')}</button></div><div class="toc-links"></div></dialog>`;
+
+  // 직접 수정: 본문 끝 다른 프로젝트 상세 문서 링크 + 맨 아래 띠(세 줄) — 예전 본문 맨 아래 세 줄을 옮김(common.js docEnd)
+  PF.docEnd(root.querySelector('.doc-page'), { pf, name, current: id });
 
   // 좁은 화면(< 720px)에서는 "한눈에" 상자를 접어 둠
   document.getElementById('glance').open = !matchMedia('(max-width: 719.98px)').matches;
@@ -312,6 +342,19 @@ try { window.mermaid?.initialize({ startOnLoad: false }); } catch (_) { /* */ }
       w.className = 'table-wrap';
       w.setAttribute('role', 'region'); w.tabIndex = 0; w.setAttribute('aria-label', `표 ${++nTable}`);
       tb.replaceWith(w); w.appendChild(tb);
+    });
+    // 표 칸 안 코드 이름은 낱말 경계(소문자·숫자 뒤 대문자, . _ / ( 뒤)에서만 줄바꿈 — 직접 고친 부분.
+    //   <wbr>로 줄바꿈 자리를 주고, doc.css(.md :is(th, td) code)가 글자 중간 줄바꿈을 막음 → 'TimeFreezeHolo|gram' 대신 'TimeFreeze|Hologram'
+    doc.querySelectorAll(':is(th, td) code').forEach((code) => {
+      const walk = document.createTreeWalker(code, NodeFilter.SHOW_TEXT);
+      const texts = []; for (let n = walk.nextNode(); n; n = walk.nextNode()) texts.push(n);
+      for (const t of texts) {
+        const parts = t.data.split(/(?<=[a-z0-9])(?=[A-Z])|(?<=[._/(])(?=[^\s._/()])/);
+        if (parts.length < 2) continue;
+        const frag = document.createDocumentFragment();
+        parts.forEach((s, i) => { if (i) frag.appendChild(document.createElement('wbr')); frag.appendChild(document.createTextNode(s)); });
+        t.replaceWith(frag);
+      }
     });
     doc.querySelectorAll('p').forEach((para) => {
       const kids = [...para.childNodes].filter((n) => !(n.nodeType === 3 && !n.textContent.trim()));
@@ -470,7 +513,7 @@ try { window.mermaid?.initialize({ startOnLoad: false }); } catch (_) { /* */ }
     const deckAbs = new URL(deckUrl(), location.href).href;
     document.querySelector('.print-urls').innerHTML = `<p>${T('doc.print-web')}: ${esc(here.href)}</p>${noDeck ? '' : `<p>${T('name.deck')}: ${esc(deckAbs)}</p>`}`;
 
-    // ⑩ 목차 현재 위치(스크롤 기준) + 레일 "지금 읽는 절"
+    // ⑩ 목차 현재 위치(스크롤 기준)
     trackSection(headings.filter((h) => h.tagName === 'H2' || h.tagName === 'H3'));
     PF.fitSides();
 
@@ -558,45 +601,44 @@ try { window.mermaid?.initialize({ startOnLoad: false }); } catch (_) { /* */ }
 
   function trackSection(list) {
     const links = new Map([...document.querySelectorAll('#toc-links a')].map((a) => [decodeURIComponent(a.hash.slice(1)), a]));
-    const tocBox = document.getElementById('toc');
-    const nowTitle = document.querySelector('#rail-now .now-title');
-    const nowBody = document.querySelector('#rail-now .now-body');
-    let cur, t = 0;
-    const parentH2 = (h) => { let i = list.indexOf(h); while (i >= 0 && list[i].tagName !== 'H2') i--; return list[i] || null; };
-    // 목차·본문 링크로 고른 제목: 도착해 맨 위(scroll-margin 자리)에 머무는 동안은 그 제목을 강조(바로 밑 소제목이 30% 선 안에 들어와 있어도).
-    //   손으로 스크롤해 그 자리를 벗어나면 다시 30% 선 기준. 3초 안에 도착하지 못하면(맨 아래라 더 못 내려가는 등) 고른 것을 잊음
-    let pin = null;
-    const atTop = (el) => { const y = el.getBoundingClientRect().top, m = parseFloat(getComputedStyle(el).scrollMarginTop) || 0; return y >= -2 && y <= m + 16; };
+    const tocBox = document.getElementById('toc-links');                // 직접 수정: 목차에서 스크롤하는 것은 목록 칸(doc.css '목차')
+    let cur, t = 0;   // 직접 수정: 오른쪽 칸 '지금 읽는 절' 카드 없앰(목차 강조와 겹침)
+    // 직접 수정: 목차·본문 링크로 고른 제목(pin)은 누른 순간부터 강조 — 이동하는 동안(travel)에도 30% 선 계산을 쓰지 않아,
+    //   장 제목을 누르면 지나가는 첫 절이 잠깐 강조됐다가 장 제목으로 바뀌는 일이 없음. 스크롤이 멈추면(settle: 150ms 동안 스크롤 없음 · 늦어도 4초)
+    //   그 자리(pin.y)를 기억하고, 손으로 스크롤해 그 자리를 벗어나면 다시 30% 선 기준. 맨 아래라 제목이 맨 위까지 오지 못해도 멈춘 자리에서는 고른 제목 그대로
+    let pin = null, settleT = 0, capT = 0;
+    const settle = () => { clearTimeout(settleT); if (!pin || pin.settled) return; clearTimeout(capT); pin.settled = true; pin.y = scrollY; cur = undefined; update(); };
+    const armSettle = () => { clearTimeout(settleT); settleT = setTimeout(settle, 150); };
     document.addEventListener('click', (e) => {
       const a = e.target.closest?.('a[href^="#"]');
       if (!a) return;
       let id = a.hash.slice(1); try { id = decodeURIComponent(id); } catch { /* 그대로 */ }
       const el = document.getElementById(id);
-      pin = list.includes(el) ? { el, until: performance.now() + 3000, arrived: false } : null;
+      pin = list.includes(el) ? { el, settled: false, y: 0 } : null;
+      if (pin) { armSettle(); clearTimeout(capT); capT = setTimeout(settle, 4000); cur = undefined; update(); }   // 누른 순간 강조
     });
     const update = () => {
       t = 0;
       let c = null;
       for (const h of list) { if (h.getBoundingClientRect().top <= innerHeight * 0.3) c = h; else break; }   // 화면 위 30% 선을 지난 마지막 제목
       if (list.length && innerHeight + scrollY >= document.documentElement.scrollHeight - 2) c = list[list.length - 1];   // 맨 아래까지 내리면 마지막 제목(짧은 마지막 절은 30% 선에 닿지 못함)
-      if (pin) { if (atTop(pin.el)) { pin.arrived = true; c = pin.el; } else if (pin.arrived || performance.now() > pin.until) pin = null; }
+      if (pin) { if (!pin.settled || Math.abs(scrollY - pin.y) <= 4) c = pin.el; else pin = null; }   // 이동 중·멈춘 자리 = 고른 제목, 손으로 벗어나면 놓음
       if (c === cur && cur !== undefined) return;
       cur = c;
       links.forEach((a) => { a.classList.remove('active'); a.removeAttribute('aria-current'); });
-      if (!c) { nowTitle.textContent = PF.t('doc.start'); nowBody.innerHTML = `<p class="now-none">${T('doc.now-none')}</p>`; return; }
+      if (!c) return;
       const a = links.get(c.id);
       if (a) {
         a.classList.add('active'); a.setAttribute('aria-current', 'location');
         if (tocBox && tocBox.scrollHeight > tocBox.clientHeight) {
           const top = a.offsetTop, bottom = top + a.offsetHeight;
-          if (top < tocBox.scrollTop + 40 || bottom > tocBox.scrollTop + tocBox.clientHeight - 40) tocBox.scrollTop = Math.max(0, top - tocBox.clientHeight / 3);
+          // 직접 수정: 목록이 지금 절로 순간 이동하지 않고 부드럽게 따라감(움직임 줄이기 설정이면 바로)
+          const tail = +document.documentElement.dataset.sideTail || 0;   // 직접 수정: 맨 아래 띠가 덮는 아래 높이는 피함(common.js fitSides)
+          if (top < tocBox.scrollTop + 40 || bottom > tocBox.scrollTop + tocBox.clientHeight - 40 - tail) tocBox.scrollTo({ top: Math.max(0, top - tocBox.clientHeight / 3), behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
         }
       }
-      nowTitle.textContent = htext(c);
-      const h2 = parentH2(c);
-      nowBody.innerHTML = h2 && h2 !== c ? `<p class="now-parent">${esc(htext(h2))}</p>` : '';
     };
-    addEventListener('scroll', () => { if (!t) t = setTimeout(update, 60); }, { passive: true });   // rAF 대신 setTimeout(가려진 창에서도 동작)
+    addEventListener('scroll', () => { if (pin && !pin.settled) armSettle(); if (!t) t = setTimeout(update, 60); }, { passive: true });   // rAF 대신 setTimeout(가려진 창에서도 동작)
     addEventListener('resize', () => { cur = undefined; update(); });
     update();
   }
@@ -648,6 +690,7 @@ try { window.mermaid?.initialize({ startOnLoad: false }); } catch (_) { /* */ }
     }
     // 같은 문서 안 이동(목차·앵커): 브라우저가 옮긴 뒤 도착 강조 + 붙잡기
     addEventListener('hashchange', () => { const el = document.getElementById(hashText()); if (el && el.matches('h1,h2,h3,h4,h5,h6')) { flash(el); hold(el); } });
+    addEventListener('pf-anchor', (e) => { const el = e.detail?.el; if (el && el.matches('h1,h2,h3,h4,h5,h6')) { flash(el); hold(el); } });   // 직접 추가: 주소를 바꾸지 않는 이동(page-anchor.js)도 같은 도착 강조
   }
 
   // 도착한 제목 붙잡기 — md 그림에는 크기 정보가 없어서, 제목에 도착한 뒤 위쪽 그림이 늦게 들어오면 제목이 화면 아래로 밀립니다
@@ -688,7 +731,7 @@ try { window.mermaid?.initialize({ startOnLoad: false }); } catch (_) { /* */ }
   // 준비 신호(점검 하네스용): 문서·Mermaid·코드 처리와 글꼴이 끝난 뒤
   function done() {
     (document.fonts ? document.fonts.ready : Promise.resolve()).then(() => {
-      html.dataset.docReady = '1'; resolveReady(report());
+      html.dataset.docReady = '1'; performance.mark?.('pf-doc-ready'); resolveReady(report());
       if (new URLSearchParams(location.search).get('pf-audit') === '1') writeAudit();
     });
   }

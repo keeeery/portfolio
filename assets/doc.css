@@ -24,15 +24,16 @@
   --sans: 'Pretendard', 'Noto Sans KR', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   --mono: 'JetBrains Mono', 'D2Coding', Consolas, monospace;
   --r: var(--t-radius, 20px); --radius: calc(var(--r) * .7); --pill: var(--t-pill, 999px);
-  /* 공통 틀: 목차 260 · 간격 40 · 본문 칸 · 간격 40 · 레일 300(≥1440px), 바깥 패딩 clamp(16px, 2.5vw, 48px) */
-  --toc-w: 260px; --rail-w: 300px; --gap: 40px; --pad: clamp(16px, 2.5vw, 48px);
+  /* 공통 틀: 목차 270(직접 수정: 260 → 270, 돌아가기 줄(13px)의 지금 프로젝트 이름이 모두 한 줄에 — 가장 긴 Folk Sack 269px) · 간격 40 · 본문 칸 · 간격 40 · 레일 300(≥1440px), 바깥 패딩 clamp(16px, 2.5vw, 48px) */
+  --toc-w: 270px; --rail-w: 300px; --gap: 40px; --pad: clamp(16px, 2.5vw, 48px);
   /* ① 가운데: 최대 폭 1840, 글줄 40rem(rem인 이유: em이면 h2에서 요소마다 다르게 풀림), 도식·그림 최대 1200 */
   --measure: 45rem; --page-max: 1840px; --fig-max: 1200px;   /* 직접 수정: 글줄 40rem → 45rem(720px), 모든 블록을 이 칸에 맞춤 */
   color-scheme: var(--t-scheme, dark);
 }
 
 * { margin: 0; padding: 0; box-sizing: border-box; }
-html { scroll-behavior: smooth; }   /* 제목 도착 위치는 제목의 scroll-margin-top(머리 줄 아래 24px) 하나로 정함 */
+html { scroll-behavior: smooth; }   /* 제목 도착 위치는 제목의 scroll-margin-top(화면 위 24px) 하나로 정함 */
+@media screen { html { scrollbar-color: color-mix(in srgb, var(--ink) 25%, transparent) transparent; } }   /* 직접 수정: 페이지 스크롤 막대 — 바탕(홈)은 투명, 막대는 목차 막대와 같은 연한 색으로 늘 보임 · 굵기는 브라우저 기본 그대로 */
 body { font-family: var(--sans); background: var(--paper); color: var(--ink); line-height: 1.65;
        -webkit-font-smoothing: antialiased; word-break: keep-all; }
 a { color: inherit; }
@@ -79,7 +80,7 @@ code { font-family: var(--mono); font-size: .88em; background: var(--accent-soft
 .doc-head.crumb-off :is(.crumb, .pf-mode) { opacity: 0; visibility: hidden; transition: opacity .18s, visibility 0s .18s; }   /* 좁은 화면(<1280px, 목차 없음)에서 본문 글이 머리 줄에 닿으면 [← 돌아가기 › 제목]과 화면 모드 단추를 함께 숨김(PF.topCap). 목차가 보이면 늘 보임 */
 .doc-head-in { max-width: var(--page-max); margin: 0 auto; padding: 0 var(--pad); min-height: 56px;   /* 높이는 포트폴리오 페이지 머리 막대와 같은 56px(아래 선 1px은 따로) */
                display: flex; flex-wrap: wrap; align-items: center; gap: 8px 18px; }
-.crumb { display: flex; align-items: center; gap: 10px; font-size: 14px; font-weight: 600; color: var(--muted); min-width: 0; }
+.crumb { display: flex; align-items: center; gap: 10px; font-size: 13px; font-weight: 600; color: var(--muted); min-width: 0; }
 .crumb a { text-decoration: none; color: var(--muted); white-space: nowrap; }
 .crumb a:hover { color: var(--accent-ink); }
 .crumb b { color: var(--ink); font-weight: 800; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -88,6 +89,8 @@ code { font-family: var(--mono); font-size: .88em; background: var(--accent-soft
 .doc-head .pf-mode:hover { background: linear-gradient(var(--accent-soft), var(--accent-soft)) var(--paper); }   /* 마우스를 올려도 불투명 바탕 위에 옅은 강조색 */
 
 @media print { .doc-head .pf-mode { display: none; } }
+/* 직접 수정: 목차가 보이는 폭(≥1280px)에서는 [← 돌아가기 › 제목] 줄을 목차 칸 폭 안에 한 줄로 — 넘치는 제목은 끝을 …으로 자름(목차 폭은 지금 프로젝트 이름이 모두 들어가게 --toc-w) */
+@media screen and (min-width: 1280px) { .crumb { max-width: var(--toc-w); } }
 
 /* ── 공통 틀 ─────────────────────────────── */
 .doc-page { max-width: var(--page-max); margin: 0 auto; padding-inline: var(--pad);
@@ -101,18 +104,88 @@ code { font-family: var(--mono); font-size: .88em; background: var(--accent-soft
 .toc, .rail { position: sticky; top: calc(var(--head-h, 56px) + var(--side-gap)); max-height: min(calc(100vh - var(--head-h, 56px) - var(--side-gap) - 24px), var(--side-room, 100vh));   /* --side-room = 페이지 끝에서 틀 아래 끝까지 남은 높이(doc.js fitSides) — 칸이 위로 밀려 머리 줄과 겹치지 않고 줄어듦 · 붙는 자리 = 처음 자리(머리 줄 아래 --side-gap) — 스크롤을 시작해도 올라가지 않고 그대로 */ overflow-y: auto; margin-top: var(--side-gap); overscroll-behavior: contain; }
 
 /* 목차 */
-.toc { font-size: 13.5px; padding: 0 6px 24px 0; scrollbar-width: thin; }
+.toc { font-size: 13.5px; }
+/* 직접 수정: 목차 칸은 [제목 '목차'(늘 보임) + 목록(#toc-links, 안에서 스크롤)] 두 층 — 스크롤 막대는 '목차' 글자 아래부터 목록 옆에만.
+   칸 높이 제한(위 .toc, .rail의 max-height)은 그대로, 칸 자체는 스크롤하지 않음. 스크립트(doc.js trackSection · common.js fitSides·tocEdges)도 #toc-links를 스크롤 */
+.toc { display: flex; flex-direction: column; overflow: clip; height: calc(100vh - var(--head-h, 56px) - var(--side-gap) - var(--toc-end) - 24px); max-height: none; margin-bottom: calc(var(--toc-end) + 24px); }   /* .toc로(#toc 아님) — 아래 좁은 화면(<1280px)의 .toc { display: none }이 이기게 */
+/* 직접 수정: 페이지 끝 띠와 함께 움직이는 목차 — 스크립트 없이 브라우저가 스크롤과 같은 프레임에 처리.
+   ① 목차 칸: 화면에 맞춘 고정 높이 + 아래 margin(목록 끝 ~ 화면 아래 끝 48px)이라, 띠가 화면에 들어오는 순간부터 sticky가 틀 끝(띠 위 끝)에 밀려 올라감.
+      목록(글자·스크롤 막대)은 칸과 한 덩어리로 본문과 함께 오르내리고, 넘친 곳은 잘라냄(overflow: clip — hidden과 달리 스크롤 칸이 아니라 안쪽 sticky가 페이지 기준 그대로)
+   ② 「목차」 제목: 칸 안에서 다시 sticky로 머리 줄 아래 제자리 — 바탕색으로 칠해 올라오는 목록 위쪽 항목이 그 밑으로 들어감(제목 위 빈 곳도 바탕색으로 덮음) */
+#toc .toc-title { flex: none; margin-bottom: 0; padding-bottom: 10px; line-height: 20px; position: sticky; top: calc(var(--head-h, 56px) + var(--side-gap)); z-index: 3; background: var(--paper); }
+#toc .toc-title::before { content: ''; position: absolute; left: 0; right: 0; bottom: 100%; height: 160px; background: var(--paper); pointer-events: none; }   /* 제목 위로 올라간 목록 가림(칸 밖은 칸이 잘라 평소엔 안 보임) */   /* 높이 20 + 10 = 30px — 목록 칸은 그 아래부터(위 ˄ 화살표가 「목차」 글자에서 너무 멀지 않게 16 → 10) */
+#toc-links { flex: 1 1 auto; min-height: 0; overflow-y: auto; overscroll-behavior: contain; padding: 0 16px 0 0; scrollbar-width: none; }   /* 직접 수정: 오른쪽 16px = 예전 여백 6 + 막대 자리 10(막대는 아래 .toc-bar가 따로 그림) · 아래 여백은 목록 안이 아니라 목차 칸 밖(.toc의 아래 margin) · 위 여백(padding-top)은 페이지 끝에서 common.js tocBar가 넣음 */
+#toc-links::-webkit-scrollbar { display: none; }
+/* 직접 수정: 옆 목차의 스크롤 막대는 목록에 붙은 기본 막대 대신 따로 그림(.toc-bar — common.js tocBar). 「목차」 제목 안에 넣어 제목과 함께 제자리(제목 아래부터 목록 칸 높이만큼),
+   페이지 끝 띠에 목차 칸이 밀려 올라가면 칸이 막대 아래쪽을 잘라 막대 영역이 좁아짐 — 위 끝은 제자리, 아래 끝은 목록 끝선과 함께(스크롤과 같은 프레임).
+   모양은 예전 막대와 같음: 자리 10px, 손잡이 4px, 평소 숨김 — 목차에 마우스를 올리면 보임. 끌기·홈 누르기·휠은 목록을 스크롤 */
+.toc-bar { display: none; }
+@media screen and (min-width: 1280px) {
+  #toc .toc-bar.on { display: block; position: absolute; top: 100%; right: 0; width: 10px;
+                     height: calc(100vh - var(--head-h, 56px) - var(--side-gap) - var(--toc-end) - 24px - 30px); }
+}
+.toc-bar-thumb { position: absolute; top: 0; left: 3px; width: 4px; min-height: 26px; border-radius: 999px; background-color: transparent; transition: background-color .2s; cursor: default; }
+#toc:is(:hover, :focus-within) .toc-bar-thumb, .toc-bar.drag .toc-bar-thumb { background-color: color-mix(in srgb, var(--ink) 35%, transparent); }
+:root { --toc-end: 24px; }
+/* 직접 수정: 목차 목록 공용(옆 목차 #toc-links · 좁은 화면 목차 창 .toc-links — 스크립트가 .fade-list를 붙임, common.js tocEdges)
+   스크롤 막대는 평소 숨기고 마우스를 올렸을 때만(자리는 늘 잡아 둬 글이 흔들리지 않게) — 잘린 쪽은 끝 흐림 + 화살표로 알림 */
+.fade-list { scrollbar-width: thin; scrollbar-gutter: stable; scrollbar-color: transparent transparent; }
+.fade-list:hover, .fade-list:focus-within { scrollbar-color: color-mix(in srgb, var(--ink) 25%, transparent) transparent; }
+/* Chrome·Safari는 칸 안 막대를 11px 기본 막대로 그려 굵어 보임 → 막대 모양을 직접 그려 가늘게(손잡이 4px, 자리 10px).
+   표준 속성(scrollbar-width·color)이 걸려 있으면 이 모양이 무시되므로 이 브라우저들에서만 auto로 풀어 둠(:hover까지 — 위 :hover 색 지정이 더 강함). Firefox는 위 표준 속성 그대로 */
+@supports selector(::-webkit-scrollbar) {
+  .fade-list, .fade-list:hover, .fade-list:focus-within { scrollbar-width: auto; scrollbar-color: auto; }
+  .fade-list::-webkit-scrollbar { width: 10px; background: transparent; }
+  .fade-list::-webkit-scrollbar-track { background: transparent; }
+  .fade-list::-webkit-scrollbar-thumb { background: transparent; border: 3px solid transparent; border-radius: 999px; background-clip: padding-box; }
+  .fade-list:hover::-webkit-scrollbar-thumb, .fade-list:focus-within::-webkit-scrollbar-thumb { background-color: color-mix(in srgb, var(--ink) 35%, transparent); }
+}
 .toc-title { font-size: 13px; font-weight: 800; color: var(--ink); margin-bottom: 16px; }
+/* 직접 수정: 목차 끝 흐림 — 목록이 잘렸으면 남은 쪽 끝을 흐리고 작은 화살표(common.js tocEdges — 목록을 감싼 칸 .fade-host에 .ft 위 · .fb 아래).
+   흐림은 목록 칸 자체를 가림(mask)으로 — 글자가 칸 끝으로 갈수록 투명해져 칸 끝에서 뚝 잘린 선이 보이지 않음.
+   가림은 두 겹: 글 자리(오른쪽 10px 뺀 곳)는 위아래 흐림, 스크롤 막대 자리(오른쪽 10px)는 그대로 보임 */
+@property --ft { syntax: '<length>'; inherits: false; initial-value: 0px; }
+@property --fb { syntax: '<length>'; inherits: false; initial-value: 0px; }
+.fade-list { --ft: 0px; --fb: 0px; transition: scrollbar-color .2s, --ft .2s, --fb .2s;
+  -webkit-mask-image: linear-gradient(to bottom, transparent, #000 var(--ft), #000 calc(100% - var(--fb)), transparent), linear-gradient(#000, #000);
+          mask-image: linear-gradient(to bottom, transparent, #000 var(--ft), #000 calc(100% - var(--fb)), transparent), linear-gradient(#000, #000);
+  -webkit-mask-size: calc(100% - 10px) 100%, 10px 100%; mask-size: calc(100% - 10px) 100%, 10px 100%;
+  -webkit-mask-position: left top, right top; mask-position: left top, right top;
+  -webkit-mask-repeat: no-repeat; mask-repeat: no-repeat; }
+.fade-host.ft .fade-list { --ft: 56px; }   /* 위·아래 같은 길이 */
+.fade-host.fb .fade-list { --fb: 56px; }
+.fade-list.fade-host.ft { --ft: 56px; } .fade-list.fade-host.fb { --fb: 56px; }   /* 칸 자체가 스크롤하는 오른쪽 카드 칸(.rail) */
+/* 오른쪽 카드 칸: 스크롤 막대는 아예 없음(자리도 안 잡음) — 휠·터치로는 스크롤되고, 잘린 쪽은 끝 흐림으로만 알림. 막대 자리가 없으니 흐림은 칸 폭 전체에 */
+.rail.fade-list, .rail.fade-list:hover, .rail.fade-list:focus-within { scrollbar-width: none; scrollbar-gutter: auto; }
+.rail.fade-list::-webkit-scrollbar { display: none; }
+.rail.fade-list { -webkit-mask-size: 100% 100%, 0 0; mask-size: 100% 100%, 0 0; }
+/* 화살표: 감싼 칸에 겹쳐 놓은 빈 띠(.toc-edge)에 그림 — 위 ˄·아래 ˅ 모두 목록 칸 끝에서 6px 안쪽, 흐려지는 끝 위.
+   위 띠 자리 = 목록 칸 위 끝(--edge-t: 옆 목차는 「목차」 제목 30px 아래, 목차 창은 감싼 칸 맨 위 0) */
+.toc-edge { position: absolute; left: 0; right: 10px; z-index: 2; height: 24px; pointer-events: none; opacity: 0; transition: opacity .2s; }
+.toc-edge-t { top: var(--edge-t, 0px); }
+.toc-edge-b { bottom: 0; }
+#toc { --edge-t: 30px; }
+/* 직접 수정: 옆 목차의 위 흐림·˄ 화살표는 「목차」 제목 바로 아래에 붙은 바탕색 그라데이션으로(common.js fitSides가 위 띠를 제목 안으로 옮김) —
+   목록이 띠와 함께 올라가 위쪽 항목이 제목 밑으로 들어갈 때도 그 경계가 흐려 보이게(목록 가림 mask는 목록과 함께 제목 밑으로 들어가 버림). 아래 흐림은 목록 가림 그대로(목록 끝 = 칸 끝).
+   바탕이 단색(--paper)이라 겉보기는 가림과 같음 */
+#toc.ft #toc-links { --ft: 0px; }
+#toc .toc-title > .toc-edge-t { top: 100%; }
+#toc .toc-title > .toc-edge-t::before { content: ''; position: absolute; left: 0; right: 0; top: 0; height: 56px; background: linear-gradient(to top, transparent, var(--paper)); }
+.fade-host.ft .toc-edge-t, .fade-host.fb .toc-edge-b { opacity: 1; }
+.toc-edge::after { content: ''; position: absolute; left: 50%; width: 6px; height: 6px; border: solid var(--ink); border-width: 0 1.5px 1.5px 0; opacity: .7; }
+.toc-edge-t::after { top: 6px; transform: translateX(-50%) rotate(-135deg); }
+.toc-edge-b::after { bottom: 6px; transform: translateX(-50%) rotate(45deg); }
+.toc-scroll { position: relative; flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; }   /* 목차 창: 목록(.toc-links)을 감싼 칸 — 화살표 띠의 기준 */
 /* 직접 수정: 장(h2)마다 묶음 — 묶음 왼쪽 세로줄 · 묶음 사이 간격 · 장 제목은 굵게, 절은 들여 씀 · 지금 읽는 곳은 진한 막대 + 회색 바탕 */
 .toc-links { position: relative; }
 .toc-group { border-left: 2px solid var(--line); }
-.toc-group + .toc-group { margin-top: 18px; }
-.toc-links a { display: block; text-decoration: none; color: var(--muted); padding: 5px 12px 5px 16px; line-height: 1.5;
-               margin-left: -2px; border-left: 2px solid transparent; }   /* 선택 막대 = 묶음 세로줄과 같은 2px, 그 자리에 정확히 겹침 */
-.toc-links a.h2 { color: var(--ink); font-weight: 700; font-size: 13.5px; padding-top: 6px; padding-bottom: 8px; }
+.toc-group + .toc-group { margin-top: 15px; }   /* 직접 수정: 세로 간격을 비율 그대로 약 0.85배로(장 묶음 사이 18 → 15, 항목 위아래 5 → 4.25, 장 제목 6·8 → 5·7, 목차 창 항목 8 → 7) */
+.toc-links a { display: block; text-decoration: none; color: var(--muted); padding: 4.25px 12px 4.25px 16px; line-height: 1.5;
+               margin-left: -2px; border-left: 2px solid transparent; transition: color .25s ease, background-color .25s ease, border-left-color .25s ease; }   /* 선택 막대 = 묶음 세로줄과 같은 2px, 그 자리에 정확히 겹침 · 직접 수정: 지금 읽는 절이 바뀔 때 글자색·바탕·막대가 .25초에 걸쳐 옮겨 감(뚝 바뀌지 않게) */
+.toc-links a.h2 { color: color-mix(in srgb, var(--ink) 55%, var(--muted)); font-weight: 700; font-size: 13.5px; padding-top: 6px; padding-bottom: 6px; margin-bottom: 1px; }   /* 직접 수정: 위아래 여백을 6·6으로 같게(예전 5·7은 선택 바탕 안에서 글자가 위로 치우쳐 보였음) — 아래 절과의 간격은 margin 1px로 그대로 · 장 제목 기본색 = 절 제목(--muted)보다 밝은 회색 — 마우스를 올리면 아래 :hover로 글자색(--ink)이 되어 피드백이 보임 */
 .toc-links a.h3 { padding-left: 30px; font-size: 13px; }
 .toc-links a:hover { color: var(--ink); }
-.toc-links a.active { color: var(--accent-ink); font-weight: 700; border-left-color: var(--accent-ink); background: var(--accent-soft); }
+.toc-links a.active { color: var(--accent-ink); border-left-color: var(--accent-ink); background: var(--accent-soft); }   /* 직접 수정: 선택돼도 굵기는 그대로(절이 굵어지며 글자 폭이 바뀌어 줄바꿈이 흔들리지 않게) — 색·막대·바탕만 바뀜 */
 
 /* 레일 (≥1440px) */
 .rail { display: grid; gap: 14px; align-content: start; padding: 0 var(--rail-bleed) 32px; scrollbar-width: thin; }   /* 좌우·아래 여백(--rail-bleed) = 카드 그림자 자리 — 스크롤 칸(overflow)이 그림자를 네모로 잘라 먹지 않게. 그만큼 칸을 넓히고 바깥으로 당겨 카드 자리는 그대로 */
@@ -162,7 +235,7 @@ code { font-family: var(--mono); font-size: .88em; background: var(--accent-soft
 .md > h2:first-of-type { margin-top: 12px; }
 .md h3 { font-size: 19px; font-weight: 800; margin: 36px 0 10px; }
 .md h4 { font-size: 16px; font-weight: 800; margin: 24px 0 8px; }
-.md :is(h1, h2, h3, h4, h5, h6) { scroll-margin-top: calc(var(--head-h, 56px) + 24px); }
+.md :is(h1, h2, h3, h4, h5, h6) { scroll-margin-top: 24px; }   /* 직접 고친 부분: 제목 도착 자리 = 화면 위 24px. 투명한 머리 줄의 글자는 본문 칸 밖(넓은 화면: 목차 칸 위·오른쪽 끝)이거나 숨으므로(좁은 화면 .crumb-off) 머리 줄 높이만큼 비켜 서지 않음 — 빈 띠 없음 */
 .md p, .md li { font-size: 16px; color: var(--body); }
 .md p { margin: 12px 0; }
 .md ul, .md ol { margin: 12px 0; padding-left: 24px; }
@@ -196,8 +269,15 @@ code { font-family: var(--mono); font-size: .88em; background: var(--accent-soft
 .table-wrap { margin: 18px 0; overflow-x: auto; }
 .md table { display: table; border-collapse: collapse; font-size: 14.5px; }
 .md :is(th, td) { overflow-wrap: anywhere; }   /* 긴 영문·코드 이름도 칸 안에서 줄바꿈 — 표가 칸보다 넓어져 가로 스크롤이 생기지 않게 */
+@media screen {   /* 직접 고친 부분: 칸 안 코드 이름은 doc.js가 넣은 <wbr>(낱말 경계)에서만 줄바꿈 — 'TimeFreezeHolo|gram'처럼 글자 중간에서 자르지 않음. 인쇄·인쇄 재기(print-probe)는 그대로 */
+  .md:not(.print-probe) :is(th, td) code { word-break: normal; overflow-wrap: normal; }
+}
 .md th { text-align: left; background: var(--th); color: var(--ink); font-weight: 700; padding: 10px 14px; border: 1px solid var(--line); }
 .md td { padding: 10px 14px; border: 1px solid var(--line); vertical-align: top; color: var(--body); }
+/* 직접 추가: 고민과 선택 표의 채택한 줄(md-blocks.js markAdopted) — 강조색 바탕·굵은 첫 칸·「채택」 배지 */
+.md tr.pf-adopt > td { background: var(--accent-soft); print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+.md tr.pf-adopt > td:first-child { font-weight: 700; color: var(--ink); }
+.pf-adopt-badge { display: inline-block; padding: 2px 7px 0; border-radius: 999px; font-size: .75em; font-weight: 700; line-height: 1.5; color: #fff; background: var(--accent-fill); vertical-align: .08em; white-space: nowrap; print-color-adjust: exact; -webkit-print-color-adjust: exact; }
 .md td img { display: block; margin: 0; border-radius: 8px; border: 1px solid var(--line); cursor: zoom-in; height: auto; }
 /* 한 줄에 그림만 여러 장 → 같은 폭으로 나란히(doc.js의 .pf-figure-row) — 직접 고친 부분 */
 .md > p.pf-figure-row { display: flex; gap: 12px; align-items: flex-start; width: 100%; }
@@ -270,7 +350,8 @@ dialog.toc-dialog::backdrop { background: rgba(0, 0, 0, .7); }
 @media (pointer: coarse) { html:has(dialog.toc-dialog[open]), html:has(dialog.toc-dialog[open]) body { overflow: hidden; } dialog.toc-dialog { overscroll-behavior: contain; } }
 .toc-panel { position: absolute; right: 16px; bottom: calc(var(--fab-b) + 58px); width: min(calc(100% - 32px), 440px);
              max-height: calc(100% - var(--fab-b) - 58px - 16px - env(safe-area-inset-top, 0px)); display: flex; flex-direction: column; overflow: hidden;
-             border: 1px solid var(--line); border-radius: var(--r); padding: 16px 16px 20px; background: var(--surface); box-shadow: 0 20px 60px -20px var(--shadow);
+             border: 1px solid var(--line); border-radius: var(--r); padding: 20px 16px 20px; background: var(--surface);   /* 직접 수정: 위 16 → 20 — 「목차」가 위 모서리에 붙어 좌상단으로 쏠려 보이지 않게(좌우·아래는 그대로) */
+             box-shadow: 0 20px 60px -20px var(--shadow);
              transform-origin: calc(100% - 24px) 100%; }
 dialog.toc-dialog[open] .toc-panel { animation: toc-in .16s ease-out both; }
 @keyframes toc-in { from { opacity: 0; transform: translateY(8px) scale(.96); } }
@@ -284,8 +365,8 @@ dialog.toc-dialog[open] .toc-panel { animation: toc-in .16s ease-out both; }
 .toc-dialog-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
 /* 목차 서랍: 서랍 자체는 넘치지 않고(머리는 고정) 목차 목록만 안쪽에서 스크롤 — 스크롤 막대가 둥근 모서리 밖이 아니라 서랍 안쪽 여백 안에 */
 dialog.toc-dialog[open] { display: block; }
-.toc-dialog .toc-links { flex: 1 1 auto; min-height: 0; overflow-y: auto; overscroll-behavior: contain; scrollbar-width: thin; padding-right: 4px; }
-.toc-dialog .toc-links a { padding: 8px 10px; font-size: 15px; }
+.toc-dialog .toc-links { flex: 1 1 auto; min-height: 0; overflow-y: auto; overscroll-behavior: contain; padding-right: 4px; }   /* 막대 굵기·색·끝 흐림은 .fade-list(위 '목차 목록 공용') */
+.toc-dialog .toc-links a { padding: 7px 10px; font-size: 15px; }   /* 직접 수정: 세로 간격을 비율 그대로 약 0.85배로(항목 위아래 8 → 7, 장 묶음 사이는 옆 목차와 같은 15) */
 .toc-dialog .toc-links a.h3 { padding-left: 24px; font-size: 14px; }
 
 /* 라이트박스 (같은 페이지 dialog) */
@@ -299,6 +380,33 @@ dialog.lightbox::backdrop { background: rgba(10, 11, 14, .82); }
 
 .doc-foot { margin-top: 120px; display: grid; gap: 4px; color: var(--faint); font-size: 12px; line-height: 1.6; }   /* 본문 맨 아래 세 줄(© 이름 · 브라우저 안내 · 마지막 업데이트) — 바·선 없이, 포트폴리오 페이지 맨 아래와 같은 글 */
 .doc-foot p { margin: 0; }
+/* 직접 수정: 문서 끝(common.js docEnd) — ① 본문 맨 끝 「다른 프로젝트 상세 문서」 제목 + 글자 링크 나열(.doc-pager, 본문 글줄 폭, 위 선) ② 페이지 폭 전체의 얇은 하단 띠(.doc-end, 한 줄) */
+.doc-pager { max-width: min(var(--measure), 100%); margin: 72px auto 0; padding-top: 24px; border-top: 1px solid var(--line); display: grid; gap: 10px; }
+.pager-label { margin: 0; font-size: 12px; font-weight: 600; color: var(--muted); }
+.pager-all { display: flex; flex-wrap: wrap; gap: 8px 28px; }
+.pager-link { color: var(--ink); font-size: 16px; font-weight: 700; text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 4px;   /* 누르는 범위 = 글자 폭 */
+              text-decoration-color: color-mix(in srgb, var(--ink) 30%, transparent); transition: color .15s, text-decoration-color .15s; }
+.pager-link:hover { color: var(--accent-ink); text-decoration-color: currentColor; }
+/* ② 하단 띠: 옅은 바탕 + 위 선, 얇은 한 줄 — 왼쪽 「© 이름 · 브라우저 안내」, 오른쪽 「마지막 업데이트」. 문서 끝까지 내리면 아래에서 살짝 올라오며 나타남(.in) */
+.doc-end { position: relative; z-index: 5; margin-top: 0; border-top: 1px solid var(--line); background: color-mix(in srgb, var(--ink) 3%, var(--paper)); }
+/* 직접 수정: 띠가 올라오는 만큼 목차의 보이는 목록 끝이 함께 올라감(「목차」 제목·글자는 제자리 — 위 '목차는 두 층'). 오른쪽 카드 칸은 높이만 줄임(common.js fitSides --side-room).
+   띠 위 여백 가리개(::before, 바탕색 --end-gap)는 본문 쪽 여백 */
+:root { --end-gap: 20px; }
+@media screen { .doc-end::before { content: ''; position: absolute; left: 0; right: 0; bottom: calc(100% + 1px); height: var(--end-gap); background: var(--paper); pointer-events: none; }   /* +1px = 띠 위 선 바깥에서 */
+                .doc-page:has(+ .doc-end) .doc-main { padding-bottom: calc(44px + var(--end-gap)); }   /* 본문 끝 ~ 띠 = 64px */
+                /* 직접 수정: 틀(.doc-page) 아래 끝 = 띠 위 끝. sticky 칸은 이 틀 끝에서 밀림 — 목차 바깥 칸은 그래서 띠와 함께 올라가고(위 '목차는 두 층'),
+                   오른쪽 카드 칸은 높이를 띠 위 24px까지로 줄여(common.js fitSides --side-room) 밀리지 않음 */ }
+/* 직접 수정: 띠 안 좌우 끝 — 왼쪽 = 목차 왼쪽 끝, 오른쪽 = 카드 칸 오른쪽 끝(목차가 숨는 폭에서는 본문 글줄 양 끝). common.js docEnd가 재서 --end-l·--end-r로 */
+.doc-end-in { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 6px 32px;
+              padding: 28px var(--end-r, 32px) 32px var(--end-l, 32px);
+              opacity: 0; transform: translateY(8px); transition: opacity .4s ease, transform .4s cubic-bezier(.2,.7,.2,1); }
+@media screen and (max-width: 767.98px) { .doc-end-in { padding-bottom: 6rem; } }   /* 좁은 화면: 아래 동그란 단추 자리 */
+.doc-end.in .doc-end-in { opacity: 1; transform: none; }
+@media (prefers-reduced-motion: reduce) { .toc-links a { transition: none; } }
+@media (prefers-reduced-motion: reduce) { .doc-end-in { opacity: 1; transform: none; transition: none; } }
+.doc-end-lines { display: flex; flex-wrap: wrap; gap: 4px 20px; font-size: 12px; line-height: 16px; color: var(--muted); }
+.doc-end-lines p, .doc-end-date { margin: 0; }
+.doc-end-date { font-size: 12px; line-height: 16px; color: var(--muted); }
 
 /* ── ① 가운데 정렬 폭 규칙 (직접 수정: 한 칸 정렬) — 글줄 45rem(720px)을 본문 칸 가운데에, 코드·표·도식·그림도 같은 칸 안에.
    코드·표는 칸 폭을 꽉 채우고(넘치면 상자 안 가로 스크롤), 도식·그림은 칸 폭까지 줄어 가운데(클릭하면 크게) ── */
@@ -355,7 +463,7 @@ dialog.lightbox::backdrop { background: rgba(10, 11, 14, .82); }
   .doc-intro .eyebrow { background: none; -webkit-text-fill-color: currentColor; }
   html { scroll-behavior: auto; }
   body { background: #fff; }
-  .toc, .rail, .doc-head, .pf-newtab-icon, .pf-newtab-sr, dialog, .skip-link, .doc-fab, .glance, .mmd-bar, .doc-foot { display: none !important; }
+  .toc, .rail, .doc-head, .pf-newtab-icon, .pf-newtab-sr, dialog, .skip-link, .doc-fab, .glance, .mmd-bar, .doc-foot, .doc-end, .doc-pager { display: none !important; }
   .print-only { display: block; }
   sup.print-only { display: inline; font-size: 7pt; color: #555; margin-left: 1px; }
   .print-urls { font-size: 8.5pt; color: #555; border-bottom: 1px solid #ccc; padding-bottom: 6px; margin-bottom: 10px; }

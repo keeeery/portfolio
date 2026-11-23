@@ -389,7 +389,7 @@
     return result;
   }
 
-  /** 저장 뒤 새로고침이면 편집 모드를 다시 켭니다(장면은 주소 #s=…로 돌아옴). */
+  /** 저장 뒤 새로고침이면 편집 모드를 다시 켭니다(장면은 deck-kit.js가 기억한 보던 장면으로 돌아옴). */
   function restoreAfterSave(session) {
     const shouldRestore = sessionStorage.getItem(RESTORE_KEY) === '1';
     sessionStorage.removeItem(RESTORE_KEY);

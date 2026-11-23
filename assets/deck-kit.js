@@ -65,6 +65,14 @@
   let deck = null, scenes = [], cur = 0, hud = null, opts = {}, scope = 'all', K = 1, io = null, mountedOnce = false, ov = null, ovBuilt = false, hint = null, hintClosed = false;
   // 보기 선택 기억: 같은 <id>.github.io 출처를 여러 레포가 나눠 쓰므로 키에 레포 경로를 넣음(portfolio-structure §3-4 조건 6)
   const VIEW_KEY = `pf-view:${location.pathname.replace(/[^/]*$/, '')}`;
+  // 직접 추가: 장면을 옮겨도 주소(#s=…)를 바꾸지 않고, 보던 장면을 sessionStorage에 기억 → 새로고침·뒤로로 다시 열면 그 장면(page-anchor.js와 같은 키)
+  window.__pfOwnPos = true;
+  const POS_KEY = `pf-pos:${location.pathname.replace(/\/index\.html$/, '/')}?p=${Q.get('p') || ''}`;
+  const savedScene = () => {
+    const nav = performance.getEntriesByType?.('navigation')[0]?.type;
+    if (nav !== 'reload' && nav !== 'back_forward') return null;
+    try { const v = JSON.parse(sessionStorage.getItem(POS_KEY) || 'null'); return v?.scene ? hashTarget(v.scene) : null; } catch { return null; }
+  };
   const storedView = (() => { try { return localStorage.getItem(VIEW_KEY); } catch { return null; } })();
   let view = Q.get('view') === 'scroll' ? 'scroll' : Q.get('view') === 'deck' ? 'deck' : storedView === 'scroll' ? 'scroll' : 'deck';
   const WHEEL = Q.get('wheel') !== '0';                       // 휠·트랙패드 넘기기 기본 켬
@@ -164,11 +172,19 @@
     return null;
   }
   const hashOf = (i) => { const s = scenes[i]; return s && !isAutoId(s.id) ? `#s=${encodeURIComponent(s.id)}` : `#${i + 1}`; };
-  function setHash(i, push) {
-    const h = hashOf(i);
-    if (location.hash === h) return;
-    const url = `${location.pathname}${location.search}${h}`;
-    try { push ? history.pushState(null, '', url) : history.replaceState(history.state, '', url); } catch { /* file:// 등 */ }
+  function setHash(i, push) {                                 // 직접 고침: 주소는 그대로(들어올 때 붙어 온 #은 지움), 보던 장면은 기억 + 방문 기록(pfScene)에 적음
+    const s = scenes[i];                                      //   push(목차·개요에서 고름) = 같은 주소로 새 기록 → [뒤로]는 앞서 보던 장면. 넘기기(키·휠·버튼)는 지금 기록만 고침
+    if (!s) return;
+    const scene = s.id && !isAutoId(s.id) ? s.id : String(i + 1), url = location.pathname + location.search, st = history.state || {};
+    try { sessionStorage.setItem(POS_KEY, JSON.stringify({ scene })); } catch { /* 저장소 막힘 */ }
+    try {
+      if (push) history.pushState({ ...st, pfScene: scene, pfDepth: (st.pfDepth ?? 0) + 1 }, '', url);
+      else if (st.pfScene !== scene || location.hash) history.replaceState({ ...st, pfScene: scene }, '', url);
+    } catch { /* file://·횟수 제한 등 */ }
+  }
+  function onPop(e) {                                         // [뒤로]·[앞으로]: 그 기록의 장면으로
+    const j = e.state?.pfScene != null ? hashTarget(e.state.pfScene) : null;
+    if (j != null && j !== cur) go(j, { push: false });
   }
   function onHash() {                                         // 주소창에서 바꾸거나 뒤로·앞으로
     const j = hashTarget(location.hash);
@@ -345,7 +361,7 @@
     if (remember) { try { localStorage.setItem(VIEW_KEY, v); } catch { /* 저장소 없음 */ } }
     if (v === view) return;
     view = v; root.dataset.view = v; holdPick = false;
-    try { const u = new URL(location.href); u.searchParams.delete('view'); u.hash = hashOf(cur); history.replaceState(history.state, '', u.pathname + u.search + u.hash); } catch { /* */ }
+    try { const u = new URL(location.href); u.searchParams.delete('view'); u.hash = ''; history.replaceState(history.state, '', u.pathname + u.search + u.hash); } catch { /* */ }
     fit(); paint(); observe();
     if (v === 'scroll') scrollToScene(scenes[cur]); else scrollTo(0, 0);
     hudSync();
@@ -762,7 +778,7 @@
     collect();
     if (opts.hud && !hud) buildHud();
     if (!hint) buildHint();
-    const j = location.hash ? hashTarget(location.hash) : null;   // 처음 열 때 #s=…·#n(없거나 모르면 1장)
+    const j = location.hash ? hashTarget(location.hash) : savedScene();   // 처음 열 때 #s=…·#n, 없으면 새로고침·뒤로일 때 보던 장면(없거나 모르면 1장)
     cur = j ?? 0;
     fit(); paint(); observe();
     setHash(cur, false);
@@ -773,6 +789,7 @@
       document.addEventListener('fullscreenchange', onResize);
       addEventListener('keydown', onKey);
       addEventListener('hashchange', onHash);
+      addEventListener('popstate', onPop);
       document.addEventListener('pointerdown', onPointerDown, true);
       document.addEventListener('focusin', onFocus);
       document.addEventListener('click', onAnchor);

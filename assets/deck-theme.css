@@ -10,6 +10,7 @@
    테마 손잡이(--t-*)는 theme/theme.css(/portfolio-theme가 씀)에서 받습니다. 비어 있으면 아래 기본값 = 어두운 기본 테마
    장면 안 금지(§9-4): vw·vh, 뷰포트 @media, fixed·sticky, overflow:auto 상자, CSS background-image
    ════════════════════════════════════════════════════════════════════════════ */
+@media screen { html { scrollbar-color: color-mix(in srgb, var(--ink) 25%, transparent) transparent; } }   /* 직접 수정: 페이지 스크롤 막대(한 번에 보기 등) — 바탕(홈)은 투명, 막대는 연한 색으로 늘 보임 · 굵기는 브라우저 기본(상세 문서와 같음) */
 :root {
   --ink: var(--t-ink, #F4F4F6); --muted: var(--t-muted, #9A9AA6); --faint: var(--t-faint, color-mix(in srgb, var(--muted) 85%, var(--bg)));
   --line: var(--t-line, #26262E); --line-2: var(--t-line-2, #3D3D48); --bg: var(--t-bg, #0A0A0D); --card: var(--t-surface, #131318); --paper: var(--card);
@@ -260,6 +261,10 @@ table.md-table { border-collapse: collapse; width: 100%; font-size: 15px; line-h
 table.md-table th { background: var(--th); color: var(--ink); box-shadow: inset 0 -2px 0 var(--accent); font-weight: 700; text-align: left; padding: 7px 11px; font-size: 13px; vertical-align: bottom; }
 table.md-table td { padding: 7px 11px; border-bottom: 1px solid var(--line); vertical-align: top; color: var(--ink); overflow-wrap: anywhere; }
 table.md-table tbody tr:nth-child(even) td { background: var(--zebra); }
+/* 직접 추가: 고민과 선택 표의 채택한 줄(md-blocks.js markAdopted) — 상세 문서와 같은 표시. 줄무늬보다 뒤에 와서 이김 */
+table.md-table tbody tr.pf-adopt > td { background: var(--accent-soft); }
+table.md-table tbody tr.pf-adopt > td:first-child { font-weight: 700; }
+.pf-adopt-badge { display: inline-block; padding: 1.4px 7px .6px; border-radius: 999px; font-size: .75em; font-weight: 700; line-height: 1.5; color: #fff; background: var(--accent-fill); vertical-align: .08em; white-space: nowrap; }
 table.md-table code { font-size: max(.86em, 12px); }   /* 머리 칸(13px) 안 코드도 코드 하한 12px 아래로 내려가지 않게 */
 table.md-table img { max-height: 120px; max-width: 100%; height: auto; }   /* width·height 속성(렌더러가 미리 잰 크기)으로 불러오기 전에도 자리를 잡음 */
 .vbox[data-kind] > .pf-vband { min-width: 0; }                         /* 그림 상자 안 띠는 상자 폭에 맞춰 꺾임(높이는 fitVisuals가 다시 잼) */

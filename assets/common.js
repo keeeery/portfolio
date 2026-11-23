@@ -179,7 +179,7 @@ const PF = (() => {
     let ref; try { ref = new URL(document.referrer); } catch { return; }
     const page = (u) => u.pathname.replace(/\/index\.html$/, '/');               // '/' 와 '/index.html'은 같은 페이지
     if (!pfPrev || ref.origin !== location.origin || page(ref) !== page(new URL(a.getAttribute('href'), location.href))) return;
-    e.preventDefault(); history.go(-(pfDepth + 1));
+    e.preventDefault(); history.go(-((history.state?.pfDepth ?? pfDepth) + 1));   // 직접 고침: 주소를 바꾸지 않는 이동(page-anchor.js·슬라이드 목차)도 기록의 pfDepth로 셈
   });
   function markNewTab(a) {                                           // 이미 있는 <a>(md 안 등)에 같은 규칙 적용: ↗ 표시 + 외부 주소만 새 탭
     const ext = isExternal(a.getAttribute('href'));
@@ -270,6 +270,8 @@ const PF = (() => {
     panel.append(...dlg.childNodes);
     panel.querySelector('.toc-dialog-head .dlg-close')?.remove();
     dlg.append(panel);
+    const dlgList = panel.querySelector('.toc-links');                  // 직접 수정: 목록을 칸(.toc-scroll)으로 감싸 옆 목차와 같은 끝 흐림 + 화살표 · 가는 막대
+    if (dlgList) { const wrap = document.createElement('div'); wrap.className = 'toc-scroll'; dlgList.before(wrap); wrap.append(dlgList); tocEdges(wrap, dlgList); }
     //   (터치) 열려 있는 동안 뒤 페이지 스크롤 막기: 목차 목록(스크롤할 내용이 있을 때) 밖에서의 터치 쓸기는 무시(iPhone Safari는 html overflow:hidden만으로는 막이 뒤로 스크롤을 넘김).
     //   마우스 휠은 막지 않음 — 마우스로 쓰는 좁은 화면은 막 위에서 뒤 페이지가 스크롤돼도 됨
     const scroller = (e) => { const sc = e.target.closest?.('.toc-links'); return sc && sc.scrollHeight > sc.clientHeight + 1; };
@@ -599,27 +601,170 @@ const PF = (() => {
     }
   }
 
-  // 상세 문서·자기소개서: 페이지 끝에서 목차·오른쪽 칸이 밀려 올라가 머리 줄([← 돌아가기 › 제목])과 겹치지 않게:
-  //   sticky 칸은 틀(.doc-page)의 아래 끝을 넘지 못해 위로 밀려남 → 붙는 자리부터 틀 아래 끝까지 남은 높이(--side-room)로 칸을 줄이고 칸 안에서 스크롤
+  // 상세 문서·자기소개서: 페이지 끝에서 목차·오른쪽 칸이 밀려 올라가 머리 줄([← 돌아가기 › 제목])과 겹치지 않게
+  //   목차(직접 수정): 스크립트로 맞추지 않음 — 목차 칸은 sticky라 페이지 끝(띠 위 끝)에서 브라우저가 목록째 밀어 올리고, 「목차」 제목만 제자리(doc.css '페이지 끝 띠와 함께 움직이는 목차')
+  //   오른쪽 칸: 붙는 자리부터 틀 아래 끝(띠가 있으면 띠 위 끝 − 24px)까지 남은 높이(--side-room)로 칸을 줄이고 칸 안에서 스크롤
   function fitSides() {
     const page = document.querySelector('.doc-page'), toc = document.getElementById('toc');
     if (!page) return;
     const root = document.documentElement;
+    const rail = document.querySelector('.rail');                       // 직접 수정: 오른쪽 카드 칸도 줄어들면 잘린 쪽 끝을 흐림(카드가 칸 끝에서 뚝 잘려 보이지 않게)
     let raf = 0;
     const run = () => {
       raf = 0;
       const cs = getComputedStyle(root);
       const top = (parseFloat(cs.getPropertyValue('--head-h')) || 56) + (parseFloat(cs.getPropertyValue('--side-gap')) || 12);
-      const room = Math.max(120, Math.floor(page.getBoundingClientRect().bottom - top));
-      if (room >= innerHeight) { root.style.removeProperty('--side-room'); return; }
-      root.style.setProperty('--side-room', `${room}px`);
-      const a = toc?.querySelector('a.active');                         // 줄어든 목차에서도 지금 읽는 절이 보이게
-      if (a && toc.scrollHeight > toc.clientHeight && a.offsetTop + a.offsetHeight > toc.scrollTop + toc.clientHeight - 24) toc.scrollTop = a.offsetTop + a.offsetHeight - toc.clientHeight + 24;
+      const end = document.querySelector('.doc-end');
+      const bottom = end ? end.getBoundingClientRect().top - 24 : page.getBoundingClientRect().bottom;
+      const room = Math.max(120, Math.floor(bottom - top));
+      if (room >= innerHeight - top - 24) root.style.removeProperty('--side-room');   // 칸 기본 높이(100vh − 붙는 자리 − 24px)보다 넉넉하면 그대로
+      else root.style.setProperty('--side-room', `${room}px`);
     };
     const ask = () => { if (!raf) raf = requestAnimationFrame(run); };
-    addEventListener('scroll', ask, { passive: true });
+    addEventListener('scroll', () => { if (raf) { cancelAnimationFrame(raf); raf = 0; } run(); }, { passive: true });   // 직접 수정: 스크롤 때는 바로 잼(rAF를 기다리면 한 프레임 더 늦음)
     addEventListener('resize', ask);
     new ResizeObserver(ask).observe(page);
+    run();
+    if (toc) {
+      tocEdges(toc);
+      const et = toc.querySelector(':scope > .toc-edge-t'), title = toc.querySelector(':scope > .toc-title');   // 직접 수정: 위 흐림·˄ 화살표는 「목차」 제목 바로 아래(제목과 함께 제자리 — doc.css)
+      if (et && title) title.append(et);
+      const sc = toc.querySelector('#toc-links');
+      if (sc) tocBar(toc, sc);
+    }
+    if (rail) tocEdges(rail, rail);
+  }
+
+  // 직접 수정: 옆 목차의 스크롤 막대를 따로 그림(doc.css '.toc-bar') — 「목차」 제목 안에 넣어 위 끝은 제자리, 페이지 끝 띠에 목차 칸이 밀려 올라가면 칸이 아래쪽을 잘라 막대 영역이 좁아짐.
+  //   목록은 칸과 함께 올라가 위쪽이 제목 밑으로 들어가므로, 들어간 높이(d)만큼 목록 위 여백을 넣고 같은 만큼 스크롤 위치를 더함 — 보이는 글자는 그대로(칸과 함께 움직임)이면서
+  //   목록을 맨 위로 올리면 첫 항목이 제목 바로 아래, 맨 아래로 내리면 마지막 항목이 끝선에 붙음(위아래 같은 동작). 손잡이는 보이는 막대 영역(목록 칸 높이 − d) 안에서 그림.
+  //   끌기 · 홈 누르기(그 쪽으로 한 화면씩) · 휠은 목록을 스크롤
+  function tocBar(toc, sc) {
+    const title = toc.querySelector(':scope > .toc-title');
+    if (!title) return;
+    const bar = document.createElement('div');
+    bar.className = 'toc-bar'; bar.setAttribute('aria-hidden', 'true');
+    bar.innerHTML = '<div class="toc-bar-thumb"></div>';
+    title.append(bar);
+    const thumb = bar.firstChild;
+    let raf = 0, h = 0, room = 0, max = 0, pad = 0;
+    const lift = () => {                                                // 목록이 제목 밑으로 들어간 높이만큼 위 여백 + 스크롤 위치 보정(보이는 자리는 그대로)
+      const d = toc.offsetParent ? Math.max(0, Math.round(title.getBoundingClientRect().bottom - sc.getBoundingClientRect().top)) : 0;
+      if (d === pad) return;
+      const top = sc.scrollTop, delta = d - pad;
+      pad = d;
+      sc.style.paddingTop = d ? `${d}px` : '';
+      sc.scrollTop = top + delta;
+    };
+    const draw = () => {
+      raf = 0;
+      lift();
+      max = sc.scrollHeight - sc.clientHeight;
+      bar.classList.toggle('on', max > 1);
+      if (max <= 1) return;
+      const track = sc.clientHeight - pad - 6;                          // 보이는 막대 영역 − 위아래 3px(예전 막대 손잡이 테두리와 같은 자리)
+      h = Math.max(26, Math.round(track * (sc.clientHeight - pad) / (sc.scrollHeight - pad)));
+      room = Math.max(0, track - h);
+      thumb.style.height = `${h}px`;
+      thumb.style.transform = `translateY(${3 + Math.round(room * Math.min(1, Math.max(0, sc.scrollTop / max)))}px)`;
+    };
+    const ask = () => { if (!raf) raf = requestAnimationFrame(draw); };
+    addEventListener('scroll', () => { if (raf) { cancelAnimationFrame(raf); raf = 0; } draw(); }, { passive: true });   // 페이지 스크롤 때는 바로(띠에 밀린 높이가 바뀜)
+    sc.addEventListener('scroll', ask, { passive: true });
+    new ResizeObserver(ask).observe(sc);
+    new MutationObserver(ask).observe(sc, { childList: true, subtree: true });
+    addEventListener('resize', ask);
+    let grab = null;
+    thumb.addEventListener('pointerdown', (e) => {
+      if (e.button !== 0) return;
+      e.preventDefault(); e.stopPropagation();
+      grab = { y: e.clientY, s: sc.scrollTop };
+      thumb.setPointerCapture(e.pointerId); bar.classList.add('drag');
+    });
+    thumb.addEventListener('pointermove', (e) => {
+      if (!grab || room <= 0) return;
+      sc.scrollTop = grab.s + (e.clientY - grab.y) * max / room;
+    });
+    const drop = () => { grab = null; bar.classList.remove('drag'); };
+    thumb.addEventListener('pointerup', drop); thumb.addEventListener('pointercancel', drop);
+    bar.addEventListener('pointerdown', (e) => {
+      if (e.target !== bar || e.button !== 0) return;
+      e.preventDefault();
+      const r = thumb.getBoundingClientRect();
+      sc.scrollBy({ top: (e.clientY < r.top ? -1 : 1) * (sc.clientHeight - pad) * 0.9, behavior: 'smooth' });
+    });
+    bar.addEventListener('wheel', (e) => { e.preventDefault(); sc.scrollBy({ top: e.deltaY, left: 0 }); }, { passive: false });
+    draw();
+  }
+
+  // 직접 수정: 상세 문서·자기소개서 끝 — ① 본문 맨 끝(본문 칸 안)의 「다른 프로젝트 상세 문서」 제목 + 글자 링크 나열(.doc-pager) ② 페이지 폭 전체의 얇은 하단 띠(.doc-end, 한 줄).
+  //   ① 상세 문서만. 순서 = data/portfolio.json의 projects → others, 지금 보는 프로젝트는 뺌. 이름은 data/projects/<id>.json의 title(못 읽으면 그 링크는 뺌). 자기소개서(current 없음)는 링크 없음
+  //   ② 왼쪽 「© 이름 · 브라우저 안내」(목차 왼쪽 끝에 맞춤) · 오른쪽 「마지막 업데이트」(카드 칸 오른쪽 끝에 맞춤). 문서 끝까지 내리면 아래에서 살짝 올라오며 나타남(.in)
+  async function docEnd(page, { pf = {}, name = '', current = '' } = {}) {
+    if (!page) return;
+    const foot = document.createElement('footer');
+    foot.className = 'doc-end';
+    const parts = [name && `© ${name}`, t('page.browser-note')].filter(Boolean);
+    const date = pf.generatedAt ? `<p class="doc-end-date">${esc(t('page.last-updated', { date: pf.generatedAt }))}</p>` : '';
+    foot.innerHTML = `<div class="doc-end-in"><div class="doc-end-lines">${parts.map((x) => `<p>${esc(x)}</p>`).join('')}</div>${date}</div>`;
+    page.after(foot);
+    const root = document.documentElement;
+    // 띠 안 좌우 끝: 목차가 보이면 왼쪽 = 목차 왼쪽 끝, 오른쪽 = 카드 칸 오른쪽 끝(틀이 가운데라 목차 왼쪽 여백과 같음 — 카드 칸을 닫아도 그대로).
+    //   목차가 숨는 폭이면 본문 글줄(.doc-intro) 양 끝. 창 크기·카드 칸 열고 닫기에 따라 다시 잼
+    const toc = page.querySelector('.toc'), line = page.querySelector('.doc-intro');
+    const align = () => {
+      if (!line) return;
+      const b = line.getBoundingClientRect(), w = root.clientWidth;
+      const tb = toc && toc.offsetParent ? toc.getBoundingClientRect() : null;
+      const l = Math.max(0, Math.round(tb && tb.width ? tb.left : b.left)), r = Math.max(0, Math.round(tb && tb.width ? tb.left : w - b.right));
+      foot.style.setProperty('--end-l', `${l}px`);
+      foot.style.setProperty('--end-r', `${r}px`);
+    };
+    if (line) new ResizeObserver(align).observe(line);
+    addEventListener('resize', align); align();
+    const show = () => {                                               // 띠가 화면 아래에서 들어오면 올라옴(한 번만)
+      if (foot.getBoundingClientRect().top > innerHeight - Math.min(40, foot.offsetHeight / 2)) return;
+      foot.classList.add('in'); removeEventListener('scroll', show); removeEventListener('resize', show);
+    };
+    addEventListener('scroll', show, { passive: true }); addEventListener('resize', show); requestAnimationFrame(show);
+    // ① 다른 프로젝트 상세 문서 링크 — 본문 맨 끝
+    const main = page.querySelector('.doc-main');
+    const order = [...(pf.projects || []), ...(pf.others || [])].filter((id, i, a) => id && a.indexOf(id) === i);
+    if (!current) return;                                              // 자기소개서: 링크 없이 띠만
+    const want = order.filter((id) => id !== current);
+    if (!main || !want.length) return;
+    const list = (await Promise.all(want.map((id) => loadJSON(`data/projects/${encodeURIComponent(id)}.json`).then((p) => ({ id, title: p.title || id })).catch(() => null)))).filter(Boolean);
+    if (!list.length) return;
+    const head = t('doc.other-docs');
+    const nav = document.createElement('nav');
+    nav.className = 'doc-pager'; nav.setAttribute('aria-label', head);   // 링크는 포트폴리오 안 다른 페이지 링크와 같이 이름 뒤 ↗(link kind 'page')
+    nav.innerHTML = `<p class="pager-label">${esc(head)}</p><div class="pager-all">${list.map((p) => link({ href: `doc.html?p=${encodeURIComponent(p.id)}`, label: esc(p.title), kind: 'page', cls: 'pager-link' })).join('')}</div>`;
+    main.append(nav);
+  }
+
+  // 직접 수정: 목차 칸이 잘렸으면(안에서 스크롤) 아직 남은 쪽 끝을 흐리고 작은 화살표(˄ ˅) — 포트폴리오 페이지 휴대폰 캡슐 바의 흐림 + 화살표와 같은 뜻.
+  //   흐림은 목차 칸에 겹친 띠(.toc-edge)로 그림 — 스크롤 막대 자리는 비워 흐려지지 않음. 위 = .ft, 아래 = .fb (doc.css '목차 끝 흐림')
+  //   옆 목차(#toc + #toc-links)와 좁은 화면 목차 창(.toc-scroll + .toc-links — openToc가 감쌈)이 함께 씀
+  function tocEdges(toc, sc = toc.querySelector('#toc-links') || toc) {
+    if (toc.classList.contains('fade-host')) return;
+    toc.classList.add('fade-host'); sc.classList.add('fade-list');     // 스크롤하는 것은 목록 칸(.fade-list), 화살표 띠·.ft/.fb는 감싼 칸(.fade-host)에
+    if (toc !== sc) {                                                  // 칸 자체가 스크롤하면(오른쪽 카드 칸) 화살표 없이 흐림만
+      toc.insertAdjacentHTML('afterbegin', '<div class="toc-edge toc-edge-t" aria-hidden="true"></div>');
+      toc.insertAdjacentHTML('beforeend', '<div class="toc-edge toc-edge-b" aria-hidden="true"></div>');
+    }
+    let raf = 0;
+    const run = () => {
+      raf = 0;
+      const more = sc.scrollHeight - sc.clientHeight;
+      toc.classList.toggle('ft', more > 1 && sc.scrollTop > 2);
+      toc.classList.toggle('fb', more > 1 && sc.scrollTop < more - 2);
+    };
+    const ask = () => { if (!raf) raf = requestAnimationFrame(run); };
+    sc.addEventListener('scroll', ask, { passive: true });
+    new MutationObserver(ask).observe(sc, { childList: true });        // 목록을 다시 그리면(innerHTML) 다시 재기
+    addEventListener('resize', ask);
+    addEventListener('scroll', ask, { passive: true });               // --side-room이 바뀌어 칸 높이가 달라질 때
+    new ResizeObserver(ask).observe(sc);
     run();
   }
 
@@ -757,6 +902,6 @@ const PF = (() => {
   const { t, tab, label, load: loadStrings, report: stringsReport } = PFStr;
 
   return { esc, inline, isUrl, shortUrl, repoLinks, otherLinks, loadJSON, loadText, encodePath, srcPath, projectUrl, docUrl, siteBase, visibleUrl, metaValue, teamLabel,
-           slugger, normTitle, resolveHeading, keyOk, deckSceneFor, mdHtml, headingsOf, ICON, NEWTAB, link, markNewTab, topCap, railToggle, themeTokens, applyTheme, mermaidConfig, hlMore, routeFolkSackTerrain, gatherFanIn, fitSides, contrast, hexRgb, modeButton, setMode, getMode, hasLightMode,
+           slugger, normTitle, resolveHeading, keyOk, deckSceneFor, mdHtml, headingsOf, ICON, NEWTAB, link, markNewTab, topCap, railToggle, themeTokens, applyTheme, mermaidConfig, hlMore, routeFolkSackTerrain, gatherFanIn, fitSides, docEnd, contrast, hexRgb, modeButton, setMode, getMode, hasLightMode,
            FILE_HELP, noDataHtml, isFile, notice, guardFileProtocol, noData, t, tab, label, loadStrings, stringsReport };
 })();

@@ -18,6 +18,8 @@
   <script src="https://unpkg.com/react@18.3.1/umd/react.production.min.js"></script>
   <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js"></script>
   <script src="https://unpkg.com/@babel/standalone@7.24.7/babel.min.js"></script>
+  <script src="assets/page-scrollbar.js"></script><!-- 직접 추가: 페이지 스크롤 막대를 내용 위에 겹쳐 그림(오른쪽 빈 띠 없이) -->
+  <script src="assets/page-anchor.js"></script><!-- 직접 추가: 같은 페이지 안 이동은 주소를 바꾸지 않고, 새로고침하면 보던 위치 그대로 -->
   <script src="assets/strings.js"></script><!-- 문구 표 점검(report().strings)용. 화면 문구는 아래 FALLBACK + theme/strings.tsv -->
   <link rel="stylesheet" href="theme/theme.css">
   <link rel="stylesheet" href="theme/theme-light.css">
@@ -26,6 +28,7 @@
     try { var m = localStorage.getItem('pf-mode'); if (m ? m === 'light' : matchMedia('(prefers-color-scheme: light)').matches) document.documentElement.dataset.pfMode = 'light'; } catch (e) {}
   </script>
   <style>
+    @media screen { html { scrollbar-color: color-mix(in srgb, var(--ink) 25%, transparent) transparent; } }   /* 직접 수정: 페이지 스크롤 막대 — 바탕(홈)은 투명, 막대는 연한 색으로 늘 보임 · 굵기는 브라우저 기본(상세 문서와 같음) */
     /* 색은 포트폴리오 페이지와 같은 테마(--t-*)를 그대로. 테마가 없으면 괄호 안 기본값 */
     :root {
       --top-h: calc(56px + var(--safe-t)); --safe-t: env(safe-area-inset-top, 0px); --safe-b: env(safe-area-inset-bottom, 0px); --ext-h: 40px; --ext-up: 8px; --ext-bg: 37px;                                                     /* 머리 막대 높이 */
@@ -449,7 +452,9 @@
     .glo-title { display: block; font-size: 16px; font-weight: 700; letter-spacing: -.01em; line-height: 1.35; color: var(--ink); }
     .glo-meta { margin: 4px 0 0; font-size: 12px; line-height: 1.5; color: var(--sub); }
     .glo-meta + .glo-meta { margin-top: 0; }                            /* 개인/팀 줄과 장르 줄은 붙여서 두 줄 한 묶음 */
-    @media (min-width: 760px) { .gl-more { margin-top: 32px; padding-top: 32px; } .glo { grid-template-columns: repeat(3, minmax(0, 1fr)); column-gap: 32px; } }
+    .gl-more { margin-top: 56px; padding-top: 56px; }   /* 프로젝트 줄 사이 간격(28+28)을 구분선 위·아래에 한 번씩 그대로 — 간격 + 선 + 간격 (화면·PDF 공통) */
+    @media (min-width: 760px) { .gl-more { margin-top: 64px; padding-top: 64px; } }   /* 넓은 화면: 줄 사이 간격 32+32 = 64 */
+    @media (min-width: 760px) { .glo { grid-template-columns: repeat(3, minmax(0, 1fr)); column-gap: 32px; } }
     @media print { .gl-more { break-inside: avoid; } }
     .shot.fit img { object-fit: contain; padding: 8px; }
     /* 떠오름은 전환(transition)이 아니라 키프레임 애니메이션으로 — iPhone Safari는 스크롤하는 동안 .in이 붙으면 전환을 화면에 그리지 않고
@@ -549,7 +554,18 @@
     #cover .hero-pill .cap-row { animation: cap-row-in .9s var(--d) both, cap-row-edge .9s var(--d) both; }
     @media (max-width: 759px) { #cover .hero-pill { animation: ci-up .8s cubic-bezier(.2,.8,.2,1) var(--d) backwards; } }   /* 휴대폰: 프로젝트 캡슐처럼 펼치기 없음(몸통·점·외곽선 움직임은 위 공용 규칙이 끔) → 아래에서 떠오르기만 */
     @media (prefers-reduced-motion: reduce) { #cover .hero-pill, #cover .hero-pill * { animation: none !important; } }
-    #cover .hero-pill.no-intro, #cover .hero-pill.no-intro * { animation: none !important; }   /* 아래 절에서 열림(heroRise) → 제자리에 그대로 */
+    #cover .hero-pill.no-intro, #cover .hero-pill.no-intro * { animation: none !important; }
+    /* 직접 추가: 첫 화면 아래 끝이 ABOUT ME 머리말을 넘어 보이면(.no-rise — heroRise) 솟아오르기(cap-y·cap-s)를 건너뛰고 펼치기(28%)부터.
+       기다림(--d) 동안은 숨겨 두었다가(cap-hold) 그 끝에 28% 자리에서 시작 — 모든 조각의 지연을 0.252초(0.9초 × 28%) 앞당겨 같은 박자로 */
+    @keyframes cap-hold { from, to { opacity: 0; } }
+    @media (min-width: 760px) {                                          /* 넓은 화면만(휴대폰은 원래 펼치기가 없음 — 그대로) */
+      #cover .hero-pill.no-rise { --d2: calc(var(--d) - .252s); animation: cap-hold var(--d) linear backwards, cap-x .9s var(--d2) both; }
+      #cover .hero-pill.no-rise .cb-full { animation: cap-reveal .9s var(--d2) both; }
+      #cover .hero-pill.no-rise .cb-ring-r { animation: cap-grow-r .9s var(--d2) both, cap-ring-in .9s var(--d2) both; }
+      #cover .hero-pill.no-rise .cb-ring-l { animation: cap-ring-in .9s var(--d2) both; }
+      #cover .hero-pill.no-rise .cap-dot { animation: cap-dot-in .9s var(--d2) both, cap-row-edge .9s var(--d2) both; }
+      #cover .hero-pill.no-rise .cap-row { animation: cap-row-in .9s var(--d2) both, cap-row-edge .9s var(--d2) both; }
+    }
 
     /* 머리 막대 늘어남(화면만, 기술 스택 · 프로젝트마다): 묶음(.pg)의 큰 제목이 머리 막대 뒤로 완전히 사라지면 머리 막대 자신이 37px 아래로(프로젝트 줄 아래 여백 16px) 늘어나고,
        그 안에 [PROJECT 00 / 00] → [프로젝트명 · 기능 소개]가 시간차를 두고 아래에서 위로 떠오름. 묶음이 끝나면 다시 줄어듦 */
@@ -572,6 +588,7 @@
     .top-tools .btn-icon { background-color: var(--bg); }              /* 화면 모드 버튼: 불투명한 바탕색(숨은 머리 막대 아래로 스크롤하는 내용에 묻히지 않게) */
     .top-tools .btn-icon:hover { background-color: color-mix(in srgb, var(--accent) 16%, var(--bg)); }   /* 마우스 올림은 다른 버튼과 같게(위 불투명 바탕보다 우선) */
     .nh-tools-space { flex-shrink: 0; width: var(--tools-w, 76px); }     /* 머리 막대 메뉴가 떠 있는 버튼 아래로 들어가지 않게 버튼 폭만큼 비워 둠(폭은 스크립트가 잼) */
+    @media (min-width: 768px) { .nh-tools-space { margin-left: 8px; } }   /* 직접 수정: 마지막 메뉴(연락처) ↔ 버튼 = 머리 막대 간격 16 + 8 = 24px — 메뉴끼리 간격(md:gap-6 = 24px)과 같게. 좁은 화면은 메뉴 간격도 16px라 그대로 */
     /* 휴대폰: 띠를 불투명한 바탕색으로 — 아이폰 Safari는 화면 위에 띠가 붙어 있으면 상태 표시줄 칸을 띠의 바탕색 '단색'으로 칠함(페이지가 그 칸에 그릴 수 없음).
        띠가 반투명이면 아래로 지나가는 그림이 비쳐 시계 칸과 경계가 생기므로, 휴대폰에서는 비치지 않게 해 시계 칸과 띠를 한 색으로 잇는다(PC는 반투명 흐림 그대로) */
     @media (max-width: 759px) { .site-head { background-color: var(--bg); -webkit-backdrop-filter: none; backdrop-filter: none; } }
@@ -1318,6 +1335,14 @@
       const y = top - scrollY;
       if (y < 0 || y + el.offsetHeight > innerHeight) { el.classList.add('no-intro'); return; }
       el.style.setProperty('--cap-rise', `${innerHeight - y + el.offsetHeight}px`);
+      // 직접 추가: 화면 아래 끝이 ABOUT ME 머리말(#intro .eyebrow) 위쪽 끝을 넘으면 솟아오르기를 건너뜀(.no-rise — 올라오는 길이 ABOUT ME 위를 지나가 보이므로).
+      //   애니메이션이 실제로 움직이기 시작한 뒤에는 바꾸지 않음(창 크기를 바꿔도 다시 재생되지 않게). 로딩 그레이박스가 덮는 동안은 멈춰 있어(0ms) 그때까지는 다시 판단
+      const started = el.getAnimations?.().some((a) => (+a.currentTime || 0) > 0);
+      const ab = document.querySelector('#intro .eyebrow');
+      if (ab && !started) {
+        let abTop = 0; for (let n = ab; n; n = n.offsetParent) abTop += n.offsetTop;
+        el.classList.toggle('no-rise', abTop - scrollY < innerHeight);
+      }
     }
     const headlineLines = (text) => { const i = text.indexOf(HEADLINE_BREAK_AFTER + ' '); return i < 0 ? [text] : [text.slice(0, i + HEADLINE_BREAK_AFTER.length), text.slice(i + HEADLINE_BREAK_AFTER.length + 1)]; };
     function Cover({ pf, prof, projects = [] }) {
@@ -1338,7 +1363,9 @@
         measure();
         document.fonts?.ready.then(measure);
         addEventListener('resize', measure);
-        return () => removeEventListener('resize', measure);
+        const lift = () => heroRise(pill.current);                       // 직접 추가: 로딩 그레이박스가 걷히기 직전(읽던 위치로 옮긴 뒤) 다시 판단 — 아래 절·ABOUT ME가 보이는지
+        addEventListener('pf-skel-lift', lift);
+        return () => { removeEventListener('resize', measure); removeEventListener('pf-skel-lift', lift); };
       }, []);
       return (
         <section id="cover" className={'flex min-h-[95vh] items-center text-center' + (screens ? ' cv-fit' : '')}>
@@ -1947,7 +1974,7 @@
     function Glance({ projects, others = [] }) {
       if (!projects.length) return null;
       const metaOf = (p, label) => (p.meta || []).find((m) => m.label === label)?.value || '';
-      const envItems = (p) => { const env = metaOf(p, '환경'); return env ? env.split(',').map((x) => x.trim()).filter(Boolean) : (p.tags || []).slice(0, 4); };
+      const envItems = (p) => { const env = (metaOf(p, '개발 환경') || metaOf(p, '환경')); return env ? env.split(',').map((x) => x.trim()).filter(Boolean) : (p.tags || []).slice(0, 4); };
       // 한눈에 보기에서만 Unity 6 계열 버전을 줄여 씀(6000.3.15f1 → 6.3) — 휴대폰에서 개발 환경이 한 줄에 들어가게. 정확한 버전은 프로젝트 소개 표에 그대로
       const shortEnv = (x) => x.replace(/^Unity\s+6000\.(\d+)(?:\.\S+)?$/i, 'Unity 6.$1');
       const EnvLine = ({ p }) => envItems(p).map(shortEnv).map((x, i) => <Fragment key={x}>{i > 0 && ' · '}<span className="whitespace-nowrap">{x}</span></Fragment>);   // 항목 하나(ASP.NET Core 등)는 줄바꿈으로 끊지 않음
@@ -2117,7 +2144,7 @@
         let userMoved = false;
         ['wheel', 'touchstart', 'keydown', 'pointerdown'].forEach((ev) => addEventListener(ev, () => { userMoved = true; }, { once: true, passive: true }));
         let arrived = goHash(state.projects), restoreY = null;
-        if (!arrived && ['reload', 'back_forward'].includes(performance.getEntriesByType?.('navigation')[0]?.type)) {   // 새로고침 · 뒤로(프로젝트 상세 문서의 [← 포트폴리오] 포함)로 다시 열렸을 때 읽던 위치로
+        if (!arrived && !window.PFAnchor && ['reload', 'back_forward'].includes(performance.getEntriesByType?.('navigation')[0]?.type)) {   // 직접 고침: page-anchor.js가 있으면 그쪽이 보던 요소 기준으로 맞춤(둘이 부딪혀 떨리지 않도록)   // 새로고침 · 뒤로(프로젝트 상세 문서의 [← 포트폴리오] 포함)로 다시 열렸을 때 읽던 위치로
           try { restoreY = +sessionStorage.getItem(POS) || null; } catch {}
           if (restoreY) scrollTo({ top: restoreY, behavior: 'instant' });
         }

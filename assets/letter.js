@@ -44,19 +44,16 @@
           <h1>${esc(title)}</h1>
         </div>
         <article class="md" id="doc"></article>
-        <footer class="doc-foot">
-          ${name ? `<p>© ${esc(name)}</p>` : ''}
-          <p>${T('page.browser-note')}</p>
-          ${pf.generatedAt ? `<p>${T('page.last-updated', { date: esc(pf.generatedAt) })}</p>` : ''}
-        </footer>
       </main>
       <aside class="rail" aria-label="문서 정보">
-        <section class="rail-card" id="rail-now" aria-live="polite"><p class="rail-title">${T('doc.rail-now')}</p><p class="now-title">—</p><div class="now-body"></div></section>
         <section class="rail-card"><p class="rail-title">${T('doc.rail-links')}</p><nav class="rail-links" id="rail-pdf" aria-label="PDF"></nav></section>
       </aside>
     </div>
     <div class="doc-fab" role="group" aria-label="빠른 이동"><button type="button" class="fab-toc" aria-haspopup="dialog">${T('name.toc')}</button></div>
     <dialog class="toc-dialog" aria-label="문서 목차"><div class="toc-dialog-head"><p class="toc-title">${T('name.toc')}</p><button type="button" class="btn dlg-close">${T('ui.close')}</button></div><div class="toc-links"></div></dialog>`;
+
+  // 직접 수정: 맨 아래 띠(세 줄) — 자기소개서에는 다른 문서 링크 없음 — 예전 본문 맨 아래 세 줄을 옮김(common.js docEnd)
+  PF.docEnd(root.querySelector('.doc-page'), { pf, name });
 
   // PDF: 미리 만든 <이름>-자기소개서.pdf(tools/make-letter-pdf.py)가 있으면 [PDF로 보기 ↗] · [PDF로 저장](내려받기), 없으면 [PDF로 저장](인쇄 창 — doc.css 인쇄 규칙)
   //   파일 이름 규칙은 tools/make-letter-pdf.py의 letter_name()과 같아야 함
@@ -89,39 +86,37 @@
   document.querySelector('.fab-toc').addEventListener('click', () => dlg.showModal());
   dlg.addEventListener('click', (e) => { if (e.target === dlg || e.target.closest('.dlg-close') || e.target.closest('a')) dlg.close(); });
 
-  // 목차 현재 위치 + 레일 "지금 읽는 절"
+  // 목차 현재 위치(직접 수정: 오른쪽 칸 '지금 읽는 절' 카드 없앰 — 목차 강조와 겹침)
   const links = new Map([...document.querySelectorAll('#toc-links a')].map((a) => [decodeURIComponent(a.hash.slice(1)), a]));
-  const nowTitle = document.querySelector('#rail-now .now-title');
-  const nowBody = document.querySelector('#rail-now .now-body');
   let cur, t = 0;
-  // 목차·본문 링크로 고른 제목: 도착해 맨 위(scroll-margin 자리)에 머무는 동안은 그 제목을 강조(바로 밑 소제목이 30% 선 안에 들어와 있어도).
-  //   손으로 스크롤해 그 자리를 벗어나면 다시 30% 선 기준. 3초 안에 도착하지 못하면(맨 아래라 더 못 내려가는 등) 고른 것을 잊음
-  let pin = null;
-  const atTop = (el) => { const y = el.getBoundingClientRect().top, m = parseFloat(getComputedStyle(el).scrollMarginTop) || 0; return y >= -2 && y <= m + 16; };
+  // 직접 수정: 목차·본문 링크로 고른 제목(pin)은 누른 순간부터 강조 — 이동하는 동안(travel)에도 30% 선 계산을 쓰지 않아,
+  //   장 제목을 누르면 지나가는 첫 절이 잠깐 강조됐다가 장 제목으로 바뀌는 일이 없음. 스크롤이 멈추면(settle: 150ms 동안 스크롤 없음 · 늦어도 4초)
+  //   그 자리(pin.y)를 기억하고, 손으로 스크롤해 그 자리를 벗어나면 다시 30% 선 기준. 맨 아래라 제목이 맨 위까지 오지 못해도 멈춘 자리에서는 고른 제목 그대로
+  let pin = null, settleT = 0, capT = 0;
+  const settle = () => { clearTimeout(settleT); if (!pin || pin.settled) return; clearTimeout(capT); pin.settled = true; pin.y = scrollY; cur = undefined; update(); };
+  const armSettle = () => { clearTimeout(settleT); settleT = setTimeout(settle, 150); };
   document.addEventListener('click', (e) => {
     const a = e.target.closest?.('a[href^="#"]');
     if (!a) return;
     let id = a.hash.slice(1); try { id = decodeURIComponent(id); } catch { /* 그대로 */ }
     const el = document.getElementById(id);
-    pin = toc.some((h) => h.el === el) ? { el, until: performance.now() + 3000, arrived: false } : null;
+    pin = toc.some((h) => h.el === el) ? { el, settled: false, y: 0 } : null;
+    if (pin) { armSettle(); clearTimeout(capT); capT = setTimeout(settle, 4000); cur = undefined; update(); }   // 누른 순간 강조
   });
   const update = () => {
     t = 0;
     let c = null;
     for (const h of toc) { if (h.el.getBoundingClientRect().top <= innerHeight * 0.3) c = h; else break; }   // 화면 위 30% 선을 지난 마지막 제목
     if (toc.length && innerHeight + scrollY >= document.documentElement.scrollHeight - 2) c = toc[toc.length - 1];   // 맨 아래까지 내리면 마지막 제목(짧은 마지막 절은 30% 선에 닿지 못함)
-    if (pin) { if (atTop(pin.el)) { pin.arrived = true; c = toc.find((h) => h.el === pin.el); } else if (pin.arrived || performance.now() > pin.until) pin = null; }
+    if (pin) { if (!pin.settled || Math.abs(scrollY - pin.y) <= 4) c = toc.find((h) => h.el === pin.el); else pin = null; }   // 이동 중·멈춘 자리 = 고른 제목, 손으로 벗어나면 놓음
     if (c === cur && cur !== undefined) return;
     cur = c;
     links.forEach((a) => { a.classList.remove('active'); a.removeAttribute('aria-current'); });
-    if (!c) { nowTitle.textContent = PF.t('doc.start'); nowBody.innerHTML = `<p class="now-none">${T('doc.now-none')}</p>`; return; }
+    if (!c) return;
     const a = links.get(c.id);
     if (a) { a.classList.add('active'); a.setAttribute('aria-current', 'location'); }
-    nowTitle.textContent = c.text;
-    const parent = c.level === 3 ? c.parents.filter((p) => p.level === 2).pop() : null;
-    nowBody.innerHTML = parent ? `<p class="now-parent">${esc(parent.text)}</p>` : '';
   };
-  addEventListener('scroll', () => { if (!t) t = setTimeout(update, 60); }, { passive: true });
+  addEventListener('scroll', () => { if (pin && !pin.settled) armSettle(); if (!t) t = setTimeout(update, 60); }, { passive: true });
   addEventListener('resize', () => { cur = undefined; update(); });
   update();
 

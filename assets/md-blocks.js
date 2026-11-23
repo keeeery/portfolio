@@ -7,6 +7,26 @@
   const isRelative = (u) => u && !/^([a-z][a-z0-9+.-]*:|#|\/)/i.test(u);
   const decode = (u) => { try { return decodeURI(u); } catch (_) { return u; } };
 
+  // 직접 추가: 고민과 선택 표에서 첫 칸이 「(채택)」으로 끝나는 줄 → tr.pf-adopt + 「채택」 배지(span.pf-adopt-badge).
+  //   원문 md는 그대로 두고 화면에서만 바꿈. 상세 문서·슬라이드가 같은 결과를 씀(표 지문은 머리 줄만 보므로 영향 없음)
+  const ADOPT = /\s*\(채택\)\s*$/;
+  function markAdopted(frag) {
+    frag.querySelectorAll('tbody > tr').forEach((tr) => {
+      const cell = tr.cells[0];
+      if (!cell) return;
+      const w = document.createTreeWalker(cell, NodeFilter.SHOW_TEXT);
+      let last = null;
+      for (let n = w.nextNode(); n; n = w.nextNode()) if (n.data.trim()) last = n;
+      if (!last || !ADOPT.test(last.data)) return;
+      last.data = last.data.replace(ADOPT, '');
+      const badge = document.createElement('span');
+      badge.className = 'pf-adopt-badge';
+      badge.textContent = '채택';
+      cell.append(' ', badge);
+      tr.classList.add('pf-adopt');
+    });
+  }
+
   // md → { frag, headings: [{ el, level, text, id, parents }] }. 상대경로는 src/<폴더>/… 로 바꾸고 원래 값은 data-md-src에 둠
   function parse(md, id) {
     // CDN이 막혀 marked를 받지 못했으면 이유를 말하고 멈춤(부르는 쪽이 안내 화면으로 바꿈)
@@ -19,6 +39,7 @@
       if (isRelative(s)) { el.dataset.mdSrc = s; el.setAttribute('src', PF.srcPath(id, decode(s))); }
     });
     frag.querySelectorAll('video[poster]').forEach((el) => { const s = el.getAttribute('poster'); if (isRelative(s)) el.setAttribute('poster', PF.srcPath(id, decode(s))); });
+    markAdopted(frag);
     // 제목 앵커(GitHub 규칙). 링크 분류·각주가 섞이기 전의 원문 제목 글자로 계산(첫 H1 포함 같은 순서)
     const slug = PF.slugger();
     const stack = [];
