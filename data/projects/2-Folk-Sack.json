@@ -209,62 +209,14 @@
   },
   "deck": {
     "chapters": [
-      {
-        "key": "overview",
-        "title": "프로젝트 개요",
-        "sectionPath": [
-          "1. 프로젝트 개요"
-        ]
-      },
-      {
-        "key": "terrain-gen",
-        "title": "같은 시드로 모두에게 같은 맵 생성",
-        "sectionPath": [
-          "2. 같은 시드로 모두에게 같은 맵 생성"
-        ]
-      },
-      {
-        "key": "collapse-sync",
-        "title": "여럿이 함께 캐고 무너뜨리는 지형",
-        "sectionPath": [
-          "3. 여럿이 함께 캐고 무너뜨리는 지형"
-        ]
-      },
-      {
-        "key": "falling-terrain",
-        "title": "낙하 지형 충돌·탈출·매몰 상태",
-        "sectionPath": [
-          "4. 낙하 지형 충돌·탈출·매몰 상태"
-        ]
-      },
-      {
-        "key": "inventory",
-        "title": "인벤토리·아이템·상점",
-        "sectionPath": [
-          "5. 인벤토리·아이템·상점"
-        ]
-      },
-      {
-        "key": "exploration",
-        "title": "가 본 곳과 지금 보이는 곳을 보여 주는 지도",
-        "sectionPath": [
-          "6. 가 본 곳과 지금 보이는 곳을 보여 주는 지도"
-        ]
-      },
-      {
-        "key": "lobby",
-        "title": "로비부터 결과 화면까지의 흐름",
-        "sectionPath": [
-          "7. 로비부터 결과 화면까지의 흐름"
-        ]
-      },
-      {
-        "key": "troubleshooting",
-        "title": "트러블슈팅",
-        "sectionPath": [
-          "8. 트러블슈팅"
-        ]
-      }
+      {"key": "overview", "title": "프로젝트 개요", "sectionPath": ["1. 프로젝트 개요"]},
+      {"key": "terrain-gen", "title": "같은 시드로 모두에게 같은 맵 생성", "sectionPath": ["2. 같은 시드로 모두에게 같은 맵 생성"]},
+      {"key": "collapse-sync", "title": "여럿이 함께 캐고 무너뜨리는 지형", "sectionPath": ["3. 여럿이 함께 캐고 무너뜨리는 지형"]},
+      {"key": "falling-terrain", "title": "낙하 지형 충돌·탈출·매몰 상태", "sectionPath": ["4. 낙하 지형 충돌·탈출·매몰 상태"]},
+      {"key": "inventory", "title": "인벤토리·아이템·상점", "sectionPath": ["5. 인벤토리·아이템·상점"]},
+      {"key": "exploration", "title": "가 본 곳과 지금 보이는 곳을 보여 주는 지도", "sectionPath": ["6. 가 본 곳과 지금 보이는 곳을 보여 주는 지도"]},
+      {"key": "lobby", "title": "로비부터 결과 화면까지의 흐름", "sectionPath": ["7. 로비부터 결과 화면까지의 흐름"]},
+      {"key": "troubleshooting", "title": "트러블슈팅", "sectionPath": ["8. 트러블슈팅"]}
     ],
     "slides": [
       {
@@ -272,123 +224,67 @@
         "chapter": "overview",
         "layout": "overview",
         "tab": "개요",
-        "title": {
-          "text": "1.1 게임 소개",
-          "verbatim": true
-        },
-        "lead": {
-          "text": "Folk Sack은 지하에서 채굴하여 자원을 모으고, 지형 붕괴·매몰 위험 속에서 경쟁하는 2D 멀티플레이 채굴 게임입니다.",
-          "verbatim": true
-        },
-        "sectionPath": [
-          "1. 프로젝트 개요",
-          "1.1 게임 소개"
+        "title": {"text": "1.1 게임 소개", "verbatim": true},
+        "lead": {"text": "Folk Sack은 지하에서 채굴하여 자원을 모으고, 지형 붕괴·매몰 위험 속에서 경쟁하는 2D 멀티플레이 채굴 게임입니다.", "verbatim": true},
+        "sectionPath": ["1. 프로젝트 개요", "1.1 게임 소개"],
+        "points": [
+          {"label": "기능", "text": "지상에서 자원을 판매하여 장비와 사용 아이템을 구매합니다.", "verbatim": true},
+          {"label": "기능", "text": "지지 구조가 사라진 지형은 물리 청크로 낙하하고, 플레이어는 충돌 피해나 매몰 위험에 노출됩니다.", "verbatim": true},
+          {"label": "진행", "text": "제한 시간이 끝나거나 목표 골드에 이르면 끝나고, 실제 보유 골드로 승자를 정합니다.", "verbatim": true}
         ],
+        "visuals": [{"kind": "mermaid", "n": 1, "fp": "flowchart TB"}]
+      },
+      {
+        "key": "arch",
+        "chapter": "overview",
+        "layout": "visual",
+        "tab": "구조",
+        "title": {"text": "1.5 전체 구조", "verbatim": true},
+        "lead": {"text": "특히 지형 붕괴에서는 낙하 물리 시뮬레이션과 최종 타일 배치 확정의 책임이 다릅니다.", "verbatim": true},
+        "sectionPath": ["1. 프로젝트 개요", "1.5 전체 구조"],
         "points": [
           {
-            "label": "기능",
-            "text": "지상에서 자원을 판매하여 장비와 사용 아이템을 구매합니다.",
+            "label": "",
+            "text": "이 다이어그램은 클라이언트가 입력·물리·표시를, 서버가 공유 상태 확정을 맡고, 두 쪽이 같은 TSV·시드로 초기 맵을 만드는 전체 구조를 도식화한 것입니다.",
             "verbatim": true
           },
-          {
-            "label": "기능",
-            "text": "지지 구조가 사라진 지형은 물리 청크로 낙하하고, 플레이어는 충돌 피해나 매몰 위험에 노출됩니다.",
-            "verbatim": true
-          },
-          {
-            "label": "진행",
-            "text": "제한 시간이 끝나거나 목표 골드에 이르면 끝나고, 실제 보유 골드로 승자를 정합니다.",
-            "verbatim": true
-          }
+          {"label": "구현", "text": "소유 클라이언트가 낙하 결과를 제안하고 서버가 예약 및 배치 규칙을 검사하여 결과를 방송합니다(§3).", "verbatim": true}
         ],
-        "visuals": [
-          {
-            "kind": "mermaid",
-            "n": 1,
-            "fp": "flowchart TB"
-          }
-        ]
+        "visuals": [{"kind": "mermaid", "n": 1, "fp": "flowchart TB"}],
+        "edited": true
       },
       {
         "key": "gen-pipeline",
         "chapter": "terrain-gen",
         "layout": "visual",
         "tab": "구조",
-        "title": {
-          "text": "2.1 개요 — 같은 시드와 규칙의 절차적 맵 데이터 생성",
-          "verbatim": true
-        },
-        "lead": {
-          "text": "같은 시드와 규칙으로 클라이언트와 서버가 같은 맵 데이터를 절차적으로 생성합니다.",
-          "verbatim": true
-        },
-        "sectionPath": [
-          "2. 같은 시드로 모두에게 같은 맵 생성",
-          "2.1 개요 — 같은 시드와 규칙의 절차적 맵 데이터 생성"
-        ],
+        "title": {"text": "2.1 개요 — 같은 시드와 규칙의 절차적 맵 데이터 생성", "verbatim": true},
+        "lead": {"text": "같은 시드와 규칙으로 클라이언트와 서버가 같은 맵 데이터를 절차적으로 생성합니다.", "verbatim": true},
+        "sectionPath": ["2. 같은 시드로 모두에게 같은 맵 생성", "2.1 개요 — 같은 시드와 규칙의 절차적 맵 데이터 생성"],
         "points": [
-          {
-            "label": "구현",
-            "text": "`TerrainTableSeedGenerator`는 이 규칙을 적용해 `TerrainMapFile`을 생성합니다.",
-            "verbatim": true
-          },
-          {
-            "label": "구현",
-            "text": "서버에는 대응하는 `ServerTerrainGenerator`가 있습니다.",
-            "verbatim": true
-          },
-          {
-            "label": "이유",
-            "text": "생성 순서 자체가 결과를 결정하는 규칙입니다.",
-            "verbatim": true
-          },
-          {
-            "label": "",
-            "text": "동굴을 뚫은 후 광물을 붙이는 순서나 난수 호출 순서가 달라지면 같은 시드여도 맵이 달라질 수 있습니다.",
-            "verbatim": true
-          }
+          {"label": "구현", "text": "`TerrainTableSeedGenerator`는 이 규칙을 적용해 `TerrainMapFile`을 생성합니다.", "verbatim": true},
+          {"label": "구현", "text": "서버에는 대응하는 `ServerTerrainGenerator`가 있습니다.", "verbatim": true},
+          {"label": "이유", "text": "생성 순서 자체가 결과를 결정하는 규칙입니다.", "verbatim": true},
+          {"label": "", "text": "동굴을 뚫은 후 광물을 붙이는 순서나 난수 호출 순서가 달라지면 같은 시드여도 맵이 달라질 수 있습니다.", "verbatim": true}
         ],
-        "visuals": [
-          {
-            "kind": "mermaid",
-            "n": 1,
-            "fp": "flowchart TB"
-          }
-        ]
+        "visuals": [{"kind": "mermaid", "n": 1, "fp": "flowchart TB"}]
       },
       {
         "key": "map-contract",
         "chapter": "terrain-gen",
         "layout": "code",
         "tab": "구현",
-        "title": {
-          "text": "2.3 접속 시 같은 맵 재생성",
-          "verbatim": true
-        },
-        "lead": {
-          "text": "클라이언트는 `map_session`에서 받은 프로필·시드와 테이블 버전을 확인하고 초기 맵을 재생성합니다.",
-          "verbatim": true
-        },
-        "sectionPath": [
-          "2. 같은 시드로 모두에게 같은 맵 생성",
-          "2.3 접속 시 같은 맵 재생성"
-        ],
+        "title": {"text": "2.3 접속 시 같은 맵 재생성", "verbatim": true},
+        "lead": {"text": "클라이언트는 `map_session`에서 받은 프로필·시드와 테이블 버전을 확인하고 초기 맵을 재생성합니다.", "verbatim": true},
+        "sectionPath": ["2. 같은 시드로 모두에게 같은 맵 생성", "2.3 접속 시 같은 맵 재생성"],
         "points": [
           {
             "label": "구현",
             "text": "`TerrainNetworkAdapter.FromGeneratedMap()`이 생성 결과를 Revision 0의 런타임 스냅샷으로 변환합니다.",
             "verbatim": true
           },
-          {
-            "label": "구현",
-            "text": "게임 중 채굴·재배치 변경은 이후 서버 Batch로 적용됩니다.",
-            "verbatim": true
-          },
-          {
-            "label": "구현",
-            "text": "테이블 버전은 TSV 파일들을 정렬하여 읽고 SHA-256으로 계산한 값의 앞 12자입니다.",
-            "verbatim": true
-          },
+          {"label": "구현", "text": "게임 중 채굴·재배치 변경은 이후 서버 Batch로 적용됩니다.", "verbatim": true},
+          {"label": "구현", "text": "테이블 버전은 TSV 파일들을 정렬하여 읽고 SHA-256으로 계산한 값의 앞 12자입니다.", "verbatim": true},
           {
             "label": "이유",
             "text": "클라이언트와 서버가 같은 규칙으로 정규화하므로, Windows와 macOS에서 내용이 같은 TSV가 다른 버전으로 판단되지 않습니다.",
@@ -396,20 +292,13 @@
           }
         ],
         "visuals": [
-          {
-            "kind": "code",
-            "n": 1,
-            "fp": "// RoomClient.HandleMapSession() — 맵 세션의 프로필 ID·시드로 초기 맵 생성"
-          },
+          {"kind": "code", "n": 1, "fp": "// RoomClient.HandleMapSession() — 맵 세션의 프로필 ID·시드로 초기 맵 생성"},
           {
             "kind": "image",
             "src": "images/terrain-seed-map.png",
             "w": 1447,
             "h": 1085,
-            "caption": {
-              "text": "에디터 씬 뷰로 본 생성된 맵 전체 — 위부터 Ground·Dirt·Stone·DeepStone 구간과 변칙 지형·동굴·광물 군집",
-              "verbatim": true
-            }
+            "caption": {"text": "에디터 씬 뷰로 본 생성된 맵 전체 — 위부터 Ground·Dirt·Stone·DeepStone 구간과 변칙 지형·동굴·광물 군집", "verbatim": true}
           }
         ]
       },
@@ -418,173 +307,78 @@
         "chapter": "terrain-gen",
         "layout": "full",
         "tab": "선택",
-        "title": {
-          "text": "지형을 어떤 단위로 그릴까 — 셀마다 객체 대신 Chunk Mesh",
-          "verbatim": true
-        },
-        "lead": {
-          "text": "약 1만 셀(프로토타입 시험 맵 100×105)의 지형을 어떤 단위로 그리고, 충돌을 어떻게 줄지 정해야 했습니다.",
-          "verbatim": true
-        },
-        "sectionPath": [
-          "2. 같은 시드로 모두에게 같은 맵 생성",
-          "2.6 고민과 선택"
-        ],
+        "title": {"text": "지형을 어떤 단위로 그릴까 — 셀마다 객체 대신 Chunk Mesh", "verbatim": true},
+        "lead": {"text": "약 1만 셀(프로토타입 시험 맵 100×105)의 지형을 어떤 단위로 그리고, 충돌을 어떻게 줄지 정해야 했습니다.", "verbatim": true},
+        "sectionPath": ["2. 같은 시드로 모두에게 같은 맵 생성", "2.6 고민과 선택"],
         "points": [
           {
             "label": "이유",
             "text": "채굴과 붕괴로 셀이 계속 바뀌는 게임이라 개발이 이어질수록 문제가 커질 것으로 판단해, 상대적으로 비용이 저렴한 Chunk Mesh와 EdgeCollider를 택했습니다.",
             "verbatim": false
           },
-          {
-            "label": "",
-            "text": "AI로 빠르게 만든 프로토타입으로 붕괴 동작을 먼저 확인하고, 실제 게임에 쓸 표현 방식은 비용을 따져 다시 골랐습니다.",
-            "verbatim": true
-          }
+          {"label": "", "text": "AI로 빠르게 만든 프로토타입으로 붕괴 동작을 먼저 확인하고, 실제 게임에 쓸 표현 방식은 비용을 따져 다시 골랐습니다.", "verbatim": true}
         ],
-        "visuals": [
-          {
-            "kind": "table",
-            "n": 1,
-            "fp": "방법|장점|비용"
-          }
-        ]
+        "visuals": [{"kind": "table", "n": 1, "fp": "방법|장점|비용"}]
       },
       {
         "key": "excavation-seq",
         "chapter": "collapse-sync",
         "layout": "visual",
         "tab": "흐름",
-        "title": {
-          "text": "3.2 모두에게 같은 순서로 반영되는 채굴 결과",
-          "verbatim": true
-        },
-        "lead": {
-          "text": "Batch는 `BaseRevision`, `ResultRevision`, 셀 변경 목록을 가집니다.",
-          "verbatim": true
-        },
-        "sectionPath": [
-          "3. 여럿이 함께 캐고 무너뜨리는 지형",
-          "3.2 모두에게 같은 순서로 반영되는 채굴 결과"
-        ],
+        "title": {"text": "3.2 모두에게 같은 순서로 반영되는 채굴 결과", "verbatim": true},
+        "lead": {"text": "Batch는 `BaseRevision`, `ResultRevision`, 셀 변경 목록을 가집니다.", "verbatim": true},
+        "sectionPath": ["3. 여럿이 함께 캐고 무너뜨리는 지형", "3.2 모두에게 같은 순서로 반영되는 채굴 결과"],
         "points": [
           {
             "label": "구현",
             "text": "앞선 변경보다 먼저 도착한 Batch는 바로 적용하지 않고 `SortedDictionary`에 보관했다가, 앞 번호가 채워지면 이어서 적용합니다.",
             "verbatim": true
           },
-          {
-            "label": "주의점",
-            "text": "`true`는 송신 큐 등록 성공이며 채굴 성공 확정은 아님",
-            "verbatim": true
-          },
-          {
-            "label": "",
-            "text": "앞선 Batch가 영구히 오지 않으면 버퍼만으로는 진행을 복구할 수 없습니다.",
-            "verbatim": true
-          }
+          {"label": "주의점", "text": "`true`는 송신 큐 등록 성공이며 채굴 성공 확정은 아님", "verbatim": true},
+          {"label": "", "text": "앞선 Batch가 영구히 오지 않으면 버퍼만으로는 진행을 복구할 수 없습니다.", "verbatim": true}
         ],
-        "visuals": [
-          {
-            "kind": "mermaid",
-            "n": 1,
-            "fp": "sequenceDiagram"
-          }
-        ]
+        "visuals": [{"kind": "mermaid", "n": 1, "fp": "sequenceDiagram"}]
       },
       {
         "key": "multi-chunk",
         "chapter": "collapse-sync",
         "layout": "code",
         "tab": "구현",
-        "title": {
-          "text": "3.4 여러 덩어리의 동시 낙하",
-          "verbatim": true
-        },
-        "lead": {
-          "text": "처음에는 확정을 기다리는 상태를 하나만 두어서, 먼저 보낸 요청을 기다리는 동안 다음 청크의 배치 제안이 버려졌습니다(§8.3).",
-          "verbatim": true
-        },
-        "sectionPath": [
-          "3. 여럿이 함께 캐고 무너뜨리는 지형",
-          "3.4 여러 덩어리의 동시 낙하"
-        ],
+        "title": {"text": "3.4 여러 덩어리의 동시 낙하", "verbatim": true},
+        "lead": {"text": "처음에는 확정을 기다리는 상태를 하나만 두어서, 먼저 보낸 요청을 기다리는 동안 다음 청크의 배치 제안이 버려졌습니다(§8.3).", "verbatim": true},
+        "sectionPath": ["3. 여럿이 함께 캐고 무너뜨리는 지형", "3.4 여러 덩어리의 동시 낙하"],
         "points": [
           {
             "label": "구현",
             "text": "`pendingCollapsePlacementIds`에 `RequestId → CollapseID`를 저장해, 같은 청크의 중복 요청만 막고 다른 청크는 독립적으로 보냅니다.",
             "verbatim": false
           },
-          {
-            "label": "이유",
-            "text": "늦게 도착한 확정 Batch가 누구의 낙하인지 알아야 하므로, 성공·오류·취소 응답이 왔을 때 정리합니다.",
-            "verbatim": true
-          }
+          {"label": "이유", "text": "늦게 도착한 확정 Batch가 누구의 낙하인지 알아야 하므로, 성공·오류·취소 응답이 왔을 때 정리합니다.", "verbatim": true}
         ],
-        "visuals": [
-          {
-            "kind": "code",
-            "n": 1,
-            "fp": "// RoomClient.HandlePlacementProposed() — 배치 담당일 때 같은 청크의 중복"
-          }
-        ]
+        "visuals": [{"kind": "code", "n": 1, "fp": "// RoomClient.HandlePlacementProposed() — 배치 담당일 때 같은 청크의 중복"}]
       },
       {
         "key": "sync-tradeoffs",
         "chapter": "collapse-sync",
         "layout": "full",
         "tab": "선택",
-        "title": {
-          "text": "3.7 고민과 선택",
-          "verbatim": true
-        },
+        "title": {"text": "3.7 고민과 선택", "verbatim": true},
         "lead": null,
-        "sectionPath": [
-          "3. 여럿이 함께 캐고 무너뜨리는 지형",
-          "3.7 고민과 선택"
-        ],
+        "sectionPath": ["3. 여럿이 함께 캐고 무너뜨리는 지형", "3.7 고민과 선택"],
         "points": [],
-        "visuals": [
-          {
-            "kind": "table",
-            "n": 1,
-            "fp": "방법|장점|비용"
-          },
-          {
-            "kind": "table",
-            "n": 2,
-            "fp": "선택|이점|비용"
-          }
-        ]
+        "visuals": [{"kind": "table", "n": 1, "fp": "방법|장점|비용"}, {"kind": "table", "n": 2, "fp": "선택|이점|비용"}]
       },
       {
         "key": "burial-states",
         "chapter": "falling-terrain",
         "layout": "visual",
         "tab": "구조",
-        "title": {
-          "text": "4.1 개요 — 낙하 청크 접촉과 매몰 상태",
-          "verbatim": true
-        },
-        "lead": {
-          "text": "`FallingTerrainInteraction`은 캐릭터와 낙하 청크의 접촉 결과, 탈출 위치 탐색, 매몰 상태와 지속 피해 요청을 담당합니다.",
-          "verbatim": true
-        },
-        "sectionPath": [
-          "4. 낙하 지형 충돌·탈출·매몰 상태",
-          "4.1 개요 — 낙하 청크 접촉과 매몰 상태"
-        ],
+        "title": {"text": "4.1 개요 — 낙하 청크 접촉과 매몰 상태", "verbatim": true},
+        "lead": {"text": "`FallingTerrainInteraction`은 캐릭터와 낙하 청크의 접촉 결과, 탈출 위치 탐색, 매몰 상태와 지속 피해 요청을 담당합니다.", "verbatim": true},
+        "sectionPath": ["4. 낙하 지형 충돌·탈출·매몰 상태", "4.1 개요 — 낙하 청크 접촉과 매몰 상태"],
         "points": [
-          {
-            "label": "구현",
-            "text": "`FallingTerrainContracts`의 계약과 이벤트를 통해 캐릭터 이동·피해 계층에 연결됩니다.",
-            "verbatim": true
-          },
-          {
-            "label": "이유",
-            "text": "`PlayerController` 하나에 지형 판정과 피해 로직을 모두 넣지 않는 방향으로 분리했습니다.",
-            "verbatim": true
-          },
+          {"label": "구현", "text": "`FallingTerrainContracts`의 계약과 이벤트를 통해 캐릭터 이동·피해 계층에 연결됩니다.", "verbatim": true},
+          {"label": "이유", "text": "`PlayerController` 하나에 지형 판정과 피해 로직을 모두 넣지 않는 방향으로 분리했습니다.", "verbatim": true},
           {
             "label": "",
             "text": "이 다이어그램은 `FallingTerrainInteraction`이 여러 값과 처리 순서로 나타내는 상황과 흐름을 도식화한 것입니다.",
@@ -592,20 +386,13 @@
           }
         ],
         "visuals": [
-          {
-            "kind": "mermaid",
-            "n": 1,
-            "fp": "stateDiagram-v2"
-          },
+          {"kind": "mermaid", "n": 1, "fp": "stateDiagram-v2"},
           {
             "kind": "image",
             "src": "images/burial-death.png",
             "w": 968,
             "h": 726,
-            "caption": {
-              "text": "낙하 지형에 매몰되어 사망한 플레이어 — 해당 칸에 사망 보관함 타일이 생김",
-              "verbatim": true
-            }
+            "caption": {"text": "낙하 지형에 매몰되어 사망한 플레이어 — 해당 칸에 사망 보관함 타일이 생김", "verbatim": true}
           }
         ]
       },
@@ -614,183 +401,76 @@
         "chapter": "falling-terrain",
         "layout": "code",
         "tab": "구현",
-        "title": {
-          "text": "떨어진 덩어리가 멈출 칸 선택",
-          "verbatim": true
-        },
-        "lead": {
-          "text": "`TerrainSampler`는 청크의 각 셀을 독립적으로 반올림하지 않습니다.",
-          "verbatim": true
-        },
-        "sectionPath": [
-          "4. 낙하 지형 충돌·탈출·매몰 상태",
-          "4.3 낙하 지형과 맞물리는 움직임 — 멈출 칸·이동 충돌·낙하 피해",
-          "떨어진 덩어리가 멈출 칸 선택"
-        ],
+        "title": {"text": "떨어진 덩어리가 멈출 칸 선택", "verbatim": true},
+        "lead": {"text": "`TerrainSampler`는 청크의 각 셀을 독립적으로 반올림하지 않습니다.", "verbatim": true},
+        "sectionPath": ["4. 낙하 지형 충돌·탈출·매몰 상태", "4.3 낙하 지형과 맞물리는 움직임 — 멈출 칸·이동 충돌·낙하 피해", "떨어진 덩어리가 멈출 칸 선택"],
         "points": [
-          {
-            "label": "구현",
-            "text": "물리 Bounds 주변에서 모든 로컬 셀에 동일한 offset을 더하는 후보를 평가합니다.",
-            "verbatim": true
-          },
-          {
-            "label": "구현",
-            "text": "연결된 청크의 셀 배치를 통째로 옮기는 방식입니다.",
-            "verbatim": true
-          },
-          {
-            "label": "",
-            "text": "이 계산은 물리 결과에 가까운 정적 Grid 후보를 고를 뿐이고, 확정은 서버가 합니다.",
-            "verbatim": true
-          }
+          {"label": "구현", "text": "물리 Bounds 주변에서 모든 로컬 셀에 동일한 offset을 더하는 후보를 평가합니다.", "verbatim": true},
+          {"label": "구현", "text": "연결된 청크의 셀 배치를 통째로 옮기는 방식입니다.", "verbatim": true},
+          {"label": "", "text": "이 계산은 물리 결과에 가까운 정적 Grid 후보를 고를 뿐이고, 확정은 서버가 합니다.", "verbatim": true}
         ],
-        "visuals": [
-          {
-            "kind": "code",
-            "n": 1,
-            "fp": "// TerrainSampler.IsBetterPlacement() — 배치 종류 → 닿는 수 → 정렬 오차"
-          }
-        ]
+        "visuals": [{"kind": "code", "n": 1, "fp": "// TerrainSampler.IsBetterPlacement() — 배치 종류 → 닿는 수 → 정렬 오차"}]
       },
       {
         "key": "player-move",
         "chapter": "falling-terrain",
         "layout": "full",
         "tab": "구조",
-        "title": {
-          "text": "플레이어 이동과 지형 충돌",
-          "verbatim": true
-        },
-        "lead": {
-          "text": "이후 `PlayerController`에 몰려 있던 이동·충돌·생명주기·지형 상태 처리를 아래 구성 요소로 나눴습니다.",
-          "verbatim": true
-        },
-        "sectionPath": [
-          "4. 낙하 지형 충돌·탈출·매몰 상태",
-          "4.3 낙하 지형과 맞물리는 움직임 — 멈출 칸·이동 충돌·낙하 피해",
-          "플레이어 이동과 지형 충돌"
-        ],
+        "title": {"text": "플레이어 이동과 지형 충돌", "verbatim": true},
+        "lead": {"text": "이후 `PlayerController`에 몰려 있던 이동·충돌·생명주기·지형 상태 처리를 아래 구성 요소로 나눴습니다.", "verbatim": true},
+        "sectionPath": ["4. 낙하 지형 충돌·탈출·매몰 상태", "4.3 낙하 지형과 맞물리는 움직임 — 멈출 칸·이동 충돌·낙하 피해", "플레이어 이동과 지형 충돌"],
         "points": [],
-        "visuals": [
-          {
-            "kind": "table",
-            "n": 1,
-            "fp": "클래스|책임"
-          }
-        ]
+        "visuals": [{"kind": "table", "n": 1, "fp": "클래스|책임"}]
       },
       {
         "key": "inventory-flow",
         "chapter": "inventory",
         "layout": "visual",
         "tab": "흐름",
-        "title": {
-          "text": "5.2 아이템 요청과 서버 전체 상태로 교체",
-          "verbatim": true
-        },
-        "lead": {
-          "text": "`PlayerInventory`는 ItemID별 수량과 무게를 관리합니다.",
-          "verbatim": true
-        },
-        "sectionPath": [
-          "5. 인벤토리·아이템·상점",
-          "5.2 아이템 요청과 서버 전체 상태로 교체"
-        ],
+        "title": {"text": "5.2 아이템 요청과 서버 전체 상태로 교체", "verbatim": true},
+        "lead": {"text": "`PlayerInventory`는 ItemID별 수량과 무게를 관리합니다.", "verbatim": true},
+        "sectionPath": ["5. 인벤토리·아이템·상점", "5.2 아이템 요청과 서버 전체 상태로 교체"],
         "points": [
           {
             "label": "구현",
             "text": "`ReplaceWithSnapshot()`은 서버 전체 상태를 수신해 교체하고, 실제 수량이 바뀐 아이템의 이벤트를 발생시킵니다.",
             "verbatim": true
           },
-          {
-            "label": "구현",
-            "text": "서버가 확정한 상태를 클라이언트의 로컬 무게 제한으로 거절하지 않도록 처리합니다.",
-            "verbatim": true
-          },
-          {
-            "label": "",
-            "text": "장착 곡괭이도 `EquippedPickaxeItemID`로 별도 적용합니다.",
-            "verbatim": true
-          }
+          {"label": "구현", "text": "서버가 확정한 상태를 클라이언트의 로컬 무게 제한으로 거절하지 않도록 처리합니다.", "verbatim": true},
+          {"label": "", "text": "장착 곡괭이도 `EquippedPickaxeItemID`로 별도 적용합니다.", "verbatim": true}
         ],
-        "visuals": [
-          {
-            "kind": "mermaid",
-            "n": 1,
-            "fp": "sequenceDiagram"
-          }
-        ]
+        "visuals": [{"kind": "mermaid", "n": 1, "fp": "sequenceDiagram"}]
       },
       {
         "key": "cooldown-cancel",
         "chapter": "inventory",
         "layout": "code",
         "tab": "구현",
-        "title": {
-          "text": "5.3 아이템 사용 거절과 쿨타임",
-          "verbatim": true
-        },
-        "lead": {
-          "text": "아이템을 쓰면 서버의 응답을 기다리지 않고 화면의 쿨타임을 먼저 시작합니다.",
-          "verbatim": true
-        },
-        "sectionPath": [
-          "5. 인벤토리·아이템·상점",
-          "5.3 아이템 사용 거절과 쿨타임"
-        ],
+        "title": {"text": "5.3 아이템 사용 거절과 쿨타임", "verbatim": true},
+        "lead": {"text": "아이템을 쓰면 서버의 응답을 기다리지 않고 화면의 쿨타임을 먼저 시작합니다.", "verbatim": true},
+        "sectionPath": ["5. 인벤토리·아이템·상점", "5.3 아이템 사용 거절과 쿨타임"],
         "points": [
-          {
-            "label": "구현",
-            "text": "`pendingCooldowns`는 요청 ID마다 어느 아이템을 언제 다시 쓸 수 있는지 기억합니다.",
-            "verbatim": true
-          },
+          {"label": "구현", "text": "`pendingCooldowns`는 요청 ID마다 어느 아이템을 언제 다시 쓸 수 있는지 기억합니다.", "verbatim": true},
           {
             "label": "구현",
             "text": "성공 응답이 오면 대기를 지우고 효과를 재생하고, `RequestFailed`가 오면 그 아이템의 예상 쿨타임을 지웁니다.",
             "verbatim": true
           }
         ],
-        "visuals": [
-          {
-            "kind": "code",
-            "n": 1,
-            "fp": "// ItemController.HandleRequestFailed() — 실패한 요청의 예상 쿨타임 제거"
-          }
-        ]
+        "visuals": [{"kind": "code", "n": 1, "fp": "// ItemController.HandleRequestFailed() — 실패한 요청의 예상 쿨타임 제거"}]
       },
       {
         "key": "vision-layers",
         "chapter": "exploration",
         "layout": "visual",
         "tab": "구조",
-        "title": {
-          "text": "6.1 개요 — 누적 탐험 정보와 지금 관측되는 셀",
-          "verbatim": true
-        },
-        "lead": {
-          "text": "지하에서는 플레이어와 설치한 횃불이 지금 비추는 통로만 보이고, 시야를 벗어난 곳은 이미 지나온 곳이라도 다시 어둠에 덮입니다.",
-          "verbatim": true
-        },
-        "sectionPath": [
-          "6. 가 본 곳과 지금 보이는 곳을 보여 주는 지도",
-          "6.1 개요 — 누적 탐험 정보와 지금 관측되는 셀"
-        ],
+        "title": {"text": "6.1 개요 — 누적 탐험 정보와 지금 관측되는 셀", "verbatim": true},
+        "lead": {"text": "지하에서는 플레이어와 설치한 횃불이 지금 비추는 통로만 보이고, 시야를 벗어난 곳은 이미 지나온 곳이라도 다시 어둠에 덮입니다.", "verbatim": true},
+        "sectionPath": ["6. 가 본 곳과 지금 보이는 곳을 보여 주는 지도", "6.1 개요 — 누적 탐험 정보와 지금 관측되는 셀"],
         "points": [
-          {
-            "label": "누적 탐험",
-            "text": "이전에 방문·관측한 곳",
-            "verbatim": true
-          },
-          {
-            "label": "현재 관측",
-            "text": "현재 플레이어·조명으로 볼 수 있는 곳",
-            "verbatim": true
-          },
-          {
-            "label": "",
-            "text": "미니맵과 월드 안개는 같은 지형·탐험 상태를 참조하되 서로 다른 표시 역할을 맡습니다.",
-            "verbatim": true
-          }
+          {"label": "누적 탐험", "text": "이전에 방문·관측한 곳", "verbatim": true},
+          {"label": "현재 관측", "text": "현재 플레이어·조명으로 볼 수 있는 곳", "verbatim": true},
+          {"label": "", "text": "미니맵과 월드 안개는 같은 지형·탐험 상태를 참조하되 서로 다른 표시 역할을 맡습니다.", "verbatim": true}
         ],
         "visuals": [
           {
@@ -798,10 +478,7 @@
             "src": "images/exploration-vision.png",
             "w": 1200,
             "h": 1000,
-            "caption": {
-              "text": "같은 지하 격자를 네 칸으로 나눈 도식",
-              "verbatim": false
-            }
+            "caption": {"text": "같은 지하 격자를 네 칸으로 나눈 도식", "verbatim": false}
           }
         ]
       },
@@ -810,58 +487,24 @@
         "chapter": "exploration",
         "layout": "code",
         "tab": "구현",
-        "title": {
-          "text": "6.2 이동·지형 변경 때만 하는 재계산",
-          "verbatim": true
-        },
-        "lead": {
-          "text": "캐릭터가 같은 셀에 있고 지형/횃불 상태도 바뀌지 않았다면 계산을 생략합니다.",
-          "verbatim": true
-        },
-        "sectionPath": [
-          "6. 가 본 곳과 지금 보이는 곳을 보여 주는 지도",
-          "6.2 이동·지형 변경 때만 하는 재계산"
-        ],
+        "title": {"text": "6.2 이동·지형 변경 때만 하는 재계산", "verbatim": true},
+        "lead": {"text": "캐릭터가 같은 셀에 있고 지형/횃불 상태도 바뀌지 않았다면 계산을 생략합니다.", "verbatim": true},
+        "sectionPath": ["6. 가 본 곳과 지금 보이는 곳을 보여 주는 지도", "6.2 이동·지형 변경 때만 하는 재계산"],
         "points": [
-          {
-            "label": "구현",
-            "text": "타일을 채굴한 뒤에는 플레이어가 정지해 있어도 `needsVisionRefresh`가 설정되어 다시 관측합니다.",
-            "verbatim": true
-          },
-          {
-            "label": "구현",
-            "text": "누적 탐험은 반경과 지형 차폐를 검사하며, 현재 시야는 플레이어 및 배치 횃불의 영역을 합칩니다.",
-            "verbatim": true
-          },
-          {
-            "label": "",
-            "text": "현재 시야의 통로 확산과 탐험 기록의 직선 시야 검사는 서로 다른 알고리즘입니다.",
-            "verbatim": true
-          }
+          {"label": "구현", "text": "타일을 채굴한 뒤에는 플레이어가 정지해 있어도 `needsVisionRefresh`가 설정되어 다시 관측합니다.", "verbatim": true},
+          {"label": "구현", "text": "누적 탐험은 반경과 지형 차폐를 검사하며, 현재 시야는 플레이어 및 배치 횃불의 영역을 합칩니다.", "verbatim": true},
+          {"label": "", "text": "현재 시야의 통로 확산과 탐험 기록의 직선 시야 검사는 서로 다른 알고리즘입니다.", "verbatim": true}
         ],
-        "visuals": [
-          {
-            "kind": "code",
-            "n": 1,
-            "fp": "// PlayerExplorationController.RefreshPlayerVision() — 같은 셀이"
-          }
-        ]
+        "visuals": [{"kind": "code", "n": 1, "fp": "// PlayerExplorationController.RefreshPlayerVision() — 같은 셀이"}]
       },
       {
         "key": "lobby-screens",
         "chapter": "lobby",
         "layout": "screens",
         "tab": "결과",
-        "title": {
-          "text": "대기방 프리뷰·채팅·승자 표시",
-          "verbatim": true
-        },
+        "title": {"text": "대기방 프리뷰·채팅·승자 표시", "verbatim": true},
         "lead": null,
-        "sectionPath": [
-          "7. 로비부터 결과 화면까지의 흐름",
-          "7.3 로비부터 결과까지의 화면 — 다른 플레이어·대기방·결과",
-          "대기방 프리뷰·채팅·승자 표시"
-        ],
+        "sectionPath": ["7. 로비부터 결과 화면까지의 흐름", "7.3 로비부터 결과까지의 화면 — 다른 플레이어·대기방·결과", "대기방 프리뷰·채팅·승자 표시"],
         "points": [],
         "visuals": [
           {
@@ -869,20 +512,14 @@
             "src": "images/lobby-room-chat.png",
             "w": 2328,
             "h": 1746,
-            "caption": {
-              "text": "대기실 화면 — 네 플레이어 슬롯의 아바타와 오른쪽 채팅창, '호스트가 게임을 시작할 때까지 기다리는 중입니다' 안내",
-              "verbatim": true
-            }
+            "caption": {"text": "대기실 화면 — 네 플레이어 슬롯의 아바타와 오른쪽 채팅창, '호스트가 게임을 시작할 때까지 기다리는 중입니다' 안내", "verbatim": true}
           },
           {
             "kind": "image",
             "src": "images/game-result.png",
             "w": 1067,
             "h": 800,
-            "caption": {
-              "text": "게임 종료 결과 창",
-              "verbatim": true
-            }
+            "caption": {"text": "게임 종료 결과 창", "verbatim": true}
           }
         ]
       },
@@ -891,37 +528,18 @@
         "chapter": "troubleshooting",
         "layout": "problem",
         "tab": "문제 해결",
-        "title": {
-          "text": "8.1 여럿이 하면 멈추던 멀티플레이",
-          "verbatim": true
-        },
+        "title": {"text": "8.1 여럿이 하면 멈추던 멀티플레이", "verbatim": true},
         "lead": null,
-        "sectionPath": [
-          "8. 트러블슈팅",
-          "8.1 여럿이 하면 멈추던 멀티플레이",
-          "조금만 파도 멈추던 게임 — 전체 지형 스냅샷이 주원인"
-        ],
+        "sectionPath": ["8. 트러블슈팅", "8.1 여럿이 하면 멈추던 멀티플레이", "조금만 파도 멈추던 게임 — 전체 지형 스냅샷이 주원인"],
         "points": [
-          {
-            "label": "증상",
-            "text": "처음 멀티플레이 테스트에서 한 명이 땅을 조금만 파도 게임이 멈췄고, 한참 지나서야 복구됐습니다.",
-            "verbatim": true
-          },
+          {"label": "증상", "text": "처음 멀티플레이 테스트에서 한 명이 땅을 조금만 파도 게임이 멈췄고, 한참 지나서야 복구됐습니다.", "verbatim": true},
           {
             "label": "확인한 원인",
             "text": "lock 안의 과도한 처리도 문제였지만, 주원인은 지형 전체 스냅샷이 자주 오가며 데이터 용량이 너무 커진 것이었습니다.",
             "verbatim": true
           },
-          {
-            "label": "해결",
-            "text": "전체 스냅샷 대신 서버가 보내는 변경 Batch의 Revision만 비교해 순서대로 적용하도록 바꿨습니다.",
-            "verbatim": false
-          },
-          {
-            "label": "배운 점",
-            "text": "서버와 틱당 주고받는 데이터의 크기가 중요함을 알게 됐습니다.",
-            "verbatim": true
-          }
+          {"label": "해결", "text": "전체 스냅샷 대신 서버가 보내는 변경 Batch의 Revision만 비교해 순서대로 적용하도록 바꿨습니다.", "verbatim": false},
+          {"label": "배운 점", "text": "서버와 틱당 주고받는 데이터의 크기가 중요함을 알게 됐습니다.", "verbatim": true}
         ],
         "visuals": []
       },
@@ -930,21 +548,11 @@
         "chapter": "troubleshooting",
         "layout": "problem",
         "tab": "문제 해결",
-        "title": {
-          "text": "8.2 채굴해도 풀리지 않던 매몰",
-          "verbatim": true
-        },
+        "title": {"text": "8.2 채굴해도 풀리지 않던 매몰", "verbatim": true},
         "lead": null,
-        "sectionPath": [
-          "8. 트러블슈팅",
-          "8.2 채굴해도 풀리지 않던 매몰"
-        ],
+        "sectionPath": ["8. 트러블슈팅", "8.2 채굴해도 풀리지 않던 매몰"],
         "points": [
-          {
-            "label": "증상",
-            "text": "채굴하여 공간을 만들었는데 매몰이 풀리지 않았습니다.",
-            "verbatim": true
-          },
+          {"label": "증상", "text": "채굴하여 공간을 만들었는데 매몰이 풀리지 않았습니다.", "verbatim": true},
           {
             "label": "원인",
             "text": "지형이 바뀌면 프레임 끝까지 기다린 뒤 매몰을 다시 판정했지만, 해제 판정이 논리 셀과 물리 Collider 겹침을 함께 봤습니다. `TerrainGridWorld`의 EdgeCollider가 다시 만들어지는 시점이 달라 이전 Collider가 한 프레임 더 남았고, 그 때문에 아직 갇혔다고 판단했습니다.",
@@ -955,14 +563,342 @@
             "text": "매몰 해제는 물리 Collider 겹침(`IsCurrentSpaceEmpty()`) 대신 논리 셀(`IsGridSpaceEmpty()`)만 보고 판정하도록 바꿨습니다.",
             "verbatim": true
           },
-          {
-            "label": "배운 점",
-            "text": "셀 삭제와 Collider 재생성은 서로 다른 시점입니다(§9.3).",
-            "verbatim": true
-          }
+          {"label": "배운 점", "text": "셀 삭제와 Collider 재생성은 서로 다른 시점입니다(§9.3).", "verbatim": true}
         ],
         "visuals": []
       }
-    ]
+    ],
+    "base": [
+      {
+        "key": "what",
+        "chapter": "overview",
+        "layout": "overview",
+        "tab": "개요",
+        "title": {"text": "1.1 게임 소개", "verbatim": true},
+        "lead": {"text": "Folk Sack은 지하에서 채굴하여 자원을 모으고, 지형 붕괴·매몰 위험 속에서 경쟁하는 2D 멀티플레이 채굴 게임입니다.", "verbatim": true},
+        "sectionPath": ["1. 프로젝트 개요", "1.1 게임 소개"],
+        "points": [
+          {"label": "기능", "text": "지상에서 자원을 판매하여 장비와 사용 아이템을 구매합니다.", "verbatim": true},
+          {"label": "기능", "text": "지지 구조가 사라진 지형은 물리 청크로 낙하하고, 플레이어는 충돌 피해나 매몰 위험에 노출됩니다.", "verbatim": true},
+          {"label": "진행", "text": "제한 시간이 끝나거나 목표 골드에 이르면 끝나고, 실제 보유 골드로 승자를 정합니다.", "verbatim": true}
+        ],
+        "visuals": [{"kind": "mermaid", "n": 1, "fp": "flowchart TB"}]
+      },
+      {
+        "key": "gen-pipeline",
+        "chapter": "terrain-gen",
+        "layout": "visual",
+        "tab": "구조",
+        "title": {"text": "2.1 개요 — 같은 시드와 규칙의 절차적 맵 데이터 생성", "verbatim": true},
+        "lead": {"text": "같은 시드와 규칙으로 클라이언트와 서버가 같은 맵 데이터를 절차적으로 생성합니다.", "verbatim": true},
+        "sectionPath": ["2. 같은 시드로 모두에게 같은 맵 생성", "2.1 개요 — 같은 시드와 규칙의 절차적 맵 데이터 생성"],
+        "points": [
+          {"label": "구현", "text": "`TerrainTableSeedGenerator`는 이 규칙을 적용해 `TerrainMapFile`을 생성합니다.", "verbatim": true},
+          {"label": "구현", "text": "서버에는 대응하는 `ServerTerrainGenerator`가 있습니다.", "verbatim": true},
+          {"label": "이유", "text": "생성 순서 자체가 결과를 결정하는 규칙입니다.", "verbatim": true},
+          {"label": "", "text": "동굴을 뚫은 후 광물을 붙이는 순서나 난수 호출 순서가 달라지면 같은 시드여도 맵이 달라질 수 있습니다.", "verbatim": true}
+        ],
+        "visuals": [{"kind": "mermaid", "n": 1, "fp": "flowchart TB"}]
+      },
+      {
+        "key": "map-contract",
+        "chapter": "terrain-gen",
+        "layout": "code",
+        "tab": "구현",
+        "title": {"text": "2.3 접속 시 같은 맵 재생성", "verbatim": true},
+        "lead": {"text": "클라이언트는 `map_session`에서 받은 프로필·시드와 테이블 버전을 확인하고 초기 맵을 재생성합니다.", "verbatim": true},
+        "sectionPath": ["2. 같은 시드로 모두에게 같은 맵 생성", "2.3 접속 시 같은 맵 재생성"],
+        "points": [
+          {
+            "label": "구현",
+            "text": "`TerrainNetworkAdapter.FromGeneratedMap()`이 생성 결과를 Revision 0의 런타임 스냅샷으로 변환합니다.",
+            "verbatim": true
+          },
+          {"label": "구현", "text": "게임 중 채굴·재배치 변경은 이후 서버 Batch로 적용됩니다.", "verbatim": true},
+          {"label": "구현", "text": "테이블 버전은 TSV 파일들을 정렬하여 읽고 SHA-256으로 계산한 값의 앞 12자입니다.", "verbatim": true},
+          {
+            "label": "이유",
+            "text": "클라이언트와 서버가 같은 규칙으로 정규화하므로, Windows와 macOS에서 내용이 같은 TSV가 다른 버전으로 판단되지 않습니다.",
+            "verbatim": false
+          }
+        ],
+        "visuals": [
+          {"kind": "code", "n": 1, "fp": "// RoomClient.HandleMapSession() — 맵 세션의 프로필 ID·시드로 초기 맵 생성"},
+          {
+            "kind": "image",
+            "src": "images/terrain-seed-map.png",
+            "w": 1447,
+            "h": 1085,
+            "caption": {"text": "에디터 씬 뷰로 본 생성된 맵 전체 — 위부터 Ground·Dirt·Stone·DeepStone 구간과 변칙 지형·동굴·광물 군집", "verbatim": true}
+          }
+        ]
+      },
+      {
+        "key": "render-choice",
+        "chapter": "terrain-gen",
+        "layout": "full",
+        "tab": "선택",
+        "title": {"text": "지형을 어떤 단위로 그릴까 — 셀마다 객체 대신 Chunk Mesh", "verbatim": true},
+        "lead": {"text": "약 1만 셀(프로토타입 시험 맵 100×105)의 지형을 어떤 단위로 그리고, 충돌을 어떻게 줄지 정해야 했습니다.", "verbatim": true},
+        "sectionPath": ["2. 같은 시드로 모두에게 같은 맵 생성", "2.6 고민과 선택"],
+        "points": [
+          {
+            "label": "이유",
+            "text": "채굴과 붕괴로 셀이 계속 바뀌는 게임이라 개발이 이어질수록 문제가 커질 것으로 판단해, 상대적으로 비용이 저렴한 Chunk Mesh와 EdgeCollider를 택했습니다.",
+            "verbatim": false
+          },
+          {"label": "", "text": "AI로 빠르게 만든 프로토타입으로 붕괴 동작을 먼저 확인하고, 실제 게임에 쓸 표현 방식은 비용을 따져 다시 골랐습니다.", "verbatim": true}
+        ],
+        "visuals": [{"kind": "table", "n": 1, "fp": "방법|장점|비용"}]
+      },
+      {
+        "key": "excavation-seq",
+        "chapter": "collapse-sync",
+        "layout": "visual",
+        "tab": "흐름",
+        "title": {"text": "3.2 모두에게 같은 순서로 반영되는 채굴 결과", "verbatim": true},
+        "lead": {"text": "Batch는 `BaseRevision`, `ResultRevision`, 셀 변경 목록을 가집니다.", "verbatim": true},
+        "sectionPath": ["3. 여럿이 함께 캐고 무너뜨리는 지형", "3.2 모두에게 같은 순서로 반영되는 채굴 결과"],
+        "points": [
+          {
+            "label": "구현",
+            "text": "앞선 변경보다 먼저 도착한 Batch는 바로 적용하지 않고 `SortedDictionary`에 보관했다가, 앞 번호가 채워지면 이어서 적용합니다.",
+            "verbatim": true
+          },
+          {"label": "주의점", "text": "`true`는 송신 큐 등록 성공이며 채굴 성공 확정은 아님", "verbatim": true},
+          {"label": "", "text": "앞선 Batch가 영구히 오지 않으면 버퍼만으로는 진행을 복구할 수 없습니다.", "verbatim": true}
+        ],
+        "visuals": [{"kind": "mermaid", "n": 1, "fp": "sequenceDiagram"}]
+      },
+      {
+        "key": "multi-chunk",
+        "chapter": "collapse-sync",
+        "layout": "code",
+        "tab": "구현",
+        "title": {"text": "3.4 여러 덩어리의 동시 낙하", "verbatim": true},
+        "lead": {"text": "처음에는 확정을 기다리는 상태를 하나만 두어서, 먼저 보낸 요청을 기다리는 동안 다음 청크의 배치 제안이 버려졌습니다(§8.3).", "verbatim": true},
+        "sectionPath": ["3. 여럿이 함께 캐고 무너뜨리는 지형", "3.4 여러 덩어리의 동시 낙하"],
+        "points": [
+          {
+            "label": "구현",
+            "text": "`pendingCollapsePlacementIds`에 `RequestId → CollapseID`를 저장해, 같은 청크의 중복 요청만 막고 다른 청크는 독립적으로 보냅니다.",
+            "verbatim": false
+          },
+          {"label": "이유", "text": "늦게 도착한 확정 Batch가 누구의 낙하인지 알아야 하므로, 성공·오류·취소 응답이 왔을 때 정리합니다.", "verbatim": true}
+        ],
+        "visuals": [{"kind": "code", "n": 1, "fp": "// RoomClient.HandlePlacementProposed() — 배치 담당일 때 같은 청크의 중복"}]
+      },
+      {
+        "key": "sync-tradeoffs",
+        "chapter": "collapse-sync",
+        "layout": "full",
+        "tab": "선택",
+        "title": {"text": "3.7 고민과 선택", "verbatim": true},
+        "lead": null,
+        "sectionPath": ["3. 여럿이 함께 캐고 무너뜨리는 지형", "3.7 고민과 선택"],
+        "points": [],
+        "visuals": [{"kind": "table", "n": 1, "fp": "방법|장점|비용"}, {"kind": "table", "n": 2, "fp": "선택|이점|비용"}]
+      },
+      {
+        "key": "burial-states",
+        "chapter": "falling-terrain",
+        "layout": "visual",
+        "tab": "구조",
+        "title": {"text": "4.1 개요 — 낙하 청크 접촉과 매몰 상태", "verbatim": true},
+        "lead": {"text": "`FallingTerrainInteraction`은 캐릭터와 낙하 청크의 접촉 결과, 탈출 위치 탐색, 매몰 상태와 지속 피해 요청을 담당합니다.", "verbatim": true},
+        "sectionPath": ["4. 낙하 지형 충돌·탈출·매몰 상태", "4.1 개요 — 낙하 청크 접촉과 매몰 상태"],
+        "points": [
+          {"label": "구현", "text": "`FallingTerrainContracts`의 계약과 이벤트를 통해 캐릭터 이동·피해 계층에 연결됩니다.", "verbatim": true},
+          {"label": "이유", "text": "`PlayerController` 하나에 지형 판정과 피해 로직을 모두 넣지 않는 방향으로 분리했습니다.", "verbatim": true},
+          {
+            "label": "",
+            "text": "이 다이어그램은 `FallingTerrainInteraction`이 여러 값과 처리 순서로 나타내는 상황과 흐름을 도식화한 것입니다.",
+            "verbatim": true
+          }
+        ],
+        "visuals": [
+          {"kind": "mermaid", "n": 1, "fp": "stateDiagram-v2"},
+          {
+            "kind": "image",
+            "src": "images/burial-death.png",
+            "w": 968,
+            "h": 726,
+            "caption": {"text": "낙하 지형에 매몰되어 사망한 플레이어 — 해당 칸에 사망 보관함 타일이 생김", "verbatim": true}
+          }
+        ]
+      },
+      {
+        "key": "chunk-placement",
+        "chapter": "falling-terrain",
+        "layout": "code",
+        "tab": "구현",
+        "title": {"text": "떨어진 덩어리가 멈출 칸 선택", "verbatim": true},
+        "lead": {"text": "`TerrainSampler`는 청크의 각 셀을 독립적으로 반올림하지 않습니다.", "verbatim": true},
+        "sectionPath": ["4. 낙하 지형 충돌·탈출·매몰 상태", "4.3 낙하 지형과 맞물리는 움직임 — 멈출 칸·이동 충돌·낙하 피해", "떨어진 덩어리가 멈출 칸 선택"],
+        "points": [
+          {"label": "구현", "text": "물리 Bounds 주변에서 모든 로컬 셀에 동일한 offset을 더하는 후보를 평가합니다.", "verbatim": true},
+          {"label": "구현", "text": "연결된 청크의 셀 배치를 통째로 옮기는 방식입니다.", "verbatim": true},
+          {"label": "", "text": "이 계산은 물리 결과에 가까운 정적 Grid 후보를 고를 뿐이고, 확정은 서버가 합니다.", "verbatim": true}
+        ],
+        "visuals": [{"kind": "code", "n": 1, "fp": "// TerrainSampler.IsBetterPlacement() — 배치 종류 → 닿는 수 → 정렬 오차"}]
+      },
+      {
+        "key": "player-move",
+        "chapter": "falling-terrain",
+        "layout": "full",
+        "tab": "구조",
+        "title": {"text": "플레이어 이동과 지형 충돌", "verbatim": true},
+        "lead": {"text": "이후 `PlayerController`에 몰려 있던 이동·충돌·생명주기·지형 상태 처리를 아래 구성 요소로 나눴습니다.", "verbatim": true},
+        "sectionPath": ["4. 낙하 지형 충돌·탈출·매몰 상태", "4.3 낙하 지형과 맞물리는 움직임 — 멈출 칸·이동 충돌·낙하 피해", "플레이어 이동과 지형 충돌"],
+        "points": [],
+        "visuals": [{"kind": "table", "n": 1, "fp": "클래스|책임"}]
+      },
+      {
+        "key": "inventory-flow",
+        "chapter": "inventory",
+        "layout": "visual",
+        "tab": "흐름",
+        "title": {"text": "5.2 아이템 요청과 서버 전체 상태로 교체", "verbatim": true},
+        "lead": {"text": "`PlayerInventory`는 ItemID별 수량과 무게를 관리합니다.", "verbatim": true},
+        "sectionPath": ["5. 인벤토리·아이템·상점", "5.2 아이템 요청과 서버 전체 상태로 교체"],
+        "points": [
+          {
+            "label": "구현",
+            "text": "`ReplaceWithSnapshot()`은 서버 전체 상태를 수신해 교체하고, 실제 수량이 바뀐 아이템의 이벤트를 발생시킵니다.",
+            "verbatim": true
+          },
+          {"label": "구현", "text": "서버가 확정한 상태를 클라이언트의 로컬 무게 제한으로 거절하지 않도록 처리합니다.", "verbatim": true},
+          {"label": "", "text": "장착 곡괭이도 `EquippedPickaxeItemID`로 별도 적용합니다.", "verbatim": true}
+        ],
+        "visuals": [{"kind": "mermaid", "n": 1, "fp": "sequenceDiagram"}]
+      },
+      {
+        "key": "cooldown-cancel",
+        "chapter": "inventory",
+        "layout": "code",
+        "tab": "구현",
+        "title": {"text": "5.3 아이템 사용 거절과 쿨타임", "verbatim": true},
+        "lead": {"text": "아이템을 쓰면 서버의 응답을 기다리지 않고 화면의 쿨타임을 먼저 시작합니다.", "verbatim": true},
+        "sectionPath": ["5. 인벤토리·아이템·상점", "5.3 아이템 사용 거절과 쿨타임"],
+        "points": [
+          {"label": "구현", "text": "`pendingCooldowns`는 요청 ID마다 어느 아이템을 언제 다시 쓸 수 있는지 기억합니다.", "verbatim": true},
+          {
+            "label": "구현",
+            "text": "성공 응답이 오면 대기를 지우고 효과를 재생하고, `RequestFailed`가 오면 그 아이템의 예상 쿨타임을 지웁니다.",
+            "verbatim": true
+          }
+        ],
+        "visuals": [{"kind": "code", "n": 1, "fp": "// ItemController.HandleRequestFailed() — 실패한 요청의 예상 쿨타임 제거"}]
+      },
+      {
+        "key": "vision-layers",
+        "chapter": "exploration",
+        "layout": "visual",
+        "tab": "구조",
+        "title": {"text": "6.1 개요 — 누적 탐험 정보와 지금 관측되는 셀", "verbatim": true},
+        "lead": {"text": "지하에서는 플레이어와 설치한 횃불이 지금 비추는 통로만 보이고, 시야를 벗어난 곳은 이미 지나온 곳이라도 다시 어둠에 덮입니다.", "verbatim": true},
+        "sectionPath": ["6. 가 본 곳과 지금 보이는 곳을 보여 주는 지도", "6.1 개요 — 누적 탐험 정보와 지금 관측되는 셀"],
+        "points": [
+          {"label": "누적 탐험", "text": "이전에 방문·관측한 곳", "verbatim": true},
+          {"label": "현재 관측", "text": "현재 플레이어·조명으로 볼 수 있는 곳", "verbatim": true},
+          {"label": "", "text": "미니맵과 월드 안개는 같은 지형·탐험 상태를 참조하되 서로 다른 표시 역할을 맡습니다.", "verbatim": true}
+        ],
+        "visuals": [
+          {
+            "kind": "image",
+            "src": "images/exploration-vision.png",
+            "w": 1200,
+            "h": 1000,
+            "caption": {"text": "같은 지하 격자를 네 칸으로 나눈 도식", "verbatim": false}
+          }
+        ]
+      },
+      {
+        "key": "vision-refresh",
+        "chapter": "exploration",
+        "layout": "code",
+        "tab": "구현",
+        "title": {"text": "6.2 이동·지형 변경 때만 하는 재계산", "verbatim": true},
+        "lead": {"text": "캐릭터가 같은 셀에 있고 지형/횃불 상태도 바뀌지 않았다면 계산을 생략합니다.", "verbatim": true},
+        "sectionPath": ["6. 가 본 곳과 지금 보이는 곳을 보여 주는 지도", "6.2 이동·지형 변경 때만 하는 재계산"],
+        "points": [
+          {"label": "구현", "text": "타일을 채굴한 뒤에는 플레이어가 정지해 있어도 `needsVisionRefresh`가 설정되어 다시 관측합니다.", "verbatim": true},
+          {"label": "구현", "text": "누적 탐험은 반경과 지형 차폐를 검사하며, 현재 시야는 플레이어 및 배치 횃불의 영역을 합칩니다.", "verbatim": true},
+          {"label": "", "text": "현재 시야의 통로 확산과 탐험 기록의 직선 시야 검사는 서로 다른 알고리즘입니다.", "verbatim": true}
+        ],
+        "visuals": [{"kind": "code", "n": 1, "fp": "// PlayerExplorationController.RefreshPlayerVision() — 같은 셀이"}]
+      },
+      {
+        "key": "lobby-screens",
+        "chapter": "lobby",
+        "layout": "screens",
+        "tab": "결과",
+        "title": {"text": "대기방 프리뷰·채팅·승자 표시", "verbatim": true},
+        "lead": null,
+        "sectionPath": ["7. 로비부터 결과 화면까지의 흐름", "7.3 로비부터 결과까지의 화면 — 다른 플레이어·대기방·결과", "대기방 프리뷰·채팅·승자 표시"],
+        "points": [],
+        "visuals": [
+          {
+            "kind": "image",
+            "src": "images/lobby-room-chat.png",
+            "w": 2328,
+            "h": 1746,
+            "caption": {"text": "대기실 화면 — 네 플레이어 슬롯의 아바타와 오른쪽 채팅창, '호스트가 게임을 시작할 때까지 기다리는 중입니다' 안내", "verbatim": true}
+          },
+          {
+            "kind": "image",
+            "src": "images/game-result.png",
+            "w": 1067,
+            "h": 800,
+            "caption": {"text": "게임 종료 결과 창", "verbatim": true}
+          }
+        ]
+      },
+      {
+        "key": "freeze-problem",
+        "chapter": "troubleshooting",
+        "layout": "problem",
+        "tab": "문제 해결",
+        "title": {"text": "8.1 여럿이 하면 멈추던 멀티플레이", "verbatim": true},
+        "lead": null,
+        "sectionPath": ["8. 트러블슈팅", "8.1 여럿이 하면 멈추던 멀티플레이", "조금만 파도 멈추던 게임 — 전체 지형 스냅샷이 주원인"],
+        "points": [
+          {"label": "증상", "text": "처음 멀티플레이 테스트에서 한 명이 땅을 조금만 파도 게임이 멈췄고, 한참 지나서야 복구됐습니다.", "verbatim": true},
+          {
+            "label": "확인한 원인",
+            "text": "lock 안의 과도한 처리도 문제였지만, 주원인은 지형 전체 스냅샷이 자주 오가며 데이터 용량이 너무 커진 것이었습니다.",
+            "verbatim": true
+          },
+          {"label": "해결", "text": "전체 스냅샷 대신 서버가 보내는 변경 Batch의 Revision만 비교해 순서대로 적용하도록 바꿨습니다.", "verbatim": false},
+          {"label": "배운 점", "text": "서버와 틱당 주고받는 데이터의 크기가 중요함을 알게 됐습니다.", "verbatim": true}
+        ],
+        "visuals": []
+      },
+      {
+        "key": "collider-timing",
+        "chapter": "troubleshooting",
+        "layout": "problem",
+        "tab": "문제 해결",
+        "title": {"text": "8.2 채굴해도 풀리지 않던 매몰", "verbatim": true},
+        "lead": null,
+        "sectionPath": ["8. 트러블슈팅", "8.2 채굴해도 풀리지 않던 매몰"],
+        "points": [
+          {"label": "증상", "text": "채굴하여 공간을 만들었는데 매몰이 풀리지 않았습니다.", "verbatim": true},
+          {
+            "label": "원인",
+            "text": "지형이 바뀌면 프레임 끝까지 기다린 뒤 매몰을 다시 판정했지만, 해제 판정이 논리 셀과 물리 Collider 겹침을 함께 봤습니다. `TerrainGridWorld`의 EdgeCollider가 다시 만들어지는 시점이 달라 이전 Collider가 한 프레임 더 남았고, 그 때문에 아직 갇혔다고 판단했습니다.",
+            "verbatim": true
+          },
+          {
+            "label": "해결",
+            "text": "매몰 해제는 물리 Collider 겹침(`IsCurrentSpaceEmpty()`) 대신 논리 셀(`IsGridSpaceEmpty()`)만 보고 판정하도록 바꿨습니다.",
+            "verbatim": true
+          },
+          {"label": "배운 점", "text": "셀 삭제와 Collider 재생성은 서로 다른 시점입니다(§9.3).", "verbatim": true}
+        ],
+        "visuals": []
+      }
+    ],
+    "applied": "0c6e5e3192139455"
   }
 }

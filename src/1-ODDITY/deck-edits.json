@@ -13,11 +13,7 @@
       "points": [
         {"label": "", "text": "규칙은 제가 정하고, 그 규칙을 한 번에 적용하는 에디터 도구는 AI 코딩 에이전트를 활용해 만들었습니다.", "verbatim": false},
         {"label": "", "text": "도구는 다시 실행해도 같은 결과가 되도록 이미 만든 것을 지우고 새로 만들거나, 이미 맞춰진 것은 건너뜁니다.", "verbatim": true},
-        {
-          "label": "",
-          "text": "Unity 콘솔에서 오류를 찾고, AI의 컴파일 확인이 실제로는 실행되지 않았음을 확인함",
-          "verbatim": true
-        },
+        {"label": "", "text": "Unity 콘솔에서 오류를 찾고, AI의 컴파일 확인이 실제로는 실행되지 않았음을 확인함", "verbatim": true},
         {"label": "", "text": "X 버튼 크기에까지 0.65가 곱해진 것을 찾아 고침", "verbatim": true}
       ],
       "visuals": [
@@ -53,9 +49,138 @@
       "sectionPath": ["8. UI/UX ② 전투 피드백과 비주얼 효과", "8.6 외곽선과 가림 — 안 보이는 대상을 드러내기", "서로 가리는 보스와 플레이어 — 가려진 쪽을 드러내는 두 가지 표현"],
       "points": [],
       "visuals": [
-        {"kind": "image", "src": "images/occlusion-player-outline.png", "w": 960, "h": 720, "caption": {"text": "보스의 앞발에 가려진 플레이어가 흰 외곽선으로 보이는 화면", "verbatim": true}},
-        {"kind": "image", "src": "images/occlusion-silhouette.png", "w": 960, "h": 720, "caption": {"text": "들고 있는 물체(초록 외곽선)에 가려진 훈련용 더미가 붉은 실루엣으로 보이는 화면", "verbatim": true}}
+        {
+          "kind": "image",
+          "src": "images/occlusion-player-outline.png",
+          "w": 960,
+          "h": 720,
+          "caption": {"text": "보스의 앞발에 가려진 플레이어가 흰 외곽선으로 보이는 화면", "verbatim": true}
+        },
+        {
+          "kind": "image",
+          "src": "images/occlusion-silhouette.png",
+          "w": 960,
+          "h": 720,
+          "caption": {"text": "들고 있는 물체(초록 외곽선)에 가려진 훈련용 더미가 붉은 실루엣으로 보이는 화면", "verbatim": true}
+        }
       ]
+    },
+    {
+      "key": "arch",
+      "after": "overview",
+      "chapter": "intro",
+      "layout": "visual",
+      "tab": "구조",
+      "title": {"text": "1.5 전체 구조", "verbatim": true},
+      "lead": {
+        "text": "염동력·시간 정지·보스 공격이 모두 같은 염동력 물체(`PsychokinesisObject`)를 다루고, 물체가 준 피해는 `CombatManager` 한 곳을 거쳐 그 결과가 다시 물체의 파편화로 돌아옵니다.",
+        "verbatim": true
+      },
+      "sectionPath": ["1. 프로젝트 개요", "1.5 전체 구조"],
+      "points": [
+        {
+          "label": "이유",
+          "text": "들기·투척·시간 정지·보스의 투하가 같은 물체의 중력·충돌·시간 상태를 바꾸므로, 바꾸기 전 값을 저장하고 되돌리는 일을 각 기능이 아니라 `PsychokinesisObject`가 맡게 했습니다(§2.6).",
+          "verbatim": true
+        },
+        {
+          "label": "이유",
+          "text": "충돌했다는 사실과 실제로 피해가 들어갔는지는 다르므로, 공용 전투 이벤트(`CombatManager`)의 처리 결과를 받아 파편화를 결정합니다(§2.7·§5.1).",
+          "verbatim": true
+        },
+        {"label": "이유", "text": "저장 목록을 읽는 시점에는 플레이어 스탯이 준비되지 않을 수 있어, 목록 복원과 장착 적용을 나눴습니다(§6.3).", "verbatim": true}
+      ],
+      "visuals": [{"kind": "mermaid", "n": 1, "fp": "flowchart TB"}]
+    },
+    {
+      "key": "telegraph",
+      "after": "boss-tier",
+      "chapter": "fx",
+      "layout": "visual",
+      "tab": "",
+      "title": {"text": "8.3 공격 예고 — 범위·박자·바닥에 붙는 표시", "verbatim": true},
+      "lead": {"text": "공격 예고는 범위만이 아니라 **언제 맞는지**도 보여 줍니다.", "verbatim": true},
+      "sectionPath": ["8. UI/UX ② 전투 피드백과 비주얼 효과", "8.3 공격 예고 — 범위·박자·바닥에 붙는 표시"],
+      "points": [
+        {"label": "", "text": "`AttackTelegraph`는 바닥에 범위 외곽선을 그린 뒤 안쪽을 정해진 시간 동안 차오르게 하고, 공격이 들어가는 순간 가득 채운 뒤 사라집니다.", "verbatim": true},
+        {"label": "", "text": "시간 정지로 보스를 멈춰 두면 예고도 그 진행도에서 멈춰, 정지가 풀린 뒤 남은 시간을 그대로 읽을 수 있습니다.", "verbatim": true}
+      ],
+      "visuals": [
+        {"kind": "image", "src": "images/telegraph-fill.mp4", "w": 1200, "h": 900, "caption": {"text": "차르카로사우루스 보스의 양손 내려찍기 예고 — 보스 몸 중심의 넓은 원형 범위가 차오른 뒤 내려찍기와 함께 사라짐", "verbatim": true}},
+        {"kind": "table", "n": 1, "fp": "메서드|역할"}
+      ]
+    },
+    {
+      "key": "player-hit",
+      "after": "telegraph",
+      "chapter": "fx",
+      "layout": "full",
+      "tab": "",
+      "title": {"text": "8.4 플레이어 전투 피드백 — 피격 강도와 빠른 기상", "verbatim": true},
+      "lead": {"text": "플레이어가 맞았을 때는 피격 강도에 따라 연출의 겹을 늘립니다.", "verbatim": true},
+      "sectionPath": ["8. UI/UX ② 전투 피드백과 비주얼 효과", "8.4 플레이어 전투 피드백 — 피격 강도와 빠른 기상"],
+      "points": [],
+      "visuals": [{"kind": "table", "n": 1, "fp": "피격|화면 가장자리|체력바|카메라|히트스톱"}]
+    },
+    {
+      "key": "boss-dizzy",
+      "after": "player-hit",
+      "chapter": "fx",
+      "layout": "visual",
+      "tab": "",
+      "title": {"text": "무력화·기절을 자세로 보여 줌", "verbatim": true},
+      "lead": {"text": "보스가 어떤 상태인지를 HUD 숫자만이 아니라 몸의 움직임으로도 읽을 수 있게 했습니다.", "verbatim": true},
+      "sectionPath": ["8. UI/UX ② 전투 피드백과 비주얼 효과", "8.5 보스 전투 피드백 — 피해 구간과 몸으로 보여 주는 상태", "무력화·기절을 자세로 보여 줌"],
+      "points": [
+        {"label": "", "text": "각 겹은 사용하는 쪽이 `Begin()`/`End()`를 짝지어 부르면 가중치가 서서히 오르내리고, 횟수로 세므로 겹쳐 걸어도 안전합니다.", "verbatim": true},
+        {"label": "", "text": "모든 흔들림·반짝이·숨은 보스의 시계(`TimeFreezable`)를 따라 시간 정지 중에는 그 자세로 멈춥니다.", "verbatim": true}
+      ],
+      "visuals": [
+        {"kind": "image", "src": "images/dizzy-sway.png", "w": 800, "h": 600, "caption": {"text": "벽에 돌진해 부딪힌 페르데로스 보스가 기절한 모습 — 머리 위를 맴도는 반짝이", "verbatim": true}},
+        {"kind": "table", "n": 1, "fp": "겹|표현|사용하는 곳|함께 나오는 연출"}
+      ]
+    },
+    {
+      "key": "boss-finish",
+      "after": "boss-dizzy",
+      "chapter": "fx",
+      "layout": "visual",
+      "tab": "",
+      "title": {"text": "마무리 일격과 사망 연출", "verbatim": true},
+      "lead": {"text": "월드가 원래 속도로 돌아온 뒤에도 플레이어·카메라 회전은 느린 채 남고, 보상창은 홀로그램 소멸이 끝난 뒤에 열립니다.", "verbatim": true},
+      "sectionPath": ["8. UI/UX ② 전투 피드백과 비주얼 효과", "8.5 보스 전투 피드백 — 피해 구간과 몸으로 보여 주는 상태", "마무리 일격과 사망 연출"],
+      "points": [
+        {"label": "", "text": "보스의 숨을 끊는 순간은 한 번뿐인 장면이라 가장 긴 연출을 붙였습니다.", "verbatim": true},
+        {"label": "", "text": "이 다이어그램은 마무리 일격의 히트스톱·슬로모션부터 쓰러짐과 홀로그램 소멸, 보상창이 열리기까지의 연출 순서를 도식화한 것입니다.", "verbatim": true}
+      ],
+      "visuals": [
+        {"kind": "mermaid", "n": 1, "fp": "flowchart TB"},
+        {"kind": "image", "src": "images/boss-death.mp4", "w": 900, "h": 674, "caption": {"text": "마무리 일격과 사망 연출 — 차르카로사우루스 보스가 쓰러진 뒤 홀로그램으로 바뀌어 사라지는 모습", "verbatim": true}}
+      ]
+    },
+    {
+      "key": "boss-tier",
+      "after": "player-hit",
+      "chapter": "fx",
+      "layout": "code",
+      "tab": "구현",
+      "title": {"text": "받은 피해를 공격자 공격력과 비교한 세 구간", "verbatim": true},
+      "lead": {"text": "`BossHitFeedback`은 보스가 맞을 때마다 피해 크기를 약·중·강 세 구간으로 나누고, 구간이 높을수록 연출의 겹을 늘립니다.", "verbatim": true},
+      "sectionPath": ["8. UI/UX ② 전투 피드백과 비주얼 효과", "8.5 보스 전투 피드백 — 피해 구간과 몸으로 보여 주는 상태", "받은 피해를 공격자 공격력과 비교한 세 구간"],
+      "points": [
+        {
+          "label": "이유",
+          "text": "모든 피해가 공격력을 바탕으로 계산되므로, 칩·패시브로 공격력이 바뀌거나 보스가 달라져도 같은 종류의 공격은 같은 구간에 들어갑니다.",
+          "verbatim": true
+        },
+        {"label": "", "text": "약한 피격은 기본 공격처럼 자주 들어오므로 히트스톱을 걸지 않아 조작 흐름을 끊지 않습니다.", "verbatim": true}
+      ],
+      "visuals": [{"kind": "code", "n": 1, "fp": "// BossHitFeedback.GetTier() — 받은 피해를 공격력 배율과 비교해 피격 단계 결정"}],
+      "from": {
+        "key": "boss-tier",
+        "sectionPath": ["8. UI/UX ② 전투 피드백과 비주얼 효과", "8.5 보스 전투 피드백 — 피해 구간과 몸으로 보여 주는 상태", "받은 피해를 공격자 공격력과 비교한 세 구간"],
+        "sig": ["받은 피해를 공격자 공격력과 비교한 세 구간|code|1|// BossHitFeedback.GetTier() — 받은 피해를 공격력 배율과 비교해 피격 단계 결정"]
+      }
     }
   ],
   "hide": []

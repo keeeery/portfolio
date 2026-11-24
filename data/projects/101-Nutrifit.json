@@ -273,13 +273,13 @@
         "layout": "visual",
         "tab": "개요",
         "title": {
-          "text": "1.2 개발 의도",
+          "text": "1.2 기획 의도",
           "verbatim": true
         },
         "lead": null,
         "sectionPath": [
           "1. 프로젝트 개요",
-          "1.2 개발 의도"
+          "1.2 기획 의도"
         ],
         "points": [],
         "visuals": [

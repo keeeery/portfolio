@@ -195,9 +195,9 @@
         "chapter": "overview",
         "layout": "visual",
         "tab": "개요",
-        "title": {"text": "1.2 개발 의도", "verbatim": true},
+        "title": {"text": "1.2 기획 의도", "verbatim": true},
         "lead": null,
-        "sectionPath": ["1. 프로젝트 개요", "1.2 개발 의도"],
+        "sectionPath": ["1. 프로젝트 개요", "1.2 기획 의도"],
         "points": [
           {"label": "", "text": "목표한 경험은 시작부터 클리어(또는 시간 초과)와 재도전까지, 플레이어가 반복해서 즐길 수 있는 한 판이었습니다.", "verbatim": true},
           {
@@ -496,9 +496,9 @@
         "chapter": "overview",
         "layout": "visual",
         "tab": "개요",
-        "title": {"text": "1.2 개발 의도", "verbatim": true},
+        "title": {"text": "1.2 기획 의도", "verbatim": true},
         "lead": null,
-        "sectionPath": ["1. 프로젝트 개요", "1.2 개발 의도"],
+        "sectionPath": ["1. 프로젝트 개요", "1.2 기획 의도"],
         "points": [
           {"label": "", "text": "목표한 경험은 시작부터 클리어(또는 시간 초과)와 재도전까지, 플레이어가 반복해서 즐길 수 있는 한 판이었습니다.", "verbatim": true},
           {
@@ -757,6 +757,6 @@
         "visuals": [{"kind": "mermaid", "n": 1, "fp": "stateDiagram-v2"}]
       }
     ],
-    "applied": "aabb92ce39f984e7"
+    "applied": "5fd1cd081ef7fc36"
   }
 }

@@ -1,0 +1,21 @@
+{
+  "schemaVersion": 1,
+  "pin": [
+    {
+      "key": "arch",
+      "after": "what",
+      "chapter": "overview",
+      "layout": "visual",
+      "tab": "구조",
+      "title": {"text": "1.5 전체 구조", "verbatim": true},
+      "lead": {"text": "특히 지형 붕괴에서는 낙하 물리 시뮬레이션과 최종 타일 배치 확정의 책임이 다릅니다.", "verbatim": true},
+      "sectionPath": ["1. 프로젝트 개요", "1.5 전체 구조"],
+      "points": [
+        {"label": "", "text": "이 다이어그램은 클라이언트가 입력·물리·표시를, 서버가 공유 상태 확정을 맡고, 두 쪽이 같은 TSV·시드로 초기 맵을 만드는 전체 구조를 도식화한 것입니다.", "verbatim": true},
+        {"label": "구현", "text": "소유 클라이언트가 낙하 결과를 제안하고 서버가 예약 및 배치 규칙을 검사하여 결과를 방송합니다(§3).", "verbatim": true}
+      ],
+      "visuals": [{"kind": "mermaid", "n": 1, "fp": "flowchart TB"}]
+    }
+  ],
+  "hide": []
+}
