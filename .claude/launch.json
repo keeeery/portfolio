@@ -4,20 +4,41 @@
     {
       "name": "portfolio",
       "runtimeExecutable": "python",
-      "runtimeArgs": ["-m", "http.server", "4600"],
+      "runtimeArgs": [
+        "-m",
+        "http.server",
+        "4600"
+      ],
       "port": 4600
     },
     {
       "name": "portfolio-edit",
       "runtimeExecutable": "python",
-      "runtimeArgs": ["edit-server.py", "4600"],
+      "runtimeArgs": [
+        "edit-server.py",
+        "4600"
+      ],
       "port": 4600
     },
     {
       "name": "portfolio-edit-4601",
       "runtimeExecutable": "python",
-      "runtimeArgs": ["edit-server.py", "4601"],
+      "runtimeArgs": [
+        "edit-server.py",
+        "4601"
+      ],
       "port": 4601
+    },
+    {
+      "name": "portfolio-4605",
+      "runtimeExecutable": "python3",
+      "runtimeArgs": [
+        "-m",
+        "http.server",
+        "4605"
+      ],
+      "port": 4605,
+      "autoPort": false
     }
   ]
 }

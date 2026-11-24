@@ -262,7 +262,7 @@ try { window.mermaid?.initialize({ startOnLoad: false }); } catch (_) { /* */ }
       <nav class="toc" id="toc" aria-label="문서 목차"><p class="toc-title">${T('name.toc')}</p><div class="toc-links" id="toc-links"></div></nav>
       <main class="doc-main" id="main" tabindex="-1">
         <div class="doc-intro">
-          <p class="eyebrow">${T('name.doc')}</p>
+          <p class="eyebrow">${T('doc.eyebrow')}</p>
           <h1>${esc(p.title)}</h1>
           ${p.tagline ? `<p class="tagline">${inline(p.tagline)}</p>` : ''}
           <dl class="meta-line">${metaRows}</dl>
@@ -520,7 +520,7 @@ try { window.mermaid?.initialize({ startOnLoad: false }); } catch (_) { /* */ }
     // ⑪ 이미지 크게 보기, 다이어그램 크게 보기(같은 페이지 dialog) — 다이어그램은 그림을 누르거나 [크게 보기] 단추로(단추는 키보드용)
     doc.addEventListener('click', (e) => {
       const img = e.target.closest('img');
-      if (img && !img.closest('a')) return zoom({ src: img.currentSrc || img.src, caption: img.alt });
+      if (img && !img.closest('a')) return zoom({ src: img.currentSrc || img.src, caption: img.alt, video: img.dataset.pfVidBase });
       const hit = e.target.closest('.mmd-zoom') || (!e.target.closest('a') && e.target.closest('.mmd-screen'));   // 다이어그램 안 링크(click)는 그대로 열림
       if (hit) { const fig = hit.closest('.mmd'), svg = fig.querySelector('.mmd-screen svg'); if (svg) zoom({ svg, caption: fig.dataset.label }); }
     });
@@ -648,9 +648,14 @@ try { window.mermaid?.initialize({ startOnLoad: false }); } catch (_) { /* */ }
     dlg.className = 'lightbox';
     dlg.setAttribute('aria-label', '크게 보기');
     dlg.innerHTML = `<div class="lb-stage"></div><p class="lb-cap"></p><button type="button" class="btn lb-close">${T('ui.close-esc')}</button>`;
-    dlg.addEventListener('click', (e) => { if (e.target === dlg || e.target.closest('.lb-close') || e.target.tagName === 'IMG' || (e.target.closest('.lb-svg svg') && !e.target.closest('a'))) dlg.close(); });
+    dlg.addEventListener('click', (e) => {
+      const pb = e.target.closest('.pf-vid-btn');   // 확대 창의 영상: 일시정지·재생 버튼만 영상을 멈춤·재생(영상을 누르면 닫힘)
+      if (pb) { const v = dlg.querySelector('video'); if (v) { const stop = !v.paused; if (stop) v.pause(); else v.play().catch(() => {}); pb.innerHTML = PF.videoIcon(stop); pb.setAttribute('aria-label', PF.t(stop ? 'ui.video-play' : 'ui.video-pause')); } return; }
+      if (e.target === dlg || e.target.closest('.lb-close') || e.target.tagName === 'IMG' || e.target.tagName === 'VIDEO' || (e.target.closest('.lb-svg svg') && !e.target.closest('a'))) dlg.close();
+    });
+    dlg.addEventListener('close', () => { dlg.querySelector('.lb-stage').innerHTML = ''; });   // 영상은 닫으면 멈춤
     document.body.appendChild(dlg);
-    return ({ src, svg, caption }) => {
+    return ({ src, svg, caption, video }) => {
       const st = dlg.querySelector('.lb-stage');
       st.className = svg ? 'lb-stage lb-svg' : 'lb-stage';
       st.innerHTML = '';
@@ -660,6 +665,11 @@ try { window.mermaid?.initialize({ startOnLoad: false }); } catch (_) { /* */ }
         c.id = 'mmd-lightbox';
         if (old) { const re = new RegExp(`#${old.replace(/[^\w-]/g, '\\$&')}(?![\\w-])`, 'g'); c.querySelectorAll('style').forEach((s) => { s.textContent = s.textContent.replace(re, '#mmd-lightbox'); }); }
         c.removeAttribute('aria-hidden'); c.style.maxWidth = 'none'; st.appendChild(c);
+      }
+      else if (video) {   // 움직이는 이미지(영상): 크게 틀고, 일시정지·재생 버튼은 오른쪽 아래
+        const w = document.createElement('div'); w.className = 'lb-vid';
+        w.innerHTML = `<video autoplay muted loop playsinline poster="${PF.esc(src)}" aria-label="${PF.esc(caption || '')}">${PF.videoSources(video)}</video><button type="button" class="pf-vid-btn" aria-label="${T('ui.video-pause')}">${PF.videoIcon(false)}</button>`;
+        w.querySelector('video').muted = true; st.appendChild(w);
       }
       else { const im = new Image(); im.src = src; im.alt = caption || ''; st.appendChild(im); }
       dlg.querySelector('.lb-cap').textContent = caption || '';

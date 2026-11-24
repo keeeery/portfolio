@@ -36,7 +36,7 @@
     const frag = tpl.content;
     frag.querySelectorAll('img[src], video[src], source[src]').forEach((el) => {
       const s = el.getAttribute('src');
-      if (isRelative(s)) { el.dataset.mdSrc = s; el.setAttribute('src', PF.srcPath(id, decode(s))); }
+      if (isRelative(s)) { el.dataset.mdSrc = s; el.setAttribute('src', PF.srcPath(id, decode(el.localName === 'img' ? PF.videoPoster(s) : s))); }   // img의 .mp4 = 움직이는 이미지(영상) → 대표 화면(.poster.webp)을 두고 common.js가 영상을 겹침
     });
     frag.querySelectorAll('video[poster]').forEach((el) => { const s = el.getAttribute('poster'); if (isRelative(s)) el.setAttribute('poster', PF.srcPath(id, decode(s))); });
     markAdopted(frag);

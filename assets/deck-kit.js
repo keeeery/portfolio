@@ -57,7 +57,7 @@
 
 // ── 블록 B: 슬라이드 키트 ─────────────────────────────────────────────────────────
 (() => {
-  const W = 1280, H = 720, GAP = 16, KMAX = 1.5, HUD_H = 44;
+  const W = 1280, H = 720, GAP = 16, KMAX = 1.5, HUD_H = 54;
   const root = document.documentElement;
   const Q = new URLSearchParams(location.search);
   const PF = window.PFScene;
@@ -97,10 +97,43 @@
   const whenReady = () => (root.dataset.pfReady === 'yes' ? Promise.resolve() : new Promise((r) => readyWaiters.push(r)));
 
   // ── 배율 ── 한 장씩 보기: k = min(vw/1280, (vh − HUD)/720), 상한 없음 / 한 번에 보기: 간격·HUD 몫을 빼고 상한 1.5
-  function fit() {
+  // 직접 추가(2026-11-24): 한 번에 보기 — 양옆을 겹쳐 그리는 스크롤 막대 폭(page-scrollbar.js .pf-sb, 14px)만큼 비우고, 아래 띠 [−][+]로 확대·축소(이 브라우저에 기억)
+  const SB_W = 14, ZOOMS = [0.5, 0.6, 0.7, 0.8, 0.9, 1], ZOOM_MS = 280;
+  let zoomRaf = 0, nextView = null;
+  const ZOOM_KEY = `pf-zoom:${location.pathname.replace(/[^/]*$/, '')}`;
+  let zi = (() => { try { const v = +localStorage.getItem(ZOOM_KEY); const i = ZOOMS.indexOf(v); return i >= 0 ? i : ZOOMS.indexOf(1); } catch { return ZOOMS.indexOf(1); } })();
+  const sideGap = () => (matchMedia('(pointer: fine)').matches ? SB_W : 0);
+  const scrollWidthCap = () => (root.clientWidth - 2 * sideGap()) / W;          // 한 번에 보기에서 장면이 넘지 않는 배율(양옆 막대 폭을 뺀 창 폭)
+  const scrollBase = () => Math.min(scrollWidthCap(), (innerHeight - HUD_H - 2 * GAP) / H, KMAX);
+  function setZoom(i) {
+    i = Math.max(0, Math.min(ZOOMS.length - 1, i));
+    if (i === zi || view !== 'scroll') return;
+    const el = document.scrollingElement || root, vh = innerHeight;
+    // 보던 자리: 화면 가운데에 있는 장면과 그 장면 안의 위치(0~1). 크기가 바뀌는 매 순간 이 자리를 화면 가운데에 둠
+    const topOf = (s) => s.getBoundingClientRect().top + el.scrollTop;
+    const mid = el.scrollTop + vh / 2;
+    let n = scenes.findIndex((s) => topOf(s) + H * K + GAP > mid); if (n < 0) n = scenes.length - 1;
+    const frac = Math.max(0, Math.min(1, (mid - topOf(scenes[n])) / (H * K)));
+    const keep = () => { el.scrollTop = Math.max(0, topOf(scenes[n]) + frac * H * K - vh / 2); };
+    const k0 = K;
+    zi = i; try { localStorage.setItem(ZOOM_KEY, String(ZOOMS[zi])); } catch { /* 저장소 없음 */ }
+    cancelAnimationFrame(zoomRaf);
+    if (reduced()) { fit(); hudSync(); keep(); return; }
+    // 애니메이션: CSS 전환 대신 매 프레임 배율을 직접 정하고(fit(k)), 같은 프레임에서 스크롤 자리도 맞춤 → 크기와 자리가 한 박자씩 어긋나 계단처럼 보이지 않음
+    const k1 = (fit(), K), t0 = performance.now(), ease = (t) => 1 - Math.pow(1 - t, 3);
+    root.classList.add('pf-zooming'); hudSync();
+    const step = () => {
+      const t = Math.max(0, Math.min(1, (performance.now() - t0) / ZOOM_MS));   // 같은 시계(performance.now)로, 0~1 밖으로 나가지 않게
+      fit(k0 + (k1 - k0) * ease(t)); keep();
+      if (t < 1) zoomRaf = requestAnimationFrame(step); else root.classList.remove('pf-zooming');
+    };
+    fit(k0); keep();
+    zoomRaf = requestAnimationFrame(step);
+  }
+  function fit(kAnim) {
     const vw = root.clientWidth, vh = innerHeight;
-    let k = view === 'deck' ? Math.min(vw / W, (vh - HUD_H) / H) : Math.min(vw / W, (vh - HUD_H - 2 * GAP) / H, KMAX);
-    if (Q.has('pf-k')) k = +Q.get('pf-k');
+    let k = kAnim != null ? kAnim : view === 'deck' ? Math.min(vw / W, (vh - HUD_H) / H) : Math.min(scrollBase() * ZOOMS[zi], scrollWidthCap());
+    if (Q.has('pf-k') && kAnim == null) k = +Q.get('pf-k');
     K = k = Math.max(k, 0.05);
     root.style.setProperty('--pf-k', String(k));
     root.style.setProperty('--pf-x', `${Math.max(0, (vw - W * k) / 2)}px`);
@@ -338,6 +371,10 @@
   let holdPick = view === 'scroll';
   function pickCurrent() {
     if (view !== 'scroll' || holdPick) return;
+    // 직접 추가(2026-11-24): 맨 위·맨 아래까지 스크롤하면 첫·마지막 장면(마지막 장면은 화면에 덜 보여도 고름)
+    const el = document.scrollingElement || root;
+    const edge = el.scrollTop <= 2 ? 0 : el.scrollTop + innerHeight >= el.scrollHeight - 2 ? scenes.length - 1 : -1;
+    if (edge >= 0) { if (edge !== cur) { cur = edge; setHash(cur, false); hudSync(); } return; }
     const vh = innerHeight - HUD_H, frac = (s) => { const r = s.getBoundingClientRect(); return { v: Math.max(0, Math.min(r.bottom, vh) - Math.max(r.top, 0)) / (r.height || 1), d: Math.abs((r.top + r.bottom) / 2 - vh / 2) }; };
     let best = -1, bv = -1, bd = Infinity;
     visible.forEach((s) => { const i = scenes.indexOf(s); if (i < 0) return; const { v, d } = frac(s); if (v > bv + 1e-3 || (Math.abs(v - bv) <= 1e-3 && d < bd)) { best = i; bv = v; bd = d; } });
@@ -359,12 +396,25 @@
   function setView(v, { remember = true } = {}) {
     v = v === 'scroll' ? 'scroll' : 'deck';
     if (remember) { try { localStorage.setItem(VIEW_KEY, v); } catch { /* 저장소 없음 */ } }
-    if (v === view) return;
-    view = v; root.dataset.view = v; holdPick = false;
-    try { const u = new URL(location.href); u.searchParams.delete('view'); u.hash = ''; history.replaceState(history.state, '', u.pathname + u.search + u.hash); } catch { /* */ }
-    fit(); paint(); observe();
-    if (v === 'scroll') scrollToScene(scenes[cur]); else scrollTo(0, 0);
-    hudSync();
+    if (v === (nextView ?? view)) return;
+    nextView = v;                                              // 전환이 다음 프레임에 일어나는 동안 또 누르면 그 목표 기준으로 뒤집음
+    const doSwitch = () => {
+      nextView = null;
+      view = v; root.dataset.view = v; holdPick = false;
+      try { const u = new URL(location.href); u.searchParams.delete('view'); u.hash = ''; history.replaceState(history.state, '', u.pathname + u.search + u.hash); } catch { /* */ }
+      fit(); paint(); observe();
+      if (v === 'scroll') scrollToScene(scenes[cur]); else scrollTo(0, 0);
+      hudSync();
+    };
+    // 직접 추가(2026-11-24): 보기 전환 보간 — 보던 장면이 지금 자리·크기에서 새 보기의 자리·크기로 옮겨 가고(View Transition), 나머지는 겹쳐 바뀜.
+    //   지원하지 않는 브라우저·움직임 줄이기 설정이면 예전처럼 바로 바뀜. 모양은 deck-kit.css 맨 끝 ::view-transition-*
+    const s = scenes[cur];
+    if (document.startViewTransition && !reduced() && s) {
+      s.style.viewTransitionName = 'pf-vt-scene';
+      const vt = document.startViewTransition(doSwitch);
+      vt.ready.catch(() => { /* 건너뛴 전환(빠르게 또 누름 등) — 바뀌는 것은 그대로 */ });
+      vt.finished.finally(() => { s.style.viewTransitionName = ''; });
+    } else doSwitch();
     say(cur, v === 'deck' ? '슬라이드 보기로 바꿨습니다.' : '한 번에 보기로 바꿨습니다.');
   }
   function toggleFull() {
@@ -424,18 +474,20 @@
     hud = document.createElement('nav');
     hud.className = 'pf-hud pf-screen-only'; hud.setAttribute('aria-label', '슬라이드 조작'); hud.dataset.pfUi = 'hud';
     const hasDoc = scenes.some((s) => s.dataset.pfPart === 'doc');
-    hud.innerHTML = `<button type="button" data-a="prev" aria-label="이전 슬라이드" title="${LH('ui.prev')}">‹</button>
-      <button type="button" data-a="next" aria-label="다음 슬라이드" title="${LH('ui.next')}">›</button>
+    hud.innerHTML = `${opts.home ? `<a class="pf-hud-home" href="${opts.home.href}" title="${opts.home.label}"><span class="l">${opts.home.label}</span><span class="s" aria-hidden="true">←</span></a>` : ''}<button type="button" data-a="prev" aria-label="이전 슬라이드" title="${LH('ui.prev')}">‹</button>
       <span class="pf-hud-count" aria-hidden="true"></span>
+      <button type="button" data-a="next" aria-label="다음 슬라이드" title="${LH('ui.next')}">›</button>
       <span class="pf-hud-sec" aria-hidden="true"></span>
       <span class="pf-hud-prog" aria-hidden="true"><span></span></span>
-      <button type="button" data-a="overview" aria-haspopup="dialog" title="${LH('ui.overview-tip')}"><span aria-hidden="true">▦</span> <span class="l">${LH('ui.overview')}</span></button>
-      ${opts.scope && hasDoc ? '<button type="button" data-a="scope" aria-pressed="false" title="PDF에서 부록 빼기"><span class="l">요약만</span><span class="s">요약</span></button>' : ''}
-      <button type="button" data-a="print" class="pf-print"><span class="l">${LH('ui.pdf')}</span><span class="s">${LH('ui.pdf-short')}</span><small></small></button>
-      ${opts.pptx ? `<button type="button" data-a="pptx" class="pf-pptx" title="${LH('ui.pptx-tip')}"><span class="l">${LH('ui.pptx')}</span><span class="s">${LH('ui.pptx-short')}</span></button>` : ''}
-      <button type="button" data-a="help" aria-expanded="false" aria-controls="pf-hud-help" aria-label="저장 안내" title="저장 안내(PDF${opts.pptx ? '·PPTX' : ''})">?</button>
-      ${window.PFMode ? PFMode.button() : ''}
+      <!-- 직접 정리(2026-11-24): 묶음별 순서 — 보기(확대·축소·보기 전환·개요) · 저장(요약만·PDF·PPTX) · 화면 모드·도움말(다른 페이지처럼 화면 모드는 오른쪽 끝 쪽) -->
+      <span class="pf-hud-zoom"><button type="button" data-a="zoom-out" aria-label="축소">−</button><button type="button" data-a="zoom-in" aria-label="확대">+</button></span>
       <button type="button" data-a="view"><span class="l"></span><span class="s"></span></button>
+      <button type="button" data-a="overview" aria-haspopup="dialog" aria-label="${LH('ui.overview')}" title="${LH('ui.overview-tip')}"><span aria-hidden="true">▦</span> <span class="l">${LH('ui.overview')}</span></button>
+      ${opts.scope && hasDoc ? '<button type="button" data-a="scope" aria-pressed="false" title="PDF에서 부록 빼기"><span class="l">요약만</span><span class="s">요약</span></button>' : ''}
+      <button type="button" data-a="print" class="pf-print" aria-label="${LH('ui.pdf')}" title="${LH('ui.pdf')}"><span class="l">${LH('ui.pdf')}</span><span class="s">${LH('ui.pdf-short')}</span><small></small></button>
+      ${opts.pptx ? `<button type="button" data-a="pptx" class="pf-pptx" title="${LH('ui.pptx-tip')}"><span class="l">${LH('ui.pptx')}</span><span class="s">${LH('ui.pptx-short')}</span></button>` : ''}
+      ${window.PFMode ? PFMode.button() : ''}
+      <button type="button" data-a="help" aria-expanded="false" aria-controls="pf-hud-help" aria-label="저장 안내" title="저장 안내(PDF${opts.pptx ? '·PPTX' : ''})">?</button>
       <button type="button" data-a="anyway" hidden>${LH('ui.print-anyway')}</button>
       ${isLocal ? '<span class="pf-hud-badge" role="img" hidden title="미리보기에서만 보이는 장면 배치 점검 결과(찾은 항목 수). 배포된 페이지·PDF에는 나오지 않습니다. 슬라이드에 &quot;내용이 잘렸습니다&quot; 띠가 있으면 그 장면의 글이 나온 파일(src/의 프로젝트 문서)을 줄이거나 /portfolio-edit로 장면을 나누고 /portfolio-build를 다시 실행하세요."></span>' : ''}
       <span class="pf-hud-msg" role="status" aria-live="polite"></span>
@@ -451,7 +503,8 @@
       else if (a === 'print') print();
       else if (a === 'pptx') { toggleHelp(false); opts.pptx(b); }
       else if (a === 'help') toggleHelp();
-      else if (a === 'view') setView(view === 'deck' ? 'scroll' : 'deck');
+      else if (a === 'view') setView((nextView ?? view) === 'deck' ? 'scroll' : 'deck');
+      else if (a === 'zoom-in') setZoom(zi + 1); else if (a === 'zoom-out') setZoom(zi - 1);
       else if (a === 'anyway') PF.printAnyway();
     });
     deck.before(skip, hud);                                   // DOM 순서: 건너뛰기 → HUD → 슬라이드
@@ -472,6 +525,11 @@
     vb.title = L(view === 'deck' ? 'ui.to-scroll-tip' : 'ui.to-deck-tip');
     const sc = hud.querySelector('[data-a=scope]');
     if (sc) sc.setAttribute('aria-pressed', String(scope === 'summary'));
+    const zw = hud.querySelector('.pf-hud-zoom'), pct = Math.round(K / scrollBase() * 100);
+    zw.inert = view !== 'scroll'; zw.setAttribute('aria-hidden', String(view !== 'scroll'));
+    const zo = zw.querySelector('[data-a=zoom-out]'), zn = zw.querySelector('[data-a=zoom-in]');
+    zo.setAttribute('aria-disabled', String(zi <= 0)); zo.title = `축소 (지금 ${pct}%)`;
+    zn.setAttribute('aria-disabled', String(zi >= ZOOMS.length - 1 || K >= scrollWidthCap() - 1e-3)); zn.title = `확대 (지금 ${pct}%)`;
     hud.querySelector('.pf-print small').textContent = L('ui.pages', { n: printed().length });
     const r = root.dataset.pfReady;
     hud.querySelector('[data-a=anyway]').hidden = r !== 'timeout';
@@ -652,7 +710,7 @@
   }
   // 【R0 결정 #14】 화면 매체 감사 "슬라이드 밖에 보이는 요소"(outside-deck). 인쇄 CSS가 슬라이드 밖·슬라이드 안 비장면 요소를 PDF에서 빼므로, 화면에 보이는 그런 내용을 대신 알림
   const OD_TAGS = /^(script|style|link|meta|template|noscript|head|title|base)$/i;
-  const OD_EXEMPT = '[data-pf-ui], .pf-screen-only, .pf-hud, .pf-skiplink, #pf-audit, .pf-measure, dialog.lightbox, .pf-lightbox';
+  const OD_EXEMPT = '[data-pf-ui], .pf-screen-only, .pf-hud, .pf-skiplink, #pf-audit, .pf-measure, dialog.lightbox, .pf-lightbox, .pf-skel';   // .pf-skel: page-anchor.js의 넘김 로딩 막(곧 사라짐) — 준비 순간 배지가 1건으로 남던 허위 경보
   const OD_REPLACED = /^(img|svg|canvas|video|iframe|object|embed|input|textarea|select|button|progress|meter|hr|picture|audio|math)$/i;
   const OD_GATE = '아직 페이지를 그리는 중입니다';
   const descFull = (e) => { if (!e || e.nodeType !== 1) return '#text'; const c = String(e.getAttribute('class') || '').trim(); return `${e.tagName.toLowerCase()}${e.id ? '#' + e.id : ''}${c ? '.' + c.split(/\s+/).slice(0, 3).join('.') : ''}`; };
@@ -768,7 +826,7 @@
   }
 
   // ── mount: 데이터 렌더 후 한 번. 다시 그린 뒤에는 refresh() ──
-  function onResize() { fit(); if (view === 'scroll') scrollToScene(scenes[cur]); }
+  function onResize() { fit(); hudSync(); if (view === 'scroll') scrollToScene(scenes[cur]); }
   function mount(o = {}) {
     opts = Object.assign({ deck: '#deck', hud: true, scope: false, hint: '' }, o);
     deck = typeof opts.deck === 'string' ? document.querySelector(opts.deck) : opts.deck;

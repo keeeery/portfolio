@@ -134,7 +134,7 @@
     .pdf-menu svg { flex-shrink: 0; }
     @media (prefers-reduced-motion: reduce) { .pdf-menu, .pdf-menu *, .pdf-btn { animation: none !important; transition: none; } }
     .btn-icon { width: 34px; min-height: 34px; padding: 0; justify-content: center; }
-    .chip { display: inline-block; font-size: 12px; font-weight: 600; padding: 3px 11px; border-radius: var(--t-pill, 999px); border: 1px solid var(--divider); color: var(--ink); background: transparent; white-space: nowrap; }   /* 설명용 칩: 외곽선 버튼 모양 · 크기만 작게 · 외곽선은 구분선 색 */
+    .chip { display: inline-block; font-size: 12px; font-weight: 600; padding: 4px 11px; border-radius: var(--t-pill, 999px); border: 0; color: var(--ink); background: color-mix(in srgb, var(--ink) 10%, transparent); white-space: nowrap; -webkit-print-color-adjust: exact; print-color-adjust: exact; }   /* 설명용 칩(프로젝트 태그): 테두리 없이 옅은 바탕(글자색 10%) · 슬라이드 태그와 같은 모양 */
     a.chip:hover { color: var(--ink); border-color: var(--accent); }
     code { font-family: "D2Coding", ui-monospace, SFMono-Regular, Menlo, monospace; font-size: .9em; padding: 1px 5px; border-radius: 5px; background: color-mix(in srgb, var(--ink) 9%, transparent); }
     strong { color: var(--ink); font-weight: 700; }
@@ -578,8 +578,8 @@
                  transform: translateY(calc(-100% - 2px));
                  transition: transform .28s cubic-bezier(.5,0,.75,0), padding-bottom .45s cubic-bezier(.2,.7,.2,1) .05s, margin-bottom .45s cubic-bezier(.2,.7,.2,1) .05s; }
     /* 첫 화면(맨 위 머리)에서는 머리 막대를 숨겨 두고, 소개 절 위 끝이 머리 막대 아래 끝(화면 위 56px)에 닿으면 위에서 미끄러져 내려옴(.show).
-       다시 위로 올라가면 위로 올라가 숨음. 키보드로 머리 막대 안 링크에 가면 숨어 있어도 내려옴. 화면 모드 · PDF 버튼은 머리 막대 밖(.top-tools)에 따로 떠 있어 늘 같은 자리에 보임 */
-    .site-head.show, .site-head:focus-within { transform: none; transition: transform .5s cubic-bezier(.2,.7,.2,1), padding-bottom .45s cubic-bezier(.2,.7,.2,1) .05s, margin-bottom .45s cubic-bezier(.2,.7,.2,1) .05s; }
+       다시 위로 올라가면 위로 올라가 숨음. 키보드로 머리 막대 안 링크에 가면 숨어 있어도 내려옴(:focus-visible — 마우스로 [이름]을 눌러 맨 위로 가면 링크에 포커스가 남아도 숨음). 화면 모드 · PDF 버튼은 머리 막대 밖(.top-tools)에 따로 떠 있어 늘 같은 자리에 보임 */
+    .site-head.show, .site-head:has(:focus-visible) { transform: none; transition: transform .5s cubic-bezier(.2,.7,.2,1), padding-bottom .45s cubic-bezier(.2,.7,.2,1) .05s, margin-bottom .45s cubic-bezier(.2,.7,.2,1) .05s; }
     .site-head.instant, .site-head.instant *, .site-head.instant *::before, .site-head.instant *::after { transition: none !important; }   /* 처음 그릴 때(새로고침해 읽던 위치로 돌아온 때 포함)는 움직임 없이 바로 그 상태로 — 늘어난 막대 안의 줄(프로젝트명·바로 가기)까지 */
     .site-head.ext, .site-head.pm-open { padding-bottom: var(--ext-bg); margin-bottom: calc(-1 * var(--ext-bg)); transition-delay: 0s; }
     .top-tools { position: fixed; top: 0; left: 0; right: 0; z-index: 60; padding-top: var(--safe-t); pointer-events: none; }
@@ -595,7 +595,7 @@
     /* 휴대폰: 숨은 막대는 투명하게, 숨을 때는 미끄러지지 않고 바로 사라짐 — 관성으로 맨 위까지 올라가면
        ① 숨는 움직임(.28초)이 끝나기 전에 맨 위에 닿고 ② 맨 위에서 튕기는 동안 페이지가 아래로 끌려 내려오며 화면 바로 위에 숨겨 둔 막대도 함께 드러나
        막대가 잠깐 보였음. 나타날 때(.show)는 그대로 미끄러져 내려옴 */
-    @media (max-width: 759px) { .site-head:not(.show):not(:focus-within) { opacity: 0; transition: none; } }
+    @media (max-width: 759px) { .site-head:not(.show):not(:has(:focus-visible)) { opacity: 0; transition: none; } }
     .nh-ext { position: absolute; left: 0; right: 0; top: calc(var(--top-h) - var(--ext-up)); height: var(--ext-h); overflow: hidden; pointer-events: none; }
     .nh-ext-w { display: grid; height: 100%; }
     .nh-bar { grid-area: 1 / 1; display: flex; align-items: center; gap: 14px; min-width: 0; }
@@ -633,11 +633,14 @@
       .nh-ext { display: none; }                                         /* 휴대폰은 [PROJECT 00 / 00 · 프로젝트명] 줄 없이 바로 가기만 */
     }
     @media (prefers-reduced-motion: reduce) { .site-head, .nh-bar > *, .nh-sub, .nh-pm-l { transition: none !important; } }
-    /* 머리 막대 메뉴: 지금 보고 있는 절(스크롤 위치)을 이름(왼쪽 "주현진")과 같은 색 · 굵기 한 단계 위(400 → 500) · 글자 아래 따로 그은 선으로 */
-    .nav-a { position: relative; padding: 6px 0; transition: color .2s ease; }
+    /* 머리 막대 메뉴: 지금 보고 있는 절(스크롤 위치)을 이름(왼쪽 "주현진")과 같은 색 · 굵기 한 단계 위(500 → 600) · 글자 아래 따로 그은 선으로 */
+    .nav-a { position: relative; padding: 6px 0; font-weight: 500; transition: color .2s ease; }
     .nav-a::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 2px; border-radius: 1px; background: var(--ink);
                     transform: scaleX(0); transition: transform .3s cubic-bezier(.2,.7,.2,1); }
-    .nav-a.on { color: var(--ink); font-weight: 500; }
+    .nav-a.on { color: var(--ink); font-weight: 600; }
+    /* 굵어질 때 폭이 바뀌지 않게: 같은 글을 굵게 높이 0으로 한 번 더 깔아 처음부터 굵은(600) 폭을 차지(한글은 굵기와 상관없이 폭이 같지만 영문은 넓어짐) */
+    .nav-a[data-t] { display: inline-flex; flex-direction: column; align-items: center; }
+    .nav-a[data-t]::before { content: attr(data-t) / ""; height: 0; overflow: hidden; visibility: hidden; font-weight: 600; pointer-events: none; user-select: none; }
     .nav-a.on::after { transform: scaleX(1); }
     @media (prefers-reduced-motion: reduce) { .nav-a, .nav-a::after { transition: none; } }
 
@@ -745,7 +748,7 @@
       'en.portfolio': 'PORTFOLIO', 'en.about': 'ABOUT ME', 'en.skills': 'SKILLS', 'en.project': 'PROJECT', 'en.feature': 'FEATURE', 'en.others': 'OTHER WORK',
       'en.glance': 'AT A GLANCE', 'en.contact': 'CONTACT', 'en.link': 'LINK',
       'page.updated': '업데이트 {date}', 'page.intro': '자기소개', 'page.stack': '기술 스택', 'page.stack-note': '근거 프로젝트와 함께', 'page.project-no': '{en.project} {no} / {total}',
-      'page.features': '기능 소개', 'page.see-in-deck': '{name.deck}에서 보기', 'page.see-in-doc': '프로젝트 문서에서 보기', 'page.browser-note': '이 문서는 넓은 화면(PC), Chrome 브라우저 환경에 최적화되어 있습니다.', 'page.last-updated': '마지막 업데이트 {date}', 'page.deck-all': '{name.deck} 전체', 'page.others': '기타 프로젝트', 'page.link-card-open': '바로가기', 'page.glance': '프로젝트 요약',
+      'page.features': '기능 소개', 'page.see-in-deck': '{name.deck}에서 보기', 'page.see-in-doc': '{name.doc-short}에서 보기', 'page.browser-note': '이 문서는 넓은 화면(PC), Chrome 브라우저 환경에 최적화되어 있습니다.', 'page.last-updated': '마지막 업데이트 {date}', 'page.deck-all': '{name.deck} 전체', 'page.others': '기타 프로젝트', 'page.link-card-open': '바로가기', 'page.glance': '프로젝트 요약',
       'page.nav-intro': '소개', 'page.nav-stack': '{page.stack}', 'page.nav-projects': '프로젝트', 'page.nav-others': '기타', 'page.nav-glance': '한눈에 보기', 'page.nav-contact': '연락처',
       'page.print-email': '이메일', 'page.print-web': '웹 {name.portfolio}',
       'ui.pdf': 'PDF로 저장', 'ui.preparing': '준비 중…', 'ui.skip': '본문으로 건너뛰기',
@@ -810,7 +813,7 @@
     }
     const deckHref = (p, sid = '') => `project.html?p=${encodeURIComponent(p.id)}${sid ? `#s=${sid}` : ''}`;
     const docHref = (p) => `doc.html?p=${encodeURIComponent(p.id)}`;
-    // 기능마다 [프로젝트 문서에서 보기]: 프로젝트 상세 문서의 그 기능을 설명한 절로(#sec=<절 제목> — doc.html이 제목을 찾아 그 자리로 이동·강조).
+    // 기능마다 [상세 문서에서 보기]: 프로젝트 상세 문서의 그 기능을 설명한 절로(#sec=<절 제목> — doc.html이 제목을 찾아 그 자리로 이동·강조).
     //   기본은 기능 소개가 가리키는 절(highlights[].section). 그 절보다 더 맞는 절이 있는 기능만 아래 표에서 바꿈(프로젝트 문서를 보고 고름)
     const DOC_SECTION = {
       '2-Folk-Sack': { 3: '4.2 탈출·깔림 결정과 피해 전달' },   // 낙하 지형 충돌·탈출·매몰 — '4.1 낙하 청크 접촉과 매몰 상태'보다 판정·피해 처리를 직접 설명하는 절
@@ -1215,7 +1218,7 @@
           <div className="wrap relative flex h-14 items-center gap-4">
             <a href="#cover" className="font-semibold tracking-tight whitespace-nowrap">{prof.name || t('name.portfolio')}</a>
             <nav className="noscroll ml-auto flex min-w-0 gap-4 md:gap-6 overflow-x-auto text-[13px] text-[var(--muted)]" aria-label="절 이동">
-              {items.map(([id, label]) => <a key={id} href={`#${id}`} data-nav={id} className="nav-a whitespace-nowrap hover:text-[var(--ink)]" {...(id.startsWith('p-') ? { 'data-pm-open': '' } : {})}>{label}</a>)}
+              {items.map(([id, label]) => <a key={id} href={`#${id}`} data-nav={id} data-t={label} className="nav-a whitespace-nowrap hover:text-[var(--ink)]" {...(id.startsWith('p-') ? { 'data-pm-open': '' } : {})}>{label}</a>)}
             </nav>
             <div className="nh-tools-space" aria-hidden="true" />
           </div>
@@ -1230,8 +1233,8 @@
           {projects.length > 0 && (
             <div className="nh-pm"><div className="wrap nh-pm-w">
               <nav className="nh-pm-l noscroll" aria-label="프로젝트 바로 가기">
-                {projects.map((p) => <a key={p.id} href={`#p-${p.id}`} data-pm={`p-${p.id}`} className="nav-a whitespace-nowrap hover:text-[var(--ink)]">{p.title}</a>)}
-                {others.length > 0 && <a href="#others" data-pm="others" className="nav-a whitespace-nowrap hover:text-[var(--ink)]">{otherLabel}</a>}
+                {projects.map((p) => <a key={p.id} href={`#p-${p.id}`} data-pm={`p-${p.id}`} data-t={p.title} className="nav-a whitespace-nowrap hover:text-[var(--ink)]">{p.title}</a>)}
+                {others.length > 0 && <a href="#others" data-pm="others" data-t={otherLabel} className="nav-a whitespace-nowrap hover:text-[var(--ink)]">{otherLabel}</a>}
               </nav>
             </div></div>
           )}
@@ -1664,7 +1667,8 @@
           {p.cover && <div className="proj-backdrop" aria-hidden="true"><img src={img(p, p.cover)} alt="" decoding="async" /></div>}
           <div className="wrap">
             <SecHead en={no} title={p.title} big />
-            {p.tagline && <p className="reveal -mt-4 mb-12 md:mb-16 max-w-[760px] text-xl md:text-2xl leading-snug text-[var(--muted)]"><Inline text={p.tagline} /></p>}
+            {/* 한 줄 소개(768px 이상): 쉼표 뒤마다 끊은 덩어리(inline-block)로 — 줄이 넘칠 때 쉼표 자리에서 바뀜(덩어리 하나가 한 줄보다 길면 그 안에서 줄 길이를 고르게) 휴대폰은 덩어리 없이 보통 줄바꿈 */}
+            {p.tagline && <p className="reveal -mt-4 mb-12 md:mb-16 max-w-[760px] text-lg md:text-xl leading-snug text-[var(--muted)]">{p.tagline.split(/(?<=,)\s+/).map((seg, i) => <Fragment key={i}>{i > 0 && ' '}<span className="md:inline-block md:[text-wrap:balance]"><Inline text={seg} /></span></Fragment>)}</p>}
             <div className={hasCover ? 'split reveal' : 'reveal'}>
               {hasCover && (
                 <div className="media cover-fade relative">
@@ -1682,7 +1686,7 @@
             </div>
             {p.intent?.text && (
               <div className="reveal mt-14 md:mt-20 max-w-[820px]">
-                <p className="eyebrow">{t('name.intent')}</p>
+                <p className="eyebrow">{t('en.intent')}</p>
                 <p className="mt-4 text-lg md:text-xl leading-relaxed text-[var(--muted)]"><Inline text={p.intent.text} /></p>
               </div>
             )}

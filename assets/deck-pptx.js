@@ -20,7 +20,7 @@
   const P2 = (px) => Math.round(px * PT * 100) / 100;
   const L = (k, v) => (typeof PFStr === 'object' ? PFStr.t(k, v) : k);
   const num = (v) => parseFloat(v) || 0;
-  const SKIP = '.pf-sr-only, .pf-sr, .pf-screen-only, .pf-n-screen, .pf-skiplink, .pf-newtab-icon, [hidden]';
+  const SKIP = '.pf-vid, .pf-sr-only, .pf-sr, .pf-screen-only, .pf-n-screen, .pf-skiplink, .pf-newtab-icon, [hidden]';
   const VOID = new Set(['img', 'br', 'hr', 'input', 'video', 'audio', 'canvas', 'iframe', 'object', 'embed', 'source', 'track', 'wbr', 'area', 'select', 'textarea']);
   const BLOCKY = /^(block|flex|grid|list-item|table|flow-root|table-row-group|table-header-group|table-footer-group|table-row|table-cell|table-caption)$/;
   const GENERIC = /^(serif|sans-serif|monospace|cursive|fantasy|system-ui|ui-[a-z-]+|-apple-system|blinkmacsystemfont|emoji|math|fangsong|apple color emoji|segoe ui emoji|segoe ui symbol|noto color emoji)$/i;

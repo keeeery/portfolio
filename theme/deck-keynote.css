@@ -1,0 +1,134 @@
+/* ─────────────────────────────────────────────────────────────
+   슬라이드 키노트 스타일 (theme/deck-keynote.css) — 2026-11-24
+   애플 발표 무대 느낌 + 플랫: 한 색 바탕 · 장 표지·맺음은 한가운데 아주 큰 제목 하나(나머지는 덜어 냄)
+   · 그러데이션·그림자 없음 · 선·테두리 없이 한 단 밝은 판으로 나눔
+   project.html이 theme.css·theme-light.css 다음에 싣습니다. 모든 규칙이 .pf-scene(슬라이드 장면) 안이라 포트폴리오 페이지·상세 문서는 바뀌지 않습니다.
+   끄기: project.html의 deck-keynote.css 링크 한 줄을 지우면 예전 슬라이드로 돌아갑니다.
+   주의: /portfolio-update가 project.html을 새로 받으면 그 링크 줄이 빠집니다 — 다시 넣어 주세요(이 파일은 그대로 남음).
+   ───────────────────────────────────────────────────────────── */
+
+/* ① 무대 바탕 — 한 색(그러데이션·조명 없음) */
+.pf-scene, .pf-scene.t-CH, .pf-scene.t-EN, .pf-scene.t-P1, .pf-scene.t-P2 { background: var(--bg); }
+
+/* ② 큰 제목 글자 — 한 색 */
+.pf-scene :is(.ch-t, .en-t, .pi-t, .toc-h, .pf-title) { background: none; -webkit-text-fill-color: currentColor; color: var(--ink); }
+.pf-scene .pf-title { font-size: 40px; font-weight: 700; letter-spacing: -.04em; line-height: 1.15; }
+
+/* ③ 본문 장면 머리 — 밑줄 없음, 작은 강조색 라벨 + 큰 제목 + 회색 도입 */
+.pf-scene .pf-headrow, .pf-scene .toprow { border-bottom-color: transparent; }
+.pf-scene .pf-eyebrow { background: none; -webkit-text-fill-color: currentColor; color: var(--accent-ink); font-weight: 700; letter-spacing: .08em; }
+.pf-scene .pf-rlabel { color: var(--faint); font-weight: 500; }
+.pf-scene .pf-titlerow { margin-top: 8px; }
+.pf-scene .pf-lead { color: var(--muted); font-weight: 400; font-size: 18px; }
+
+/* ④ 장 표지 — 한가운데 아주 큰 제목 하나. 장면 목록은 덜어 냄(목차 장면·개요 보기에 그대로 있음) */
+.pf-scene.t-CH .toprow :is(.pf-eyebrow, .rl), .pf-scene.t-EN .toprow :is(.pf-eyebrow, .rl) { color: var(--faint); }   /* 윗줄은 흐리게(숨기면 배치 점검에 걸림) */
+.pf-scene .ch-mid { grid-template-columns: minmax(0, 1fr); justify-items: center; text-align: center; }
+.pf-scene .ch-mid > :first-child { display: flex; flex-direction: column; align-items: center; }
+.pf-scene .ch-list { display: none; }
+.pf-scene .ch-no { background: none; -webkit-text-fill-color: currentColor; color: var(--muted); font-size: 18px; letter-spacing: .3em; margin-inline: auto; }
+.pf-scene .ch-t { margin-top: 18px !important; font-size: 104px; font-weight: 800; letter-spacing: -.05em; line-height: 1.05; max-width: 1080px; }
+.pf-scene.t-CH .dotrule { display: none; }
+
+/* ⑤ 맺음 — 한가운데 프로젝트 이름, 아래에 링크 한 줄 */
+.pf-scene .en-mid { grid-template-columns: minmax(0, 1fr); justify-items: center; text-align: center; align-content: center; gap: 48px; }
+.pf-scene .en-mid > :first-child { display: flex; flex-direction: column; align-items: center; }
+.pf-scene .en-t { font-size: 96px; font-weight: 800; letter-spacing: -.05em; line-height: 1.05; }
+.pf-scene .en-mid .tagline { margin-top: 18px !important; font-size: 22px; font-weight: 400; max-width: 900px; }
+.pf-scene.t-EN .dotrule { display: none; }
+.pf-scene .en-links { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; width: 100%; text-align: left; }
+
+/* ⑥ 목차 — 큰 제목 */
+.pf-scene .toc-h { font-size: 72px; letter-spacing: -.04em; }
+.pf-scene .toc-list a { border-bottom-color: color-mix(in srgb, var(--line) 60%, transparent); }
+
+/* ⑦ 프로젝트 소개 — 제목 크게 */
+.pf-scene.t-P1 .pi-t { font-size: 60px; font-weight: 800; letter-spacing: -.045em; line-height: 1.05; }
+.pf-scene .pi-head .tagline { font-size: 19px; }
+
+/* ⑧ 면 — 테두리·그림자 없이 바탕보다 한 단 밝은 판(플랫), 모서리 더 둥글게 */
+.pf-scene :is(.card, .ncard, .fstep, .note, .media, .vmedia, .lcard a, .rt-ach) { border-color: transparent; background-image: none; box-shadow: none; }
+.pf-scene :is(.ncard, .fstep) { border-radius: 22px; }
+.pf-scene .note { border-left-color: var(--accent); }
+.pf-scene .fstep.res { border-color: transparent; }
+.pf-scene .vbox[data-kind="image"] .vmedia, .pf-scene .pi-cover { background: transparent; border-radius: 20px; box-shadow: none; }
+.pf-scene .ncard .num, .pf-scene .toc-list .n { background: var(--accent-fill); }
+
+/* ⑨ 장식·표·라벨·바닥글 */
+.pf-scene .dotrule .dot { display: none; }
+.pf-scene .dotrule .ln { height: 2px; background: var(--accent); }
+.pf-scene :is(table.mini, table.md-table) th { box-shadow: inset 0 -1px 0 var(--line-2); }
+.pf-scene .fe-k { background: none; -webkit-text-fill-color: currentColor; color: var(--accent-ink); }
+.pf-scene .pf-foot { color: var(--faint); font-weight: 500; }
+
+
+/* ⑩ 링크(표지·맺음) — 글자 + 아이콘 크기의 캡슐. 평소엔 바탕 없이 글자만, 마우스를 올리면 아래 띠 버튼처럼 글자색 14% 캡슐이 보임
+     영문 라벨은 빼고 이름만, 새 탭·문서 이동 아이콘은 글자 바로 옆. 맺음의 상세 문서 링크는 강조색 글자로만 구분 */
+.pf-scene .pi-links, .pf-scene .en-links { display: flex !important; flex-wrap: wrap; align-items: center; gap: 4px 6px; }
+.pf-scene .pi-links { align-self: flex-start; }
+
+.pf-scene .en-links { justify-content: center; width: 100%; }
+.pf-scene .lcard .lc-k { display: none; }
+.pf-scene .lcard a {
+  display: inline-flex; align-items: center; gap: 6px; width: auto; white-space: nowrap;
+  padding: 8px 14px !important; border-radius: 999px; border-color: transparent; background: transparent;
+  transition: background-color .15s;
+}
+.pf-scene .lcard .lc-t { font-size: 15px !important; }
+.pf-scene .lcard a .pf-newtab-icon { position: static !important; margin: 0 !important; flex: none; }
+.pf-scene .lcard a:hover { border-color: transparent; background: color-mix(in srgb, var(--ink) 14%, transparent); }
+.pf-scene .lcard.primary a, .pf-scene .en-links .lcard.primary a { color: var(--accent-ink); border-color: transparent; background: transparent; }
+.pf-scene .lcard.primary a:hover, .pf-scene .en-links .lcard.primary a:hover { background: color-mix(in srgb, var(--ink) 14%, transparent); }   /* 상세 문서 링크도 같은 호버(투명 바탕 규칙이 뒤에 있어 따로 적음) */
+.pf-scene .lcard a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* ⑪ 표지(프로젝트 소개) 덜어 내기 — 윗줄(PROJECT · 슬라이드 / 팀 프로젝트 · N인)과 바닥글 이름(이름 · 프로젝트)은 빼고 장면 번호만 */
+.pf-scene:is(.t-P1, .t-EN) .toprow { display: none; }   /* 맺음도 같게 */
+.pf-scene:is(.t-P1, .t-EN) .pf-foot > span:first-child { display: none; }
+.pf-scene:is(.t-P1, .t-EN) .pf-foot { justify-content: flex-end; }
+
+/* ⑫ 표지 배치 — 링크는 제목 줄 오른쪽 끝, 아래 두 단은 간격을 넉넉히(글은 그대로) */
+.pf-scene.t-P1 .pf-body { position: absolute; }
+.pf-scene.t-P1 .pi-links { position: absolute; top: 70px; right: 0; margin: 0 !important; justify-content: flex-end; flex-wrap: nowrap; }
+.pf-scene.t-P1 .pi-t { max-width: calc(100% - 480px); }
+.pf-scene.t-P1 .pi-head { margin-top: 56px; }   /* 윗줄을 뺀 만큼 내려 위·아래 여백을 비슷하게(제목 위 약 110px · 아래 약 80~130px, 글 길이에 따라) */
+.pf-scene.t-P1 .pi-main { margin-top: 30px; gap: 64px; }
+.pf-scene.t-P1 .pi-right { gap: 18px !important; }
+.pf-scene.t-P1 .pi-meta { row-gap: 6px; }
+.pf-scene.t-P1 .meta-k { color: var(--muted); }
+.pf-scene.t-P1 .intent { border-left-width: 2px; }
+.pf-scene.t-P1 .intent .it { color: color-mix(in srgb, var(--ink) 82%, var(--bg)); line-height: 1.62; }
+
+/* ⑭ 표지 — 제목 줄 링크 글자 작게(15 → 13px), 장르·기간·인원 칸 사이 넓게(22 → 44px) */
+.pf-scene:is(.t-P1, .t-EN) .lcard .lc-t { font-size: 13px !important; }   /* 맺음 링크도 같게 */
+.pf-scene:is(.t-P1, .t-EN) .lcard a { padding: 7px 12px !important; gap: 5px; }
+.pf-scene.t-P1 .pi-links { gap: 2px; }
+.pf-scene.t-P1 .pi-meta { column-gap: 44px; }
+
+/* ⑮ 한 장씩 보기 — 장면 바깥 빈 곳을 장면 바탕과 같은 색으로, 장면 테두리·그림자 없이(슬라이드와 빈 곳의 경계가 보이지 않게) */
+@media screen {
+  html[data-view="deck"], html[data-view="deck"] body { background: var(--bg); }
+  html[data-view="deck"] .pf-deck > .pf-scene { box-shadow: none; }
+}
+
+/* ⑯ 세로로 보기(어두운 화면) — 장면 사이·양옆 바탕을 장면(순검정)보다 한 단 밝은 짙은 회색으로, 장면이 판처럼 떠 보이게. 밝은 화면은 그대로 */
+@media screen {
+  html:not([data-pf-mode="light"])[data-view="scroll"], html:not([data-pf-mode="light"])[data-view="scroll"] body { background: #161618; }
+  html:not([data-pf-mode="light"])[data-view="scroll"] .pf-deck > .pf-scene { box-shadow: none; }
+}
+
+/* ⑰ 링크 글자 세로 자리 — 줄 높이(위아래 여백 포함) 대신 글자 높이(대문자 높이~기준선)만으로 가운데 맞춤(text-box).
+     보통 화면(1배 픽셀)에서 줄 여백이 반올림되며 한글이 아이콘보다 1px가량 떠 보이던 것을 막음. 캡슐 높이는 위아래 여백으로 그대로 */
+.pf-scene .lcard .lc-t { text-box: trim-both cap alphabetic; line-height: 1; }
+.pf-scene:is(.t-P1, .t-EN) .lcard a { padding-block: 11.5px !important; }
+
+/* ⑱ 링크 아이콘 또렷하게 — 작게(약 12px) 그리면 상자·화살표가 뭉개져 보여, 슬라이드에서만 선을 단순하고 가늘게 다시 그림(CSS d, 크롬 계열).
+     선은 반 픽셀 좌표 위에 두어 1배 화면에서도 번지지 않게. 지원하지 않는 브라우저와 PPTX는 원래 아이콘 그대로 */
+.pf-scene .lcard a .pf-newtab-icon { width: 12px; height: 12px; overflow: visible; transform: translateY(-0.5px); }   /* 새 모양은 한글보다 반 픽셀 낮게 보여 살짝 올림 */
+.pf-scene .lcard a .pf-newtab-icon, .pf-scene .lcard a .pf-newtab-icon path { stroke-width: 1.4; }
+.pf-scene .lcard a .pf-newtab-icon { opacity: 1; }   /* 기본 85% 투명도를 빼서 글자와 같은 색으로 */
+.pf-scene .lcard a .pf-ext-icon path:first-child { d: path("M5.5 2.5H3.5A1 1 0 0 0 2.5 3.5V8.5A1 1 0 0 0 3.5 9.5H8.5A1 1 0 0 0 9.5 8.5V6.5"); }
+.pf-scene .lcard a .pf-ext-icon path:last-child { d: path("M7.5 2.5H9.5V4.5M9.5 2.5L5.5 6.5"); }
+.pf-scene .lcard a .pf-newtab-icon:not(.pf-ext-icon) path { d: path("M4.5 2.5H9.5V7.5M9.5 2.5L2.5 9.5"); }
+
+/* ⑲ 세로로 보기(밝은 화면) — 장면 테두리 1px 빼기: 바탕색 차이로 이미 구분되고, 테두리가 스크롤 막대 왼쪽 여백을 1px 먹어 막대 양옆 여백이 달라 보였음 */
+@media screen { html[data-pf-mode="light"][data-view="scroll"] .pf-deck > .pf-scene { box-shadow: none; } }

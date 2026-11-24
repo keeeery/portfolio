@@ -65,6 +65,15 @@
   try { history.scrollRestoration = 'manual'; } catch { /* 그대로 */ }
   const pathOf = (el) => { const p = []; for (let n = el; n !== document.body; n = n.parentElement) { if (!n?.parentElement) return null; p.unshift([...n.parentElement.children].indexOf(n)); } return p; };
   const byPath = (p) => { let n = document.body; for (const i of p) { n = n?.children[i]; if (!n) return null; } return n; };
+  const layTop = (el) => {                                       // 화면 위 자리에서 조상들의 옮김(transform·translate)을 뺀 원래 자리 — 떠오르기 전 아래로 밀려 있는 띠(.reveal)도 제자리로 잼
+    let t = el.getBoundingClientRect().top;
+    for (let n = el; n && n !== document.body; n = n.parentElement) {
+      const cs = getComputedStyle(n);
+      if (cs.transform && cs.transform !== 'none') { try { t -= new DOMMatrixReadOnly(cs.transform).m42; } catch { /* 그대로 */ } }
+      if (cs.translate && cs.translate !== 'none') { const y = parseFloat(cs.translate.split(' ')[1]); if (y) t -= y; }
+    }
+    return t;
+  };
   const pinned = (el) => { for (let n = el; n && n !== document.body; n = n.parentElement) { const ps = getComputedStyle(n).position; if (ps === 'fixed' || ps === 'sticky') return true; } return false; };
   const anchor = () => {                                         // 화면 위쪽에 보이는 가장 안쪽 블록(머리 막대·떠 있는 단추처럼 고정된 것은 뺌)
     for (const fy of [0.3, 0.45, 0.6]) {
@@ -79,7 +88,7 @@
         }
         while (el.parentElement !== document.body && getComputedStyle(el).display.startsWith('inline')) el = el.parentElement;
         const path = pathOf(el);
-        if (path) return { path, tag: el.tagName, off: Math.round(el.getBoundingClientRect().top) };
+        if (path) return { path, tag: el.tagName, off: Math.round(layTop(el)) };
       }
     }
     return null;
@@ -89,7 +98,8 @@
     const cut = (r, c) => ({ l: Math.max(r.left, c.l), t: Math.max(r.top, c.t), r: Math.min(r.right, c.r), b: Math.min(r.bottom, c.b) });
     const add = (r, k, c) => { const x = cut(r, c); if (x.r - x.l > 1 && x.b - x.t > 1 && out.length < 600) out.push([Math.round(x.l), Math.round(x.t), Math.round(x.r - x.l), Math.round(x.b - x.t), k]); };
     const walk = (el, c) => {
-      if (out.length >= 600 || el.matches('script, style, noscript, template, .pf-sb, .pf-skel, dialog:not([open]), [aria-hidden="true"], .cap, .cap-pill, .hero-pill, .tcap, .cv-screens, .mmd-src')) return;   // 꾸밈(aria-hidden — 배경 번짐·장식)·캡슐 바·표지 대표 화면·다이어그램 원문 접는 상자는 빼기
+      if (out.length >= 600 || el.matches('script, style, noscript, template, .pf-sb, .pf-skel, dialog:not([open]), svg, .fe-shot:not(.on), .cap, .cap-pill, .hero-pill, .tcap, .cv-screens, .mmd-src, .site-head, header.top, .glance, .pdf-menu, html.pf-rail-open .rail')) return;   // 아이콘(svg)·기능 소개의 위아래로 흐리게 비치는 장(지금 보이는 한 장 .on만 그림)·캡슐 바·표지 대표 화면·다이어그램 원문 접는 상자·포트폴리오 페이지 상단 바·한눈에·링크 상자,
+      //   열어 둔 채 떠나도 다시 열면 닫혀 있는 것(포트폴리오 페이지 [PDF] 메뉴·좁은 화면에서 단추로 연 오른쪽 카드 칸)은 빼기
       const cs = getComputedStyle(el);
       if (cs.display === 'none' || cs.visibility === 'hidden' || +cs.opacity < 0.05) return;
       if (/blur\(/.test(cs.filter)) return;                       // 흐리게 깐 배경 그림(프로젝트 소개 배경·표지 번짐)
@@ -165,12 +175,42 @@ html.pf-skel-hold body *, html.pf-skel-hold body *::before, html.pf-skel-hold bo
     let el = null, over = false;
     const info = (window.PFAnchor.skeleton = { kind: '', shown: 0, finished: 0 });   // 점검용: 어떤 모양으로 언제 보이고 걷혔는지(ms)
     const VARS = '--sk: color-mix(in srgb, var(--ink, #F4F4F6) 8%, var(--bg, #0A0A0D)); --sk-hi: color-mix(in srgb, var(--ink, #F4F4F6) 15%, var(--bg, #0A0A0D));';
-    const SHIM = 'linear-gradient(100deg, var(--sk) 40%, var(--sk-hi) 50%, var(--sk) 60%) 0 0 / 300% 100%';
-    const KEYS = '@keyframes pf-skel { from { background-position: 100% 0; } to { background-position: 0 0; } }';
+    // 반짝임: 바탕은 고정 회색, 밝은 띠는 화면 전체에 하나(.pf-skel::after)가 transform으로 이동 → 합성 단계에서 돌아 메인 스레드(Babel 변환 등)가 막혀 있어도 멈추지 않고, 층도 하나뿐.
+    //   세로에서 20° 기운 띠(tan 20° = .364)가 좌상단 → 우하단으로 오른쪽으로 흐름. 띠 상자는 가로 2×--bw, 띠(30~70%)보다 넉넉히 넓어 가장자리에서 잘리지 않음. 넓고 옅은 빛이 천천히(3.7초) 지나간 뒤 잠깐 쉼(움직임 88% · 쉼 12%)
+    // 띠의 밝기 곡선: 종 모양(가우스, 표준편차 = 띠 상자 길이의 7%) — 가운데는 둥글고 끝은 길게 사라짐(직선으로 이은 꼭짓점이 빛줄기처럼 또렷해 보이지 않게). 폭은 30~70% 그대로
+    const BELL = [0, 3, 6, 9, 12, 15, 20].flatMap((d) => {
+      const k = Math.round(100 * Math.exp(-(d * d) / (2 * 7 * 7)));
+      const c = d === 20 ? 'transparent' : `color-mix(in srgb, var(--sk-glow) ${k}%, transparent)`;
+      return d ? [[50 - d, c], [50 + d, c]] : [[50, c]];
+    }).sort((a, b) => a[0] - b[0]).map(([at, c]) => `${c} ${at}%`).join(', ');
+    // 막대 = 가만히 있는 회색 바탕(::before)뿐. 빛은 막대마다가 아니라 화면 전체에 하나(.pf-skel::after, 아래 BAND)만 지나감.
+    //   막대마다 빛·숨쉬기 애니메이션을 따로 걸면 줄이 많은 화면(수백 개)에서 합성 층이 수백~천 개가 되어 브라우저가 층을 놓치고 막대가 사라졌다 나타남(영상으로 확인).
+    const SHINE = (sel, imp = '') => `${sel} { position: relative; background: none${imp}; }
+${sel.split(',').map((x) => x.trim() + '::before').join(', ')} { content: ''; position: absolute; inset: 0; border-radius: inherit; background: var(--sk)${imp}; visibility: inherit${imp}; }`;
+    const GLOW = '--bw: max(420px, 60vw); --sk-glow: color-mix(in srgb, var(--ink, #F4F4F6) 3%, transparent);';   // 빛은 은은하게(가장 밝은 곳 3%)
+    // 화면 전체를 지나가는 비스듬한 빛 하나(세로에서 20° 기운 띠 · 4.2초에 한 바퀴, 움직임 88% · 쉼 12%) — 층 하나, 투명도·옮김만이라 메인 스레드가 바빠도 안 멈춤.
+    //   빛(.sk-band)은 막대 모양으로 오린 마스크 한 장을 쓴 상자(.sk-glow) 안에서만 보임 → 막대 위에만 빛이 지나가고 바탕에는 번지지 않음.
+    //   마스크는 막대 자리를 재서 만든 SVG 하나(maskBars) — 움직이지 않으므로 층은 그대로 하나
+    const BAND = `.sk-glow { position: absolute; inset: 0; overflow: hidden; pointer-events: none; ${VARS} ${GLOW}
+  -webkit-mask: var(--sk-mask, none) 0 0 / 100% 100% no-repeat; mask: var(--sk-mask, none) 0 0 / 100% 100% no-repeat; }
+.sk-glow:not([style]) { display: none; }                                          /* 마스크를 만들기 전에는 빛을 숨김(화면 전체가 빛나지 않게) */
+.sk-band { position: absolute; top: -20vh; bottom: -20vh; left: calc(var(--bw) / -2); width: calc(var(--bw) * 2);
+  background: linear-gradient(110deg, ${BELL}); transform: translate3d(calc(-1.5 * var(--bw)), 0, 0); animation: pf-skel-sweep 4.2s linear -.8s infinite; }
+/* 깜박임: 막대마다가 아니라 막대 묶음(표지 .sk-cv · 떠나기 전 모양 .sk-bars · 슬라이드 .sk-sl · 상세 문서 .sk-root) 하나만 천천히 옅어졌다 돌아옴
+   → 층이 하나만 늘어 막대가 많아도 사라졌다 나타나지 않음. 빛(.sk-glow)은 묶음 밖이라 깜박임에 같이 어두워지지 않음. 2.1초 = 빛 한 바퀴(4.2초)의 절반 */
+.sk-breathe { animation: pf-skel-breathe 2.1s ease-in-out infinite; }
+@keyframes pf-skel-breathe { 0%, 100% { opacity: 1; } 50% { opacity: .55; } }
+@media (prefers-reduced-motion: reduce) { .sk-band, .sk-breathe { animation: none; } }`;
+    const KEYS = `@keyframes pf-skel-sweep {   /* 이름을 나눔: 본문 '불러오는 중' 글의 pf-skel(배경 이동)과 같은 문서에 있어도 덮어쓰지 않게 */
+  0% { transform: translate3d(calc(-1.5 * var(--bw)), 0, 0); }
+  88%, 100% { transform: translate3d(calc(100vw + 36.4vh + .5 * var(--bw)), 0, 0); } }`;
     const CSS = `
-.pf-skel { position: fixed; inset: 0; z-index: 2147483001; overflow: hidden; background: var(--bg, #0A0A0D); transition: opacity .25s ease; ${VARS} }
+.pf-skel { position: fixed; inset: 0; z-index: 2147483001; overflow: hidden; background: var(--bg, #0A0A0D); transition: opacity .25s ease; ${VARS} ${GLOW} }
 .pf-skel.sk-out { opacity: 0; }
-.pf-skel i { display: block; height: 14px; border-radius: 6px; margin: 0 0 14px; background: ${SHIM}; animation: pf-skel 1.4s ease-in-out infinite; }
+${BAND}
+.pf-skel i { display: block; height: 14px; border-radius: 6px; margin: 0 0 14px; }
+${SHINE('.pf-skel i')}
+.pf-skel .sk-bars { position: absolute; inset: 0; }
 .pf-skel i.sk-s { position: absolute; margin: 0; border-radius: 5px; }       /* 떠나기 전 화면 모양(글 줄) */
 .pf-skel i.sk-s.sk-m { border-radius: 10px; }                                 /* 그림 자리 */
 /* 포트폴리오 페이지 표지 — index.html #cover와 같은 규칙: 머리 막대 아래(56px)에서 위 여백, 머리말·이름·영문 이름·한 줄 정체성 두 줄,
@@ -207,7 +247,6 @@ html.pf-skel-hold body *, html.pf-skel-hold body *::before, html.pf-skel-hold bo
   border: 1px solid var(--sk); display: flex; flex-direction: column; justify-content: center; }
 .pf-skel .sk-sl .sk-t { width: 46%; height: 40px; }
 ${KEYS}
-@media (prefers-reduced-motion: reduce) { .pf-skel i { animation: none; } }
 @media print { .pf-skel { display: none !important; } }`;
     const W = (w, c = '') => `<i class="${c}" style="width:${w}%"></i>`;
     const path = location.pathname, isLetter = /\/letter\.html$/.test(path), isDoc = isLetter || /\/doc\.html$/.test(path);
@@ -257,10 +296,11 @@ ${KEYS}
           + card('6em', `<dl class="rail-meta">${[['2.2em', '9em'], ['2.2em', '11em'], ['2.2em', '2em'], ['2.2em', '96%<br>60%'], ['4.4em', '96%<br>92%<br>40%']]
             .map(([x, y]) => `<div><dt>${b(x)}</dt><dd>${y.includes('<br>') ? lines(...y.split('<br>')) : b(y)}</dd></div>`).join('')}</dl>`)
           + card('5em', links('5em', '10em', '7.4em', '5.2em', '7em')) + `</aside>`;
-      return `<div class="sk-root${railOn ? '' : ' sk-railoff'}">${crumb}<div class="doc-page">${nav}<main class="doc-main">${main}</main>${rail}</div></div>`;
+      return `<div class="sk-root sk-breathe${railOn ? '' : ' sk-railoff'}">${crumb}<div class="doc-page">${nav}<main class="doc-main">${main}</main>${rail}</div></div>`;
     };
     const DOC_CSS = `
-.sk-root { position: absolute; inset: 0; overflow: hidden; ${VARS} }
+.sk-root { position: absolute; inset: 0; overflow: hidden; ${VARS} ${GLOW} }
+.sk-root.sk-breathe { animation: pf-skel-breathe 2.1s ease-in-out infinite !important; }
 .sk-root * { color: transparent !important; -webkit-text-fill-color: transparent !important; background: none !important; border-color: transparent !important;
   box-shadow: none !important; text-shadow: none !important; backdrop-filter: none !important; -webkit-mask: none !important; mask: none !important;
   animation: none !important; transition: none !important; }
@@ -270,13 +310,16 @@ ${KEYS}
 .sk-root .toc-title { height: 30px; box-sizing: border-box; padding-bottom: 10px; line-height: 20px; margin: 0; }
 .sk-root .ln { display: flex; align-items: center; height: 1lh; }                     /* flex 링크·단추 안: 막대만으로는 줄 높이가 사라지므로 한 줄 높이 칸에 담음 */
 .sk-root *::before, .sk-root *::after { visibility: hidden !important; }
-.sk-root .b, .sk-root .bx { background: ${SHIM} !important; animation: pf-skel 1.4s ease-in-out infinite !important; }
+${SHINE('.sk-root .b, .sk-root .bx', ' !important')}
 .sk-root .b { display: inline-block; max-width: 100%; height: .72em; vertical-align: -.04em; border-radius: 5px; }
 .sk-root .bx { display: block; width: 100%; aspect-ratio: 16 / 9; border-radius: 10px; }
-.sk-root :is(.rail-card, .glance, .actions .btn) { border-color: var(--sk) !important; background: color-mix(in srgb, var(--ink, #F4F4F6) 3%, var(--bg, #0A0A0D)) !important; }
+.sk-root .glance .b { visibility: hidden !important; }                             /* 한눈에·링크 상자는 그리지 않고 자리만(아래 본문 자리가 실제와 같게) */
+.sk-root .glance .b::after { animation: none !important; }
+.sk-root .rail-card { border-color: var(--sk) !important; background: color-mix(in srgb, var(--ink, #F4F4F6) 3%, var(--bg, #0A0A0D)) !important; }
 @media screen and (min-width: 1440px) { .sk-root.sk-railoff .doc-page { grid-template-columns: calc(var(--toc-w) + var(--gap)) minmax(0, 1fr) 0px; } }
+${BAND}
 ${KEYS}
-@media (prefers-reduced-motion: reduce) { .sk-root .b, .sk-root .bx { animation: none !important; } }`;
+`;
 
     const snapHtml = () => {                                       // 새로고침·뒤로: 떠나기 전 화면에 보이던 글 줄·그림 자리 그대로(창 폭이 같을 때만)
       const S = saved && saved.s;
@@ -294,16 +337,35 @@ ${KEYS}
       el = document.createElement('div'); el.setAttribute('aria-hidden', 'true'); el.className = 'pf-skel';
       const snapped = !own() && snapHtml();
       info.kind = snapped ? 'snapshot' : own() ? 'deck' : isDoc ? (isLetter ? 'letter' : 'doc') : 'cover';
-      if (snapped) el.innerHTML = snapped;
-      else if (own()) { el.className = 'pf-skel sk-deck'; el.innerHTML = `<div class="sk-sl"><i class="sk-t"></i>${W(80)}${W(72)}${W(64)}${W(40)}</div>`; }
+      if (snapped) el.innerHTML = `<div class="sk-bars sk-breathe">${snapped}</div>`;
+      else if (own()) { el.className = 'pf-skel sk-deck'; el.innerHTML = `<div class="sk-sl sk-breathe"><i class="sk-t"></i>${W(80)}${W(72)}${W(64)}${W(40)}</div>`; }
       else if (isDoc && el.attachShadow) {
         const sr = el.attachShadow({ mode: 'open' });
         sr.innerHTML = `<style>${pageCss()}\n${DOC_CSS}</style>${docHtml()}`;
       } else {                                                   // 포트폴리오 페이지: 맨 위 표지 모양
         const ln = (n) => `<div class="sk-ln sk-l${n}"><i></i></div>`;
-        el.innerHTML = `<div class="sk-cv">${ln(1)}${ln(2)}${ln(3)}${ln(4)}${ln(5)}<div class="sk-stage"><div class="sk-shots"><i></i><i></i><i></i><i></i></div></div><div class="sk-pill"></div></div>`;
+        el.innerHTML = `<div class="sk-cv sk-breathe">${ln(1)}${ln(2)}${ln(3)}${ln(4)}${ln(5)}<div class="sk-stage"><div class="sk-shots"><i></i><i></i><i></i><i></i></div></div><div class="sk-pill"></div></div>`;
       }
+      const glow = document.createElement('div'); glow.className = 'sk-glow'; glow.innerHTML = '<div class="sk-band"></div>';
+      (el.shadowRoot || el).append(glow);                          // 막대들 위(마지막 자식) — 상세 문서는 shadow 안
       document.documentElement.append(el);                         // 본문 밖: 본문을 가려 둔 동안에도 보이고, 본문 안 경로(위치 기준)를 바꾸지 않음
+      const maskBars = () => {                                     // 지금 보이는 막대 자리(둥근 모서리 포함)를 SVG 한 장으로 → 빛 상자의 마스크
+        if (over || !el) return;
+        const W = innerWidth, H = innerHeight;
+        const rects = [...(el.shadowRoot || el).querySelectorAll('i, .b, .bx')].map((b) => {
+          if (getComputedStyle(b).visibility === 'hidden') return '';
+          const r = b.getBoundingClientRect();
+          if (r.width < 1 || r.height < 1 || r.bottom < 0 || r.top > H || r.right < 0 || r.left > W) return '';
+          const rad = Math.min(parseFloat(getComputedStyle(b).borderTopLeftRadius) || 0, r.height / 2, r.width / 2);
+          return `<rect x="${r.left.toFixed(1)}" y="${r.top.toFixed(1)}" width="${r.width.toFixed(1)}" height="${r.height.toFixed(1)}" rx="${rad.toFixed(1)}"/>`;
+        }).join('');
+        const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none">${rects}</svg>`;
+        glow.style.setProperty('--sk-mask', `url("data:image/svg+xml,${encodeURIComponent(svg)}")`);
+      };
+      maskBars();
+      addEventListener('resize', maskBars);                        // 창 크기가 바뀌면 막대 자리도 바뀜
+      document.fonts?.ready.then(maskBars);                        // 글꼴이 늦게 와서 줄 길이가 바뀌어도 다시
+      info.maskBars = maskBars;
       document.documentElement.classList.add('pf-skel-hold');      // 덮는 동안 페이지 애니메이션 멈춤(위 ④의 CSS)
       info.shown = Math.round(performance.now());
     };
@@ -317,7 +379,13 @@ ${KEYS}
         info.animsAtLift = run.length; info.maxAnimTimeAtLift = Math.round(Math.max(0, ...run.map((a) => +a.currentTime || 0)));
       }
       dispatchEvent(new Event('pf-skel-lift'));                    // 걷히기 직전(애니메이션은 아직 0ms에 멈춤) — 제자리(읽던 위치)가 정해진 뒤 다시 판단할 일에(포트폴리오 페이지 캡슐 바)
-      const play = () => { document.documentElement.classList.remove('pf-skel-hold'); info.played = Math.round(performance.now()); };
+      const play = () => {
+        let go = false;
+        const start = () => { if (go) return; go = true; document.documentElement.classList.remove('pf-skel-hold'); info.played = Math.round(performance.now()); };
+        // 걷힌 직후 이미지 디코딩·배치가 몰려 첫 프레임이 눌리므로, 화면을 두 번 그린 뒤(= 몰린 일이 지나간 뒤) 시작. 가려진 탭은 rAF가 멈추므로 0.15초 뒤에는 무조건 시작
+        requestAnimationFrame(() => requestAnimationFrame(start));
+        setTimeout(start, 150);
+      };
       if (!el) { play(); return; }
       el.classList.add('sk-out');                                  // 흐려지며 걷힘(.25초) → 다 걷힌 뒤에 애니메이션 시작(걷히는 동안 함께 움직이지 않게)
       setTimeout(() => { el.remove(); play(); }, 260);
@@ -386,7 +454,7 @@ ${KEYS}
     if (!A?.path) return null;
     const el = byPath(A.path);
     if (!el || el.tagName !== A.tag || !el.getClientRects().length) return null;
-    const t = Math.round(scrollY + el.getBoundingClientRect().top - A.off);
+    const t = Math.round(scrollY + layTop(el) - A.off);
     return t >= 0 && root.scrollHeight - innerHeight >= t - 1 ? t : null;
   };
   let ro = null, timer = 0, tick = 0, done = false, shown = false;

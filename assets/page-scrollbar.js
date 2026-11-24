@@ -10,7 +10,7 @@
 @media screen and (pointer: fine) {
   html { scrollbar-width: none; }
   html::-webkit-scrollbar { display: none; }
-  .pf-sb { position: fixed; top: 0; right: 0; bottom: 0; width: 14px; z-index: 2147483000; display: none; }
+  .pf-sb { position: fixed; top: 0; right: 0; bottom: var(--pf-sb-bottom, 0px); width: 14px; z-index: 2147483000; display: none; }
   .pf-sb.on { display: block; }
   .pf-sb-thumb { position: absolute; right: 3px; width: 8px; min-height: 32px; border-radius: 999px; cursor: default;
                  background: color-mix(in srgb, var(--ink, #F4F4F6) 30%, var(--bg, #0A0A0D)); transition: background-color .15s; }
@@ -19,7 +19,7 @@
 @media print { .pf-sb { display: none !important; } }`;
   const start = () => {
     const st = document.createElement('style'); st.textContent = css; document.head.append(st);
-    const bar = document.createElement('div'); bar.className = 'pf-sb'; bar.setAttribute('aria-hidden', 'true');
+    const bar = document.createElement('div'); bar.className = 'pf-sb'; bar.setAttribute('aria-hidden', 'true'); bar.dataset.pfUi = 'scrollbar';   // 슬라이드 배치 점검(outside-deck)이 화면 조작 요소로 보고 건너뜀
     const thumb = document.createElement('div'); thumb.className = 'pf-sb-thumb'; bar.append(thumb);
     document.body.append(bar);
     const se = () => document.scrollingElement || document.documentElement;
@@ -42,10 +42,11 @@
       const on = fine.matches && max > 1;
       bar.classList.toggle('on', on);
       if (!on) return;
+      const track = bar.clientHeight || vh;                             // 막대 길이: 페이지가 아래 띠 높이(--pf-sb-bottom)를 주면 그만큼 짧음(켠 뒤에 잼)
       hs = holds();
       vmax = Math.max(1, max - hs.reduce((sum, x) => sum + x.d, 0));
-      h = Math.max(32, Math.round(vh * vh / (vmax + vh)));
-      room = vh - h - 6;                                                 // 위아래 3px씩 띄움
+      h = Math.max(32, Math.round(track * vh / (vmax + vh)));
+      room = track - h - 6;                                                 // 위아래 3px씩 띄움
       thumb.style.height = `${h}px`;
       thumb.style.top = `${3 + Math.round(room * Math.min(1, Math.max(0, toV(el.scrollTop) / vmax)))}px`;
     };

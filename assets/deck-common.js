@@ -29,6 +29,7 @@
   // 이미지 크기: data에 media w×h 기록이 아직 없으므로(Q12) 머리만 받아서 잼. rAF·decode() 금지 → setTimeout 폴링
   const dimCache = new Map();
   function imageSize(src) {
+    src = PF.videoPoster(src);   // 움직이는 이미지(.mp4)는 대표 화면으로 잼
     if (dimCache.has(src)) return dimCache.get(src);
     const p = new Promise((res) => {
       const im = new Image();
@@ -165,7 +166,7 @@
 
   // 참고 슬라이드 모티프: 점 선(2px 선 + 14px 점)
   const DOT = '<div class="dotrule" aria-hidden="true"><span class="ln"></span><span class="dot"></span></div>';
-  const imgTag = (src, alt, d, cls = '') => `<img${cls ? ` class="${cls}"` : ''} src="${esc(src)}" alt="${esc(alt)}" loading="lazy" decoding="async"${d ? ` width="${d.w}" height="${d.h}"` : ''}>`;
+  const imgTag = (src, alt, d, cls = '') => `<img${cls ? ` class="${cls}"` : ''} src="${esc(PF.videoPoster(src))}" alt="${esc(alt)}" loading="lazy" decoding="async"${d ? ` width="${d.w}" height="${d.h}"` : ''}>`;
 
   // 프로젝트 외부 링크(시연 영상 · GitHub · 그 밖의 링크) — data 순서 그대로. type으로 영문 라벨을 고름(보이는 이름은 문구 표에서 바뀔 수 있음)
   const extLinks = (p) => [
@@ -371,18 +372,19 @@
     const d = p.cover ? (p.coverSize?.w ? p.coverSize : await imageSize(PF.srcPath(p.id, p.cover))) : null;
     const ar = d ? d.w / d.h : null;
     const variant = !p.cover || !ar ? 'nocover' : ar < 0.9 ? 'portrait' : 'landscape';
-    const meta = (p.meta || []).map((m) => `<div class="mi"><dt class="meta-k">${metaEn(m.label) ? `${esc(metaEn(m.label))} · ` : ''}${esc(m.label)}</dt><dd>${inline(m.value)}</dd></div>`);
-    if (p.team?.role) meta.push(`<div class="mi wide role"><dt class="meta-k">${esc(PF.t('en.role'))} · ${esc(PF.t('name.role'))}</dt><dd>${inline(p.team.role)}</dd></div>`);
-    const intent = p.intent?.text ? `<div class="intent"><p class="lc-k">${esc(PF.t('en.intent'))} · ${esc(PF.t('name.intent'))}</p><p class="it">${inline(p.intent.text)}</p></div>` : '';
-    const cards = links.map((l) => `<div class="lcard">${PF.link({ href: l.href, kind: l.kind, label: `<span class="lc-k">${esc(l.k)}</span><span class="lc-t">${esc(l.label)}</span><span class="url">${esc(l.visible)}</span>` })}</div>`).join('');
+    const meta = (p.meta || []).map((m) => `<div class="mi"><dt class="meta-k">${esc(m.label)}</dt><dd>${inline(m.value)}</dd></div>`);
+    if (p.team?.role) meta.push(`<div class="mi wide role"><dt class="meta-k">${esc(PF.t('name.role'))}</dt><dd>${inline(p.team.role)}</dd></div>`);
+    const intent = p.intent?.text ? `<div class="intent"><p class="lc-k">${esc(PF.t('name.intent'))}</p><p class="it">${inline(p.intent.text)}</p></div>` : '';
+    const cards = links.map((l) => `<div class="lcard${/doc\.html/.test(l.href || '') ? ' primary' : ''}">${PF.link({ href: l.href, kind: l.kind, label: `<span class="lc-k">${esc(l.k)}</span><span class="lc-t">${esc(l.label)}</span><span class="url">${esc(l.visible)}</span>` })}</div>`).join('');
     const tags = (p.tags || []).length ? `<ul class="tags">${p.tags.map((x) => `<li>${esc(x)}</li>`).join('')}</ul>` : '';
     const cover = p.cover ? `<div class="media pi-cover"${ar ? ` style="aspect-ratio:${ar.toFixed(4)}"` : ''}>${imgTag(PF.srcPath(p.id, p.cover), p.title, d)}</div>` : '';
     const head = `<div class="pi-head"><${titleTag} class="pi-t">${esc(p.title)}</${titleTag}>${p.tagline ? `<p class="tagline">${inline(p.tagline)}</p>` : ''}</div>`;
     const make = (tight, linksLeft) => {
       const s = scene({ id, tpl, kind: 'bare', cls: `${variant}${tight ? ' pi-tight' : ''}`, foot, sec, group, stitle: p.title });
-      const right = `<div class="pi-right">${meta.length ? `<dl class="pi-meta">${meta.join('')}</dl>` : ''}${intent}${!linksLeft && cards ? `<div class="pi-links">${cards}</div>` : ''}${tags}</div>`;
-      const left = `<div class="pi-left">${head}${cover}${linksLeft && cards ? `<div class="pi-links row">${cards}</div>` : ''}</div>`;
-      body(s).innerHTML = `<div class="toprow"><span class="pf-eyebrow">${esc(eyebrow)}</span><span class="rl">${esc(PF.teamLabel(p.team))}</span></div><div class="pi-main">${left}${right}</div>`;
+      const right = `<div class="pi-right">${meta.length ? `<dl class="pi-meta">${meta.join('')}</dl>` : ''}${intent}${tags}${!linksLeft && cards ? `<div class="pi-links">${cards}</div>` : ''}</div>`;   // 직접 고친 기능: 링크 카드는 오른쪽 단 맨 아래(태그 뒤)
+      const left = `<div class="pi-left">${cover}${linksLeft && cards ? `<div class="pi-links row">${cards}</div>` : ''}</div>`;
+      // 포트폴리오 페이지처럼: 제목·한 줄 소개는 위 전체 폭, 아래는 정보(왼쪽) · 대표 이미지(오른쪽)
+      body(s).innerHTML = `<div class="toprow"><span class="pf-eyebrow">${esc(eyebrow)}</span><span class="rl">${esc(PF.teamLabel(p.team))}</span></div>${head}<div class="pi-main">${right}${left}</div>`;
       return s;
     };
     for (const tight of [false, true]) for (const linksLeft of variant === 'nocover' ? [false] : [false, true]) { const s = make(tight, linksLeft); if (fitsM(s)) return s; }

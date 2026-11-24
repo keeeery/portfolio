@@ -62,6 +62,97 @@ const PF = (() => {
   // src/<폴더>/<상대경로> — 경로 조각마다 인코딩(한글 폴더·파일 이름 대응). 페이지는 모두 레포 루트에 있으므로 상대경로 그대로
   const encodePath = (p) => String(p).split('/').map(encodeURIComponent).join('/');
   const srcPath = (id, rel) => `src/${encodeURIComponent(id)}/${encodePath(String(rel).replace(/^\.\//, ''))}`;
+  // ── 움직이는 이미지 = 영상(직접 추가) ──
+  // 문서에는 ![설명](images/x.mp4)처럼 H.264 mp4를 적고, 같은 폴더에 x.av1.mp4(AV1, 더 작음)·x.poster.webp(대표 화면)를 둡니다.
+  // 페이지에는 대표 화면 <img>를 그대로 두어 배치·PDF·PPTX는 이미지와 같고, 화면에서만 그 위에 영상을 겹쳐 재생합니다(영상은 클릭을 받지 않아 이미지처럼 눌러집니다 — 상세 문서는 확대. 일시정지·재생은 오른쪽 아래 버튼으로만).
+  const MP4_RE = /\.mp4(?=$|[?#])/i, POSTER_RE = /\.poster\.webp(?=$|[?#])/i;
+  const AV1_TYPE = 'video/mp4; codecs="av01.0.08M.08"';
+  const videoSources = (base) => `<source src="${esc(base)}.av1.mp4" type='${AV1_TYPE}'><source src="${esc(base)}.mp4" type="video/mp4">`;   // AV1 먼저, 재생 못 하는 브라우저는 H.264
+  // 일시정지·재생 아이콘(글자 기호 대신 직접 그림 — 막대가 가늘고 간격이 넓음)
+  const videoIcon = (paused) => paused
+    ? '<svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true" focusable="false"><path d="M5.2 3.2v9.6a.5.5 0 0 0 .76.43l7.7-4.8a.5.5 0 0 0 0-.86l-7.7-4.8a.5.5 0 0 0-.76.43z" fill="currentColor"/></svg>'
+    : '<svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true" focusable="false"><rect x="3.6" y="3" width="2.8" height="10" rx="1" fill="currentColor"/><rect x="9.6" y="3" width="2.8" height="10" rx="1" fill="currentColor"/></svg>';
+  const videoPoster = (src) => (src && MP4_RE.test(src) ? String(src).replace(MP4_RE, '.poster.webp') : src);
+  function setupVideos() {
+    if (typeof IntersectionObserver === 'undefined') return;
+    if (!document.body) { document.addEventListener('DOMContentLoaded', setupVideos, { once: true }); return; }
+    const st = document.createElement('style');
+    st.textContent = `.pf-vid{position:absolute;overflow:hidden;z-index:1;background:transparent;pointer-events:none}
+.pf-vid[hidden]{display:none}
+.pf-vid video{display:block;width:100%;height:100%;pointer-events:none}
+.pf-vid-btn{position:absolute;right:8px;bottom:8px;width:34px;height:34px;padding:0;border:0;border-radius:50%;background:rgba(0,0,0,.6);color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;opacity:0;transition:opacity .15s;pointer-events:auto}
+img:hover+.pf-vid .pf-vid-btn,.lb-vid:hover .pf-vid-btn,.pf-vid.is-paused .pf-vid-btn,.pf-vid-btn:hover,.pf-vid-btn:focus-visible{opacity:1}
+@media (hover:none){.pf-vid-btn{opacity:.8}}
+@media print{.pf-vid{display:none!important}}`;
+    document.head.append(st);
+    const live = new Set();          // 화면에 보이는 영상 칸(자리 맞추기·재생 대상)
+    const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+    // img의 자리(테두리 안쪽)를 영상 칸의 기준 상자(offsetParent) 좌표로. 슬라이드의 확대·축소(transform)와 무관하게 맞음
+    function place(v) {
+      const was = v.shown;
+      v.shown = layout(v);
+      if (v.shown !== was) sync(v);                                    // 다른 장면으로 넘어가 숨으면 멈추고, 다시 보이면 재생
+    }
+    function layout(v) {
+      const { img, box, video } = v;
+      if (!img.isConnected) { box.remove(); v.io.disconnect(); live.delete(v); return false; }
+      const s = getComputedStyle(img);
+      if (!img.clientWidth || s.visibility === 'hidden') { box.hidden = true; return false; }
+      box.hidden = false;                                             // 숨긴 채로는 offsetParent가 없으므로 먼저 보이게 한 뒤 잼
+      if (!box.offsetParent) { box.hidden = true; return false; }
+      let x = img.offsetLeft + img.clientLeft, y = img.offsetTop + img.clientTop, p = img.offsetParent;
+      const cb = box.offsetParent;
+      while (p && p !== cb) { x += p.offsetLeft + p.clientLeft - p.scrollLeft; y += p.offsetTop + p.clientTop - p.scrollTop; p = p.offsetParent; }
+      const set = (k, val) => { if (box.style[k] !== val) box.style[k] = val; };
+      set('left', `${x}px`); set('top', `${y}px`); set('width', `${img.clientWidth}px`); set('height', `${img.clientHeight}px`);
+      set('borderRadius', s.borderRadius);
+      if (video.style.objectFit !== s.objectFit) { video.style.objectFit = s.objectFit; video.style.objectPosition = s.objectPosition; }
+      return true;
+    }
+    let raf = 0;
+    const tick = () => { raf = 0; live.forEach(place); if (live.size) raf = requestAnimationFrame(tick); };
+    function sync(v) {
+      const btn = v.box.querySelector('.pf-vid-btn');
+      const paused = v.user || !v.vis || !v.shown;
+      v.box.classList.toggle('is-paused', !!v.user);
+      btn.innerHTML = videoIcon(!!v.user);
+      btn.setAttribute('aria-label', v.user ? PFStr.t('ui.video-play') : PFStr.t('ui.video-pause'));
+      if (paused) v.video.pause();
+      else { const pr = v.video.play(); if (pr && pr.catch) pr.catch((e) => { if (e && e.name === 'NotAllowedError') { v.user = true; sync(v); } }); }   // 자동 재생이 막힌 브라우저면 ▶로 두고 누르면 재생
+    }
+    function attach(img) {
+      const src = img.getAttribute('src');
+      if (img.dataset.pfVid || !src || !POSTER_RE.test(src)) return;
+      img.dataset.pfVid = '1';
+      const base = img.src.replace(POSTER_RE, '');
+      const box = document.createElement('div');
+      box.className = 'pf-vid'; box.hidden = true;
+      box.setAttribute('data-pf-allow-hidden', '');  // 슬라이드 배치 점검: 마우스를 올릴 때만 보이는 버튼은 숨은 글자로 세지 않음
+      box.innerHTML = `<video muted loop playsinline disablepictureinpicture preload="none" aria-hidden="true">${videoSources(base)}</video><button type="button" class="pf-vid-btn"></button>`;
+      const video = box.querySelector('video');
+      video.muted = true; video.poster = img.currentSrc || img.src;
+      img.dataset.pfVidBase = base;   // 확대 창(doc.js)이 같은 영상을 크게 틀 때 씀
+      img.after(box);
+      const v = { img, box, video, user: reduce, vis: false, shown: false };
+      box.querySelector('.pf-vid-btn').addEventListener('click', (e) => { e.preventDefault(); e.stopPropagation(); v.user = !v.user; sync(v); });   // 일시정지·재생은 이 버튼으로만(영상 자체는 클릭을 받지 않음)
+      video.addEventListener('error', () => box.remove(), true);   // 영상이 없으면 대표 화면 이미지만 남김
+      v.io = new IntersectionObserver(([en]) => {
+        v.vis = en.isIntersecting;
+        if (v.vis) { live.add(v); place(v); if (!raf) raf = requestAnimationFrame(tick); } else live.delete(v);
+        sync(v);
+      }, { rootMargin: '200px' });
+      v.io.observe(img);
+      sync(v);
+    }
+    const scan = (n) => { if (n.nodeType !== 1) return; if (n.localName === 'img') attach(n); else n.querySelectorAll('img').forEach(attach); };
+    new MutationObserver((ms) => ms.forEach((m) => {
+      m.addedNodes.forEach(scan);
+      if (m.type === 'attributes' && m.target.localName === 'img') attach(m.target);
+    })).observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ['src'] });
+    scan(document.body);
+  }
+  setupVideos();
+
   // 페이지 사이 주소(상대경로, 앞에 / 없음 — 프로젝트 Pages는 /<레포>/ 아래에 있음)
   const projectUrl = (id, sid = '') => `project.html?p=${encodeURIComponent(id)}${sid ? `#s=${sid}` : ''}`;
   const docUrl = (id, anchor = '') => `doc.html?p=${encodeURIComponent(id)}${anchor ? `#${anchor}` : ''}`;
@@ -404,8 +495,9 @@ const PF = (() => {
     const A2 = isHex(a2) ? hexRgb(a2) : hueShift(A, 50 * dir), A3 = isHex(a3) ? hexRgb(a3) : hueShift(A, 95 * dir);
     const soft = mix(A, BG, 0.84), chip = mix(A, BG, 0.72), mid = mix(A, BG, 0.35);
     const lift = (c) => { let x = c; for (let t = 0; t <= 1 && (contrast(x, BG) < 7 || contrast(x, soft) < 6); t += 0.02) x = mix(c, far, t); return x; };
-    const T = { '--accent': A, '--accent-ink': lift(A), '--accent-fill': fillOf(A), '--accent-soft': soft, '--accent-chip': chip, '--accent-mid': mid,
-                '--accent-2': A2, '--accent-2-ink': lift(A2), '--accent-2-fill': fillOf(A2), '--accent-3': A3,
+    // 직접 수정(2026-11-24): 화면의 강조 글자색 = 강조색 그대로(바탕에 맞춰 밝히거나 어둡게 하지 않음 — 어두운·밝은 화면에서 같은 색). 인쇄용 '-p'는 그대로
+    const T = { '--accent': A, '--accent-ink': A, '--accent-fill': fillOf(A), '--accent-soft': soft, '--accent-chip': chip, '--accent-mid': mid,
+                '--accent-2': A2, '--accent-2-ink': A2, '--accent-2-fill': fillOf(A2), '--accent-3': A3,
                 '--accent-ink-p': inkP, '--accent-fill-p': contrast(A, WHITE) >= 4.5 ? A : inkP, '--accent-soft-p': softP, '--accent-chip-p': chipP, '--accent-mid-p': midP };
     return Object.fromEntries(Object.entries(T).map(([k, v]) => [k, rgbHex(v)]));
   }
@@ -901,7 +993,7 @@ const PF = (() => {
   // ── 문구 표(assets/strings.js): t(키, 값) · tab(data의 탭 값) · label(data의 카드 라벨 값) · 페이지 시작 때 loadStrings()로 theme/strings.tsv를 읽음 ──
   const { t, tab, label, load: loadStrings, report: stringsReport } = PFStr;
 
-  return { esc, inline, isUrl, shortUrl, repoLinks, otherLinks, loadJSON, loadText, encodePath, srcPath, projectUrl, docUrl, siteBase, visibleUrl, metaValue, teamLabel,
+  return { videoPoster, videoSources, videoIcon, esc, inline, isUrl, shortUrl, repoLinks, otherLinks, loadJSON, loadText, encodePath, srcPath, projectUrl, docUrl, siteBase, visibleUrl, metaValue, teamLabel,
            slugger, normTitle, resolveHeading, keyOk, deckSceneFor, mdHtml, headingsOf, ICON, NEWTAB, link, markNewTab, topCap, railToggle, themeTokens, applyTheme, mermaidConfig, hlMore, routeFolkSackTerrain, gatherFanIn, fitSides, docEnd, contrast, hexRgb, modeButton, setMode, getMode, hasLightMode,
            FILE_HELP, noDataHtml, isFile, notice, guardFileProtocol, noData, t, tab, label, loadStrings, stringsReport };
 })();
