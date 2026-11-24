@@ -14,10 +14,10 @@
   // 글꼴: 굵기마다 load + 각각 catch → fonts.ready, 상한 8초. 실패하면 data-pf-font="fallback"(늦게 들어오면 페이지가 다시 그림)
   async function loadFonts(sample = '가나다ABC123', ms = 8000) {
     const disp = displayFont();
-    const want = ['400', '600', '700', '800'].map((w) => `${w} 16px Pretendard`).concat(disp ? [`700 16px ${disp}`, `800 16px ${disp}`] : [], ['400 14px D2Coding']);   // disp = 영문 라벨(눈썹 글자·목차 머리)
+    const want = ['400', '600', '700', '800'].map((w) => `${w} 16px Pretendard`).concat(disp ? [`700 16px ${disp}`, `800 16px ${disp}`] : [], ['400 14px D2Coding', '400 14px "JetBrains Mono"']);   // disp = 영문 라벨(눈썹 글자·목차 머리)
     const errs = [];
     const CODE_SAMPLE = 'public void {}();=<>[]0Oil|';                    // 코드 블록 글자(영문·기호)로도 받음 — 한글 표본만으로는 코드 글꼴 조각이 늦게 올 수 있음
-    const all = Promise.all(want.map((f) => document.fonts.load(f, /D2Coding/.test(f) ? sample + CODE_SAMPLE : sample).then((r) => { if (!r.length) errs.push(f + ' (일치 없음)'); }).catch((e) => errs.push(f + ' ' + e))))
+    const all = Promise.all(want.map((f) => document.fonts.load(f, /D2Coding|JetBrains/.test(f) ? sample + CODE_SAMPLE : sample).then((r) => { if (!r.length) errs.push(f + ' (일치 없음)'); }).catch((e) => errs.push(f + ' ' + e))))
       .then(() => document.fonts.ready);
     const timedOut = await Promise.race([all.then(() => false), sleep(ms).then(() => true)]);
     const ok = want.map((f) => document.fonts.check(f, '가'));
@@ -183,7 +183,7 @@
     let done = false;
     const disp = displayFont();
     document.fonts.addEventListener('loadingdone', () => {
-      if (done || !document.fonts.check('700 16px Pretendard', '가') || (disp && !document.fonts.check(`800 16px ${disp}`, 'A')) || !document.fonts.check('400 14px D2Coding', '{}();')) return;
+      if (done || !document.fonts.check('700 16px Pretendard', '가') || (disp && !document.fonts.check(`800 16px ${disp}`, 'A')) || !document.fonts.check('400 14px D2Coding', '{}();') || !document.fonts.check('400 14px "JetBrains Mono"', '{}();')) return;
       done = true;
       window.PFScene.track(render().then(() => window.PFScene.refresh()));
     });
@@ -357,8 +357,30 @@
       });
     }
     s.classList.remove('pf-sizing');
+    alignToMedia(s);
     if (!wasIn) s.remove();
     return s;
+  }
+  // 직접 추가(2026-11-24): 슬라이드 공용 — 시각 자료와 그 옆의 다른 요소(글 칸·카드 열)는 캡션을 뺀 '자료 영역'(이미지·다이어그램·코드 칸) 기준으로 세로 정렬.
+  //   예전에는 캡션까지 합친 상자의 가운데를 기준으로 삼아 캡션 높이의 절반만큼 어긋났음. 두 쪽의 기준점(자료 영역 가운데 / 옆 요소 가운데)을 한 높이에 포개고,
+  //   둘 다 칸 높이 안에 들어가게만 가둠(안 들어가면 칸 아래를 그만큼 늘림). 캡션이 없으면 결과가 예전과 같음(가운데)
+  function alignToMedia(s) {
+    s.querySelectorAll('.dk-side').forEach((dk) => {
+      const vis = dk.querySelector(':scope > .vis'), other = [...dk.children].find((c) => c !== vis);
+      if (!vis || !other) return;
+      [vis, other].forEach((e) => { e.style.alignSelf = ''; e.style.marginTop = ''; }); dk.style.paddingBottom = '';
+      const medias = [...vis.querySelectorAll(':scope > .vbox > .vmedia')];
+      if (!medias.length || !dk.offsetHeight) return;
+      const dr = dk.getBoundingClientRect(), k = dr.height / dk.offsetHeight || 1, vr = vis.getBoundingClientRect(), or = other.getBoundingClientRect();
+      let top = Infinity, bot = -Infinity;
+      medias.forEach((m) => { const r = m.getBoundingClientRect(); top = Math.min(top, r.top); bot = Math.max(bot, r.bottom); });
+      const dh = dr.height / k, ha = vr.height / k, hb = or.height / k, ac = ((top + bot) / 2 - vr.top) / k, bc = hb / 2;
+      const lo = Math.max(ac, bc), hi = dh - Math.max(ha - ac, hb - bc);
+      const y = lo <= hi ? Math.min(hi, Math.max(lo, dh / 2)) : lo;       // 칸 안에 다 안 들어가면(캡션이 아래로 길 때) 위에 붙이고 칸 아래를 그만큼 늘림(장면 안 가운데 배치는 그대로)
+      if (lo > hi) dk.style.paddingBottom = `${(lo - hi).toFixed(2)}px`;
+      vis.style.alignSelf = 'start'; vis.style.marginTop = `${(y - ac).toFixed(2)}px`;
+      other.style.alignSelf = 'start'; other.style.marginTop = `${(y - bc).toFixed(2)}px`;
+    });
   }
 
   // ── 프로젝트 소개 장면(슬라이드 표지, 결정 G4): 큰 대표 이미지 · 메타 격자 · 개발 의도 · 링크 카드 · 태그 ──

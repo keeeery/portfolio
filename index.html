@@ -1873,6 +1873,7 @@
         const go = e.target.closest('[data-fe-go]');
         if (!go || !wide()) return;
         const k = +go.dataset.feGo, { start, step } = geo(b);
+        if (k === b.cur && !b.lock) return;                              // 지금 보고 있는 항목을 다시 누르면 그대로(진척도를 처음으로 되돌리지 않음)
         b.lock = { k, until: performance.now() + 1500 }; b.pending = null;
         set(b, k);
         scrollTo({ top: Math.ceil(start + step * k) + 1, behavior: 'smooth' });   // 그 항목 스크롤 구간의 맨 위(1px 안쪽, 게이지 빈 상태)로

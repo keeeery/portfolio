@@ -723,7 +723,7 @@
       }
     } finally { host.remove(); }
     report.fonts = [...fonts];
-    report.file = `${fileSafe(meta.title || document.title.split(' · ')[0] || 'deck')} - ${fileSafe(L('name.deck'))}.pptx`;
+    report.file = `${fileSafe(meta.title || document.title.split(/ [—·] /)[0] || 'deck')} - ${fileSafe(L('name.deck'))}.pptx`;
     report.ms = Math.round(performance.now() - t0);
     PFPptx.report = report;
     return { pptx, report };

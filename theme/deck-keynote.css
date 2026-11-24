@@ -12,7 +12,8 @@
 
 /* ② 큰 제목 글자 — 한 색 */
 .pf-scene :is(.ch-t, .en-t, .pi-t, .toc-h, .pf-title) { background: none; -webkit-text-fill-color: currentColor; color: var(--ink); }
-.pf-scene .pf-title { font-size: 40px; font-weight: 700; letter-spacing: -.04em; line-height: 1.15; }
+.pf-scene :is(.pf-title, .toc-h) { font-size: 40px; font-weight: 700; letter-spacing: -.04em; line-height: 1.15; }
+.pf-scene .toc-h { font-family: inherit; }   /* 직접 고침(2026-11-24): 목차 제목(「목차」)은 이후 슬라이드 제목과 같은 글꼴·굵기·크기 */
 
 /* ③ 본문 장면 머리 — 밑줄 없음, 작은 강조색 라벨 + 큰 제목 + 회색 도입 */
 .pf-scene .pf-headrow, .pf-scene .toprow { border-bottom-color: transparent; }
@@ -39,7 +40,6 @@
 .pf-scene .en-links { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; width: 100%; text-align: left; }
 
 /* ⑥ 목차 — 큰 제목 */
-.pf-scene .toc-h { font-size: 72px; letter-spacing: -.04em; }
 .pf-scene .toc-list a { border-bottom-color: color-mix(in srgb, var(--line) 60%, transparent); }
 
 /* ⑦ 프로젝트 소개 — 제목 크게 */

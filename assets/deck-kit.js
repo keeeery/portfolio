@@ -259,6 +259,7 @@
       paint();
       if (prev !== i && !reduced()) { s.classList.remove('pf-enter'); void s.offsetWidth; s.classList.add('pf-enter'); }
     } else {
+      navHold();
       scrollToScene(s, reduced() ? 'auto' : 'smooth');
     }
     setHash(i, push);
@@ -353,24 +354,41 @@
     if (d) { swallowClickUntil = Date.now() + 450; go(cur + d); }
   }
   // 휠·트랙패드: 몸짓(200ms 이상 쉬면 끝) 하나에 한 장. 관성 스크롤도 한 몸짓으로 침. Ctrl+휠(확대)은 건드리지 않음
-  let wAcc = 0, wLast = -1e9, wStepped = false;
+  // 직접 고침(2026-11-24): 마우스 휠은 틱 하나에 한 장(빠르게 굴려도 틱마다 넘김).
+  //   ① 낱개 틱(줄 단위 deltaMode 1, 또는 세로만·wheelDelta 120 배수인 입력이 홀로 옴) → 입력마다 한 장
+  //   ② 부드러운 스크롤 마우스(mac Chrome 등): 틱 하나가 ~200ms 동안 빨라졌다 느려지는 잔입력(3,5,7,7,6,…,2,1)으로 옴.
+  //      틱 사이가 200ms보다 짧아 한 몸짓으로 이어지므로, 속도가 꼭대기의 40% 아래로 떨어진 뒤 다시 빨라지면(바닥+3 이상·2배 이상) 새 틱으로 봄.
+  //      속도 = 입력량 ÷ 프레임 수(12ms 단위, 묶여 온 입력 보정). 트랙패드 관성은 느려지기만 하므로 한 장 그대로. 넘김 사이는 최소 150ms
+  let wAcc = 0, wLast = -1e9, wStepped = false, wTick = false, wDir = 0, wPeak = 0, wLow = Infinity, wDecayed = false, wStepAt = -1e9;
   function onWheel(e) {
     if (!WHEEL || view !== 'deck' || e.ctrlKey || document.querySelector('dialog[open]') || e.target.closest?.('.pf-hud')) return;
-    const now = performance.now();
+    const now = performance.now(), dt = now - wLast;
     const unit = e.deltaMode === 1 ? 16 : e.deltaMode === 2 ? innerHeight : 1;
     const d = (Math.abs(e.deltaY) >= Math.abs(e.deltaX) ? e.deltaY : e.deltaX) * unit;
-    if (now - wLast > 200) { wAcc = 0; wStepped = false; }
+    if (!d) { wLast = now; return; }                                         // 몸짓 시작 표시(0) 입력
+    const wd = e.wheelDeltaY || 0;
+    const tick = (e.deltaMode === 1 || (e.deltaX === 0 && wd !== 0 && wd % 120 === 0)) && (wTick || dt > 50);
+    wTick = tick;
+    const step = () => { wStepped = true; wStepAt = now; wPeak = 0; wLow = Infinity; wDecayed = false; go(cur + (d > 0 ? 1 : -1), { focus: false }); };
+    if (tick) { wLast = now; wAcc = 0; wDir = Math.sign(d); step(); return; }
+    if (dt > 200 || Math.sign(d) !== wDir) { wAcc = 0; wStepped = false; wPeak = 0; wLow = Infinity; wDecayed = false; wDir = Math.sign(d); }
     wLast = now;
-    if (wStepped) return;
-    wAcc += d;
-    if (Math.abs(wAcc) >= 60) { wStepped = true; go(cur + (wAcc > 0 ? 1 : -1), { focus: false }); }
+    const f = Math.abs(d) / Math.max(1, Math.round(Math.min(dt, 200) / 12));  // 프레임당 입력량(속도)
+    if (!wStepped) {
+      wAcc += d; wPeak = Math.max(wPeak, f);
+      if (Math.abs(wAcc) >= 30) step();
+      return;
+    }
+    if (!wDecayed) { wPeak = Math.max(wPeak, f); if (f <= wPeak * 0.4) { wDecayed = true; wLow = f; } return; }
+    wLow = Math.min(wLow, f);
+    if (f >= wLow + 3 && f >= wLow * 2 && now - wStepAt >= 150) step();
   }
 
   // 한 번에 보기: IO는 보이는 장면 집합만, 지금 장면은 실시간 상자로 고름(지금 장면이 여전히 가장 많이 보이면 유지)
   const visible = new Set();
   let holdPick = view === 'scroll';
   function pickCurrent() {
-    if (view !== 'scroll' || holdPick) return;
+    if (view !== 'scroll' || holdPick || navT) return;
     // 직접 추가(2026-11-24): 맨 위·맨 아래까지 스크롤하면 첫·마지막 장면(마지막 장면은 화면에 덜 보여도 고름)
     const el = document.scrollingElement || root;
     const edge = el.scrollTop <= 2 ? 0 : el.scrollTop + innerHeight >= el.scrollHeight - 2 ? scenes.length - 1 : -1;
@@ -383,6 +401,19 @@
     cur = best; setHash(cur, false); hudSync();
   }
   let pickT = 0;
+  // 직접 고침(2026-11-24): 버튼·키로 옮기는 부드러운 스크롤 동안에는 장면 고르기를 멈춤 — 멈추지 않으면 스크롤 도중 아직 많이 보이는 앞 장면으로
+  //   지금 장면이 되돌아가(번호 오락가락) 이어 누를 때 목표가 바뀌며 떨림. 스크롤이 150ms 멈추면 풀림. 도중에 사용자가 휠·터치로 직접 스크롤했을 때만 그 자리로 다시 고름
+  //   (그냥 다시 고르면 맨 아래 근처 장면으로 옮길 때 '맨 아래 = 마지막 장면' 규칙에 바뀜)
+  let navT = 0, navUser = false;
+  const navArm = () => { clearTimeout(navT); navT = setTimeout(navDone, 150); };
+  const navTouch = () => { navUser = true; };
+  const NAV_USER = ['wheel', 'touchmove'];
+  function navDone() { removeEventListener('scroll', navArm); NAV_USER.forEach((t) => removeEventListener(t, navTouch)); navT = 0; if (navUser) pickCurrent(); navUser = false; }
+  function navHold() {
+    removeEventListener('scroll', navArm); addEventListener('scroll', navArm, { passive: true });
+    NAV_USER.forEach((t) => addEventListener(t, navTouch, { passive: true }));
+    navUser = false; navArm();
+  }
   const schedulePick = () => { if (view === 'scroll' && !pickT) pickT = setTimeout(() => { pickT = 0; pickCurrent(); }, 50); };
   function observe() {
     io?.disconnect(); visible.clear();

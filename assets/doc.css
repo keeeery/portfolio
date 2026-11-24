@@ -100,6 +100,7 @@ code { font-family: var(--mono); font-size: .88em; background: var(--accent-soft
 .toc { grid-area: toc; }
 .doc-main { grid-area: main; min-width: 0; padding: 36px 0 96px; outline: none; }
 .rail { grid-area: rail; }
+:root:not([data-pf-mode="light"]) { --th: color-mix(in srgb, #000 45%, var(--surface)); }   /* 직접 수정: 어두운 화면에서만 표 제목 행 채우기를 더 어둡게(외곽선과 구분) — 밝은 화면은 위 기본값 */
 :root { --side-gap: 12px; }   /* 머리 줄과 목차·오른쪽 칸 사이(스크립트도 이 값을 읽음 — --rail-y) */
 .toc, .rail { position: sticky; top: calc(var(--head-h, 56px) + var(--side-gap)); max-height: min(calc(100vh - var(--head-h, 56px) - var(--side-gap) - 24px), var(--side-room, 100vh));   /* --side-room = 페이지 끝에서 틀 아래 끝까지 남은 높이(doc.js fitSides) — 칸이 위로 밀려 머리 줄과 겹치지 않고 줄어듦 · 붙는 자리 = 처음 자리(머리 줄 아래 --side-gap) — 스크롤을 시작해도 올라가지 않고 그대로 */ overflow-y: auto; margin-top: var(--side-gap); overscroll-behavior: contain; }
 
@@ -380,7 +381,8 @@ dialog.lightbox::backdrop { background: rgba(10, 11, 14, .82); }
 .lb-stage.lb-svg { max-width: 94vw; max-height: 84vh; overflow: auto; background: var(--diagram-bg); border-radius: calc(var(--r) * .5); padding: 16px; touch-action: pan-x pan-y pinch-zoom; }
 .lb-stage.lb-svg svg { display: block; height: auto; cursor: zoom-out; }
 .lb-cap { color: #fff; text-align: center; font-size: 14px; margin-top: 10px; }
-.lb-close { display: block; margin: 10px auto 0; }
+.lb-close { display: block; margin: 10px auto 0; background: var(--surface); }   /* 직접 수정: 확대 창 닫기 버튼 배경 불투명 */
+.lb-close:hover { background: color-mix(in srgb, var(--accent) 16%, var(--surface)); }   /* 호버도 불투명(반투명 soft 색 대신 표면색 위에 섞음) */
 
 .doc-foot { margin-top: 120px; display: grid; gap: 4px; color: var(--faint); font-size: 12px; line-height: 1.6; }   /* 본문 맨 아래 세 줄(© 이름 · 브라우저 안내 · 마지막 업데이트) — 바·선 없이, 포트폴리오 페이지 맨 아래와 같은 글 */
 .doc-foot p { margin: 0; }

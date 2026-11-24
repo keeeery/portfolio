@@ -323,7 +323,7 @@
     const name = pf.profile?.name || '';
     const foot = `${name ? name + ' · ' : ''}${p.title}`;
     info.meta = { title: p.title, name };                               // PPTX 파일 이름·작성자(assets/deck-pptx.js)
-    document.title = `${p.title} · ${PF.t('name.deck')}${name ? ' · ' + name : ''}`;
+    document.title = `${p.title} — ${PF.t('name.deck')}${name ? ' · ' + name : ''}`;
     info.fonts = await PF.loadFonts();
     mark('fonts');
     const model = modelOf(p, P);
@@ -429,9 +429,11 @@
       [String(items.length + (retro.length ? 2 : 1)).padStart(2, '0'), PF.t('deck.more'), PF.t('deck.more-desc'), 'end']].filter(Boolean);
     const make = (compact) => {
       const s = PF.scene({ id: 'toc', tpl: 'P2', kind: 'bare', cls: compact ? 'compact' : '', foot, sec: PF.t('name.toc'), stitle: PF.t('name.toc') });
-      const half = rows.length > 7 ? Math.ceil(rows.length / 2) : rows.length;
+      // 직접 고침(2026-11-24): 목차 제목은 영문 CONTENTS(en.contents) 대신 「목차」(name.toc, 문구 표에서 바꿀 수 있음)
+      // 직접 고침(2026-11-24): 슬라이드 공용 — 목차는 한 열에 다 들어가도 늘 2열(항목 2개 이상). 홀수면 왼쪽이 하나 더(올림)
+      const two = rows.length > 1, half = two ? Math.ceil(rows.length / 2) : rows.length;
       const col = (list) => `<section><ol class="toc-list">${list.map((r) => item(...r)).join('')}</ol></section>`;
-      PF.body(s).innerHTML = `<div class="toc-top"><p class="toc-h">${esc(PF.t('en.contents'))}</p><p class="toc-sub">${esc(p.title)}</p></div>${DOT}<div class="toc-cols${rows.length > 7 ? '' : ' one'}">${col(rows.slice(0, half))}${rows.length > half ? col(rows.slice(half)) : ''}</div>`;
+      PF.body(s).innerHTML = `<div class="toc-top"><p class="toc-h">${esc(PF.t('name.toc'))}</p><p class="toc-sub">${esc(p.title)}</p></div>${DOT}<div class="toc-cols${two ? '' : ' one'}">${col(rows.slice(0, half))}${rows.length > half ? col(rows.slice(half)) : ''}</div>`;
       return band(s, auto);
     };
     for (const compact of [false, true]) { const s = make(compact); if (PF.fitsM(s)) return s; }

@@ -25,9 +25,10 @@
   --code-bg: var(--t-code-bg, #111116); --ok: #1B7A4B; --ok-ink: color-mix(in srgb, #2BB673 70%, var(--ink)); --diagram-bg: var(--t-diagram, var(--card));
   --sans: 'Pretendard', 'Noto Sans KR', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   --display: var(--t-display, 'Montserrat'), var(--sans);
-  --mono: 'D2Coding', Consolas, monospace;
+  --mono: 'JetBrains Mono', 'D2Coding', Consolas, monospace;   /* 직접 고침(2026-11-24): 상세 문서(doc.css --mono)와 같은 글꼴 목록 — 코드 스니펫·인라인 코드 모두 */
   color-scheme: var(--t-scheme, dark);
 }
+:root:not([data-pf-mode="light"]) { --th-head: color-mix(in srgb, #000 45%, var(--card)); --tbl-bg: var(--bg); }   /* 직접 수정: 어두운 화면에서만 표 제목 행을 더 어둡게(외곽선과 구분) · 본문 행 채우기는 상세 문서처럼 페이지 바탕색(--bg) — 밝은 화면은 --th 그대로 */
 body { font-family: var(--sans); color: var(--ink); -webkit-font-smoothing: antialiased; }
 .pf-scene { font-family: var(--sans); color: var(--ink); font-size: 16px; line-height: 1.6; word-break: keep-all; overflow-wrap: break-word; }
 .pf-scene * { box-sizing: border-box; }
@@ -101,10 +102,9 @@ a.chip:hover { background: var(--accent-chip); }
 .btnlink { display: inline-flex; align-items: center; gap: 2px; padding: 7px 14px; border-radius: var(--pill); border: 1.5px solid var(--accent-fill); color: var(--accent-ink);
            font-size: 15px; font-weight: 800; text-decoration: none; background: transparent; white-space: nowrap; }
 .btnlink.primary { background: var(--accent-fill); color: #fff; }
-table.mini { border-collapse: collapse; width: 100%; font-size: 15px; line-height: 1.55; table-layout: fixed; background: var(--paper); }
-table.mini th { background: var(--th); color: var(--ink); box-shadow: inset 0 -2px 0 var(--accent); font-weight: 700; text-align: left; padding: 9px 14px; font-size: 14px; }   /* 머리 밑줄은 안쪽 그림자(크기 그대로) */
+table.mini { border-collapse: collapse; width: 100%; font-size: 15px; line-height: 1.55; table-layout: fixed; background: var(--tbl-bg, var(--paper)); }
+table.mini th { background: var(--th-head, var(--th)); color: var(--ink); box-shadow: inset 0 -2px 0 var(--accent); font-weight: 700; text-align: left; padding: 9px 14px; font-size: 14px; }   /* 머리 밑줄은 안쪽 그림자(크기 그대로) */
 table.mini td { padding: 9px 14px; border-bottom: 1px solid var(--line); color: var(--ink); vertical-align: top; overflow-wrap: anywhere; }
-table.mini tbody tr:nth-child(even) td { background: var(--zebra); }
 table.mini caption { caption-side: top; text-align: left; font-size: 13px; font-weight: 700; color: var(--muted); padding-bottom: 4px; }
 table.kv { border-collapse: collapse; font-size: 15px; }
 table.kv th { color: var(--muted); font-weight: 800; letter-spacing: .06em; text-align: left; padding: 5px 22px 5px 0; white-space: nowrap; vertical-align: top; }
@@ -269,10 +269,12 @@ table.kv td.role { color: var(--accent-ink); font-weight: 800; }
 .vbox { margin: 0; display: flex; flex-direction: column; gap: 6px; flex: none; max-width: 100%; min-width: 0; }
 .vmedia { border-radius: calc(var(--radius) * .6); overflow: hidden; background: var(--card); border: 1px solid var(--line); display: flex; align-items: center; justify-content: center; }
 .vbox[data-kind="mermaid"] .vmedia { background: var(--diagram-bg); box-sizing: border-box; padding: 16px; }   /* 직접 고친 기능: 상세 문서(.mmd .mermaid)와 같은 안쪽 여백 16px */      /* 다이어그램 판 = 카드 색(그림 색은 PF.mermaidConfig가 이 판 기준으로 뽑음) */
-.vbox[data-kind="image"] .vmedia img { width: 100%; height: 100%; object-fit: contain; display: block; }
+.vbox[data-kind="image"] .vmedia img { width: 100%; height: 100%; object-fit: cover; display: block; }   /* 직접 고침: contain → cover. 칸은 이미 이미지 비율(deck-common.js fitVisuals)이라 px 반올림만큼(1px 안쪽)만 잘리고, 윤곽선과 이미지 사이 틈이 사라짐. 영상(.pf-vid)도 이 값을 따름 */
 .vbox[data-kind="mermaid"] .vmedia svg { width: 100% !important; height: 100% !important; max-width: none !important; display: block; }
 .vbox[data-kind="code"] .vmedia { display: block; background: var(--code-bg); border: 0; box-shadow: inset 0 0 0 1px var(--line); }
 .vbox[data-kind="table"] .vmedia { display: block; background: transparent; border: 0; border-radius: 0; }
+/* 직접 추가: 슬라이드 공용 — 이미지·영상 윤곽선(상세 문서 .pf-figure img와 같은 1px var(--line), 이미지 바로 바깥). 칸의 1px 테두리 자리에 그려 키노트 테마(테두리 투명)에서도 보이고, 영상(.pf-vid)은 칸 안쪽에만 겹쳐 가리지 않음 */
+.pf-scene :is(.vmedia, .media):has(> img) { position: relative; outline: 1px solid var(--line); outline-offset: -1px; }   /* relative: 겹쳐 그리는 영상(.pf-vid)이 칸의 둥근 모서리 안에서 잘리게 */
 .fit-in { transform-origin: 0 0; }
 .fit-in pre { margin: 0 !important; padding: 14px 18px !important; background: transparent !important; }
 .fit-in pre code, .fit-in pre code.hljs { display: block; padding: 0; background: transparent; color: #E6E8F5; font-family: var(--mono); font-size: 14px; line-height: 1.5; white-space: pre; tab-size: 4; border-radius: 0; overflow: visible; }
@@ -289,16 +291,18 @@ pre code.hljs .pf-t-member { color: #DCDCDC; }
 pre code.hljs :is(.hljs-params, .hljs-variable, .hljs-attr, .hljs-property) { color: inherit; }
 .vbox .cap { font-size: 13px; line-height: 1.4; color: var(--muted); text-align: center; }
 .vbox .cap .ix { font-family: var(--mono); font-size: 12px; color: var(--accent-ink); margin-right: 6px; }
-table.md-table { border-collapse: collapse; width: 100%; font-size: 15px; line-height: 1.5; background: var(--paper); table-layout: auto; }
-table.md-table th { background: var(--th); color: var(--ink); box-shadow: inset 0 -2px 0 var(--accent); font-weight: 700; text-align: left; padding: 7px 11px; font-size: 13px; vertical-align: bottom; }
+table.md-table { border-collapse: collapse; width: 100%; font-size: 15px; line-height: 1.5; background: var(--tbl-bg, var(--paper)); table-layout: auto; }
+table.md-table th { background: var(--th-head, var(--th)); color: var(--ink); box-shadow: inset 0 -2px 0 var(--accent); font-weight: 700; text-align: left; padding: 7px 11px; font-size: 13px; vertical-align: bottom; }
 table.md-table td { padding: 7px 11px; border-bottom: 1px solid var(--line); vertical-align: top; color: var(--ink); overflow-wrap: anywhere; }
-table.md-table tbody tr:nth-child(even) td { background: var(--zebra); }
 /* 직접 추가: 고민과 선택 표의 채택한 줄(md-blocks.js markAdopted) — 상세 문서와 같은 표시. 줄무늬보다 뒤에 와서 이김 */
 table.md-table tbody tr.pf-adopt > td { background: var(--accent-soft); }
 table.md-table tbody tr.pf-adopt > td:first-child { font-weight: 700; }
 .pf-adopt-badge { display: inline-block; padding: 1.4px 7px .6px; border-radius: 999px; font-size: .75em; font-weight: 700; line-height: 1.5; color: #fff; background: var(--accent-fill); vertical-align: .08em; white-space: nowrap; }
 table.md-table code { font-size: max(.86em, 12px); }   /* 머리 칸(13px) 안 코드도 코드 하한 12px 아래로 내려가지 않게 */
-table.md-table img { max-height: 120px; max-width: 100%; height: auto; }   /* width·height 속성(렌더러가 미리 잰 크기)으로 불러오기 전에도 자리를 잡음 */
+table.md-table img { max-height: 120px; max-width: 100%; height: auto; box-shadow: 0 0 0 1px var(--line); }   /* width·height 속성(렌더러가 미리 잰 크기)으로 불러오기 전에도 자리를 잡음 */
+/* 직접 추가: 슬라이드 공용 — 표 외곽선을 상세 문서(.md th·td)와 같게: 모든 칸 1px var(--line) 격자, 머리 칸은 바탕(--th)만(강조색·키노트 밑줄 없음), 짝수 줄 줄무늬(--zebra) 없음.
+   html을 앞에 붙여 뒤에 실리는 theme/deck-keynote.css의 머리 밑줄 규칙보다 이김 */
+html .pf-scene :is(table.mini, table.md-table) :is(th, td) { border: 1px solid var(--line); box-shadow: none; }
 .vbox[data-kind] > .pf-vband { min-width: 0; }                         /* 그림 상자 안 띠는 상자 폭에 맞춰 꺾임(높이는 fitVisuals가 다시 잼) */
 .cards { display: grid; gap: 12px; align-content: center; min-width: 0; }
 .cards.row { grid-template-columns: repeat(var(--n, 3), minmax(0, 1fr)); align-items: stretch; }
@@ -321,6 +325,24 @@ table.md-table img { max-height: 120px; max-width: 100%; height: auto; }   /* wi
 .fstep.res { background: color-mix(in srgb, var(--ok) 16%, var(--card)); border-color: color-mix(in srgb, var(--ok) 50%, var(--card)); }
 .flow.col .fstep { display: grid; grid-template-columns: 86px minmax(0, 1fr); gap: 12px; align-items: start; padding: 11px 14px; }
 .flow.col .fstep .labelchip { justify-content: center; }
+/* 직접 추가: 슬라이드 공용 — 「표지(동그라미 번호·라벨) + 글」 칸 규칙
+   ① 표지는 높이 26px 고정, 글자는 표지 가운데(한글·숫자 글리프는 줄 상자보다 약 1px 위에 그려져 → 위 여백 2px로 1px 내림, 크기 그대로)
+   ② 글의 첫 줄은 표지와 나란히: 첫 줄 줄 상자를 26px 가운데에 두고 같은 1px 보정(위 +1px, 아래 −1px)
+      → 한 줄이면 글 덩어리 높이 = 26px = 표지 높이, 칸 여백이 위아래 같아 표지·글이 모두 칸 가운데
+      → 여러 줄이면 표지는 첫 줄 옆 그대로, 마지막 줄 아래도 같은 보정이라 위아래 여백이 같게 보임
+   ③ 칸 안 위아래 여백은 같게 */
+.ncard .num, .fstep .labelchip { box-sizing: border-box; height: 26px; padding-top: 2px; padding-bottom: 0; margin-top: 0; }
+.flow.col .fstep { padding-block: 11px; }
+.flow.col .fstep > p { margin-block: calc((26px - 1lh) / 2 + 1px) calc((26px - 1lh) / 2 - 1px); }
+.ncard:not(:has(.lb)) > div > p:first-child { margin-top: calc((26px - 1lh) / 2 + 1px); }
+.ncard:not(:has(.lb)) > div > p:last-child { margin-bottom: calc((26px - 1lh) / 2 - 1px); }
+/* 직접 추가: 슬라이드 공용 — 칸 모서리 둥글기를 상세 문서(doc.css, --r = --radius)와 같게. html을 붙여 theme/deck-keynote.css(22px·20px)·표지 16px 규칙보다 이김
+   글 칸(번호·문제/해결·카드)·다이어그램·코드 칸 = 상세 문서 코드·다이어그램 칸(.md pre·.mmd .mermaid) r × .7
+   이미지·영상 칸·표지 이미지 = 상세 문서 이미지(.pf-figure img) r × .5,  왼쪽 줄 메모(.note) = 상세 문서 인용(blockquote) 0 r×.5 r×.5 0 */
+html .pf-scene :is(.ncard, .fstep, .card, .rt-ach, .callout),
+html .pf-scene .vbox:is([data-kind="mermaid"], [data-kind="code"]) .vmedia { border-radius: calc(var(--radius) * .7); }
+html .pf-scene .vbox[data-kind="image"] .vmedia, html .pf-scene .media, html .pf-scene .pi-main .pi-cover.media { border-radius: calc(var(--radius) * .5); }
+html .pf-scene .note { border-radius: 0 calc(var(--radius) * .5) calc(var(--radius) * .5) 0; }
 .scr-row { display: grid; grid-template-columns: repeat(var(--n, 3), minmax(0, 1fr)); gap: 22px; }
 .pf-sizing .scr-row { align-items: stretch; }
 .pf-vband { margin: 0; padding: 12px 14px; border-left: 4px solid #F04438; background: #2A1212; color: #FDA29B; font-size: 13px; line-height: 1.45; border-radius: 8px; min-width: 260px; }
