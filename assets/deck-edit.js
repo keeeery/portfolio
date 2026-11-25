@@ -3,6 +3,7 @@
 //   덱을 슬라이드 데이터(deck)로 그렸을 때만(예전 데이터 자동 구성 덱은 아님). GitHub Pages나 python -m http.server에서는 아무것도 하지 않습니다.
 //   흐름: 덱이 다 그려지길 기다림 → data·프로젝트 문서 md를 다시 읽음 → [편집 모드] 버튼 → 덱 위 글·그림 누르기 → 아래 입력창
 //         ├ 표·코드·다이어그램 → 그 원문 md 줄 → /__edit/save (상세 문서 편집과 같은 길, 프로젝트 문서만 고침)
+//         │   코드는 [슬라이드에만 저장]을 켜면 → /__edit/deck field "code" (deck-edits.json "deckText" + data visuals[].slideText, 원문 그대로 — 직접 고침 2026-11-25)
 //         └ 장면 제목·도입·요점·장 표지 키워드 → 글 한 칸 → /__edit/deck (deck-edits.json "deckText" + 같은 글이 있으면 프로젝트 문서 줄, data도)
 //         → 저장하면 새로고침(주소 #s=<장면>이 그대로라 같은 장면으로 돌아옴)
 //   화면의 글·그림이 어느 장면인지는 원본 project-deck.js가 이미 다는 것으로 압니다: 장면 요소 id(d-<key>, slideForSceneId) · figure.vbox의 data-kind와 내용(visualRefForFigure).
@@ -14,7 +15,7 @@
   const TEXT_SAVE_URL = '/__edit/deck';
   const RESTORE_KEY = 'pf-deck-edit-restore';         // 저장 뒤 새로고침에서 편집 모드를 다시 켜는 sessionStorage 키
   const POINT_SELECTOR = '.ncard, .fstep, .fe-card';  // 요점 카드·흐름 칸(문제 해결)·화면 카드 — 장면 안 순서 = data points 순서
-  const EDITABLE_FIGURE_SELECTOR = 'figure.vbox:is([data-kind="table"], [data-kind="code"], [data-kind="mermaid"])';   // 그림(image)은 편집에서 뺌
+  const EDITABLE_FIGURE_SELECTOR = 'figure.vbox:is([data-kind="table"], [data-kind="code"], [data-kind="mermaid"])';   // 그림(image)은 편집에서 뺌 · 코드는 [슬라이드에만 저장]으로 슬라이드 전용 코드(slideText)도 고침(직접 고침 2026-11-25)
   const IMAGE_CAPTION_SELECTOR = 'figure.vbox[data-kind="image"] > figcaption.cap';   // 그림 아래 설명 글(코드 캡션은 렌더러가 만든 라벨이라 제외)
   const VISUAL_NAMES = { table: '표', image: '그림', code: '코드', mermaid: '다이어그램' };
   // 덱이 원문 블록을 찾는 지문(md-blocks.js pick). 바꾸면 다시 빌드할 때까지 그 장면에 띠가 뜸
@@ -209,10 +210,25 @@
       const picked = PF.md.pick(session.source.parsed, ref, slide.sectionPath || []);
       if (picked.el === undefined) return false;
       // 슬라이드 코드는 괄호 절 번호 참조를 숨기고 그리므로(project-deck.js) 원문 쪽도 같이 지운 뒤 견줌
-      const sourceText = PF.md.dropRefs(normalizedText(picked.el.querySelector('pre') || picked.el), PF.md.sectionNumbers(session.source.parsed));
-      if (kind === 'code') return sourceText.includes(figureText);
+      // 직접 고침(2026-11-25): PF.md.dropRefs·sectionNumbers는 이 렌더러에 없어 부르면 오류(코드가 둘 이상인 장면에서 눌러도 무반응). 있을 때만 쓰고, 없으면 그대로 견줌
+      //   (슬라이드는 pre·code 안의 절 표시를 지우지 않으므로 코드는 그대로 견줘도 같음 — project-deck.js stripSecRefs)
+      const rawSource = normalizedText(picked.el.querySelector('pre') || picked.el);
+      const sourceText = typeof PF.md.dropRefs === 'function' && typeof PF.md.sectionNumbers === 'function'
+        ? PF.md.dropRefs(rawSource, PF.md.sectionNumbers(session.source.parsed)) : rawSource;
+      const slideText = typeof ref.slideText === 'string' ? ref.slideText.replace(/\s+/g, ' ').trim() : null;   // 슬라이드 전용 코드는 그 글과 견줌
+      if (kind === 'code') return (slideText ?? sourceText).includes(figureText);
       return normalizedText(picked.el.querySelector('thead')) === figureText;
     });
+    // 직접 고침(2026-11-25): 머리 칸이 같은 표가 둘 이상이면(「방법|장점|비용」 비교 표 등) 표 글 전체로 한 번 더 가림 — 나뉜 표(행 일부)도 원문 표 글에 그대로 들어 있음
+    if (kind === 'table' && matching.length > 1) {
+      const drawnTable = normalizedText(figure.querySelector('table'));
+      const byBody = matching.filter((ref) => {
+        const picked = PF.md.pick(session.source.parsed, ref, slide.sectionPath || []);
+        const sourceTable = normalizedText(picked.el?.matches?.('table') ? picked.el : picked.el?.querySelector?.('table') || null);
+        return sourceTable.includes(drawnTable);
+      });
+      return byBody.length === 1 ? byBody[0] : null;
+    }
     return matching.length === 1 ? matching[0] : null;
   }
 
@@ -234,13 +250,20 @@
     const block = session.source.blocks.find((candidate) => candidate.elements.some((element) => element.contains(picked.el)));
     if (block === undefined) return null;
     const name = VISUAL_NAMES[ref.kind] || '원문';
-    return {
+    const spot = {
       kind: 'md',
       element: figure,
       label: `${name} · ${session.source.mdPath} ${block.start}~${block.end}줄 (프로젝트 문서 원문)`,
       block,
       note: `덱은 ${FINGERPRINT_PARTS[ref.kind] || '첫 줄을'} 보고 이 블록을 찾습니다. 그것을 바꾸면 /portfolio-build를 다시 할 때까지 이 장면에 띠가 뜹니다.`,
     };
+    if (ref.kind === 'code') {                         // 직접 고침(2026-11-25): 슬라이드에만 저장할 수 있는 코드
+      const sourceCode = (picked.el.querySelector('code')?.textContent || '').replace(/\n$/, '');
+      const slideCode = typeof ref.slideText === 'string' ? ref.slideText : null;
+      spot.code = { sourceCode, slideCode, request: { project: session.source.id, slide: slide.key, field: 'code', n: slide.visuals.indexOf(ref) + 1 } };
+      if (slideCode !== null) spot.note += ' 이 장면은 슬라이드 전용 코드를 보여 줍니다 — 원문을 고쳐도 슬라이드는 슬라이드 전용 코드 그대로입니다.';
+    }
+    return spot;
   }
 
   // ── 화면 ──
@@ -300,7 +323,13 @@
       saveSpot(session, spot, textarea.value, deckOnly.checked, form);
     });
     form.querySelector('.pf-edit-cancel').addEventListener('click', close);
-    deckOnly.addEventListener('change', () => showDestination(spot, deckOnly.checked, form));
+    deckOnly.addEventListener('change', () => (spot.code ? switchCodeMode(session, spot, deckOnly.checked, form, textarea) : showDestination(spot, deckOnly.checked, form)));
+    if (spot.code) {
+      const onlyLabel = form.querySelector('.pf-edit-only');
+      onlyLabel.lastChild.textContent = ' 프로젝트 문서는 그대로 두고 슬라이드에만 저장 (deck-edits.json — 줄바꿈·들여쓰기·일부 빼기만)';
+      onlyLabel.hidden = false;
+      if (spot.code.slideCode !== null) { deckOnly.checked = true; switchCodeMode(session, spot, true, form, textarea); }
+    }
     textarea.addEventListener('keydown', (event) => {
       if (event.key === 'Escape') close();
       if (event.key === 'Enter' && event.ctrlKey) form.requestSubmit();
@@ -331,6 +360,29 @@
     textarea.rows = 3;
   }
 
+  /**
+   * 코드 입력창을 [슬라이드에만 저장] 켬/끔에 맞춥니다(직접 고침 2026-11-25).
+   * 켬: 슬라이드에 보이는 코드(슬라이드 전용 코드, 없으면 원문 코드 글)를 고침 → deck-edits.json. 끔: 원문 md 줄(펜스 포함)을 고침 → 프로젝트 문서.
+   */
+  function switchCodeMode(session, spot, slideOnly, form, textarea) {
+    const head = form.querySelector('.pf-edit-head');
+    const where = form.querySelector('.pf-edit-where');
+    form.querySelector('.pf-edit-error').textContent = '';
+    if (slideOnly) {
+      const text = spot.code.slideCode ?? spot.code.sourceCode;
+      head.textContent = `코드 · 슬라이드에만 (${session.source.mdPath} ${spot.block.start}~${spot.block.end}줄의 원문 코드는 그대로)`;
+      where.textContent = '줄바꿈·들여쓰기를 바꾸거나 일부를 뺄 수 있습니다(뺀 자리는 … 한 줄 가능). 원문에 없는 글자는 저장되지 않습니다. 원문 코드와 같게 적으면 슬라이드 전용 코드가 지워집니다.';
+      textarea.value = text;
+      textarea.rows = Math.min(14, text.split('\n').length + 1);
+    } else {
+      head.textContent = spot.label;
+      where.textContent = spot.note;
+      textarea.value = originalMdText(session, spot.block);
+      textarea.rows = Math.min(14, spot.block.end - spot.block.start + 2);
+    }
+    textarea.wrap = 'off';
+  }
+
   /** 서버에 장면 글의 저장 위치만 물어(dryRun) 보여 줍니다. 프로젝트 문서에도 저장될 때만 [슬라이드에만 저장] 선택이 보입니다. */
   async function showDestination(spot, deckOnly, form) {
     const result = await postJson(TEXT_SAVE_URL, { ...spot.request, expected: spot.value, deckOnly, dryRun: true });
@@ -351,7 +403,11 @@
     const errorLine = form.querySelector('.pf-edit-error');
     errorLine.textContent = '저장하는 중…';
     let result;
-    if (spot.kind === 'md') {
+    if (spot.code && deckOnly) {
+      const current = spot.code.slideCode ?? spot.code.sourceCode;
+      if (text.replace(/\s+$/, '') === current.replace(/\s+$/, '')) { session.openEditor.close(); return; }
+      result = await postJson(TEXT_SAVE_URL, { ...spot.code.request, expected: current, value: text });
+    } else if (spot.kind === 'md') {
       const originalText = originalMdText(session, spot.block);
       if (text === originalText) { session.openEditor.close(); return; }
       result = await postJson(MD_SAVE_URL, { path: session.source.mdPath, start: spot.block.start, end: spot.block.end, expected: originalText, text });

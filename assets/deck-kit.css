@@ -16,7 +16,7 @@
     display: block; padding: 0; gap: 0; overflow: hidden; }
   html[data-view="deck"] .pf-deck > .pf-scene {
     position: absolute; left: 0; top: 0; margin: 0;
-    transform: translate(var(--pf-x, 0px), var(--pf-y, 0px)) scale(var(--pf-k, 1)); transform-origin: 0 0;
+    zoom: var(--pf-k, 1); transform: translate(calc(var(--pf-x, 0px) / var(--pf-k, 1)), calc(var(--pf-y, 0px) / var(--pf-k, 1))); transform-origin: 0 0;   /* 직접 고침(2026-11-24): scale → zoom(scene-kit.css와 같은 이유). 자기 zoom이 자기 이동 거리도 키우므로 k로 나눔 */
     visibility: hidden; box-shadow: 0 0 0 1px var(--th, #1C1C24), 0 24px 60px -24px var(--shadow, rgba(0, 0, 0, .9)); }
   html[data-view="deck"] .pf-deck > .pf-scene.pf-cur { visibility: visible; }
   html[data-view="deck"] .pf-deck > .pf-scene:focus,
@@ -243,6 +243,10 @@
 }
 /* 직접 추가: 확대·축소 버튼을 누른 동안(.pf-zooming, deck-kit.js setZoom이 매 프레임 배율과 스크롤을 함께 맞춤) 브라우저의 자동 스크롤 고정을 끔(서로 다투지 않게) */
 html.pf-zooming { overflow-anchor: none; }
+/* 직접 추가(2026-11-25): 확대·축소 애니메이션 동안만 예전 방식(transform: scale — 그림처럼 통째로 키움)으로. zoom은 매 프레임 다시 배치하며 글자가
+   화면 픽셀에 새로 맞춰져 1px씩 떨려 보임. 두 방식 모두 장면이 차지하는 자리(1280k×720k)가 같아 끝나고 zoom으로 돌아가도 스크롤 위치는 그대로(글자만 한 번 맞춰짐) */
+html[data-view="scroll"].pf-zooming .pf-deck > .pf-scene { zoom: 1; transform: scale(var(--pf-k)); transform-origin: 0 0;
+  margin: 0 calc(1280px * (var(--pf-k) - 1)) calc(720px * (var(--pf-k) - 1)) 0; }
 /* 직접 추가(2026-11-24): 한 장씩 보기 ↔ 세로로 보기 전환 보간(deck-kit.js setView의 View Transition)
    보던 장면(pf-vt-scene)은 자리·크기가 옮겨 가고, 아래 띠(pf-vt-hud)는 그대로 둔 채 안의 버튼만 제 움직임(확대·축소 펼침)대로, 나머지 화면은 겹쳐 바뀜 */
 @media screen {
@@ -250,6 +254,15 @@ html.pf-zooming { overflow-anchor: none; }
   ::view-transition-group(pf-vt-scene) { animation-duration: .45s; animation-timing-function: cubic-bezier(.2, .7, .2, 1); }
   ::view-transition-old(pf-vt-scene), ::view-transition-new(pf-vt-scene) { animation-duration: .45s; height: 100%; object-fit: fill; }
   ::view-transition-old(root), ::view-transition-new(root) { animation-duration: .3s; }
+  /* 직접 추가(2026-11-25): 보던 장면 밖의 화면(root)은 겹쳐 바뀌지 않고 한쪽만 움직임
+     세로로 보기 → 하나씩 보기: 나머지 슬라이드가 있는 예전 화면이 위에서 페이드아웃, 새 화면은 아래에 그대로
+     하나씩 보기 → 세로로 보기: 예전 화면은 아래에 그대로, 나머지 슬라이드가 있는 새 화면이 위로 페이드인 */
+  html.pf-vt-to-deck::view-transition-old(root) { z-index: 1; animation: pf-vt-fade-out .3s ease both; }
+  html.pf-vt-to-deck::view-transition-new(root) { animation: none; }
+  html.pf-vt-to-scroll::view-transition-old(root) { animation: none; }
+  html.pf-vt-to-scroll::view-transition-new(root) { z-index: 1; animation: pf-vt-fade-in .3s ease both; }
+  @keyframes pf-vt-fade-out { from { opacity: 1; } to { opacity: 0; } }
+  @keyframes pf-vt-fade-in { from { opacity: 0; } to { opacity: 1; } }
   ::view-transition-old(pf-vt-hud) { display: none; }
   ::view-transition-new(pf-vt-hud) { animation: none; }
   ::view-transition-group(pf-vt-hud) { animation: none; }

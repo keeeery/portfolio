@@ -46,6 +46,8 @@ code { font-family: var(--mono); font-size: .88em; background: var(--accent-soft
 .print-only { display: none; }
 .loading { color: var(--faint); padding: 40px 0; }
 .error { color: #F97066; overflow-wrap: anywhere; }
+/* 직접 추가(2026-11-24): 코드 글꼴(JetBrains Mono)의 합자 끔 — ==·!=·=>가 한 글자처럼 붙어 보이지 않게 */
+:is(pre, code) { font-variant-ligatures: none; font-feature-settings: "calt" 0, "liga" 0; }
 .notice { max-width: 640px; margin: 96px auto; padding: 32px 36px; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); overflow-wrap: anywhere; }
 .notice h1 { font-size: 22px; margin-bottom: 12px; }
 .notice p + p, .notice ol { margin-top: 10px; }
@@ -253,7 +255,8 @@ code { font-family: var(--mono); font-size: .88em; background: var(--accent-soft
 .md blockquote { margin: 18px 0; padding: 12px 18px; background: var(--accent-soft); border-left: 3px solid var(--accent); border-radius: 0 calc(var(--r) * .5) calc(var(--r) * .5) 0; }
 .md blockquote p { color: var(--ink); margin: 6px 0; }
 
-.md pre { margin: 16px 0; border-radius: calc(var(--r) * .7); overflow: auto; background: var(--code-bg); border: 1px solid var(--line); }
+.md pre { margin: 16px 0; border-radius: calc(var(--r) * .7); overflow: auto; background: var(--code-bg); border: 0; }   /* 직접 고침(2026-11-25): 외곽선은 바탕과 대비가 낮을 때만(.pf-edge, common.js setupEdges) */
+.md pre.pf-edge { box-shadow: 0 0 0 1px var(--line); }
 .md pre code, .md pre code.hljs { display: block; width: auto; min-width: 0; padding: 18px 20px; font-size: 13.5px; line-height: 1.65;
                                   background: transparent; color: #E6E6E6; word-break: normal; white-space: pre-wrap; overflow-wrap: anywhere; overflow: visible; border-radius: 0; }   /* 긴 줄은 칸 안에서 줄바꿈 — 가로 스크롤 없음(들여쓰기는 그대로 유지) */
 /* 코드 색: Rider 구성표 "Visual Studio Dark"와 비슷하게(메서드는 VS 2019 이후 색) — 이름 종류는 PF.hlMore가 글자 모양으로 나눔(common.js) */
@@ -278,18 +281,20 @@ code { font-family: var(--mono); font-size: .88em; background: var(--accent-soft
 .md th { text-align: left; background: var(--th); color: var(--ink); font-weight: 700; padding: 10px 14px; border: 1px solid var(--line); }
 .md td { padding: 10px 14px; border: 1px solid var(--line); vertical-align: top; color: var(--body); }
 /* 직접 추가: 고민과 선택 표의 채택한 줄(md-blocks.js markAdopted) — 강조색 바탕·굵은 첫 칸·「채택」 배지 */
-.md tr.pf-adopt > td { background: var(--accent-soft); print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+.md tr.pf-adopt > td { background: var(--accent-soft); print-color-adjust: exact; -webkit-print-color-adjust: exact; }   /* 목차의 선택 항목과 같은 --accent-soft 바탕 */
 .md tr.pf-adopt > td:first-child { font-weight: 700; color: var(--ink); }
 .pf-adopt-badge { display: inline-block; padding: 2px 7px 0; border-radius: 999px; font-size: .75em; font-weight: 700; line-height: 1.5; color: #fff; background: var(--accent-fill); vertical-align: .08em; white-space: nowrap; print-color-adjust: exact; -webkit-print-color-adjust: exact; }
-.md td img { display: block; margin: 0; border-radius: 8px; border: 1px solid var(--line); cursor: zoom-in; height: auto; }
+.md td img { display: block; margin: 0; border-radius: 8px; cursor: zoom-in; height: auto; }
 /* 한 줄에 그림만 여러 장 → 같은 폭으로 나란히(doc.js의 .pf-figure-row) — 직접 고친 부분 */
 .md > p.pf-figure-row { display: flex; gap: 12px; align-items: flex-start; width: 100%; }
 .md .pf-figure-row img { flex: 1 1 0; min-width: 0; width: 0; }
 
 .md .pf-figure { margin: 20px 0; }
 /* 테두리는 폭을 차지하지 않는 box-shadow로 — 본문 폭(720px)과 같은 그림이 1:1로 그려져 1px 선·디더링이 뭉개지지 않게(직접 고친 부분) */
-.md .pf-figure img { display: block; max-width: 100%; height: auto; border-radius: calc(var(--r) * .5); box-shadow: 0 0 0 1px var(--line); cursor: zoom-in; }
+.md .pf-figure img { display: block; max-width: 100%; height: auto; border-radius: calc(var(--r) * .5); cursor: zoom-in; }
 .md img { cursor: zoom-in; }
+/* 직접 고침(2026-11-25): 이미지·영상(포스터 이미지) 외곽선은 가장자리 색이 바탕과 대비가 낮을 때만(.pf-edge, common.js setupEdges) */
+.md img.pf-edge { box-shadow: 0 0 0 1px var(--line); }
 /* 크기 정보가 없는 그림이 늦게 들어올 때 스크롤 고정의 기준이 되지 않게 → 바로 아래 제목·글이 기준이 되어 제자리에 머묾(doc.js hold()와 함께) */
 .md :is(.pf-figure, img, .table-wrap:has(img)) { overflow-anchor: none; }
 /* 세로 그림(높이 ≥ 폭 × 1.15, doc.js가 .pf-tall) → 한 줄 두 장(.pf-figure-row)의 한 칸 폭과 같게 줄여 가운데 — 직접 고친 부분 */
@@ -298,7 +303,7 @@ code { font-family: var(--mono); font-size: .88em; background: var(--accent-soft
 @media screen and (max-width: 719.98px) { .md > p.pf-tall img { width: min(220px, 60vw); } }   /* 휴대폰 */
 
 .md .mmd { margin: 22px 0; }
-.mmd .mermaid { display: flex; justify-content: center; padding: 16px; border: 1px solid var(--line); border-radius: calc(var(--r) * .7); overflow-x: auto; background: var(--diagram-bg); }
+.mmd .mermaid { display: flex; justify-content: center; padding: 16px; border: 0; border-radius: calc(var(--r) * .7); overflow-x: auto; background: var(--diagram-bg); }   /* 직접 고침(2026-11-25): 다이어그램은 외곽선 없음 */
 .mmd .mermaid svg { display: block; max-width: 100%; height: auto; }
 .mmd .mmd-screen:has(svg) { cursor: zoom-in; }   /* 그림을 누르면 크게 보기(이미지와 같음) */
 .mmd .mmd-screen a { cursor: pointer; }

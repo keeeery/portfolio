@@ -14,7 +14,7 @@
   const info = (PFScene.info = { page: 'project', id, t: {}, summary: {}, overflow: [], errors: [], unresolved: [], notes: [], mode: '' });
   const mark = (k) => { info.t[k] = Math.round(performance.now()); };
   const { esc, inline, shortUrl, DOT, link } = PF;
-  const MAXL = 20;                                                     // 코드 한 장면 20줄 안팎(Q8), 넘으면 "계속" 장면
+  const MAXL = 30;                                                     // 코드 한 장면 30줄 안팎, 넘으면 "계속" 장면 — 직접 고침(2026-11-25): 원래 20줄(Q8), ODDITY d-debris-pool(23줄)을 한 장에
 
   // ── 옛 주소(결정 G3) ──
   //   #s=… · #<숫자> · #s-n · 새 장면 id → 슬라이드가 받음(옛 장면 id는 그린 뒤 remapHash가 바꿈) / #pf-doc → 상세 문서 /
@@ -70,6 +70,8 @@
     const render = () => renderAll(pf, p, P);
     await render();
     PF.refitOnLateFont(render);
+    // 직접 고침(2026-11-25): 그림이 늦게 들어와 크기가 바뀐 장면도 좌우 여백을 다시 맞춤(PF.balanceX — 장면을 그릴 때도 한 번 함)
+    PFScene.whenReady().then(() => deck.querySelectorAll(':scope > .pf-scene').forEach((s) => PF.balanceX(s))).catch(() => {});
   }
 
   // ── 장면 모델: deck(schemaVersion 2) 또는 자동 구성 ──
@@ -149,7 +151,7 @@
       await renderMermaid(els, { again: true });
       document.querySelectorAll('.vbox[data-kind="mermaid"][data-mmd]').forEach((f) => {
         const r = svgCache.get(els[+f.dataset.mmd]), m = f.querySelector('.vmedia');
-        if (r?.svg && m) m.innerHTML = r.svg;
+        if (r?.svg && m) { m.innerHTML = r.svg; if (f.dataset.split) PF.splitDiagram?.(f, JSON.parse(f.dataset.split)); }   // 직접 추가: 두 도막으로 나눈 그림은 같은 자리에서 다시 나눔
       });
     }).catch((err) => console.warn('[deck] 다이어그램 다시 그리기 오류:', err));
   });
@@ -174,9 +176,11 @@
   const LANG = { csharp: 'C#', cs: 'C#', js: 'JavaScript', javascript: 'JavaScript', ts: 'TypeScript', json: 'JSON', yaml: 'YAML', yml: 'YAML', xml: 'XML', html: 'HTML', css: 'CSS', python: 'Python', py: 'Python', bash: 'Shell', sh: 'Shell', powershell: 'PowerShell', hlsl: 'HLSL', shader: 'Shader', cpp: 'C++', c: 'C', lua: 'Lua' };
   if (window.hljs && !hljs.getLanguage('hlsl')) { try { hljs.registerAliases('hlsl', { languageName: 'cpp' }); } catch { /* */ } }  // HLSL은 C 계열이라 C++ 색을 빌림
   const codeLines = (el) => { const t = (el.querySelector('code')?.textContent || '').replace(/\n$/, ''); return t.split('\n'); };
+  // 직접 고침(2026-11-25): 슬라이드 전용 코드(ref.slideText, /portfolio-edit) — 원문 블록은 그대로 찾고(지문 대조) 보이는 글만 이것으로. 상세 문서는 원문 그대로
+  const vLines = (v) => (typeof v.ref.slideText === 'string' ? v.ref.slideText.replace(/\r\n/g, '\n').replace(/\n$/, '').split('\n') : codeLines(v.el));
   const langOf = (el) => /language-([\w+#-]+)/.exec(el.querySelector('code')?.className || '')?.[1]?.toLowerCase() || '';
-  function codeHtml(el, a, b) {
-    const lang = langOf(el), text = codeLines(el).slice(a - 1, b).join('\n');
+  function codeHtml(v, a, b) {
+    const lang = langOf(v.el), text = vLines(v).slice(a - 1, b).join('\n');
     const code = document.createElement('code');
     code.textContent = text;
     if (lang && window.hljs && hljs.getLanguage(lang)) { code.className = `language-${lang}`; try { hljs.highlightElement(code); PF.hlMore?.(code); } catch { /* 강조 없이 */ } }   // 타입·메서드 호출도 색
@@ -194,13 +198,14 @@
     if (k === 'mermaid') {
       const r = svgCache.get(v.el) || {};
       if (!r.svg) return `<figure class="vbox err">${PF.vband('visual-missing', `다이어그램을 그리지 못했습니다: ${r.error || ''}`)}</figure>`;
-      return `<figure class="vbox" data-kind="mermaid" data-mmd="${mmdIdx.get(v.el)}"><div class="vmedia">${r.svg}</div>${cap(v.ref.caption?.text ? inline(v.ref.caption.text) : '')}${warn}</figure>`;
+      // 직접 고침(2026-11-25): 다이어그램의 caption도 위 소제목(.colhead)으로 — 표·요점 카드 소제목과 같은 모양
+      return `<figure class="vbox" data-kind="mermaid" data-mmd="${mmdIdx.get(v.el)}">${v.ref.caption?.text ? `<p class="colhead">${inline(v.ref.caption.text)}</p>` : ''}<div class="vmedia">${r.svg}</div>${warn}</figure>`;
     }
     if (k === 'code') {
-      const all = codeLines(v.el).length, [a, b] = chunk;
+      const all = vLines(v).length, [a, b] = chunk;
       const lang = LANG[langOf(v.el)] || '';
       const part = a > 1 || b < all ? PF.t('deck.code-lines', { a, b, all }) : '';
-      return `<figure class="vbox" data-kind="code"><div class="vmedia"><div class="fit-in"><pre>${codeHtml(v.el, a, b)}</pre></div></div>${cap([lang, part].filter(Boolean).map(esc).join(' · '))}${warn}</figure>`;
+      return `<figure class="vbox" data-kind="code"${typeof v.ref.slideText === 'string' ? ' data-slide-code="1"' : ''}><div class="vmedia"><div class="fit-in"><pre>${codeHtml(v, a, b)}</pre></div></div>${cap(part ? esc(part) : '')}${warn}</figure>`;   // 직접 고침(2026-11-25): 언어 이름(C# 등) 캡션은 빼고 줄 범위만
     }
     if (k === 'table') {
       const t = v.el.cloneNode(true);
@@ -210,17 +215,42 @@
         if (d) { const h = Math.min(d.h, 120); i.width = Math.round((h * d.w) / d.h); i.height = h; }   // CSS max-height 120px와 같은 크기
         i.loading = 'lazy'; i.decoding = 'async';
       });
+      // 직접 고침(2026-11-26): 슬라이드 전용 표 줄바꿈(ref.slideBreakParen, deck-edits.json) — 칸마다 마지막 「(」 앞에서 줄을 나눔(상세 문서는 원문 그대로)
+      if (v.ref.slideBreakParen) t.querySelectorAll('td, th').forEach((c) => {
+        const tw = document.createTreeWalker(c, NodeFilter.SHOW_TEXT); let last = null, n;
+        while ((n = tw.nextNode())) if (n.nodeValue.includes('(')) last = n;
+        if (!last) return;
+        const i = last.nodeValue.lastIndexOf('(');
+        if (!last.nodeValue.slice(0, i).trim() && last === c.firstChild) return;   // 칸 맨 앞의 괄호는 나누지 않음
+        const rest = last.splitText(i); rest.before(document.createElement('br'));
+      });
+      // 슬라이드 전용: ref.slideBreakAfter(글 배열) — 표 칸에서 그 글 바로 뒤(뒤따르는 공백은 뺌)에서 줄을 나눔
+      (v.ref.slideBreakAfter || []).forEach((m) => {
+        const tw = document.createTreeWalker(t, NodeFilter.SHOW_TEXT), hit = []; let n;
+        while ((n = tw.nextNode())) if (n.nodeValue.includes(m)) hit.push(n);
+        hit.forEach((nd) => { const i = nd.nodeValue.indexOf(m) + m.length; const rest = nd.splitText(i); rest.nodeValue = rest.nodeValue.replace(/^\s+/, ''); rest.before(document.createElement('br')); });
+      });
       if (chunk) { const rows = [...t.querySelectorAll('tbody tr')]; rows.forEach((r, i) => { if (i < chunk[0] || i >= chunk[1]) r.remove(); }); }
-      return `<figure class="vbox" data-kind="table"><div class="vmedia"><div class="fit-in">${t.outerHTML}</div></div>${cap(v.ref.caption?.text ? inline(v.ref.caption.text) : '')}${warn}</figure>`;
+      // 직접 고침(2026-11-25): 표의 caption은 표 위 소제목(.colhead)으로 — 요점 카드 소제목(pointsTitle)과 같은 모양
+      return `<figure class="vbox" data-kind="table">${v.ref.caption?.text ? `<p class="colhead">${inline(v.ref.caption.text)}</p>` : ''}<div class="vmedia"><div class="fit-in">${t.outerHTML}</div></div>${warn}</figure>`;
     }
     return '';
   }
 
   // ── 장면 틀(deck.slides[].layout) ──
   const txt = (t) => (t && typeof t === 'object' ? t.text : t) || '';
-  const ncards = (points, { row = false, num = true, two = false } = {}) => (points.length
-    ? `<div class="cards${row ? ' row' : ''}${two ? ' two' : ''}" style="--n:${Math.min(points.length, 4)}">${points.map((pt, i) =>
-      `<div class="ncard${num ? '' : ' nonum'}">${num ? `<span class="num" aria-hidden="true">${i + 1}</span>` : ''}<div>${pt.label ? `<span class="lb">${esc(PF.label(pt.label))}</span>` : ''}<p>${inline(txt(pt))}</p></div></div>`).join('')}</div>` : '');
+  const SEC_NO = /^\s*(\d+(?:\.\d+)*)\.?\s+/;                         // 직접 고침(2026-11-25): 절 제목 앞 번호(「2.2 」·「2. 」)
+  // 직접 고침(2026-11-25): 요점마다 서로 다른 제목형 라벨(「시간 정지」·「보스」…)이 있으면 번호 칸 대신 라벨을 왼쪽 칸에(.cards.titled).
+  //   「이유」·「구현」 같은 종류 라벨은 그대로 번호 + 작은 라벨.
+  const KIND_LB = new Set(['기능', '구현', '이유', '문제', '원인', '해결', '결과', '배운 점', '비용']);
+  const titledPts = (points) => points.length > 1 && points.every((p) => p.label && !KIND_LB.has(p.label)) && new Set(points.map((p) => p.label)).size === points.length;
+  const ncards = (points, { row = false, num = true, two = false, head = '' } = {}) => {
+    if (!points.length) return '';
+    const titled = num && !row && !two && titledPts(points);
+    return `<div class="cards${row ? ' row' : ''}${two ? ' two' : ''}${titled ? ' titled' : ''}" style="--n:${Math.min(points.length, 4)}">${head ? `<p class="colhead">${inline(head)}</p>` : ''}${points.map((pt, i) => titled
+      ? `<div class="ncard"><span class="num tl">${esc(PF.label(pt.label))}</span><div><p>${inline(txt(pt))}</p></div></div>`
+      : `<div class="ncard${num ? '' : ' nonum'}">${num ? `<span class="num" aria-hidden="true">${i + 1}</span>` : ''}<div>${pt.label ? `<span class="lb">${esc(PF.label(pt.label))}</span>` : ''}<p>${inline(txt(pt))}</p></div></div>`).join('')}</div>`;
+  };
   const FLOW = { '문제': '', '원인': '', '해결': 'accent', '결과': 'ok', '배운 점': '' };   // data 값 → 칩 색(보이는 글자만 PF.label로 바뀜)
   const flowHtml = (points, dir) => `<div class="flow ${dir}" style="--n:${Math.min(points.length, 4)}">${points.map((pt) =>
     `<div class="fstep${pt.label === '결과' ? ' res' : ''}">${pt.label ? `<span class="labelchip${FLOW[pt.label] ? ' ' + FLOW[pt.label] : ''}">${esc(PF.label(pt.label))}</span>` : ''}<p>${inline(txt(pt))}</p></div>`).join('')}</div>`;
@@ -230,7 +260,7 @@
     const tight = variant.tight ? ' tight' : '';
     if (!vs.length) {
       if (sl.layout === 'problem') return `<div class="dk dk-text${tight}">${flowHtml(points, variant.stack || variant.tight ? 'row' : 'col')}</div>`;
-      return `<div class="dk dk-text${tight}">${ncards(points, { two: points.length >= 3 && !variant.stack, num: sl.layout !== 'overview' })}</div>`;
+      return `<div class="dk dk-text${tight}">${ncards(points, { two: points.length >= 3 && !variant.stack, num: sl.layout !== 'overview', head: txt(sl.pointsTitle) })}</div>`;
     }
     if (sl.layout === 'screens') {
       return `<div class="dk scr-row${tight}" style="--n:${vs.length}">${vs.map((v, i) => `<div class="fe-card">${vis([v])}${points[i] ? `<p class="fe-k">${esc(PF.t('en.feature'))} ${String(i + 1).padStart(2, '0')}</p>${points[i].label ? `<h3>${esc(PF.label(points[i].label))}</h3>` : ''}${txt(points[i]) ? `<p>${inline(txt(points[i]))}</p>` : ''}` : ''}</div>`).join('')}</div>`;
@@ -240,18 +270,22 @@
       return `<div class="dk dk-side flip${tight}" style="--vw:${variant.vw}fr">${vis(vs)}${flowHtml(points, 'col')}</div>`;
     }
     // 요점이 없으면(나눈 장면 등) 옆 칸이 비지 않게 시각 자료를 가로 전체로
-    if (sl.layout === 'full' || variant.stack || !points.length) return `<div class="dk dk-stack${tight}">${vis(vs)}${ncards(points, { row: true, num: sl.layout !== 'full' })}</div>`;
-    return `<div class="dk dk-side${tight}" style="--vw:${variant.vw}fr">${vis(vs)}${ncards(points, { num: true })}</div>`;
+    if (sl.layout === 'full' || variant.stack || !points.length) return `<div class="dk dk-stack${tight}">${vis(vs)}${ncards(points, { row: true, num: sl.layout !== 'full', head: txt(sl.pointsTitle) })}</div>`;
+    // 직접 고침(2026-11-25): 시각 자료가 표 하나면 표 칸을 내용 폭에 맞추고(.tfit) 남는 폭을 카드에
+    const tfit = vs.length === 1 && vs[0].includes('data-kind="table"') ? ' tfit' : '';
+    // 직접 고침(2026-11-25): 나눈 옆 배치(--pf-layout: side-split) — 첫 시각 자료만 왼쪽 칸, 오른쪽 칸에 카드 위·나머지 시각 자료 아래(.rcol)
+    if (variant.split && vs.length > 1) return `<div class="dk dk-side dk-split${tight}" style="--vw:${variant.vw}fr">${vis(vs.slice(0, 1))}<div class="rcol">${ncards(points, { num: true, head: txt(sl.pointsTitle) })}${vis(vs.slice(1))}</div></div>`;
+    return `<div class="dk dk-side${tight}${tfit}" style="--vw:${variant.vw}fr">${vis(vs)}${ncards(points, { num: true, head: txt(sl.pointsTitle) })}</div>`;
   }
 
-  // 장면 하나(나뉠 수 있음): 코드 줄 범위 20줄 단위, 표는 넘치면 행을 반으로
+  // 장면 하나(나뉠 수 있음): 코드 줄 범위 30줄 단위, 표는 넘치면 행을 반으로
   //   코드 블록마다 자기 줄 범위(ref.lines, 없으면 전체)를 따로 나눕니다 — 한 장면에 코드가 둘이어도 서로의 범위로 잘리지 않게
   function slideScenes(sl, sid, meta) {
     const vis = sl._v || [];
     const ranges = new Map();                                          // 코드 시각 자료 → [[a, b], …]
     vis.forEach((v) => {
       if (v.ref.kind !== 'code' || !(v.status === 'ok' || v.status === 'changed')) return;
-      const n = codeLines(v.el).length;
+      const n = vLines(v).length;
       let [a, b] = Array.isArray(v.ref.lines) && v.ref.lines.length === 2 ? v.ref.lines : [1, n];
       a = Math.max(1, Math.min(a, n)); b = Math.max(a, Math.min(b, n));
       const chunks = [], len = b - a + 1, parts = Math.ceil(len / MAXL);
@@ -259,7 +293,7 @@
       if (parts > 1) PF.note(sid, 'long-code', len, `코드 ${len}줄을 장면 ${parts}개로 나눔`);
       ranges.set(v, chunks);
     });
-    // 코드 조각을 문서 순서대로 장면에 담습니다. 한 장면의 코드는 모두 합쳐 20줄 안팎 — 넘으면 다음 조각부터 "계속" 장면으로
+    // 코드 조각을 문서 순서대로 장면에 담습니다. 한 장면의 코드는 모두 합쳐 30줄 안팎 — 넘으면 다음 조각부터 "계속" 장면으로
     const pages = [[]];                                                // 장면마다 [코드 시각 자료, 줄 범위] 목록
     let used = 0, longOne = false;
     vis.forEach((v) => (ranges.get(v) || []).forEach((ch, i, all) => {
@@ -285,18 +319,43 @@
     return out;
   }
   //   codeChunk(v) = 그 코드의 이번 줄 범위 · tsplit = { v, rows: [a, b) } 행을 나누는 표 하나(다른 표는 그대로 둠)
+  // 직접 고침(2026-11-25): 슬라이드 본문(도입·요점·표·캡션)에서 괄호 속 절 표시 「(§2.6)」「(§2.7·§5.1)」를 화면에서만 뺌.
+  //   원문·data는 그대로(상세 문서에는 그대로 보임). 코드·다이어그램·링크(머리 오른쪽 「상세 문서 §n ↗」)는 건드리지 않음
+  const SEC_REF = /\s*\([^()]*§\s*\d[^()]*\)/g;
+  const SEC_IN = /\s*[,·]\s*§\s*\d+(?:\.\d+)*(?:\s*[·,]\s*§?\s*\d+(?:\.\d+)*)*(?=\s*\))/g;
+  const SEC_OF = /§\s*\d+(?:\.\d+)*의\s*/g;
+  function stripSecRefs(s) {
+    const tw = document.createTreeWalker(s, NodeFilter.SHOW_TEXT, { acceptNode: (n) => (n.parentElement?.closest('pre, code, svg, a, .pf-rlabel, .pf-foot') ? NodeFilter.FILTER_REJECT : NodeFilter.FILTER_ACCEPT) });
+    const hits = [];
+    for (let n = tw.nextNode(); n; n = tw.nextNode()) if (n.nodeValue.includes('§')) hits.push(n);
+    hits.forEach((n) => {
+      n.nodeValue = n.nodeValue.replace(SEC_IN, '')                     // 「(시연 중 직접 발견, §10.2)」→「(시연 중 직접 발견)」(먼저 — 내용과 섞인 괄호는 절 표시만)
+        .replace(SEC_REF, '')                                             // 「(§2.6)」「(성공 연출은 §2.4)」 — 절을 가리키는 괄호는 통째로
+        .replace(SEC_OF, '');                                             // 「§5.5의 부위별 …」→「부위별 …」
+    });
+  }
+  // 장면 id에 걸린 CSS 변수(theme CSS의 `#d-<key> { … }`)를 그리기 전에 읽음 — 빈 장면 껍데기를 잠깐 붙여 계산값을 봄
+  const sceneVar = (id, name) => {
+    const probe = document.createElement('section'); probe.className = 'pf-scene'; probe.id = id; probe.style.display = 'none';
+    document.body.appendChild(probe); const v = getComputedStyle(probe).getPropertyValue(name).trim(); probe.remove(); return v;
+  };
   function fitSlide(sl, vis, sid, part, codeChunk, meta, tsplit = null, depth = 0) {
     const vs = vis.map((v) => vboxHtml(v, v.ref.kind === 'code' ? codeChunk(v) : v.ref.kind === 'table' && tsplit && tsplit.v === v ? tsplit.rows : null));
-    const V = sl.layout === 'full' || sl.layout === 'screens' ? [{}, { tight: true }]
+    let V = sl.layout === 'full' || sl.layout === 'screens' ? [{}, { tight: true }]
       : [{ vw: 1.4 }, { vw: 1.7 }, { vw: 1.15 }, { vw: 1.4, tight: true }, { stack: true }, { stack: true, tight: true }];
+    // 직접 고침(2026-11-25): 장면별 배치 고정 — theme CSS `#d-<key> { --pf-layout: side }`(그림 칸 + 카드 칸) / `stack`(위아래). 맞는 후보가 없으면 원래 후보로
+    const fl = sceneVar(sid, '--pf-layout');
+    if (fl === 'side' || fl === 'stack') { const f = V.filter((v) => (fl === 'stack') === !!v.stack); if (f.length) V = f; }
+    else if (fl === 'side-split' && vis.length > 1) V = [{ vw: 1, split: true }, { vw: 1.2, split: true }, { vw: 0.85, split: true }, { vw: 1, split: true, tight: true }];
     const build = (v) => {
-      const s = PF.scene({ id: sid, tpl: 'D', eyebrow: meta.chapter, rlabel: meta.rlabel, title: txt(sl.title) || meta.chapter, sub: part, lead: part && part !== `1/${part.split('/')[1]}` ? '' : txt(sl.lead), foot: meta.foot, sec: meta.chapter, group: meta.chapter, stitle: txt(sl.title) });
+      const s = PF.scene({ id: sid, tpl: 'D', eyebrow: meta.eyebrow || meta.chapter, rlabel: meta.rlabel, rhtml: meta.rhtml, title: txt(sl.title).replace(SEC_NO, '') || meta.chapter, sub: part, lead: part && part !== `1/${part.split('/')[1]}` ? '' : txt(sl.lead), foot: meta.foot, sec: meta.chapter, group: meta.chapter, stitle: txt(sl.title) });
       s.classList.add(`l-${sl.layout || 'visual'}`);
       if (meta.err) s.dataset.pfErr = meta.err;
       if (sl.edited) s.dataset.pfEdited = '1';                       // 장면 고치기로 고친 장면(미리보기 개요에 ✎)
       PF.body(s).innerHTML = `<div class="pf-fill">${bodyHtml(sl, vs, v)}</div>`;
+      stripSecRefs(s);
       if (meta.auto) s.querySelector('.pf-foot > span').insertAdjacentHTML('beforeend', '<span class="pf-autoband" data-pf-ui="note">예전 데이터로 자동 구성 — /portfolio-build를 다시 실행하면 슬라이드가 됩니다</span>');
-      return PF.fitVisuals(s);
+      return PF.balanceX(PF.fitVisuals(s));                            // 직접 고침(2026-11-25): 본문 좌우 여백 같게(PF.balanceX)
     };
     // 들어가는 변형 중 시각 자료가 가장 크게 보이는 것(같으면 앞의 것). 가로로 긴 다이어그램은 위아래 배치가, 세로로 긴 것은 옆 배치가 이김
     let best = null;
@@ -353,14 +412,22 @@
         if (!PF.keyOk(sl.key)) err = `key-invalid: "${sl.key || ''}"`;
         if (used.has(sid)) { err = `key-invalid: "${sl.key}" 중복`; sid = `d${ci + 1}-${si + 1}`; }
         used.add(sid);
-        const rl = [PF.tab(sl.tab), `${si + 1}/${c.slides.length}`].filter(Boolean).join(' · ');
-        const scenes = slideScenes(sl, sid, { chapter: c.title || '', rlabel: rl, foot, auto, err });
+        // 직접 고침(2026-11-25): 장면 머리 — 왼쪽 위 「장 제목 · 종류 라벨」, 오른쪽 위는 그 절의 상세 문서 링크(「상세 문서 §2.2 ↗」).
+        //   제목 앞 절 번호는 떼고 링크의 §번호로. 번호가 제목에 없으면 sectionPath에서 가장 가까운 번호 붙은 절
+        const tab = PF.tab(sl.tab), path = sl.sectionPath || [];
+        //   직접 고침(2026-11-25): 프로젝트 개요 장(제목 「프로젝트 개요」 또는 key intro·overview)은 라벨 없이 장 제목만
+        const isIntro = /^(intro|overview)$/.test(c.key || '') || PF.normTitle(c.title || '') === PF.normTitle('프로젝트 개요');
+        const eyebrow = [c.title || '', isIntro ? '' : tab].filter(Boolean).join(' · ');
+        const num = [txt(sl.title), ...[...path].reverse()].map((t) => (SEC_NO.exec(t || '') || [])[1]).find(Boolean) || '';
+        const href = PF.docUrl(p.id, path.length ? `sec=${encodeURIComponent(path[path.length - 1])}` : '');
+        const rhtml = PF.link({ href, kind: 'page', cls: 'pf-headlink', label: esc(num ? PF.t('deck.doc-ref', { n: num }) : PF.t('deck.doc-ref-plain')) });
+        const scenes = slideScenes(sl, sid, { chapter: c.title || '', eyebrow, rhtml, foot, auto, err });
         scenes.forEach((s) => used.add(s.id));
         slides.push({ sl, scenes });
       });
       const chs = chapterScene(c, ci, chId, slides, foot, auto, p.title);
       chapterScenes.push(chs, ...slides.flatMap((x) => x.scenes));
-      tocItems.push({ c, chId, n: slides.reduce((a, x) => a + x.scenes.length, 0) });
+      tocItems.push({ c, chId, n: slides.reduce((a, x) => a + x.scenes.length, 0), endId: (slides.at(-1)?.scenes.at(-1) || chs).id });
     });
     const retro = buildRetro(p.retro || {}, p, foot, auto);
     const end = endScene(p, foot, ext, auto);
@@ -403,7 +470,8 @@
 
   // 목록 한 줄(같은 슬라이드 안 이동 = 같은 탭). 쪽 번호(p.N)는 키트가 채움
   //   ld = 장 표지 넉넉한 변형에서 그 장면의 도입(lead, 데이터의 글 조각 그대로)
-  const item = (n, t, d, ref, ld = '') => `<li><a href="#${esc(ref)}" data-pf-ref="${esc(ref)}"><span class="n">${esc(n)}</span><span class="tx"><span class="t">${inline(t)}</span>${d ? `<span class="d">${esc(d)}</span>` : ''}${ld ? `<span class="ld">${inline(ld)}</span>` : ''}</span><span class="pg"><span class="pf-n-screen">p.00</span><span class="pf-n-print"></span></span></a></li>`;
+  //   endRef = (목차) 이 항목의 마지막 장면 id — 있으면 키트가 쪽 번호를 「p.n — m」으로 채움(직접 고침 2026-11-25)
+  const item = (n, t, d, ref, ld = '', endRef = '') => `<li><a href="#${esc(ref)}" data-pf-ref="${esc(ref)}"${endRef ? ` data-pf-ref-end="${esc(endRef)}"` : ''}><span class="n">${esc(n)}</span><span class="tx"><span class="t">${inline(t)}</span>${d ? `<span class="d">${esc(d)}</span>` : ''}${ld ? `<span class="ld">${inline(ld)}</span>` : ''}</span><span class="pg"><span class="pf-n-screen">p.00</span><span class="pf-n-print"></span></span></a></li>`;
   const band = (s, auto) => { if (auto) s.querySelector('.pf-foot > span').insertAdjacentHTML('beforeend', '<span class="pf-autoband" data-pf-ui="note">예전 데이터로 자동 구성</span>'); return s; };
 
   // 장 표지: 장면이 적으면(4개 이하) 넉넉한 변형 — 목차 크기 목록 + 장면마다 도입(결정 I7). 안 들어가면 보통 → 촘촘
@@ -412,8 +480,11 @@
     const make = (mode) => {
       const s = PF.scene({ id: chId, tpl: 'CH', kind: 'bare', cls: mode === 'compact' ? 'compact' : '', foot, sec: c.title, group: c.title, stitle: c.title });
       const roomy = mode === 'roomy';
-      const list = slides.map((x, i) => item(String(i + 1), txt(x.sl.title) || c.title, PF.tab(x.sl.tab), x.scenes[0].id, roomy ? txt(x.sl.lead) : '')).join('');
-      PF.body(s).innerHTML = `<div class="toprow"><span class="pf-eyebrow long">${esc(ptitle)}</span><span class="rl">${esc(PF.t('deck.ch-count', { n: slides.length }))}</span></div>
+      // 직접 고침(2026-11-25): 절 목록 제목 앞 번호(「2.2 」) 떼기
+      const list = slides.map((x, i) => item(String(i + 1), txt(x.sl.title).replace(SEC_NO, '') || c.title, PF.tab(x.sl.tab), x.scenes[0].id, roomy ? txt(x.sl.lead) : '')).join('');
+      // 직접 고침(2026-11-25): 장 표지 오른쪽 위 「장면 n개」 빼기
+      // 직접 고침(2026-11-25): 장 표지 윗줄(프로젝트 이름) 빼기 — 꼬리말 왼쪽에 늘 있음
+      PF.body(s).innerHTML = `
         <div class="ch-mid"><div><p class="ch-no">${esc(PF.t('en.chapter'))} ${String(ci + 1).padStart(2, '0')}</p><h2 class="ch-t">${esc(c.title)}</h2>${DOT}</div>
         <div class="ch-list t-P2${mode === 'normal' ? '' : ' ' + mode}"><ol class="toc-list${roomy ? '' : ' sub'}">${list}</ol></div></div>`;
       return band(s, auto);
@@ -424,16 +495,18 @@
   }
 
   function tocScene(p, foot, items, retro, auto) {
-    const rows = [...items.map((x, i) => [String(i + 1).padStart(2, '0'), x.c.title, PF.t('deck.toc-count', { n: x.n }), x.chId]),
-      retro.length && [String(items.length + 1).padStart(2, '0'), PF.t('deck.retro'), PF.t('deck.retro-desc'), retro[0].id],
-      [String(items.length + (retro.length ? 2 : 1)).padStart(2, '0'), PF.t('deck.more'), PF.t('deck.more-desc'), 'end']].filter(Boolean);
+    // 직접 고침(2026-11-25): 장 줄의 「장면 n장」 설명 빼고, 쪽 번호를 「p.시작 — 끝」 범위로(회고·더 보기 줄의 설명은 그대로)
+    const rows = [...items.map((x, i) => [String(i + 1).padStart(2, '0'), x.c.title, '', x.chId, '', x.endId]),
+      retro.length && [String(items.length + 1).padStart(2, '0'), PF.t('deck.retro'), PF.t('deck.retro-desc'), retro[0].id, '', retro.at(-1).id],
+      [String(items.length + (retro.length ? 2 : 1)).padStart(2, '0'), PF.t('deck.more'), PF.t('deck.more-desc'), 'end', '', 'end']].filter(Boolean);
     const make = (compact) => {
       const s = PF.scene({ id: 'toc', tpl: 'P2', kind: 'bare', cls: compact ? 'compact' : '', foot, sec: PF.t('name.toc'), stitle: PF.t('name.toc') });
       // 직접 고침(2026-11-24): 목차 제목은 영문 CONTENTS(en.contents) 대신 「목차」(name.toc, 문구 표에서 바꿀 수 있음)
+      // 직접 고침(2026-11-25): 목차 오른쪽 위 프로젝트 이름(toc-sub)·회고 장면 오른쪽 위 프로젝트 이름 빼기 — 꼬리말 왼쪽에 늘 있음
       // 직접 고침(2026-11-24): 슬라이드 공용 — 목차는 한 열에 다 들어가도 늘 2열(항목 2개 이상). 홀수면 왼쪽이 하나 더(올림)
       const two = rows.length > 1, half = two ? Math.ceil(rows.length / 2) : rows.length;
       const col = (list) => `<section><ol class="toc-list">${list.map((r) => item(...r)).join('')}</ol></section>`;
-      PF.body(s).innerHTML = `<div class="toc-top"><p class="toc-h">${esc(PF.t('name.toc'))}</p><p class="toc-sub">${esc(p.title)}</p></div>${DOT}<div class="toc-cols${two ? '' : ' one'}">${col(rows.slice(0, half))}${rows.length > half ? col(rows.slice(half)) : ''}</div>`;
+      PF.body(s).innerHTML = `<div class="toc-top"><p class="toc-h">${esc(PF.t('name.toc'))}</p></div>${DOT}<div class="toc-cols${two ? '' : ' one'}">${col(rows.slice(0, half))}${rows.length > half ? col(rows.slice(half)) : ''}</div>`;
       return band(s, auto);
     };
     for (const compact of [false, true]) { const s = make(compact); if (PF.fitsM(s)) return s; }
@@ -448,7 +521,7 @@
     const achHtml = ach.length ? `<div class="rt-ach card"><p class="rt-h ok">✓ ${esc(PF.t('deck.achieved'))}</p><ul>${ach.map((x) => `<li>${inline(x)}</li>`).join('')}</ul></div>` : '';
     const pairHtml = n ? `<table class="mini"><thead><tr><th scope="col">△ ${esc(PF.t('deck.regrets'))}</th><th scope="col">→ ${esc(PF.t('deck.plans'))}</th></tr></thead><tbody>${Array.from({ length: n }, (_, i) => `<tr><td>${inline(reg[i] || '')}</td><td class="p">${inline(plan[i] || '')}</td></tr>`).join('')}</tbody></table>` : '';
     const make = (html, one, i, cnt) => {
-      const s = PF.scene({ id: i === 0 ? 'retro' : `retro-${i + 1}`, tpl: 'P6', eyebrow: PF.t('deck.retro-eyebrow'), rlabel: p.title, title: PF.t('deck.retro'), sub: cnt > 1 ? `${i + 1}/${cnt}` : '', foot,
+      const s = PF.scene({ id: i === 0 ? 'retro' : `retro-${i + 1}`, tpl: 'P6', eyebrow: PF.t('deck.retro-eyebrow'), rlabel: '', title: PF.t('deck.retro'), sub: cnt > 1 ? `${i + 1}/${cnt}` : '', foot,
         sec: PF.t('deck.retro'), group: PF.t('deck.retro') });
       PF.body(s).innerHTML = `<div class="pf-fill"><div class="rt${one ? ' one' : ''}">${html}</div></div>`;
       return band(s, auto);

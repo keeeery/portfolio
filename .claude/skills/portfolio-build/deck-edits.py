@@ -43,7 +43,7 @@ KEY_RE = re.compile(r'^[a-z][a-z0-9-]{1,31}$')
 LAYOUTS = ('overview', 'visual', 'code', 'full', 'screens', 'problem')
 TABS = ('개요', '구조', '흐름', '구현', '선택', '문제 해결', '결과', '')
 KINDS = ('mermaid', 'code', 'table', 'image')
-SLIDE_FIELDS = ('key', 'chapter', 'layout', 'tab', 'title', 'lead', 'sectionPath', 'points', 'visuals')
+SLIDE_FIELDS = ('key', 'chapter', 'layout', 'tab', 'title', 'lead', 'sectionPath', 'points', 'visuals', 'pointsTitle')   # 직접 수정(2026-11-25): pointsTitle = 요점 카드 묶음 위 소제목(선택)
 KIND_KO = {'mermaid': '다이어그램', 'code': '코드', 'table': '표', 'image': '그림'}
 
 for _s in (sys.stdout, sys.stderr):                                # Claude가 읽는 파이프는 UTF-8로(한글 깨짐 방지)
@@ -119,6 +119,25 @@ def unemph(t):                                                   # 굵게·기�
     return re.sub(r'~~(.+?)~~', r'\1', t)
 
 
+_ELLIPSIS = {'...', '…', '// ...', '// …', '/* ... */', '/* … */'}
+
+
+def code_tokens(text, skip_ellipsis=False):                       # 낱말·기호 단위(공백·줄바꿈은 무시)
+    lines = text.replace('\r\n', '\n').split('\n')
+    if skip_ellipsis:
+        lines = [x for x in lines if x.strip() not in _ELLIPSIS]
+    return re.findall(r'\w+|[^\w\s]', '\n'.join(lines))
+
+
+def code_diff(src, slide):
+    """슬라이드 전용 코드(slideText)를 원문 코드와 견줌 → 'same'(줄바꿈·들여쓰기만 다름) · 'reduced'(원문에서 일부를 뺌, 생략 줄 … 허용) · 'added'(원문에 없는 글자)"""
+    a, b = code_tokens(src), code_tokens(slide, skip_ellipsis=True)
+    if a == b and len(code_tokens(slide)) == len(b):
+        return 'same'
+    it = iter(a)
+    return 'reduced' if all(t in it for t in b) else 'added'
+
+
 def table_cells(line):
     t = line.strip().replace('\\|', '\x01')
     if t.startswith('|'):
@@ -158,7 +177,7 @@ class Doc:
                 if y and not (kind == 'mermaid' and y.startswith('%%')):
                     first = y
                     break
-            self.blocks.append({'kind': kind, 'line': fstart, 'fp': squash(first)[:60]})
+            self.blocks.append({'kind': kind, 'line': fstart, 'fp': squash(first)[:60], 'body': '\n'.join(fbody)})   # 직접 수정(2026-11-25): body = 슬라이드 전용 코드(slideText) 대조용
 
         i, n = 0, len(L)
         while i < n:
@@ -434,6 +453,8 @@ def validate(p, chapters, doc):
         errs.append('title은 {"text", "verbatim"} 글 조각이어야 함(빈 글 안 됨)')
     if p.get('lead') is not None and not is_piece(p.get('lead')):
         errs.append('lead는 글 조각 또는 null이어야 함')
+    if p.get('pointsTitle') is not None and not is_piece(p.get('pointsTitle')):
+        errs.append('pointsTitle은 글 조각 또는 null이어야 함')
     sp = p.get('sectionPath')
     if not is_path(sp):
         errs.append('sectionPath는 제목 글자 배열이어야 함')
@@ -459,6 +480,11 @@ def validate(p, chapters, doc):
                 errs.append('visuals[%d] %s에 지문 fp가 없음' % (i, KIND_KO[v['kind']]))
         if 'n' in v and not (isinstance(v['n'], int) and not isinstance(v['n'], bool) and v['n'] >= 1):
             errs.append('visuals[%d]의 n은 1 이상의 정수' % i)
+        if 'slideText' in v:                                         # 직접 수정(2026-11-25): 슬라이드에만 보일 코드(원문 코드의 줄바꿈·들여쓰기를 바꾸거나 일부를 뺀 것)
+            if v['kind'] != 'code':
+                errs.append('visuals[%d]의 slideText는 코드(kind "code")에만 쓸 수 있음' % i)
+            elif not (isinstance(v['slideText'], str) and v['slideText'].strip()):
+                errs.append('visuals[%d]의 slideText는 빈 글이 아닌 문자열' % i)
         if v['kind'] == 'code' and 'lines' in v:
             ln = v['lines']
             if not (isinstance(ln, list) and len(ln) == 2 and all(isinstance(x, int) for x in ln) and 1 <= ln[0] <= ln[1]):
@@ -498,6 +524,7 @@ def validate(p, chapters, doc):
 
     piece(p.get('title'), '제목', body)
     piece(p.get('lead'), '도입', body)
+    piece(p.get('pointsTitle'), '요점 소제목', body)
     for x in pts:
         piece(x, '요점(%s)' % x['label'] if x.get('label') else '요점', body)
     for i, v in enumerate(vis):
@@ -520,6 +547,15 @@ def validate(p, chapters, doc):
         got, want = bl[nth - 1]['fp'], squash(v['fp'])
         if (got != want) if kind == 'table' else (got[:60] != want[:60]):
             warns.append('visuals[%d]: §%s의 %s %d번째 지문이 다릅니다 — 원문 "%s"(미리보기에 빨간 띠)' % (i, vh['text'], KIND_KO[kind], nth, got))
+        if kind == 'code' and isinstance(v.get('slideText'), str):
+            how = code_diff(bl[nth - 1]['body'], v['slideText'])
+            if how == 'added':
+                errs.append('visuals[%d]의 slideText에 원문 코드(§%s 코드 %d번째)에 없는 글자가 있음 → 줄바꿈·들여쓰기만 바꾸거나 원문에서 빼기만 할 수 있습니다(새 코드는 프로젝트 문서에 먼저)' % (i, vh['text'], nth))
+            elif how == 'reduced':
+                first = next((x.strip() for x in v['slideText'].split('\n') if x.strip()), '')
+                pieces.append(('슬라이드 코드(원문에서 일부를 뺌)', first[:60]))
+            else:
+                warns.append('visuals[%d]: 슬라이드 코드가 원문과 줄바꿈·들여쓰기만 다릅니다(slideText, 상세 문서는 원문 그대로)' % i)
     return errs, warns, pieces, cross
 
 
@@ -657,7 +693,12 @@ def apply_edits(data, edits, doc, rep):
             rep.add('필수', '고친 장면 "%s"의 key가 슬라이드의 다른 장면과 겹칩니다 → 반영하지 않았습니다' % k)
             S.remove(out)
             continue
-        if p.get('after') is not None:
+        if p.get('after') == '^':                                    # 직접 수정(2026-11-26): "^" = 그 장의 맨 앞
+            same = [s for s in S if s.get('chapter') == out['chapter'] and s is not out]
+            if same:
+                S.remove(out)
+                S.insert(S.index(same[0]), out)
+        elif p.get('after') is not None:
             a = [s for s in S if s.get('key') == p['after'] and s is not out]
             if not a:
                 rep.add('권장', '고친 장면 "%s"의 after "%s"가 슬라이드에 없습니다(숨겼거나 없어진 장면) → 순서를 옮기지 않았습니다' % (k, p['after']))

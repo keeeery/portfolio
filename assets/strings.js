@@ -71,6 +71,9 @@ const PFStr = (() => {
     ['deck.cover-eyebrow', '{en.project} · {name.deck}', '슬라이드 · 표지 왼쪽 위', 20],
     ['deck.ch-count', '장면 {n}개', '슬라이드 · 장 표지 오른쪽 위', 10],
     ['deck.toc-count', '장면 {n}장', '슬라이드 · 목차 줄 설명', 10],
+    // 직접 고침(2026-11-25): 장면 머리 오른쪽 — 그 절의 상세 문서로 가는 링크(§번호가 없는 절은 -plain)
+    ['deck.doc-ref', '{name.doc-short} §{n}', '슬라이드 · 장면 머리 오른쪽 링크', 16],
+    ['deck.doc-ref-plain', '{name.doc-short}', '슬라이드 · 장면 머리 오른쪽 링크(절 번호 없음)', 12],
     ['deck.retro', '결과와 회고', '슬라이드 · 회고 장면 제목·목차', 12],
     ['deck.retro-eyebrow', '결과 · 회고', '슬라이드 · 회고 장면 왼쪽 위', 12],
     ['deck.retro-desc', '{deck.achieved} · {deck.regrets} → {deck.plans}', '슬라이드 · 목차의 회고 줄 설명', 24],

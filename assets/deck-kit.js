@@ -178,8 +178,12 @@
       const sc = t ? (t.classList.contains('pf-scene') ? t : t.closest('.pf-scene')) : null;
       const si = scenes.indexOf(sc), pj = P.indexOf(sc);
       const scr = a.querySelector('.pf-n-screen'), prn = a.querySelector('.pf-n-print');
-      if (scr) scr.textContent = si >= 0 ? `p.${si + 1}` : '';
-      if (prn) prn.textContent = pj >= 0 ? `p.${pj + 1}` : refUrl(a.dataset.pfRef);
+      // 직접 고침(2026-11-25): data-pf-ref-end(목차)가 있으면 「p.시작 — 끝」(한 장이면 「p.n」)
+      const endEl = a.dataset.pfRefEnd ? document.getElementById(a.dataset.pfRefEnd) : null;
+      const esc2 = endEl ? (endEl.classList.contains('pf-scene') ? endEl : endEl.closest('.pf-scene')) : null;
+      const range = (i, j) => (j > i ? `p.${i + 1} — ${j + 1}` : `p.${i + 1}`);
+      if (scr) scr.textContent = si < 0 ? '' : esc2 ? range(si, scenes.indexOf(esc2)) : `p.${si + 1}`;
+      if (prn) prn.textContent = pj < 0 ? refUrl(a.dataset.pfRef) : esc2 ? range(pj, P.indexOf(esc2)) : `p.${pj + 1}`;
     });
     hudSync();
   }
@@ -311,7 +315,7 @@
   }
 
   // 한 장씩 보기 클릭: 데스크톱(마우스)에서는 장면을 눌러도 넘기지 않음(글자 고르기·더블클릭 보호).
-  //   넘기는 길 = HUD ‹ ›, 키보드, 휠, 레터박스(장면 바깥 가장자리) 클릭, 터치(탭 구역: 왼쪽 30% 이전 · 나머지 다음, 스와이프)
+  //   넘기는 길 = HUD ‹ ›, 키보드, 휠, 터치(탭 구역: 왼쪽 30% 이전 · 나머지 다음, 스와이프). 레터박스(장면 바깥 빈 곳) 클릭은 직접 고침(2026-11-25)으로 뺌
   let swallowClickUntil = 0, tch = null, lastTouch = null;
   const CONTROL = 'a, button, input, select, textarea, summary, label, video, audio, [contenteditable], [data-pf-noclick]';
   // 휴대폰 터치 보정: 손가락이 실제로 닿은 점이 링크·버튼 밖인데 브라우저가 가장 가까운 링크로 옮긴 탭(배율이 작은 목차 장면 등)이면 true.
@@ -332,7 +336,7 @@
       e.preventDefault(); x = lastTouch.x;
     }
     const r = sc.getBoundingClientRect();
-    if (e.target === deck) { go(cur + (e.clientX < (r.left + r.right) / 2 ? -1 : 1)); return; }   // 가장자리(레터박스)
+    if (e.target === deck) return;   // 직접 고침(2026-11-25): 장면 바깥 빈 곳(레터박스) 클릭으로는 넘기지 않음(예전: 왼쪽 절반 이전 · 오른쪽 절반 다음)
     if (!sc.contains(e.target) || lastPointerType !== 'touch') return;
     if ((window.visualViewport?.scale || 1) > 1.01) return;   // 손가락으로 확대한 상태면 화면 이동에 맡김
     const sel = getSelection(); if (sel && !sel.isCollapsed && String(sel).trim()) return;
@@ -441,10 +445,13 @@
     //   지원하지 않는 브라우저·움직임 줄이기 설정이면 예전처럼 바로 바뀜. 모양은 deck-kit.css 맨 끝 ::view-transition-*
     const s = scenes[cur];
     if (document.startViewTransition && !reduced() && s) {
+      // 직접 추가(2026-11-25): 방향 표시 — 세로로 보기 → 하나씩 보기면 나머지 슬라이드가 페이드아웃, 반대면 페이드인(deck-kit.css pf-vt-to-*)
+      const html = document.documentElement, dir = v === 'deck' ? 'pf-vt-to-deck' : 'pf-vt-to-scroll';
+      html.classList.remove('pf-vt-to-deck', 'pf-vt-to-scroll'); html.classList.add(dir);
       s.style.viewTransitionName = 'pf-vt-scene';
       const vt = document.startViewTransition(doSwitch);
       vt.ready.catch(() => { /* 건너뛴 전환(빠르게 또 누름 등) — 바뀌는 것은 그대로 */ });
-      vt.finished.finally(() => { s.style.viewTransitionName = ''; });
+      vt.finished.finally(() => { s.style.viewTransitionName = ''; html.classList.remove(dir); });
     } else doSwitch();
     say(cur, v === 'deck' ? '슬라이드 보기로 바꿨습니다.' : '한 번에 보기로 바꿨습니다.');
   }
@@ -693,11 +700,13 @@
     if (!/hidden|clip/.test(cs.overflowX + cs.overflowY)) add('overflow-visible', '장면 overflow가 visible');
     if (s.scrollHeight > s.clientHeight + 1 || s.scrollWidth > s.clientWidth + 1) add('scene-scroll', `장면 넘침 ${s.scrollWidth}×${s.scrollHeight}`);
     const sr = s.getBoundingClientRect();
-    const k = sr.width / W || 1, tol = 0.5 * k;
+    // 직접 고침(2026-11-24): 화면의 장면은 zoom으로 키워 확대된 크기에서 다시 배치하므로 글자 줄 높이 반올림으로 1px 안팎 차이가 생김.
+    //   배치를 정할 때(layoutOnly, 배율 1 측정)는 예전처럼 엄격하게, 화면에 보인 장면을 점검할 때만 화면 1.5px·본문 1px까지 허용
+    const k = sr.width / W || 1, tol = layoutOnly ? 0.5 * k : Math.max(0.5 * k, 1.5), slack = layoutOnly ? 0 : 1;
     const body = s.querySelector(':scope > .pf-body');
     const offStage = view === 'deck' && !isPrint() && s.parentElement === deck && !s.classList.contains('pf-cur');
     const br = body ? body.getBoundingClientRect() : sr;
-    if (body && (body.scrollHeight > body.clientHeight || body.scrollWidth > body.clientWidth))
+    if (body && (body.scrollHeight > body.clientHeight + slack || body.scrollWidth > body.clientWidth + slack))
       add('body-scroll', `본문 넘침 ${body.scrollWidth}×${body.scrollHeight} > ${body.clientWidth}×${body.clientHeight}`);
     const head = s.querySelector(':scope > .pf-head');
     if (head && body) { const hb = head.getBoundingClientRect().bottom; if (hb > br.top + tol) add('head-overlap', `머리(제목)가 본문과 겹침 ${((hb - br.top) / k).toFixed(1)}px`); }

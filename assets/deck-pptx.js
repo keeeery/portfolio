@@ -608,10 +608,11 @@
   function prepClone(scene) {
     const c = scene.cloneNode(true);
     c.classList.remove('pf-cur', 'pf-enter');
-    c.style.transform = 'none'; c.style.visibility = 'visible'; c.style.margin = '0'; c.style.boxShadow = 'none';
+    c.style.transform = 'none'; c.style.zoom = '1'; c.style.visibility = 'visible'; c.style.margin = '0'; c.style.boxShadow = 'none';
     c.querySelectorAll('.pf-n-print').forEach((e) => { e.style.display = 'inline'; });
     c.querySelectorAll('[data-pf-reveal]').forEach((e) => { e.style.opacity = '1'; e.style.transform = 'none'; });
     c.querySelectorAll('img').forEach((i) => { i.loading = 'eager'; });
+    c.querySelectorAll('img.pf-vid-under').forEach((i) => { i.classList.remove('pf-vid-under'); i.style.opacity = '1'; });   // 직접 고침: 영상 밑 포스터(화면에서만 투명, common.js)는 PPTX에 그대로 넣음
     return c;
   }
   const settle = (imgs) => Promise.all(imgs.map((i) => (i.complete ? null : new Promise((r) => { i.addEventListener('load', r, { once: true }); i.addEventListener('error', r, { once: true }); setTimeout(r, 15000); }))));

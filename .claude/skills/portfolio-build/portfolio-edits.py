@@ -520,6 +520,8 @@ def save_deck_text(request):
       deckOnly = true면 프로젝트 문서에 같은 글이 있어도 deck-edits.json에만 저장, dryRun = true면 저장 위치만 알려 줌
     반환: { ok, where: 저장 위치 설명, canChooseOverride: 프로젝트 문서를 빼고 슬라이드에만 저장할 수 있는지 }
     """
+    if request.get("field") == "code":                              # 직접 수정(2026-11-25): 슬라이드에만 보일 코드(slideText)
+        return save_deck_code(request)
     project_id = request["project"]
     entry_key = deck_text_entry_key(request)
     data_path = project_data_path(project_id)
@@ -707,6 +709,9 @@ def apply_deck_text(project_id):
     data_path = project_data_path(project_id)
     messages = []
     for entry in entries:
+        if entry.get("field") == "code":                              # 직접 수정(2026-11-25): 슬라이드 전용 코드
+            messages += apply_deck_code(project_id, data_path, entry)
+            continue
         place = f"장면 {entry.get('slide')} {entry.get('field')}{' ' + str(entry.get('n')) if entry.get('n') else ''}"
         slides_path, base_path = deck_text_json_paths(read_json(data_path), entry)
         if slides_path is None:
@@ -725,6 +730,140 @@ def apply_deck_text(project_id):
         else:
             messages.append(f"[참고] {place}: 고친 글을 반영했습니다")
     return messages
+
+
+# ── 슬라이드 전용 코드(직접 추가 2026-11-25) ─────────────────────
+#   편집 모드에서 슬라이드의 코드를 "슬라이드에만" 고치면 deck-edits.json "deckText"에 { slide, field: "code", n: visuals 번호, value, from }로 남기고,
+#   data 장면 visuals[n-1]의 slideText에 씁니다(project-deck.js가 이 글로 그림, 상세 문서는 원문 그대로).
+#   원문 코드의 줄바꿈·들여쓰기를 바꾸거나 일부를 빼는 것만 받습니다(deck-edits.py code_diff — 원문에 없는 글자는 거절).
+#   원문 코드와 같게 되돌리면 그 줄을 지우고 slideText도 지웁니다.
+
+def save_deck_code(request):
+    """슬라이드 전용 코드 저장(또는 dryRun이면 저장 위치만). request: { project, slide, n, expected: 화면을 그릴 때의 슬라이드 코드, value, dryRun? }"""
+    project_id = request["project"]
+    entry_key = {"slide": str(request.get("slide", "")), "field": "code", "n": int(request["n"])}
+    data_path = project_data_path(project_id)
+    data = read_json(data_path)
+    visual_paths = deck_code_visual_paths(data, entry_key)
+    if visual_paths["slides"] is None:
+        raise EditError(404, f"슬라이드에서 장면 '{entry_key['slide']}'의 코드 {entry_key['n']}번째를 찾지 못했습니다. 새로고침해 주세요.")
+    visual = value_at(data, visual_paths["slides"])
+    source = deck_code_source(project_id, data, entry_key["slide"], visual)
+    current = visual.get("slideText") if isinstance(visual.get("slideText"), str) else source
+    if clean_code(current) != clean_code(request.get("expected", "")):
+        raise EditError(409, "코드가 화면을 그린 뒤에 바뀌었습니다. 새로고침한 뒤 다시 고쳐 주세요.")
+    edits_where = f"src/{project_id}/{EDITS_FILE_NAME}"
+    answer = {"ok": True, "where": f"{edits_where} (슬라이드에만 — 프로젝트 문서·상세 문서의 코드는 그대로)", "canChooseOverride": False}
+    if request.get("dryRun") == True:
+        return answer
+
+    new_value = clean_code(request.get("value", ""))
+    if new_value == "":
+        raise EditError(400, "빈 코드는 저장할 수 없습니다. 원문으로 되돌리려면 원문 코드와 같게 적어 주세요.")
+    how = deck_edits_module().code_diff(source, new_value)
+    if how == "added":
+        raise EditError(400, "원문 코드에 없는 글자가 있습니다. 슬라이드에서는 줄바꿈·들여쓰기를 바꾸거나 일부를 빼는 것만 됩니다(뺀 자리는 … 한 줄 가능). 코드를 바꾸려면 [슬라이드에만 저장]을 끄고 프로젝트 문서를 고치세요.")
+    is_back_to_source = new_value == clean_code(source)
+    edits_path = ROOT / "src" / project_id / EDITS_FILE_NAME
+    edits = read_json(edits_path) if edits_path.exists() else {"schemaVersion": 1, "pin": [], "hide": []}
+    entries = edits.get(DECK_TEXT_LIST) if isinstance(edits.get(DECK_TEXT_LIST), list) else []
+    entry = find_entry(entries, entry_key)
+    if is_back_to_source:
+        if entry is not None:
+            entries.remove(entry)
+    elif entry is None:
+        entries.append(dict(entry_key, value=new_value, **{"from": current}))
+    else:
+        entry["value"] = new_value
+    edits[DECK_TEXT_LIST] = entries if entries != [] else None
+    write_text(edits_path, deck_edits_module().dump(edits) + "\n")
+    write_deck_code_to_data(data_path, entry_key, None if is_back_to_source else new_value)
+    if how == "reduced":
+        answer["note"] = "원문에서 일부를 뺀 코드입니다."
+    return answer
+
+
+def clean_code(text):
+    """줄 끝(CRLF)·끝 공백 줄을 정리한 코드 글자. 앞 들여쓰기는 그대로."""
+    lines = str(text).replace("\r\n", "\n").replace("\r", "\n").split("\n")
+    while lines and lines[-1].strip() == "":
+        lines.pop()
+    while lines and lines[0].strip() == "":
+        lines.pop(0)
+    return "\n".join(line.rstrip() for line in lines)
+
+
+def deck_code_visual_paths(data, entry_key):
+    """장면 key·visuals 번호 → { slides: deck.slides 안 그 코드 참조의 JSON 경로, base: deck.base 쪽 }. 코드가 아니면 None."""
+    deck = data.get("deck") if isinstance(data.get("deck"), dict) else {}
+    found = {"slides": None, "base": None}
+    for list_name in found:
+        for index, slide in enumerate(deck.get(list_name) or []):
+            if slide.get("key") != entry_key["slide"]:
+                continue
+            visuals = slide.get("visuals") or []
+            number = entry_key["n"]
+            if 1 <= number <= len(visuals) and isinstance(visuals[number - 1], dict) and visuals[number - 1].get("kind") == "code":
+                found[list_name] = ["deck", list_name, index, "visuals", number - 1]
+            break
+    return found
+
+
+def deck_code_source(project_id, data, slide_key, visual):
+    """그 코드 참조가 가리키는 프로젝트 문서 코드 블록의 글(펜스 제외). 못 찾으면 404."""
+    slide = next((x for x in (data.get("deck") or {}).get("slides") or [] if x.get("key") == slide_key), {})
+    path = visual.get("sectionPath") or slide.get("sectionPath") or []
+    deck_edits = deck_edits_module()
+    doc = deck_edits.Doc(project_doc_path(project_id).read_text(encoding="utf-8-sig"))
+    heads = doc.find(path)
+    if len(heads) != 1:
+        raise EditError(404, f"프로젝트 문서에서 절 「{' › '.join(path)}」을 찾지 못했습니다. 새로고침해 주세요.")
+    blocks = doc.blocks_in(heads[0], "code")
+    nth = visual.get("n") or 1
+    if nth > len(blocks):
+        raise EditError(404, f"프로젝트 문서 절 「{path[-1] if path else ''}」에 코드가 {len(blocks)}개뿐입니다.")
+    return blocks[nth - 1]["body"]
+
+
+def write_deck_code_to_data(data_path, entry_key, new_value):
+    """data의 deck.slides·deck.base 그 코드 참조에 slideText를 쓰거나(new_value) 지웁니다(None)."""
+    paths = deck_code_visual_paths(read_json(data_path), entry_key)
+    for json_path in (paths["slides"], paths["base"]):
+        if json_path is None:
+            continue
+        visual = dict(value_at(read_json(data_path), json_path))
+        if new_value is None:
+            if "slideText" not in visual:
+                continue
+            visual.pop("slideText")
+        else:
+            if visual.get("slideText") == new_value:
+                continue
+            visual["slideText"] = new_value
+        write_data_value(data_path, json_path, visual)
+    refresh_applied_digest(data_path)
+
+
+def apply_deck_code(project_id, data_path, entry):
+    """"deckText"의 코드 줄 하나를 data에 덮습니다(멱등). 원문 코드가 바뀌어 더는 원문에서 온 글이 아니면 반영하지 않고 알립니다."""
+    place = f"장면 {entry.get('slide')} 코드 {entry.get('n')}"
+    data = read_json(data_path)
+    paths = deck_code_visual_paths(data, entry)
+    if paths["slides"] is None:
+        return [f"[권장] 슬라이드 전용 코드({place})의 장면·코드를 찾지 못했습니다(장면 key가 바뀌었거나 숨김·코드를 뺌) → 반영하지 않았습니다. "
+                f"편집 모드에서 다시 고치거나 src/{project_id}/{EDITS_FILE_NAME}의 그 줄을 지우세요"]
+    visual = value_at(data, paths["slides"])
+    try:
+        source = deck_code_source(project_id, data, entry["slide"], visual)
+    except EditError as error:
+        return [f"[권장] 슬라이드 전용 코드({place}): {error} → 반영하지 않았습니다"]
+    if deck_edits_module().code_diff(source, entry["value"]) == "added":
+        return [f"[권장] 슬라이드 전용 코드({place})가 지금 원문 코드에 없는 글자를 담고 있습니다(원문 코드를 고쳤나요?) → 반영하지 않았습니다. 편집 모드에서 다시 고치거나 그 줄을 지우세요"]
+    base_done = paths["base"] is None or value_at(data, paths["base"]).get("slideText") == entry["value"]
+    if visual.get("slideText") == entry["value"] and base_done:
+        return []
+    write_deck_code_to_data(data_path, entry, entry["value"])
+    return [f"[참고] {place}: 슬라이드 전용 코드를 반영했습니다"]
 
 
 # ════════════════════════════════════════════════════════════════

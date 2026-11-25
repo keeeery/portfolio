@@ -55,7 +55,8 @@
   // 장면 틀. kind: 'sum'(eyebrow │ 오른쪽 라벨 줄 + 제목 줄) | 'bare'(머리 없음: 표지·목차·맺음)
   //   id = 안정 장면 id(#s=<id> 공유 주소·장면 안 링크 목적지), sec = HUD·개요의 섹션명, stitle = 낭독·개요용 제목, group = 개요 묶음 이름
   //   lead = 제목 아래 도입 1~2줄(머리 높이가 그만큼 늘고 본문 상자가 줄어듦, 결정 G7). 머리는 축소하지 않음
-  function scene({ id = '', tpl, part = 'summary', kind = 'sum', eyebrow = '', rlabel = '', title = '', sub = '', pill = '', lead = '', cls = '', foot = '', titleTag = 'h2', sec = '', stitle = '', group = '' }) {
+  //   rhtml = 오른쪽 라벨 자리에 넣을 HTML(직접 고침 2026-11-25: 상세 문서 링크) — rlabel보다 먼저
+  function scene({ id = '', tpl, part = 'summary', kind = 'sum', eyebrow = '', rlabel = '', rhtml = '', title = '', sub = '', pill = '', lead = '', cls = '', foot = '', titleTag = 'h2', sec = '', stitle = '', group = '' }) {
     const s = document.createElement('section');
     s.className = `pf-scene pf-${kind} t-${tpl}${cls ? ' ' + cls : ''}`;
     if (id) s.id = id;
@@ -65,7 +66,7 @@
     if (group) s.dataset.group = group;
     const row = (right) => `<div class="pf-headrow"><p class="pf-eyebrow">${esc(eyebrow)}</p>${right}</div>`;
     const head = kind === 'bare' ? ''
-      : `<header class="pf-head" data-pf-ui="chrome">${row(rlabel ? `<p class="pf-rlabel">${esc(rlabel)}</p>` : '')}${title ? `<div class="pf-titlerow"><${titleTag} class="pf-title">${inline(title)}${sub ? `<span class="pf-part" data-pf-ui="cont" aria-hidden="true">${esc(sub)}</span>` : ''}</${titleTag}>${pill ? `<span class="pill">${inline(pill)}</span>` : ''}</div>` : ''}${lead ? `<p class="pf-lead">${inline(lead)}</p>` : ''}</header>`;
+      : `<header class="pf-head" data-pf-ui="chrome">${row(rhtml ? `<p class="pf-rlabel">${rhtml}</p>` : rlabel ? `<p class="pf-rlabel">${esc(rlabel)}</p>` : '')}${title ? `<div class="pf-titlerow"><${titleTag} class="pf-title">${inline(title)}${sub ? `<span class="pf-part" data-pf-ui="cont" aria-hidden="true">${esc(sub)}</span>` : ''}</${titleTag}>${pill ? `<span class="pill">${inline(pill)}</span>` : ''}</div>` : ''}${lead ? `<p class="pf-lead">${inline(lead)}</p>` : ''}</header>`;
     s.innerHTML = `${head}<div class="pf-body"></div>` +
       `<footer class="pf-foot" data-pf-ui="chrome"><span>${esc(foot)}</span><span class="pf-num"><span class="pf-n-screen"></span><span class="pf-n-print"></span></span></footer>`;
     return s;
@@ -105,7 +106,7 @@
 
   // ── 글자 하한(결정 G5): 본문 14 · 코드 12 · 라벨 11px. 장면 본문의 보이는 글자를 셋으로 나눠 가장 작은 크기를 잼 ──
   //   .fit-in(시각 자료 맞추기로 이미 줄인 코드·표)은 data-pf-fz 배율을 곱해 실제 크기로 셈. SVG(다이어그램) 글자는 따로(tiny-diagram 참고)
-  const FLOOR = { body: 14, code: 12, label: 11 };
+  const FLOOR = { body: 14, code: 10.5, label: 11 };   // 직접 고침(2026-11-24): 코드 하한 12 → 10.5px — 코드 글꼴이 JetBrains Mono(글자 폭 0.6em)라 같은 폭 기준으로 예전 D2Coding 12px(0.5em)에 해당
   const CODE_SEL = 'pre, code, kbd, .url, .pg, .mono';
   const LABEL_SEL = '.fe-a, .pf-eyebrow, .pf-rlabel, .pf-part, .tags li, .badge, .labelchip, .toc-lb, .nlabel, figcaption, .chip, th, .lb, .lk a, .pc-links b, .cv-lb, .rl, .toc-sub, .kick, .cap, .ix, .lc-k, .meta-k, .fe-k, .num, .toc-list .n';
   function minFonts(root) {
@@ -190,7 +191,7 @@
   }
 
   // ── 참고 지표(결정 G8): 빨간 배지·audit에 넣지 않고 report().info.notes에만. {id, type, value, detail} — 장면 번호는 report()가 채움 ──
-  //   type: low-fill(채움률 60% 미만) · tiny-diagram(다이어그램 실효 글자 10px 미만) · long-code(20줄 넘어 나뉨) · many-scenes(30장 초과) · auto-mode · font-floor
+  //   type: low-fill(채움률 60% 미만) · tiny-diagram(다이어그램 실효 글자 10px 미만) · long-code(30줄 넘어 나뉨) · many-scenes(30장 초과) · auto-mode · font-floor
   function note(id, type, value, detail = '') {
     const info = window.PFScene.info || (window.PFScene.info = {});
     (info.notes || (info.notes = [])).push({ id, type, value, detail });
@@ -214,6 +215,10 @@
   function noteFill(scenes, { fill = true } = {}) {
     scenes.forEach((s) => {
       s.querySelectorAll('.vbox[data-eff]').forEach((b) => {
+        if (b.dataset.split) {                                           // 직접 추가(2026-11-25): 두 도막으로 나눈 다이어그램
+          const p = JSON.parse(b.dataset.split);
+          note(s.id, 'split-diagram', +(+b.dataset.eff).toFixed(1), `세로로 긴 다이어그램을 두 도막으로 나눔(글자 약 ${Math.round(+b.dataset.eff0)}px → ${Math.round(+b.dataset.eff)}px, 잘린 선 ${p.xs.length}개)`);
+        }
         const eff = +b.dataset.eff; if (eff >= 10) return;
         const why = { h: '세로로 긴 그림 — 높이에 막힘', w: '가로로 긴 그림 — 폭에 막힘', multi: '다른 자료와 한 장면 — 나누면 커짐' }[b.dataset.lim] || '';
         note(s.id, 'tiny-diagram', +eff.toFixed(1), `다이어그램 글자가 약 ${Math.round(eff)}px로 작음${why ? `(${why}, ${b.dataset.vb})` : ''}`);
@@ -237,25 +242,119 @@
   //   1) 장면에 .pf-sizing을 붙여 .vis가 쓸 수 있는 칸 크기(W×H)를 잼  2) 한 개/세로로 쌓기/가로로 늘어놓기 중 가장 크게 보이는 배치
   //   3) 크기를 px로 적고 .pf-sizing을 떼면 내용 높이만큼만 차지 → .pf-fill이 세로 가운데로
   //   코드·표는 CSS zoom으로 줄임(글자 하한: 코드 12/14, 표 14/15). 하한 아래로는 줄이지 않고 넘침으로 둠(→ 변형·나눔·잘림 띠)
-  //   다이어그램은 쪼개지 않고 줄임(Q9). 실효 글자 = 16px × 표시 폭 ÷ viewBox 폭, 10px 미만이면 tiny-diagram 참고
+  //   다이어그램은 줄임(Q9). 실효 글자 = 16px × 표시 폭 ÷ viewBox 폭, 10px 미만이면 tiny-diagram 참고
+  //   직접 추가(2026-11-25): 슬라이드 공용 — 세로로 긴 다이어그램의 실효 글자가 SPLIT_EFF 미만이면 칸이 없는 빈 줄에서 위·아래 두 도막으로 잘라
+  //   왼쪽(위 도막) → 오른쪽(아래 도막)으로 나란히 놓음(같은 SVG를 두 번, viewBox만 다르게). 글자가 SPLIT_GAIN배 이상 커질 때만. 시퀀스 다이어그램은 제외(참여자 머리가 위에만 있음)
+  //   자를 곳은 칸·글자가 없는 빈 줄 중 높이의 35~65% 안, 잘리는 선 SPLIT_CROSS개 이하. 없으면 나누지 않음
+  //   잘린 선에는 양쪽 끝에 같은 번호 표시. 상세 문서·원문은 그대로. 나눈 그림은 report().info.notes의 split-diagram
   const GAP = 16;
+  const SPLIT_EFF = 12, SPLIT_GAIN = 1.2, SPLIT_SEP = 40, SPLIT_CROSS = 2;   // SPLIT_SEP = 두 도막 사이(viewBox 단위) · SPLIT_CROSS = 잘려도 되는 선 수
+  // 그린 SVG(화면에 붙어 있을 때)에서 자를 높이를 고름: 칸·선 글자·묶음이 없는 빈 줄 중 두 도막 높이의 큰 쪽이 가장 작고 잘리는 선이 적은 곳
+  function planSplit(svg) {
+    const vb = svg.viewBox?.baseVal; if (!vb?.width || !vb?.height || !svg.getScreenCTM()) return null;
+    if (svg.getAttribute('aria-roledescription') === 'sequence' || svg.querySelector('.actor')) return null;
+    const inv = svg.getScreenCTM().inverse();
+    const box = (el) => {                                                // 요소의 bbox → SVG(viewBox) 좌표의 위·아래·왼·오른
+      let b; try { b = el.getBBox(); } catch { return null; }
+      const ctm = el.getScreenCTM(); if (!ctm || !(b.width || b.height)) return null;
+      const m = inv.multiply(ctm), pt = svg.createSVGPoint();
+      const ps = [[b.x, b.y], [b.x + b.width, b.y], [b.x, b.y + b.height], [b.x + b.width, b.y + b.height]].map(([x, y]) => { pt.x = x; pt.y = y; return pt.matrixTransform(m); });
+      return { t: Math.min(...ps.map((p) => p.y)), b: Math.max(...ps.map((p) => p.y)), l: Math.min(...ps.map((p) => p.x)), r: Math.max(...ps.map((p) => p.x)) };
+    };
+    // 칸으로 보는 것: 선(path·line)이 아닌 모든 도형·글자(흐름도 칸, 상태 그림 메모, 선 글자, 묶음 테두리, 엔진이 그린 메모 상자). 화살촉 정의(defs·marker)는 뺌
+    const solid = [...svg.querySelectorAll('g.node, g.cluster, g.note, rect, polygon, circle, ellipse, foreignObject, text, image')]
+      .filter((e) => !e.closest('defs, marker, .pf-cont'))
+      .map(box).filter((b) => b && b.b - b.t > 0.5 && b.r - b.l > 0.5);
+    const paths = [...svg.querySelectorAll('path')].filter((p) => !p.closest('defs, marker') && !p.closest('g.node, g.cluster, g.note'))
+      .map((p) => ({ p, bb: box(p) })).filter((x) => x.bb);
+    const PAD = 16, top = vb.y, bot = vb.y + vb.height;                  // 자른 곳 위아래 여유 = 번호 표시(자른 곳에서 1~15)가 칸·글자에 닿지 않게
+    const occ = solid.map((s) => [s.t - PAD, s.b + PAD]).sort((a, b) => a[0] - b[0]);
+    const free = []; let y = top;
+    for (const [a, b] of occ) { if (a > y) free.push([y, a]); y = Math.max(y, b); }
+    if (y < bot) free.push([y, bot]);
+    let best = null;
+    for (const [a, b] of free) {
+      const lo = Math.max(a, top + vb.height * 0.35), hi = Math.min(b, bot - vb.height * 0.35); if (lo > hi) continue;   // 두 도막이 비슷한 크기일 때만
+      const cut = Math.min(hi, Math.max(lo, (top + bot) / 2));
+      const cross = paths.filter((x) => x.bb.t < cut - 1 && x.bb.b > cut + 1);
+      if (cross.length > SPLIT_CROSS) continue;                          // 잘리는 선이 많으면 번호가 흩어져 오히려 읽기 어려움
+      const H = Math.max(cut - top, bot - cut), score = H + cross.length * vb.height * 0.03;
+      if (!best || score < best.score) best = { cut, H, cross, score };
+    }
+    if (!best) return null;
+    const xs = best.cross.map(({ p }) => {                               // 선이 자르는 높이를 지나는 x(길이를 따라 훑어 가장 가까운 점)
+      const m = inv.multiply(p.getScreenCTM()), pt = svg.createSVGPoint(), L = p.getTotalLength(); let bx = null, bd = Infinity;
+      for (let i = 0; i <= 200; i++) { const q = p.getPointAtLength(L * i / 200); pt.x = q.x; pt.y = q.y; const s = pt.matrixTransform(m); const d = Math.abs(s.y - best.cut); if (d < bd) { bd = d; bx = s.x; } }
+      return bx;
+    }).filter((x) => x !== null).sort((a, b) => a - b);
+    // 도막마다 내용이 있는 좌우 범위만(위 도막 = 자른 곳 위의 칸·선, 아래 도막 = 아래의 것). 잘린 선은 자른 곳의 x를 양쪽에 넣음
+    const span = (isTop) => {
+      let l = Infinity, r = -Infinity;
+      const inside = (bb) => (isTop ? bb.b <= best.cut + 1 : bb.t >= best.cut - 1);
+      solid.forEach((bb) => { if (inside(bb)) { l = Math.min(l, bb.l); r = Math.max(r, bb.r); } });
+      paths.forEach(({ bb }) => { if (inside(bb)) { l = Math.min(l, bb.l); r = Math.max(r, bb.r); } });
+      xs.forEach((x) => { l = Math.min(l, x - 12); r = Math.max(r, x + 12); });
+      return l === Infinity ? [vb.x, vb.width] : [Math.max(vb.x, l - 8), Math.min(vb.x + vb.width, r + 8) - Math.max(vb.x, l - 8)];
+    };
+    const [x1, w1] = span(true), [x2, w2] = span(false);
+    return { x: vb.x, y: vb.y, w: vb.width, h: vb.height, cut: +best.cut.toFixed(1), H: +best.H.toFixed(1), xs: xs.map((x) => +x.toFixed(1)),
+      x1: +x1.toFixed(1), w1: +w1.toFixed(1), x2: +x2.toFixed(1), w2: +w2.toFixed(1) };
+  }
+  // 나눈 모양으로 바꿈(plan = planSplit 결과). 화면 모드를 바꿔 다시 그린 뒤에도 같은 plan으로 다시 부름(PF.splitDiagram)
+  function splitDiagram(box, plan) {
+    const media = box.querySelector(':scope > .vmedia'), svg = media?.querySelector(':scope > svg'); if (!svg || !plan) return false;
+    const part = (y0, first) => {
+      const c = first ? svg : svg.cloneNode(true);
+      c.setAttribute('viewBox', `${first ? plan.x1 : plan.x2} ${y0} ${first ? plan.w1 : plan.w2} ${first ? plan.cut - plan.y : plan.y + plan.h - plan.cut}`);   // 도막마다 자기 범위만(폭 비율로 칸을 나눠 같은 배율, 위에 붙임)
+      c.setAttribute('preserveAspectRatio', 'xMidYMin meet');
+      c.style.aspectRatio = `${first ? plan.w1 : plan.w2} / ${first ? plan.cut - plan.y : plan.y + plan.h - plan.cut}`;   // 상자 = 도막 비율(SVG는 상자에서 잘리므로 상자가 길면 자른 곳 너머가 보임)
+      c.querySelectorAll(':scope > g.pf-cont').forEach((g) => g.remove());
+      const g = document.createElementNS('http://www.w3.org/2000/svg', 'g'); g.setAttribute('class', 'pf-cont');
+      plan.xs.forEach((x, i) => {                                         // 잘린 선 끝의 같은 번호(위 도막은 자른 곳 바로 위, 아래 도막은 바로 아래)
+        const cy = first ? plan.cut - 8 : plan.cut + 8;
+        g.insertAdjacentHTML('beforeend', `<circle cx="${x}" cy="${cy}" r="7"></circle><text x="${x}" y="${cy}" text-anchor="middle" dominant-baseline="central">${i + 1}</text>`);
+      });
+      c.appendChild(g);
+      const d = document.createElement('div'); d.className = 'pf-mpart'; d.style.flexGrow = String(first ? plan.w1 : plan.w2); d.appendChild(c); return d;
+    };
+    const wrap = document.createElement('div'); wrap.className = 'pf-msplit';
+    const a = part(plan.y, true), b = part(plan.cut, false);
+    wrap.append(a, b);
+    media.replaceChildren(wrap);
+    box.dataset.split = JSON.stringify(plan);
+    return true;
+  }
+  function unsplitDiagram(box) {
+    const media = box.querySelector(':scope > .vmedia'), svg = media?.querySelector('.pf-msplit svg'); if (!svg || !box.dataset.split) return;
+    const p = JSON.parse(box.dataset.split);
+    svg.setAttribute('viewBox', `${p.x} ${p.y} ${p.w} ${p.h}`); svg.removeAttribute('preserveAspectRatio'); svg.style.aspectRatio = ''; svg.querySelectorAll(':scope > g.pf-cont').forEach((g) => g.remove());
+    media.replaceChildren(svg); delete box.dataset.split;
+  }
+  // 직접 고침(2026-11-25): 슬라이드 전역 — 다이어그램은 실효 글자가 DIAG_MAX_PX(원래 22px) 이하일 때까지만 키움(16px 원본 글자 기준)
+  const DIAG_MAX_PX = 15;
   function natOf(box) {
     const k = box.dataset.kind, media = box.querySelector(':scope > .vmedia');
     if (k === 'image') { const w = +box.dataset.w || 0, h = +box.dataset.h || 0; return { k, ar: w && h ? w / h : 16 / 9, max: w ? 1.25 : Infinity, nw: w || 1600 }; }
+    if (k === 'mermaid' && box.dataset.split) {
+      const p = JSON.parse(box.dataset.split), nw = p.w1 + p.w2 + SPLIT_SEP;
+      return { k, ar: nw / p.H, nw, max: DIAG_MAX_PX / 16, split: true };
+    }
     if (k === 'mermaid') {
       const svg = media.querySelector('svg'); const vb = svg?.viewBox?.baseVal;
       const w = vb?.width || 400, h = vb?.height || 300;
-      return { k, ar: w / h, nw: w, max: 22 / 16 };                       // 다이어그램 글자는 22px까지만 키움
+      return { k, ar: w / h, nw: w, max: DIAG_MAX_PX / 16 };               // 다이어그램 글자는 DIAG_MAX_PX까지만 키움
     }
     const fin = media.querySelector(':scope > .fit-in');
     Object.assign(fin.style, { zoom: '1', width: 'max-content' });
-    if (k === 'code') return { k, ar: fin.offsetWidth / Math.max(1, fin.offsetHeight), nw: fin.offsetWidth, nh: fin.offsetHeight, max: 1, min: 12 / 14 };
-    // 표: 높이는 놓일 폭에 따라 달라지므로 hAt(w)로 잼(배율 1)
+    // 표·코드: 높이는 놓일 폭에 따라 달라지므로 hAt(w)로 잼(배율 1)
     const hAt = (w) => { Object.assign(fin.style, { zoom: '1', width: `${Math.max(1, Math.floor(w))}px` }); return fin.offsetHeight; };
+    // 직접 고침(2026-11-25): 코드는 글자 크기 고정(배율 1) — 칸 폭을 넘는 줄은 상세 문서처럼 줄바꿈(deck-theme.css .fit-in pre code)하고, 높이는 그 폭에서 잼
+    if (k === 'code') { const nw = fin.offsetWidth, nh = fin.offsetHeight; return { k, code: true, ar: nw / Math.max(1, nh), nw, nh, max: 1, min: 1, hAt }; }
     return { k, table: true, min: 14 / 15, max: 1, hAt };
   }
   // 시각 자료 상자 안에서 그림 말고 차지하는 높이: 캡션 + 원문 문제 띠(visual-changed). 상자 안 간격 6px씩
-  const capOf = (box) => [...box.querySelectorAll(':scope > figcaption, :scope > .pf-vband')].reduce((a, c) => a + c.offsetHeight + 6, 0);
+  const capOf = (box) => [...box.querySelectorAll(':scope > figcaption, :scope > .pf-vband, :scope > .colhead')].reduce((a, c) => a + c.offsetHeight + 6
+    + (c.classList.contains('colhead') ? (parseFloat(getComputedStyle(c).marginTop) || 0) + (parseFloat(getComputedStyle(c).marginBottom) || 0) : 0), 0);   // 직접 고침(2026-11-25): 위 소제목(.colhead)은 위아래 여백까지
   // 표: 폭 bw에서 높이 bh 안에 들어가는 가장 큰 배율(하한까지)
   function fitTable(fin, bw, bh, min) {
     const at = (z) => { Object.assign(fin.style, { zoom: String(z), width: `${bw / z}px` }); return fin.offsetHeight * z <= bh + 0.5 && fin.scrollWidth <= bw / z + 1; };
@@ -272,9 +371,9 @@
     const contain = (i, w, h) => {
       const t = nat[i];
       if (t.table) return { w: Math.floor(w), h: Math.floor(h) };
-      if (t.k === 'code') {                                              // 코드는 칸 폭을 다 쓰고, 높이는 줄인 배율만큼
-        const z = Math.max(t.min, Math.min(1, w / t.nw, h / t.nh));
-        return { w: Math.floor(w), h: Math.ceil(t.nh * z) };
+      if (t.k === 'code') {                                              // 코드는 칸 폭을 다 쓰고(글자 크기 고정·줄바꿈), 높이는 그 폭에서 잰 값. 받은 높이를 넘으면 over
+        const cw = Math.floor(Math.min(w, t.nw)), ch = t.hAt(cw);
+        return { w: cw, h: ch, over: ch > h + 0.5 };
       }
       let bw = Math.min(w, h * t.ar);
       const lim = w <= h * t.ar ? 'w' : 'h';                             // 폭에 막힘(가로로 긴 그림) / 높이에 막힘(세로로 긴 그림)
@@ -285,9 +384,18 @@
     else if (arr === 'col') {
       // 세로로 쌓기: 표는 똑같이 나눈 몫까지 받되 칸 폭에서의 실제 높이가 더 작으면 그만큼만(남는 높이는 다이어그램·그림에)
       const avail = H - GAP * (n - 1) - caps.reduce((a, c) => a + c, 0);
-      const need = nat.map((t) => (t.table ? Math.min(avail / n, t.hAt(W)) : t.k === 'code' ? t.nh : W / t.ar));
+      const need = nat.map((t) => (t.table ? Math.min(avail / n, t.hAt(W)) : t.k === 'code' ? t.hAt(Math.min(W, t.nw)) : W / t.ar));
       const f = Math.min(1, avail / Math.max(1, need.reduce((a, x) => a + x, 0)));
-      nat.forEach((t, i) => { out[i] = contain(i, W, need[i] * f); });
+      // 직접 고침(2026-11-25): 코드는 글자 하한 아래로 줄지 않으므로, 하한에서 필요한 높이를 먼저 떼어 두고 남는 높이를 나머지에 비율대로
+      const share = need.map((x) => x * f);
+      const codeH = nat.map((t, i) => (t.k === 'code' ? t.hAt(Math.min(W, t.nw)) : 0));   // 코드는 줄일 수 없으므로 그 폭에서의 높이 그대로
+      const extra = codeH.reduce((a, h, i) => a + Math.max(0, h - share[i]), 0);
+      if (extra > 0) {
+        const rest = share.reduce((a, x, i) => a + (nat[i].k === 'code' ? 0 : x), 0);
+        const g = rest > 0 ? Math.max(0, (rest - extra) / rest) : 1;
+        share.forEach((x, i) => { share[i] = nat[i].k === 'code' ? codeH[i] : x * g; });
+      }
+      nat.forEach((t, i) => { out[i] = contain(i, W, share[i]); });
     } else {
       const avail = W - GAP * (n - 1);
       const ars = nat.map((t) => (t.table ? 1.6 : t.ar));
@@ -304,22 +412,126 @@
     return { out, nat, caps };
   }
   // 시각 자료가 원래 크기의 몇 배로 보이는가(1 이상은 1). 배치 고르기 점수
-  const scaleOf = (t, o) => (t.table ? (o.z ?? 0.9) : t.k === 'code' ? Math.min(1, o.w / t.nw, o.h / t.nh) : Math.min(1, o.w / (t.nw || 1600)));
+  const scaleOf = (t, o) => (t.table ? (o.z ?? 0.9) : t.k === 'code' ? (o.over ? 0.01 : Math.min(1, o.w / t.nw)) : Math.min(1, o.w / (t.nw || 1600)));   // 코드: 칸에 안 들어가면 그 배치를 피하고, 넓을수록(줄바꿈이 적을수록) 좋음
   // 장면 점수 = 시각 자료마다 log(보이는 배율)의 합(PF.fitVisuals 뒤). 클수록 그림·코드가 크게 보임
   const visScore = (s) => [...s.querySelectorAll('.vbox[data-sc]')].reduce((x, b) => x + Math.log(Math.max(0.01, +b.dataset.sc)), 0);
+  // 직접 추가(2026-11-25): 슬라이드 전역 규칙 — 본문 내용의 좌우 여백을 같게.
+  //   옆 배치(.dk.dk-side: 그림 칸 + 카드·단계 칸)에서 그림(.vbox)이 자기 칸보다 좁으면 그림 칸에 빈 곳이 생겨 한쪽 여백만 넓어짐.
+  //   그림 칸 폭을 그림 폭에 맞춰 줄이고, 두 칸 덩어리를 본문 가운데(justify-content: center)에 놓음 → 내용의 왼쪽·오른쪽 여백이 같아짐.
+  //   그림·카드 크기와 줄바꿈은 그대로(그림 폭은 PF.fitVisuals가 px로 정해 둠)이고 어떤 상자도 본문 칸 밖으로 나가지 않음.
+  //   위아래 배치(그림 한 줄 · 카드 한 줄)는 그림이 이미 가운데라 손대지 않음
+  const span = (els) => { const rs = els.map((e) => e.getBoundingClientRect()); return Math.max(...rs.map((r) => r.right)) - Math.min(...rs.map((r) => r.left)); };
+  function balanceX(s) {
+    const M = measureRoot(); const wasIn = s.isConnected; if (!wasIn) M.appendChild(s);
+    for (const dk of s.querySelectorAll('.pf-body .dk.dk-side')) {
+      dk.style.gridTemplateColumns = ''; dk.style.justifyContent = '';
+      const vis = [...dk.children].find((c) => c.classList.contains('vis'));
+      const other = [...dk.children].find((c) => c !== vis && getComputedStyle(c).display !== 'none');
+      if (!vis || !other) continue;
+      const cols = getComputedStyle(dk).gridTemplateColumns.split(' ').map(parseFloat);
+      if (cols.length !== 2 || cols.some((x) => !(x > 0))) continue;
+      const vr = vis.getBoundingClientRect(), or = other.getBoundingClientRect();
+      const vi = vr.left < or.left ? 0 : 1;                               // 그림 칸이 왼쪽(0)인가 오른쪽(1)인가(flip)
+      const kk = vr.width / cols[vi] || 1;                                // 화면 px ÷ 이 칸의 CSS px(장면·확대 배율)
+      const boxes = [...vis.children].filter((c) => c.classList.contains('vbox'));
+      if (!boxes.length) continue;
+      const need = span(boxes) / kk;                                       // 그림이 여럿이면(나란히·위아래) 그 전체 폭
+      // 직접 고침(2026-11-25): 표 하나 + 카드(.tfit)는 카드 칸을 83%로 줄이고 둘을 가운데로(--tfit-cw로 비율 조절)
+      const cw = dk.matches('.tfit') ? parseFloat(getComputedStyle(dk).getPropertyValue('--tfit-cw')) || 1 : 1;
+      if (cw < 1) cols[1 - vi] *= cw;                                      // 표 칸은 그대로(내용 폭), 카드 칸만 줄임
+      else {
+        if (need >= cols[vi] - 2) continue;                                // 그림이 칸을 거의 다 씀
+        cols[vi] = Math.ceil(need);
+      }
+      // 직접 고침(2026-11-25): 장면별 카드 칸 넓히기 — theme CSS에서 `#d-<key> { --pf-cards-scale: 1.2 }`(그림을 줄여 생긴 폭을 카드에). 본문 폭을 넘지 않음
+      const cg = parseFloat(getComputedStyle(dk).getPropertyValue('--pf-cards-scale')) || 1;
+      if (cg > 1) cols[1 - vi] = Math.min(cols[1 - vi] * cg, dk.clientWidth - (parseFloat(getComputedStyle(dk).columnGap) || 0) - cols[vi]);
+      dk.style.gridTemplateColumns = `${cols[0].toFixed(1)}px ${cols[1].toFixed(1)}px`;
+      dk.style.justifyContent = 'center';
+    }
+    //   화면 장면(.dk.scr-row: 스크린샷 2~3장이 한 줄): 칸마다 그림만 있으면(설명 글이 없으면) 칸 폭을 그림 폭에 맞추고 가운데로.
+    //   설명 글이 있는 칸은 줄바꿈이 바뀌므로 손대지 않음
+    for (const dk of s.querySelectorAll('.pf-body .dk.scr-row')) {
+      dk.style.gridTemplateColumns = ''; dk.style.justifyContent = '';
+      const cards = [...dk.children].filter((c) => getComputedStyle(c).display !== 'none');
+      const cols = getComputedStyle(dk).gridTemplateColumns.split(' ').map(parseFloat);
+      if (!cards.length || cols.length !== cards.length || cols.some((x) => !(x > 0))) continue;
+      const only = cards.every((c) => [...c.children].every((x) => x.classList.contains('vis') || !x.textContent.trim() && !x.querySelector('img,svg,video')));
+      if (!only) continue;
+      const kk = cards[0].getBoundingClientRect().width / cols[0] || 1;
+      const need = cards.map((c) => { const b = [...c.querySelectorAll(':scope > .vis > .vbox')]; return b.length ? Math.ceil(span(b) / kk) : 0; });
+      if (need.some((w, i) => !w || w > cols[i])) continue;
+      if (need.every((w, i) => w >= cols[i] - 2)) continue;
+      dk.style.gridTemplateColumns = need.map((w) => `${w}px`).join(' ');
+      dk.style.justifyContent = 'center';
+    }
+    if (s.querySelector('.dk-split')) { fitSplit(s); alignToMedia(s); }   // 직접 고침(2026-11-25): 칸 폭이 바뀌어 오른쪽 칸 높이가 달라졌으면 그림 높이·위아래 맞춤을 다시
+    if (!wasIn) s.remove();
+    return s;
+  }
   function fitVisuals(s) {
     const M = measureRoot(); const wasIn = s.isConnected; if (!wasIn) M.appendChild(s);
     s.classList.add('pf-sizing');
+    // 직접 고침(2026-11-25): 장면별 그림 크기 손잡이 — theme CSS에서 `#d-<key> { --pf-vis-scale: .85 }`처럼 주면 그림 영역을 그 비율로 줄여 맞춤(1 이하만)
+    const vk = Math.min(1, parseFloat(getComputedStyle(s).getPropertyValue('--pf-vis-scale')) || 1);
     const plans = [...s.querySelectorAll('.vis')].map((vis) => {
       const boxes = [...vis.children].filter((e) => e.classList.contains('vbox') && e.dataset.kind);
       // 원문을 찾지 못한 자리(.vbox.err, 띠만 있음)는 크기를 정하지 않으므로 그 높이를 칸에서 빼고 세로로 쌓음
       const errs = [...vis.children].filter((e) => e.classList.contains('vbox') && !e.dataset.kind);
       const errH = errs.reduce((a, e) => a + e.offsetHeight + GAP, 0);
-      return { vis, boxes, W: vis.clientWidth, H: vis.clientHeight - errH, col: errs.length > 0 };
+      return { vis, boxes, W: vis.clientWidth * vk, H: (vis.clientHeight - errH) * vk - 1, col: errs.length > 0 };   // 직접 고침(2026-11-25): -1 = 캡션 높이 소수점 반올림 여유(0.7px 넘쳐 옆 배치가 탈락하던 것)
     });
     for (const { vis, boxes, W, H, col } of plans) {
       if (!boxes.length || !W || H <= 0) continue;
-      const arrs = boxes.length === 1 ? ['one'] : col ? ['col'] : (vis.dataset.arr ? [vis.dataset.arr] : ['col', 'row']);
+      const arr0 = vis.dataset.arr;
+      sizeArea(vis, boxes, W, H, col);
+      // 직접 추가(2026-11-25): 세로로 긴 다이어그램이 SPLIT_EFF 미만이면 두 도막으로 나눠 다시 맞춰 봄 → SPLIT_GAIN배 이상 커질 때만 남김
+      for (const box of boxes) {
+        if (box.dataset.kind !== 'mermaid' || box.dataset.split || !(+box.dataset.eff < SPLIT_EFF)) continue;
+        const svg = box.querySelector(':scope > .vmedia > svg'), vb = svg?.viewBox?.baseVal;
+        if (!vb || vb.height <= vb.width) continue;
+        const plan = planSplit(svg); if (!plan) continue;
+        const eff0 = +box.dataset.eff;
+        splitDiagram(box, plan);
+        if (arr0) vis.dataset.arr = arr0; else delete vis.dataset.arr;
+        sizeArea(vis, boxes, W, H, col);
+        if (+box.dataset.eff >= eff0 * SPLIT_GAIN) { box.dataset.eff0 = eff0.toFixed(1); continue; }
+        unsplitDiagram(box);
+        if (arr0) vis.dataset.arr = arr0; else delete vis.dataset.arr;
+        sizeArea(vis, boxes, W, H, col);
+      }
+    }
+    s.classList.remove('pf-sizing');
+    fitSplit(s);
+    alignToMedia(s);
+    if (!wasIn) s.remove();
+    return s;
+  }
+    // 직접 고침(2026-11-25): 나눈 옆 배치(.dk-split) — 왼쪽 그림 높이를 오른쪽 칸 내용(카드 위 끝 ~ 아래 그림 끝) 높이에 맞춤 → 위아래 끝이 같게(캡션은 그림 아래로)
+  function fitSplit(s) {
+    s.querySelectorAll('.dk-split').forEach((dk) => {
+      const lv = dk.querySelector(':scope > .vis'), rc = dk.querySelector(':scope > .rcol');
+      if (!lv || !rc) return;
+      const kids = [...rc.children].filter((c) => c.offsetHeight);
+      const gap = parseFloat(getComputedStyle(rc).rowGap) || 0;
+      const contentH = kids.reduce((a, c) => a + c.offsetHeight, 0) + gap * Math.max(0, kids.length - 1);
+      const boxes = [...lv.children].filter((e) => e.classList.contains('vbox') && e.dataset.kind);
+      if (boxes.length !== 1 || !contentH) return;
+      sizeArea(lv, boxes, lv.clientWidth, contentH + capOf(boxes[0]), false);
+      // 폭에 막혀 그림이 조금 낮으면(8% 이내) 그림 칸을 내용 높이로 채우고 가장자리를 조금 잘라(object-fit: cover) 위아래 끝을 맞춤
+      const media = boxes[0].querySelector(':scope > .vmedia'), img = media?.querySelector('img, video');
+      const mh = media ? media.offsetHeight : 0;
+      if (boxes[0].dataset.kind === 'image' && img && mh && mh < contentH && (contentH - mh) / contentH <= 0.08) {
+        media.style.height = `${contentH}px`;
+        Object.assign(img.style, { width: '100%', height: '100%', objectFit: 'cover' });
+      }
+    });
+  }
+  function sizeArea(vis, boxes, W, H, col) {
+    {
+      // 직접 고침(2026-11-25): 장면별 그림 쌓는 방향 — theme CSS `#d-<key> { --pf-arr: col }`(위아래) / `row`(나란히)
+      const fa = getComputedStyle(vis).getPropertyValue('--pf-arr').trim();
+      const arrs = boxes.length === 1 ? ['one'] : col ? ['col'] : (fa === 'col' || fa === 'row') ? [fa] : (vis.dataset.arr ? [vis.dataset.arr] : ['col', 'row']);
       let best = null;
       for (const a of arrs) {
         const r = sizeBoxes(boxes, a, W, H);
@@ -349,17 +561,13 @@
         } else {
           const fin = media.querySelector(':scope > .fit-in');
           let z;
-          if (t.k === 'code') { z = Math.max(t.min, Math.min(1, o.w / t.nw, o.h / t.nh)); Object.assign(fin.style, { zoom: String(z), width: `${o.w / z}px` }); }
+          if (t.k === 'code') { z = 1; Object.assign(fin.style, { zoom: '1', width: `${o.w}px` }); box.dataset.sc = scaleOf(t, o).toFixed(3); }
           else z = fitTable(fin, o.w, o.h, t.min);
           fin.dataset.pfFz = z.toFixed(3);
-          box.dataset.sc = z.toFixed(3);
+          if (t.k !== 'code') box.dataset.sc = z.toFixed(3);
         }
       });
     }
-    s.classList.remove('pf-sizing');
-    alignToMedia(s);
-    if (!wasIn) s.remove();
-    return s;
   }
   // 직접 추가(2026-11-24): 슬라이드 공용 — 시각 자료와 그 옆의 다른 요소(글 칸·카드 열)는 캡션을 뺀 '자료 영역'(이미지·다이어그램·코드 칸) 기준으로 세로 정렬.
   //   예전에는 캡션까지 합친 상자의 가운데를 기준으로 삼아 캡션 높이의 절반만큼 어긋났음. 두 쪽의 기준점(자료 영역 가운데 / 옆 요소 가운데)을 한 높이에 포개고,
@@ -369,7 +577,8 @@
       const vis = dk.querySelector(':scope > .vis'), other = [...dk.children].find((c) => c !== vis);
       if (!vis || !other) return;
       [vis, other].forEach((e) => { e.style.alignSelf = ''; e.style.marginTop = ''; }); dk.style.paddingBottom = '';
-      const medias = [...vis.querySelectorAll(':scope > .vbox > .vmedia')];
+      if (dk.matches('.tfit') && dk.querySelector('.colhead')) return;   // 직접 고침(2026-11-25): 표 + 카드에 소제목이 있으면 두 칸을 위에서부터(소제목 높이 맞춤, CSS align-items: start)
+      const medias = [...vis.querySelectorAll(':scope > .vbox > .vmedia, :scope > .vbox > .colhead')];   // 직접 고침(2026-11-25): 위 소제목도 자료 영역에 넣어 함께 가운데로
       if (!medias.length || !dk.offsetHeight) return;
       const dr = dk.getBoundingClientRect(), k = dr.height / dk.offsetHeight || 1, vr = vis.getBoundingClientRect(), or = other.getBoundingClientRect();
       let top = Infinity, bot = -Infinity;
@@ -431,5 +640,5 @@
   }
 
   Object.assign(PF, { sleep, loadFonts, imageSize, measureRoot, dropMeasure, scene, body, fitsScene, fitsM, pack, shrinkOrClip, guard, msgScene, DOT, imgTag, extLinks, refitOnLateFont,
-                      projectIntro, note, fillOf, noteFill, vband, fitVisuals, visScore, minFonts, deckSceneNear, FLOOR, extEn });
+                      projectIntro, note, fillOf, noteFill, vband, fitVisuals, balanceX, visScore, splitDiagram, minFonts, deckSceneNear, FLOOR, extEn });
 })();

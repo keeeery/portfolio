@@ -19,17 +19,29 @@
 .pf-scene .pf-headrow, .pf-scene .toprow { border-bottom-color: transparent; }
 .pf-scene .pf-eyebrow { background: none; -webkit-text-fill-color: currentColor; color: var(--accent-ink); font-weight: 700; letter-spacing: .08em; }
 .pf-scene .pf-rlabel { color: var(--faint); font-weight: 500; }
-.pf-scene .pf-titlerow { margin-top: 8px; }
-.pf-scene .pf-lead { color: var(--muted); font-weight: 400; font-size: 18px; }
+.pf-scene .pf-titlerow { margin-top: 6px; }   /* 머리말 ↔ 제목 18px(2026-11-25, 머리말 글자 줄 아래 끝 → 제목 글자 줄 위 끝) = 머리말 줄 아래 여백 12 + 6. 24px(본문 ↔ 꼬리말과 같은 값)는 큰 제목 때문에 더 넓어 보여 줄임 */
+.pf-scene .pf-headrow { border-bottom-width: 0; }   /* 투명이라 안 보이던 구분선(약 1.4px)을 빼서 간격을 정확히 24px로 */
+.pf-scene .pf-lead { color: var(--muted); font-weight: 400; font-size: 17px; }   /* 2026-11-25: 18 → 17px */
 
-/* ④ 장 표지 — 한가운데 아주 큰 제목 하나. 장면 목록은 덜어 냄(목차 장면·개요 보기에 그대로 있음) */
+/* ④ 장 표지 — 왼쪽에 장 번호·제목(104 → 64px), 오른쪽에 그 장의 절 목록(2026-11-25 바꿈. 예전: 한가운데 큰 제목 하나, 목록 숨김)
+     목록 한 줄 = 절 제목(번호 포함) + 쪽 번호. 동그란 순번·종류 라벨·도입 문장은 덜어 냄(절 번호와 겹치고 줄이 길어짐) */
 .pf-scene.t-CH .toprow :is(.pf-eyebrow, .rl), .pf-scene.t-EN .toprow :is(.pf-eyebrow, .rl) { color: var(--faint); }   /* 윗줄은 흐리게(숨기면 배치 점검에 걸림) */
-.pf-scene .ch-mid { grid-template-columns: minmax(0, 1fr); justify-items: center; text-align: center; }
-.pf-scene .ch-mid > :first-child { display: flex; flex-direction: column; align-items: center; }
-.pf-scene .ch-list { display: none; }
-.pf-scene .ch-no { background: none; -webkit-text-fill-color: currentColor; color: var(--muted); font-size: 18px; letter-spacing: .3em; margin-inline: auto; }
-.pf-scene .ch-t { margin-top: 18px !important; font-size: 104px; font-weight: 800; letter-spacing: -.05em; line-height: 1.05; max-width: 1080px; }
+.pf-scene.t-CH .ch-mid { grid-template-columns: 544px 440px; justify-content: center; gap: 80px; align-items: center; }   /* 제목 칸 544px · 목록 440px 고정 폭을 장면 가운데로 — 모든 장에서 제목 시작 위치가 같음(장면 왼쪽에서 108px).
+     544px = 가장 긴 장 제목들이 두 줄에 들어가는 폭 + 여유(Folk Sack 「가 본 곳과 지금 보이는 곳을 보여 주는 지도」 524px, ODDITY 「UI/UX ② 전투 피드백과 비주얼 효과」 500px) */
+.pf-scene .ch-no { background: none; -webkit-text-fill-color: currentColor; color: var(--muted); font-size: 16px; letter-spacing: .3em; }
+.pf-scene .ch-t { margin-top: 16px !important; font-size: 64px; font-weight: 800; letter-spacing: -.04em; line-height: 1.12; }
+/*   가운데 맞춤 기준 = 장 제목만: 「CHAPTER 00」은 자리를 차지하지 않고 제목 바로 위에 붙음(목록 세로 가운데 = 제목 세로 가운데) */
+.pf-scene.t-CH .ch-mid > :first-child { position: relative; }
+.pf-scene.t-CH .ch-no { position: absolute; left: 0; bottom: 100%; margin: 0 0 14px; white-space: nowrap; }
+.pf-scene.t-CH .ch-t { margin-top: 0 !important; }
 .pf-scene.t-CH .dotrule { display: none; }
+.pf-scene.t-CH .ch-list .toc-list { border-top: 1px solid color-mix(in srgb, var(--line) 60%, transparent); }
+.pf-scene.t-CH .ch-list .toc-list :is(.n, .d, .ld) { display: none; }
+.pf-scene.t-CH .ch-list .toc-list a { align-items: center; gap: 24px; padding: 16px 4px; }
+.pf-scene.t-CH .ch-list.compact .toc-list a { padding: 11px 4px; }
+.pf-scene.t-CH .ch-list .toc-list .t { font-size: 19px; font-weight: 700; line-height: 1.35; }
+.pf-scene.t-CH .ch-list .toc-list .pg { padding-top: 0; font-size: 14px; color: var(--faint); }
+.pf-scene.t-CH .ch-list .toc-list a:hover .t { color: var(--accent-ink); }
 
 /* ⑤ 맺음 — 한가운데 프로젝트 이름, 아래에 링크 한 줄 */
 .pf-scene .en-mid { grid-template-columns: minmax(0, 1fr); justify-items: center; text-align: center; align-content: center; gap: 48px; }
@@ -132,3 +144,148 @@
 
 /* ⑲ 세로로 보기(밝은 화면) — 장면 테두리 1px 빼기: 바탕색 차이로 이미 구분되고, 테두리가 스크롤 막대 왼쪽 여백을 1px 먹어 막대 양옆 여백이 달라 보였음 */
 @media screen { html[data-pf-mode="light"][data-view="scroll"] .pf-deck > .pf-scene { box-shadow: none; } }
+
+/* ⑳ 장면 머리 오른쪽 — 그 절의 상세 문서 링크(「상세 문서 §2.2 ↗」, 2026-11-25). 표지 링크처럼 평소엔 글자만, 마우스를 올리면 글자색 14% 캡슐.
+     캡슐 여백만큼 바깥으로 당겨(음수 여백) 글자 오른쪽 끝·기준선은 예전 라벨 자리 그대로 */
+.pf-scene .pf-headrow { align-items: center; }
+.pf-scene .pf-rlabel:has(> .pf-headlink) { line-height: 1; }
+.pf-scene a.pf-headlink {
+  display: inline-flex; align-items: center; gap: 5px; white-space: nowrap;
+  margin: -7px -12px; padding: 7px 12px; border-radius: 999px;
+  color: var(--muted); font-size: 13px; font-weight: 500; text-decoration: none;
+  transition: background-color .15s, color .15s;
+}
+.pf-scene a.pf-headlink:hover { color: var(--ink); background: color-mix(in srgb, var(--ink) 14%, transparent); }
+.pf-scene a.pf-headlink:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.pf-scene a.pf-headlink .pf-newtab-icon { width: 12px; height: 12px; margin: 0; flex: none; opacity: 1; overflow: visible; }
+.pf-scene a.pf-headlink .pf-newtab-icon, .pf-scene a.pf-headlink .pf-newtab-icon path { stroke-width: 1.4; }
+.pf-scene a.pf-headlink .pf-newtab-icon:not(.pf-ext-icon) path { d: path("M4.5 2.5H9.5V7.5M9.5 2.5L2.5 9.5"); }
+@media print { .pf-scene a.pf-headlink { margin: 0; padding: 0; } }
+
+/* ㉑ 꼬리말(이름 · 프로젝트 / 쪽 번호) 위치 — 장면 바닥에서 글자 아래까지 14 → 24px(2026-11-25). 위 여백 44px와 덜 어긋나게.
+     간격: 머리 ↔ 본문 18px(예전 20px), 본문 ↔ 꼬리말 글자 위 끝 28px(본문 칸 아래 끝 = 바닥에서 69px) */
+.pf-scene .pf-foot { bottom: 10px; }
+.pf-scene.pf-sum > .pf-body { margin-top: 18px; margin-bottom: 69px; }
+.pf-scene.pf-bare > .pf-body { height: 595px; }
+
+/* ㉒ 목차 — 쪽 번호(「p.n — m」)는 장 표지 절 목록과 같은 색·크기, 마우스를 올리면 장 제목이 강조색(장 표지 목록과 같은 호버) (2026-11-25) */
+.pf-scene.t-P2 .toc-list .pg { font-size: 14px; color: var(--faint); }
+.pf-scene.t-P2 .toc-list a .t { transition: color .15s; }
+.pf-scene.t-P2 .toc-list a:hover .t { color: var(--accent-ink); }
+/*   회고·더 보기 줄의 회색 설명(「달성 · 아쉬운 점 → 개선 계획」 등)은 제목 아래가 아니라 제목 오른쪽에(기준선 맞춤) */
+.pf-scene.t-P2 .toc-list .tx { display: flex; align-items: baseline; gap: 12px; min-width: 0; }
+.pf-scene.t-P2 .toc-list .tx .t { flex: none; }
+.pf-scene.t-P2 .toc-list .tx .d { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+/*   파란 칸·원 안 숫자 세로 가운데 — 줄(위아래 글꼴 여백 포함) 대신 숫자 자체(대문자 높이~기준선)를 가운데에 놓음(2026-11-25).
+     text-box로 줄의 위아래 여백을 잘라 내용 높이 = 1cap(숫자 높이)로 만들고, 칸 높이(--nh)에서 뺀 나머지의 절반을 위 여백으로.
+     글꼴(Inter·Pretendard)·화면 배율과 상관없이 계산상 정가운데 — 남는 오차는 화면 픽셀 반올림(0.5픽셀 이하)뿐. 예전 임시 보정(0.5px·3px)은 뺌.
+     칸 크기는 deck-theme.css 그대로(--nh = 각 크기의 높이). text-box를 모르는 옛 브라우저는 숫자가 조금 아래로 보임 */
+.pf-scene .toc-list .n { --nh: 40px; }
+.pf-scene .toc-list.sub .n { --nh: 30px; }
+.pf-scene.t-P2.compact .toc-list .n { --nh: 32px; }
+.pf-scene.t-P2.compact .toc-list.sub .n { --nh: 26px; }
+.pf-scene .ncard .num { --nh: 26px; }
+.pf-scene :is(.toc-list .n, .ncard .num) {
+  display: block; box-sizing: border-box; height: var(--nh); margin-top: 0;
+  text-align: center; line-height: 1; text-box: trim-both cap alphabetic;
+  padding: calc((var(--nh) - 1cap) / 2) 0 0;
+}
+
+/* ㉓ 카드 안 배지 → 카드를 칸으로 나눔(2026-11-25) — 배지(번호 원·문제/원인/해결/결과 라벨)를 카드 가장자리까지 꽉 찬 색 칸으로.
+     요점 카드(.ncard)·세로로 쌓인 단계 카드(.flow.col .fstep): 왼쪽 칸(색) | 오른쪽 칸(글). 가로로 놓인 단계 카드(.flow .fstep): 위 칸(색) / 아래 칸(글).
+     칸 색 = 배지 색 그대로(번호·해결 = 강조색, 문제·원인 = 회색, 결과 = 초록). 칸 안 글자는 숫자·라벨 높이 기준 정가운데(text-box + align-content) */
+.pf-scene .ncard:not(.nonum), .pf-scene .fstep { padding: 0; gap: 0; overflow: hidden; }
+.pf-scene .ncard:not(.nonum) { grid-template-columns: max-content minmax(0, 1fr); align-items: stretch; }   /* 왼쪽 칸 = 번호 폭 + 양옆 10px(라벨 칸과 같은 규칙, 2026-11-25) */
+.pf-scene .ncard > .num {
+  width: auto; height: auto; margin: 0; padding: 0; border-radius: 0; align-self: stretch;
+  display: block; align-content: center; text-align: center; font-size: 13px; font-weight: 700; line-height: 1; text-box: trim-both cap alphabetic;
+  padding: 0 10px; font-variant-numeric: tabular-nums;   /* 문제 해결 라벨 칸과 같은 글씨(13px·700)·양옆 10px. 숫자 폭 고정이라 카드끼리 칸 경계가 한 줄 */
+}
+.pf-scene .ncard:not(.nonum) > div { padding: 14px 18px; align-self: center; }   /* 글 시작 = 칸 경계 + 18px */
+.pf-scene .dk.tight .ncard:not(.nonum) > div { padding: 10px 16px 10px 18px; }
+.pf-scene .ncard:not(:has(.lb)) > div > p:first-child, .pf-scene .ncard:not(:has(.lb)) > div > p:last-child { margin-block: 0; }
+.pf-scene .fstep > .labelchip {
+  border-radius: 0; height: auto; margin: 0; align-self: stretch;
+  display: block; align-content: center; text-align: center; line-height: 1; text-box: trim-both cap alphabetic;
+}
+.pf-scene .flow:not(.col) .fstep > .labelchip { padding: 12px 18px; text-align: left; }
+.pf-scene .flow:not(.col) .fstep > :not(.labelchip) { padding: 0 18px; }   /* 위 칸 / 아래 칸(가로 배치)은 왼쪽 칸이 없어 그대로 */
+.pf-scene .flow:not(.col) .fstep > :not(.labelchip):nth-child(2) { padding-top: 12px; }
+.pf-scene .flow:not(.col) .fstep > :not(.labelchip):last-child { padding-bottom: 14px; }
+.pf-scene .flow.col { grid-template-columns: max-content minmax(0, 1fr); column-gap: 0; }   /* 왼쪽 칸 폭 = 그 묶음에서 가장 긴 라벨(「확인한 원인」 등)에 맞춤 — 카드끼리 칸 경계가 한 줄로 */
+.pf-scene .flow.col .fstep { grid-column: 1 / -1; grid-template-columns: subgrid; align-items: stretch; padding: 0; column-gap: 0; }   /* 원래 칸 사이 12px를 빼야 글 시작이 요점 카드와 같게 칸 경계 + 18px */
+.pf-scene .flow.col .fstep > .labelchip { padding: 0 10px; white-space: nowrap; }   /* 라벨 양옆 10px(요점 카드 번호 칸과 비슷하게) */
+.pf-scene .flow.col .fstep > p { margin: 0; padding: 12px 18px; align-self: center; }
+
+/* ㉔ 제목형 라벨 카드(.cards.titled, 2026-11-25) — 번호 칸 자리에 라벨. 칸 폭은 묶음에서 가장 긴 라벨에 맞춰 카드끼리 경계가 한 줄로(.flow.col과 같은 방식) */
+.pf-scene .cards.titled .ncard { grid-template-columns: subgrid; column-gap: 0; }
+.pf-scene .ncard > .num.tl { padding: 0 10px; min-height: 0; font-size: 13px; font-weight: 700; white-space: nowrap;
+  background: color-mix(in srgb, var(--ink) 22%, var(--bg)); color: var(--ink); }   /* 2026-11-25: 제목 칸 기본 = 문제·원인 라벨 칸과 같은 회색(숫자 칸은 강조색 그대로) */   /* 2026-11-25: 문제 해결 라벨 칸(.flow.col .labelchip)과 같은 글씨(13px·700)·양옆 10px로 통일 */
+
+/* ㉕ 본문 글씨 크기(2026-11-25) — 카드 안 글은 배치(글만 있는 장면·촘촘한 배치)와 상관없이 15px 고정, 표 칸 글 14px(머리 칸 13px은 그대로).
+     표·그림은 장면에 안 들어가면 배치 맞추기가 통째로 줄일 수 있음(그때는 표 글씨도 함께 작아짐) */
+.pf-scene :is(.ncard, .dk-text .ncard, .dk.tight .ncard) p,
+.pf-scene .fstep > p, .pf-scene .fe-card p:not(.fe-k) { font-size: 15px; }
+.pf-scene :is(table.md-table, table.mini) td, .pf-scene .rt table.mini td { font-size: 14px; }
+
+/* ㉕ 장면별 크기·배치(2026-11-25) — --pf-vis-scale(1 이하): 그림 영역 비율(fitVisuals) · --pf-cards-scale(1 이상): 옆 배치 카드 칸 비율(balanceX), assets/deck-common.js가 읽음 · --pf-layout: side|stack|side-split(배치 고정, side-split = 첫 그림만 왼쪽·오른쪽에 카드와 나머지 그림, project-deck.js) · --pf-arr: col|row(그림 쌓는 방향, deck-common.js) */
+#d-psy-control { --pf-vis-scale: .85; --pf-cards-scale: 1.06; }   /* ODDITY 2.2 조작 입력과 물체 상태 — 상태 다이어그램 조금 작게, 카드는 넓혀 두 줄로 */
+#d-psy-aim { --pf-vis-scale: .95; }   /* ODDITY 2.3 조준과 선택 — 이미지 5% 작게 */
+#d-psy-follow { --pf-layout: side-split; }   /* ODDITY 2.4 물리 추종과 휘두르기 — 왼쪽에 이미지, 오른쪽에 카드 위·코드 아래 */
+#d-psy-hold-aim, #d-freeze-except { --pf-layout: stack; --pf-arr: row; }   /* ODDITY 2.4 홀딩 위치 — 이미지 2개 위 나란히, 카드 하나 아래 */
+/* 카드 줄 폭 = 이미지 줄 폭: 열을 이미지 줄 내용 폭으로 잡고(카드는 폭 계산에서 빠짐) 카드 칸 사이도 이미지 사이(16px)와 같게.
+   배치 맞추기 중(.pf-sizing은 장면 자신에 붙음)에는 원래 폭으로 남은 높이를 잼 */
+#d-psy-hold-aim .dk-stack, #d-freeze-except .dk-stack { grid-template-columns: max-content; justify-content: center; }
+#d-psy-hold-aim .dk-stack > .cards, #d-freeze-except .dk-stack > .cards { width: 0; min-width: 100%; gap: 16px; }
+#d-psy-hold-aim.pf-sizing .dk-stack, #d-freeze-except.pf-sizing .dk-stack { grid-template-columns: none; justify-content: normal; }
+#d-psy-hold-aim.pf-sizing .dk-stack > .cards, #d-freeze-except.pf-sizing .dk-stack > .cards { width: auto; min-width: 0; }
+#d-psy-hold-aim .ncard, #d-freeze-except .ncard { padding-inline: calc(18px - 1.25px); }   /* 카드 양쪽 끝 ↔ 글 18px(테두리 1.25px 포함) */
+#d-psy-hold-aim .ncard p, #d-freeze-except .ncard p { white-space: pre-line; }
+#d-local-time { --pf-layout: side-split; }   /* ODDITY 4.2 시간이 풀린 뒤의 원래 움직임 복원 — 10장(d-psy-follow)처럼 왼쪽에 이미지, 오른쪽에 카드 위·코드 아래 */
+#d-psy-throw { --pf-layout: side-split; }   /* ODDITY 2.5 당겨 모은 뒤 조준점으로 던지기 — 10장(d-psy-follow)처럼 왼쪽에 영상, 오른쪽에 카드 위·코드 아래 */
+#d-psy-throw .pf-lead { white-space: pre-line; }
+/* 나눈 옆 배치(side-split)의 오른쪽 칸 코드는 카드와 같은 폭(배치 맞추기가 코드 내용 폭으로 적은 width를 덮음) — 10장·13장 */
+.pf-scene .dk-split .rcol .vbox[data-kind="code"], .pf-scene .dk-split .rcol .vbox[data-kind="code"] .fit-in { width: 100% !important; }   /* 도입 두 문장을 두 줄로(「모읍니다.」 뒤 \n) */
+#d-psy-damage { --pf-layout: stack; }   /* ODDITY 2.8 무게 등급과 크기로 정하는 물체 피해 — 제목 카드 3장 위에 같은 폭 가로로, 코드는 아래 카드 줄 전체 폭 */
+#d-psy-damage .dk-stack > .vis { order: 2; }
+#d-psy-damage.pf-sizing .dk-stack { grid-template-rows: auto minmax(0, 1fr); }
+#d-psy-damage .dk-stack .vbox[data-kind="code"], #d-psy-damage .dk-stack .vbox[data-kind="code"] .fit-in { width: 100% !important; }
+/* 가로 카드에서도 제목 칸은 왼쪽: 번호 칸을 숨기고 제목(.lb)을 카드 왼쪽 칸으로(옆 배치 제목 칸 .num.tl과 같은 모양). 세 카드의 칸 폭은 가장 긴 제목에 맞춰 같게(--tl-w) */
+#d-psy-damage .cards.row .ncard { grid-template-columns: minmax(0, 1fr); --tl-w: 69.2px; }   /* 「설계 변경」·「크기 배율」 칸 폭(13px·양옆 10px) */
+#d-psy-damage .cards.row .ncard > .num { display: none; }
+#d-psy-damage .cards.row .ncard > div { display: grid; grid-template-columns: var(--tl-w, max-content) minmax(0, 1fr); padding: 0; align-self: stretch; }
+#d-psy-damage .cards.row .ncard > div > .lb { display: block; align-self: stretch; align-content: center; text-align: center; margin: 0; padding: 0 10px; white-space: nowrap;
+  font-size: 13px; font-weight: 700; line-height: 1; text-box: trim-both cap alphabetic;
+  background: color-mix(in srgb, var(--ink) 22%, var(--bg)); color: var(--ink); }
+#d-psy-damage .cards.row .ncard:nth-child(2) > div > .lb { background: #D97757; color: #fff; }
+#d-psy-damage .cards.row .ncard:nth-child(2) { background: color-mix(in srgb, #D97757 16%, var(--card)); border-color: transparent; }   /* 「AI 활용」 카드 은은한 주황 — 결과 카드(.fstep.res, 초록 16%)와 같은 규칙 */
+#d-psy-damage .cards.row .ncard > div > p { margin: 0; padding: 14px 18px; align-self: center; }
+/* 제목 칸은 ㉔ 기본 회색, 「AI 활용」(2번 카드)만 Claude 주황 */
+#d-psy-damage .cards.titled .ncard:nth-child(2) > .num.tl { background: #D97757; color: #fff; }
+#d-psy-hold-lag { --pf-layout: side; --pf-vis-scale: .913; }   /* ODDITY 2.4 회전 속도에 따라 뒤따라오는 물체 — 9장(d-psy-aim)처럼 왼쪽 이미지 하나, 오른쪽 카드 세로로 */   /* 카드 글의 줄바꿈(\n, 「정합니다.」 뒤)을 화면에도 */
+/* ODDITY 3.5 고민과 선택 — 「이유」·「비용」 카드를 11장(d-psy-damage)처럼 왼쪽 라벨 칸 + 글로. 이유 = 파랑, 비용 = 빨강(라벨 칸 진하게, 카드 바탕은 16% 디밍) */
+#d-debris-choice .cards.row .ncard, #d-time-choice .cards.row .ncard { padding: 0; gap: 0; overflow: hidden; grid-template-columns: minmax(0, 1fr); --tl-w: 43.1px; }   /* 라벨 칸 폭 = 라벨(13px·700) + 양옆 10px — 전역 라벨 칸 규칙과 같게, 두 카드 같은 폭 */
+#d-debris-choice .cards.row .ncard > div, #d-time-choice .cards.row .ncard > div { display: grid; grid-template-columns: var(--tl-w) minmax(0, 1fr); padding: 0; align-self: stretch; }
+#d-debris-choice .cards.row .ncard > div > .lb, #d-time-choice .cards.row .ncard > div > .lb { display: block; align-self: stretch; align-content: center; text-align: center; margin: 0; padding: 0 10px; white-space: nowrap;
+  font-size: 13px; font-weight: 700; line-height: 1; text-box: trim-both cap alphabetic; color: #fff; }
+#d-debris-choice .cards.row .ncard > div > p, #d-time-choice .cards.row .ncard > div > p { margin: 0; padding: 14px 18px; align-self: center; }
+#d-debris-choice .cards.row .ncard:nth-child(1) > div > .lb, #d-time-choice .cards.row .ncard:nth-child(1) > div > .lb { background: #3B7DD8; }
+#d-debris-choice .cards.row .ncard:nth-child(1), #d-time-choice .cards.row .ncard:nth-child(1) { background: color-mix(in srgb, #3B7DD8 16%, var(--card)); border-color: transparent; }
+#d-debris-choice .cards.row .ncard:nth-child(2) > div > .lb, #d-time-choice .cards.row .ncard:nth-child(2) > div > .lb { background: #D9534F; }
+#d-debris-choice .cards.row .ncard:nth-child(2), #d-time-choice .cards.row .ncard:nth-child(2) { background: color-mix(in srgb, #D9534F 16%, var(--card)); border-color: transparent; }
+#d-debris-pool { --pf-layout: side; }   /* ODDITY 3.2 미리 만들어 다시 사용하는 파편 — 코드 하나(24줄) 왼쪽, 오른쪽 카드 세로로 */
+#d-debris-life { --pf-vis-scale: .7565; }   /* ODDITY 3.3 작은 파편의 수명과 반환 — 상태 다이어그램 글자를 8장(d-psy-control)과 같은 크기로 */
+#d-debris-material { --pf-layout: side-split; }   /* ODDITY 3.4 재질별 파괴 — 왼쪽 이미지(남는 폭을 다 씀), 오른쪽 칸은 표 위·번호 없는 카드 아래(표 내용 폭) */
+#d-debris-material .dk-split { grid-template-columns: minmax(0, 1fr) max-content; }
+#d-debris-material .dk-split > .rcol > .cards { order: 2; }
+#d-debris-material .dk-split > .rcol { row-gap: 52px; display: grid; grid-template-columns: max-content; justify-content: start; align-content: center; }   /* 열 폭 = 표(카드는 폭 계산에서 빠짐, 9장 규칙과 같은 방식) */
+#d-debris-material.pf-sizing .dk-split > .rcol { grid-template-columns: none; justify-content: normal; }
+#d-debris-material .dk-split > .rcol > .cards { width: 0; min-width: 100%; }   /* 카드 폭 = 표 폭(카드는 오른쪽 칸 폭 계산에서 빠짐, 9장 규칙과 같은 방식) */
+#d-debris-material.pf-sizing .dk-split > .rcol > .cards { width: auto; min-width: 0; }
+#d-debris-material .ncard { grid-template-columns: minmax(0, 1fr); }   /* 글 시작 = 카드 안쪽 18px(공통 규칙의 div padding) */
+#d-debris-material .ncard > .num { display: none; }
+#d-debris-material .ncard p { white-space: pre-line; }
+#d-debris-material .vbox[data-kind="image"] .cap { display: none; }   /* 이 장면의 이미지 설명(캡션)은 숨김 */
+#d-debris-material .rcol .vbox[data-kind="table"], #d-debris-material .rcol .vbox[data-kind="table"] .fit-in { width: max-content !important; }   /* 배치 맞추기가 적은 표 칸 폭(inline)을 표 내용 폭으로 덮음 */
+#d-debris-material table.md-table { width: auto; }   /* 표 열 = 줄이 꺾이지 않는 내용 폭(칸 안 여백 없이) */
+#d-debris-material table.md-table :is(th, td) { white-space: nowrap; }

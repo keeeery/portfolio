@@ -33,8 +33,9 @@ html, body { margin: 0; padding: 0; }
   html, body { background: var(--deck-bg, #E4E5E8); }                                   /* 장면 사이·레터박스 */
   .pf-deck            { display: flex; flex-direction: column; align-items: center;
                         gap: var(--pf-gap); padding: var(--pf-gap) 0; }
-  .pf-deck > .pf-scene { flex: none; transform: scale(var(--pf-k)); transform-origin: 0 0;   /* 측정용 장면에는 안 걸림 */
-                        margin: 0 calc(1280px * (var(--pf-k) - 1)) calc(720px * (var(--pf-k) - 1)) 0;
+  /* 직접 고침(2026-11-24): transform: scale → zoom. scale은 1280 판에서 글자 기준선을 반올림한 뒤 그림처럼 키워 라벨 안 글자가 1px씩 어긋났음.
+     zoom은 키운 크기에서 다시 배치해 다른 페이지처럼 화면 픽셀 단위로 맞춤(키운 만큼 자리도 차지하므로 여백 보정 margin이 필요 없음) */
+  .pf-deck > .pf-scene { flex: none; zoom: var(--pf-k);   /* 측정용 장면에는 안 걸림 */
                         box-shadow: 0 2px 14px rgba(20, 22, 30, .14); }
   html.pf-hud-pill { scroll-padding-bottom: 72px; }
   html.pf-present .pf-deck { gap: 0; padding: 0; }

@@ -39,6 +39,17 @@
       ],
       "port": 4605,
       "autoPort": false
+    },
+    {
+      "name": "portfolio-4607",
+      "runtimeExecutable": "python3",
+      "runtimeArgs": [
+        "-m",
+        "http.server",
+        "4607"
+      ],
+      "port": 4607,
+      "autoPort": false
     }
   ]
 }

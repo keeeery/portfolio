@@ -83,7 +83,8 @@ const PF = (() => {
 .pf-vid-btn{position:absolute;right:8px;bottom:8px;width:34px;height:34px;padding:0;border:0;border-radius:50%;background:rgba(0,0,0,.6);color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;opacity:0;transition:opacity .15s;pointer-events:auto}
 img:hover+.pf-vid .pf-vid-btn,.lb-vid:hover .pf-vid-btn,.pf-vid.is-paused .pf-vid-btn,.pf-vid-btn:hover,.pf-vid-btn:focus-visible{opacity:1}
 @media (hover:none){.pf-vid-btn{opacity:.8}}
-@media print{.pf-vid{display:none!important}}`;
+img.pf-vid-under{opacity:0}
+@media print{.pf-vid{display:none!important}img.pf-vid-under{opacity:1!important}}`;
     document.head.append(st);
     const live = new Set();          // 화면에 보이는 영상 칸(자리 맞추기·재생 대상)
     const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -91,6 +92,9 @@ img:hover+.pf-vid .pf-vid-btn,.lb-vid:hover .pf-vid-btn,.pf-vid.is-paused .pf-vi
     function place(v) {
       const was = v.shown;
       v.shown = layout(v);
+      // 직접 고침(2026-11-25): 영상 첫 프레임이 들어와 영상이 보이는 동안에는 밑에 깔린 포스터 이미지를 투명하게 —
+      //   영상과 이미지 가장자리가 1px 미만 어긋나면 그 틈으로 포스터가 선처럼 비쳤음(인쇄·PPTX 저장은 이미지를 그대로 씀)
+      v.img.classList.toggle('pf-vid-under', !!(v.shown && v.ready));
       if (v.shown !== was) sync(v);                                    // 다른 장면으로 넘어가 숨으면 멈추고, 다시 보이면 재생
     }
     function layout(v) {
@@ -104,8 +108,20 @@ img:hover+.pf-vid .pf-vid-btn,.lb-vid:hover .pf-vid-btn,.pf-vid.is-paused .pf-vi
       const cb = box.offsetParent;
       while (p && p !== cb) { x += p.offsetLeft + p.clientLeft - p.scrollLeft; y += p.offsetTop + p.clientTop - p.scrollTop; p = p.offsetParent; }
       const set = (k, val) => { if (box.style[k] !== val) box.style[k] = val; };
-      set('left', `${x}px`); set('top', `${y}px`); set('width', `${img.clientWidth}px`); set('height', `${img.clientHeight}px`);
+      // 직접 고침(2026-11-25): 크기는 소수점까지(clientWidth·clientHeight는 정수로 버림 → 영상이 이미지보다 1px 미만 작아 아래·오른쪽 틈으로 포스터가 선처럼 비쳤음)
+      const bx = s.boxSizing === 'border-box', pad = (a, b) => (bx ? parseFloat(s[`padding${a}`]) + parseFloat(s[`padding${b}`]) + parseFloat(s[`border${a}Width`]) + parseFloat(s[`border${b}Width`]) : 0);
+      const w = parseFloat(s.width) - pad('Left', 'Right') || img.clientWidth, h = parseFloat(s.height) - pad('Top', 'Bottom') || img.clientHeight;
+      set('width', `${w}px`); set('height', `${h}px`);
+      // 위치도 소수점까지: offsetLeft·offsetTop은 정수로 반올림 → 화면에서 잰 차이(슬라이드 배율로 나눔)만큼 보정
+      const fx = parseFloat(box.style.left) || 0, fy = parseFloat(box.style.top) || 0;
+      if (Math.abs(fx - x) >= 1 || !box.style.left) set('left', `${x}px`);
+      if (Math.abs(fy - y) >= 1 || !box.style.top) set('top', `${y}px`);
+      const ir = img.getBoundingClientRect(), br = box.getBoundingClientRect(), k = br.width / w || 1;
+      const dx = (ir.left + img.clientLeft * k - br.left) / k, dy = (ir.top + img.clientTop * k - br.top) / k;
+      if (Math.abs(dx) > 0.01) set('left', `${(parseFloat(box.style.left) || 0) + dx}px`);
+      if (Math.abs(dy) > 0.01) set('top', `${(parseFloat(box.style.top) || 0) + dy}px`);
       set('borderRadius', s.borderRadius);
+      set('boxShadow', s.boxShadow === 'none' ? '' : s.boxShadow);   // 이미지의 외곽선(상세 문서 .pf-edge)을 영상 칸에도 — 이미지가 투명해져도 보이게
       if (video.style.objectFit !== s.objectFit) { video.style.objectFit = s.objectFit; video.style.objectPosition = s.objectPosition; }
       return true;
     }
@@ -132,10 +148,12 @@ img:hover+.pf-vid .pf-vid-btn,.lb-vid:hover .pf-vid-btn,.pf-vid.is-paused .pf-vi
       const video = box.querySelector('video');
       video.muted = true; video.poster = img.currentSrc || img.src;
       img.dataset.pfVidBase = base;   // 확대 창(doc.js)이 같은 영상을 크게 틀 때 씀
+      img.setAttribute('data-pf-allow-hidden', '');   // 슬라이드 배치 점검: 영상이 보이는 동안 투명해지는 포스터(pf-vid-under)는 숨은 그림으로 세지 않음
       img.after(box);
       const v = { img, box, video, user: reduce, vis: false, shown: false };
       box.querySelector('.pf-vid-btn').addEventListener('click', (e) => { e.preventDefault(); e.stopPropagation(); v.user = !v.user; sync(v); });   // 일시정지·재생은 이 버튼으로만(영상 자체는 클릭을 받지 않음)
-      video.addEventListener('error', () => box.remove(), true);   // 영상이 없으면 대표 화면 이미지만 남김
+      video.addEventListener('error', () => { box.remove(); v.ready = false; img.classList.remove('pf-vid-under'); }, true);
+      video.addEventListener('loadeddata', () => { v.ready = true; place(v); });   // 영상이 없으면 대표 화면 이미지만 남김
       v.io = new IntersectionObserver(([en]) => {
         v.vis = en.isIntersecting;
         if (v.vis) { live.add(v); place(v); if (!raf) raf = requestAnimationFrame(tick); } else live.delete(v);
@@ -433,12 +451,20 @@ img:hover+.pf-vid .pf-vid-btn,.lb-vid:hover .pf-vid-btn,.pf-vid.is-paused .pf-vi
     const fabTop = () => document.querySelector('.fab-top');
     const show = () => { if (on) return; on = true; cap.classList.add('on'); btn.removeAttribute('tabindex'); root.classList.add('pf-top-on'); fabTop()?.removeAttribute('tabindex'); };
     const hide = () => { if (!on) return; on = false; cap.classList.remove('on'); btn.setAttribute('tabindex', '-1'); root.classList.remove('pf-top-on'); fabTop()?.setAttribute('tabindex', '-1'); };
+    // 직접 고침(2026-11-25): 읽는 사람이 직접 움직인 스크롤(휠·터치·키·스크롤 막대 끌기)일 때만 캡슐을 보임.
+    //   #sec= 도착 뒤 위쪽 이미지가 늦게 들어오면 doc.js hold()가 제목을 제자리로 되돌리며 위로 스크롤하는데, 이것을 위로 스크롤로 잘못 알아 캡슐이 뜨던 것을 막음
+    let userAt = -1e9, held = false;
+    const touched = () => { userAt = performance.now(); };
+    ['wheel', 'touchmove', 'keydown'].forEach((t) => addEventListener(t, touched, { capture: true, passive: true }));
+    addEventListener('pointerdown', () => { held = true; touched(); }, { capture: true, passive: true });
+    ['pointerup', 'pointercancel', 'blur'].forEach((t) => addEventListener(t, () => { if (held) { held = false; touched(); } }, { capture: true, passive: true }));
+    const byUser = () => held || performance.now() - userAt < 1200;     // 관성 스크롤 여유 1.2초
     const tick = () => {
       pend = 0;
       const y = scrollY, dy = y - lastY;
       if (performance.now() < quietUntil) { hide(); lastY = y; return; }   // # 이동 중
       if (y < Math.min(innerHeight * .6, 480)) hide();                  // 맨 위 가까이: 캡슐은 필요 없음
-      else if (dy < -6) show();
+      else if (dy < -6 && byUser()) show();
       else if (dy > 6) hide();
       if (Math.abs(dy) > 6 || y < 8) lastY = y;
     };
@@ -989,6 +1015,83 @@ img:hover+.pf-vid .pf-vid-btn,.lb-vid:hover .pf-vid-btn,.pf-vid.is-paused .pf-vi
     return true;
   }
   function noData(root, err) { notice(root, '아직 포트폴리오 데이터가 없습니다', noDataHtml(err)); }
+
+  // ── 직접 추가(2026-11-25): 그림 외곽선은 필요할 때만 — 상세 문서·슬라이드의 이미지·영상(포스터 이미지로 판정)·코드 칸은 기본으로 외곽선이 없고,
+  //    그림 가장자리 색과 바로 뒤 바탕의 대비가 EDGE_MIN 미만인 가장자리 픽셀이 EDGE_SHARE 이상이면 .pf-edge를 붙여 1px 선을 그림(CSS는 doc.css·deck-theme.css).
+  //    다이어그램은 대비와 상관없이 외곽선을 그리지 않음. 화면 모드(밝게·어둡게)가 바뀌면 다시 판정.
+  const EDGE_MIN = 1.5, EDGE_SHARE = 0.3;
+  const EDGE_IMG = '.md img:not(.mmd img), .pf-scene :is(.vmedia, .media) > img, .pf-scene table.md-table img';
+  const EDGE_BOX = '.md pre:not(.mmd-src pre), .pf-scene .vbox[data-kind="code"] > .vmedia';
+  const edgeCv = document.createElement('canvas'), edgeCx = edgeCv.getContext('2d', { willReadFrequently: true });
+  const cssRgba = (s) => {   // 계산된 색 문자열(rgb·oklab·color() 무엇이든) → [r, g, b, a(0~1)]
+    if (!s || s === 'transparent') return [0, 0, 0, 0];
+    edgeCv.width = edgeCv.height = 1; edgeCx.clearRect(0, 0, 1, 1); edgeCx.fillStyle = '#000'; edgeCx.fillStyle = s; edgeCx.fillRect(0, 0, 1, 1);
+    const d = edgeCx.getImageData(0, 0, 1, 1).data; return [d[0], d[1], d[2], d[3] / 255];
+  };
+  const over = (top, a, under) => top.map((v, i) => v * a + under[i] * (1 - a));
+  function backdrop(el) {   // el 뒤로 실제로 보이는 바탕색: 조상의 background-color를 위에서부터 겹쳐 불투명해질 때까지
+    const layers = [];
+    for (let n = el; n && n.nodeType === 1; n = n.parentElement) {
+      const c = cssRgba(getComputedStyle(n).backgroundColor);
+      if (c[3] > 0) { layers.push(c); if (c[3] >= 1) break; }
+    }
+    let rgb = cssRgba(getComputedStyle(document.documentElement).getPropertyValue('--bg').trim() || '#FFFFFF').slice(0, 3);
+    for (let i = layers.length - 1; i >= 0; i--) rgb = over(layers[i].slice(0, 3), layers[i][3], rgb);
+    return rgb;
+  }
+  const edgeCache = new Map();   // 이미지 주소 → 가장자리 픽셀(RGBA). 바탕이 바뀌어도 다시 그리지 않음
+  function edgePixels(img) {
+    const key = img.currentSrc || img.src;
+    if (edgeCache.has(key)) return edgeCache.get(key);
+    const w = img.naturalWidth, h = img.naturalHeight, k = Math.min(1, 240 / Math.max(w, h));
+    const W = Math.max(4, Math.round(w * k)), H = Math.max(4, Math.round(h * k)), R = 2;   // 줄여 그린 뒤 바깥 2px 띠만 읽음
+    edgeCv.width = W; edgeCv.height = H; edgeCx.clearRect(0, 0, W, H); edgeCx.drawImage(img, 0, 0, W, H);
+    let px = null;
+    try {
+      const d = edgeCx.getImageData(0, 0, W, H).data, out = [];
+      for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+        if (x >= R && x < W - R && y >= R && y < H - R) continue;
+        const i = (y * W + x) * 4; out.push(d[i], d[i + 1], d[i + 2], d[i + 3]);
+      }
+      px = out;
+    } catch (e) { px = null; }   // 다른 출처 그림이라 읽을 수 없음 → 안전하게 외곽선
+    edgeCache.set(key, px); return px;
+  }
+  function lowShare(px, bg) {   // 바탕과 대비가 EDGE_MIN 미만인 가장자리 픽셀 비율(반투명 픽셀은 바탕에 겹쳐 셈)
+    let low = 0, n = 0;
+    for (let i = 0; i < px.length; i += 4) {
+      const c = over([px[i], px[i + 1], px[i + 2]], px[i + 3] / 255, bg);
+      if (contrast(c, bg) < EDGE_MIN) low++; n++;
+    }
+    return n ? low / n : 0;
+  }
+  function edgeOne(el) {
+    if (el.matches(EDGE_IMG)) {
+      if (!el.complete || !el.naturalWidth) return;   // 불러오면 load 이벤트로 다시 옴
+      const frame = el.parentElement?.matches('.pf-scene :is(.vmedia, .media)') ? el.parentElement : el;
+      const px = edgePixels(el), bg = backdrop(frame.parentElement);
+      frame.classList.toggle('pf-edge', !px || lowShare(px, bg) >= EDGE_SHARE);
+    } else {
+      const own = cssRgba(getComputedStyle(el).backgroundColor), bg = backdrop(el.parentElement);
+      el.classList.toggle('pf-edge', contrast(over(own.slice(0, 3), own[3], bg), bg) < EDGE_MIN);
+    }
+  }
+  let edgeTimer = 0;
+  const edgeScan = () => {   // 바뀜이 이어져도 80ms마다 한 번은 판정(타이머를 미루지 않음)
+    if (edgeTimer) return;
+    edgeTimer = setTimeout(() => { edgeTimer = 0; document.querySelectorAll(`${EDGE_IMG}, ${EDGE_BOX}`).forEach(edgeOne); }, 80);
+  };
+  function setupEdges() {
+    if (!document.body) { document.addEventListener('DOMContentLoaded', setupEdges, { once: true }); return; }
+    document.addEventListener('load', (e) => {
+      if (e.target.tagName === 'IMG' && e.target.matches(EDGE_IMG)) edgeOne(e.target);
+      else if (e.target.tagName === 'LINK') edgeScan();   // 밝은 모드 테마처럼 늦게 들어온 스타일시트 → 바탕색이 바뀌었으니 다시 판정
+    }, true);
+    new MutationObserver(edgeScan).observe(document.body, { childList: true, subtree: true });
+    new MutationObserver(edgeScan).observe(document.documentElement, { attributes: true, attributeFilter: ['data-pf-mode', 'class', 'style'] });
+    edgeScan();
+  }
+  setupEdges();
 
   // ── 문구 표(assets/strings.js): t(키, 값) · tab(data의 탭 값) · label(data의 카드 라벨 값) · 페이지 시작 때 loadStrings()로 theme/strings.tsv를 읽음 ──
   const { t, tab, label, load: loadStrings, report: stringsReport } = PFStr;
