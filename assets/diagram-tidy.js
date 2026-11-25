@@ -19,6 +19,7 @@
   //        간격 = 같은 두 칸을 잇는 나란한 두 선 사이(기본 24px, 숫자 = px, 40% = 겹치는 폭의 30%·70% 자리). 이것만 적으면 길은 자동 그대로
   //     %% 격자 열 간격: 120                    격자의 열 사이 최소 간격(기본 40px, 선 글자가 넓으면 그만큼 더)
   //     %% 격자 맞춤: 아래 · 위                 격자의 같은 줄 칸들을 가운데 대신 아랫변(윗변)으로 맞춤
+  //     %% 격자 밖: A B                         적은 칸을 열·줄 너비 계산에서 빼고, 이어진 격자 칸 옆(%% 화살표의 나감 변, 기본 오른쪽)에 선 글자만큼 띄워 붙임
   //     %% 선 메모: A -> B: 글<br>글          선 옆에 메모 칸 모양 상자를 띄우고 점선으로 이음(그림에 메모 칸이 있으면 그 열에 맞춤)
   //     %% 선 글자: 한 줄                       Mermaid가 200px에서 접은 선 글자를 한 줄로 폄(<br>은 그대로)
   //        곡선 = 이 화살표만 Mermaid 곡선 그대로. 칸 이름은 원문의 id(예: Held, WallFragment). 영어 키도 됨(out= in= gap= curve)
@@ -337,6 +338,42 @@
         nd.g.setAttribute('transform', `translate(${dx.toFixed(2)},${dy.toFixed(2)}) ${nd.g.getAttribute('transform') || ''}`.trim());
         at.set(nd, { l, t, r: l + w, b: t + h });
       });
+      placeFree();
+      // %% 격자 밖: A B — 적은 칸을 열·줄 너비 계산에서 빼고, 이어진 격자 칸 바로 옆에 붙여 놓음
+      //   방향은 그 두 칸의 %% 화살표 줄(격자 칸 쪽 나감·들어감 변)에서, 없으면 오른쪽. 띄우는 거리는 선 글자 폭 + 32px(최소 열 간격)
+      //   옆에 붙으면 격자 칸의 가운데 높이에, 위아래에 붙으면 가운데 폭에 맞춰 선이 곧게 이어짐
+      function placeFree() {
+        const fm = /^\s*%%\s*(?:격자\s*밖|grid-free)\s*:\s*(.+)$/im.exec(src);
+        if (!fm) return;
+        const paths = [...svg.querySelectorAll('path[data-points]')];
+        for (const name of fm[1].trim().split(/\s+/)) {
+          const nd = nodes.find((o) => o.name === name);
+          if (!nd || cell.has(nd)) continue;
+          let partner = null, lab = null;
+          for (const p of paths) {
+            let pts; try { pts = JSON.parse(atob(p.getAttribute('data-points'))); } catch { continue; }
+            if (!pts?.length) continue;
+            const m = toRoot(p), a = nodeAt0(tp(m, pts[0])), b = nodeAt0(tp(m, pts.at(-1)));
+            const o = a === nd ? b : b === nd ? a : null;
+            if (o && cell.has(o)) { partner = o; lab = labs.find((l) => l.id && l.id === p.id); break; }
+          }
+          if (!partner) continue;
+          const rule = rules.find((r) => (r.from === partner.name && r.to === name) || (r.from === name && r.to === partner.name));
+          const side = (rule && (rule.from === partner.name ? rule.out : rule.in)) || 'r';
+          const P = at.get(partner), c = cell.get(partner), w = nd.r - nd.l, h = nd.b - nd.t;
+          const gx = Math.max(colGapMin, (lab?.w || 0) + 32), gy = Math.max(40, (lab?.h || 0) + 32);
+          const cx = (P.l + P.r) / 2, cy = (P.t + P.b) / 2;
+          const l = side === 'r' ? P.r + gx : side === 'l' ? P.l - gx - w : cx - w / 2;
+          const t = side === 'b' ? P.b + gy : side === 't' ? P.t - gy - h : cy - h / 2;
+          old.set(nd, { ...nd });
+          nd.g.setAttribute('transform', `translate(${(l - nd.l).toFixed(2)},${(t - nd.t).toFixed(2)}) ${nd.g.getAttribute('transform') || ''}`.trim());
+          at.set(nd, { l, t, r: l + w, b: t + h });
+          // 선 그리기가 곧은 길을 고르도록 격자 칸과 같은 줄(옆) 또는 같은 열(위아래)로 둠 — 열·줄 너비 계산은 이미 끝남
+          cell.set(nd, side === 'l' || side === 'r'
+            ? { ri: c.ri, re: c.re, ci: side === 'r' ? nc + 1 : -2, ce: side === 'r' ? nc + 1 : -2 }
+            : { ri: side === 'b' ? rows.length + 1 : -2, re: side === 'b' ? rows.length + 1 : -2, ci: c.ci, ce: c.ce });
+        }
+      }
       const nodeAt = (p) => nodes.filter((o) => { const b = old.get(o) || o; return p.x >= b.l - 6 && p.x <= b.r + 6 && p.y >= b.t - 6 && p.y <= b.b + 6; })
         .sort((a, c) => (a.r - a.l) * (a.b - a.t) - (c.r - c.l) * (c.b - c.t))[0];
       svg.querySelectorAll('path[data-points]').forEach((p) => {
