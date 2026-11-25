@@ -238,6 +238,7 @@ tdee = bmr * (1.0 + 0.2 * (activity - 1))
 ```python
 # server.recommend_foods() 안의 select_top() — 가중 영양 벡터와의 cosine similarity로 점수를 매겨 가장 높은 1개 선택
 features = df.drop(columns=["대표식품명", "식품대분류명"]).values
+# boost — 선호 가중치(1.1)
 scores = cosine_similarity(features, weighted_vector.reshape(1, -1)).flatten() * boost
 df = df.copy()
 df["추천점수"] = scores

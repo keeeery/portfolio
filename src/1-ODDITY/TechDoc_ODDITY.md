@@ -51,9 +51,11 @@ flowchart TB
     Reward ---> Back[진행 저장 / 로비로 복귀]
 ```
 
-이 다이어그램은 타이틀에서 로비를 거쳐 보스 전투에 들어가고, 처치 보상을 받아 로비로 돌아오는 한 판의 흐름을 도식화한 것입니다.
+이 다이어그램은 타이틀에서 로비를 거쳐 보스 전투에 들어가고, 처치 보상을 받아 로비로 돌아오는 게임 전체 흐름을 도식화한 것입니다.
 
-- **염동력 조작:** 우클릭으로 화면 중앙의 물체를 들고, 좌클릭으로 기본 공격을 하거나 들고 있는 물체를 조준점 방향으로 던집니다. 카메라를 빠르게 돌리면 들고 있는 물체를 휘두릅니다. 플레이어의 최대 염동 질량 이하인 물체만 들 수 있고, 들고 있는 동안 스태미나를 소모합니다.
+핵심 시스템은 다음과 같습니다.
+
+- **염동력 조작:** 우클릭으로 화면 중앙의 물체를 들고, 좌클릭으로 기본 공격을 하거나 들고 있는 물체를 조준점 방향으로 던집니다. 카메라를 빠르게 돌리면 들고 있는 물체를 휘두릅니다. 플레이어의 들 수 있는 최대 질량 이하인 물체만 들 수 있고, 들고 있는 동안 스태미나를 소모합니다.
 - **시간 정지:** 게임 전체가 아니라 정지 가능한 물체만 멈추므로, 플레이어는 움직이면서 멈춘 물체를 들거나 공격할 수 있습니다.
 - **보스:** 대형 보스는 투하·투척·충격파, 휴머노이드는 검격·반격 패턴을 사용합니다. 피해와 별도인 무력화 피해를 입혀 무력화 게이지를 모두 깎으면 그로기에 빠집니다.
 - **증강 칩:** 격자에 칩을 배치해 장착하면 공격력·최대 체력·최대 스태미나 같은 스탯이 오르고, 스킬 칩의 경우 스킬 슬롯 5칸에 들어갑니다.
@@ -136,7 +138,7 @@ flowchart TB
     Chip -->|스탯 보너스| PC["PsychokinesisController"]
     Chip -->|스킬 슬롯| Skill["SkillCaster<br>SuperpowerSkill"]
     PC -->|들기 · 투척| Obj["PsychokinesisObject<br>WallFragmentSpawner"]
-    Skill -->|시간 정지 · TimeFreezable| Obj
+    Skill -->|시간 정지<br>TimeFreezable| Obj
     Boss["BossIdleState<br>BossMeleePattern"] -->|투하 · 투척| Obj
     Obj -->|충돌 피해| Combat["CombatManager"]
     Combat -.->|처리 결과 → 파편화| Obj
@@ -192,9 +194,9 @@ flowchart TB
 | 좌클릭 떼기 | — | 화면 중앙 조준점 방향으로 투척 |
 | 카메라를 빠르게 수평 회전 | — | 짧은 시간 휘두르기 판정이 켜짐 |
 
-들기에는 조건이 있습니다. 물체 질량이 플레이어의 최대 염동 질량 이하이고, 스태미나가 최소량 이상이어야 합니다.
-최대 염동 질량과 기본 공격 사거리는 기본 스탯에 증강 칩 보너스를 더한 값이라, 칩을 끼우고 빼면 바로 바뀌도록 사용할 때마다 다시 읽습니다.
-들고 있는 동안에는 매 프레임 스태미나를 소모하고, 스태미나가 바닥나거나 물체가 플레이어에게서 일정 거리 이상 멀어지면 놓습니다.
+들기에는 조건이 있습니다. 물체 질량이 플레이어의 들 수 있는 최대 질량 이하이고, 스태미나가 최소량 이상이어야 합니다.
+들 수 있는 최대 질량과 기본 공격 사거리는 기본 스탯에 증강 칩 보너스를 더한 값이라, 칩을 끼우고 빼면 바로 바뀌도록 사용할 때마다 다시 읽습니다.
+들고 있는 동안에는 초당 일정량의 스태미나를 소모하고, 스태미나가 바닥나거나 물체가 플레이어에게서 일정 거리 이상 멀어지면 놓습니다.
 
 ```mermaid
 stateDiagram-v2
@@ -262,15 +264,16 @@ stateDiagram-v2
 
 ```csharp
 // PsychokinesisController.FixedUpdate() — 위치 오차로 가속도를 만들고 목표 속도와의 차이로 감쇠, 가속도·속도 상한 적용
-Vector3 acceleration = offset * (followStrength * pullMultiplier)
+Vector3 offset = holdPosition - body.worldCenterOfMass;
+Vector3 acceleration = offset * (followStrength * pullMultiplier) 
     - (body.linearVelocity - targetVelocity) * followDamping;
-acceleration = Vector3.ClampMagnitude(acceleration, maxAcceleration * pullMultiplier);
+acceleration = Vector3.ClampMagnitude(
+    acceleration, maxAcceleration * pullMultiplier);
 Vector3 nextVelocity = Vector3.ClampMagnitude(
     body.linearVelocity + acceleration * Time.fixedDeltaTime,
     maxHoldSpeed * pullMultiplier);
-body.AddForce(
-    (nextVelocity - body.linearVelocity) / Time.fixedDeltaTime,
-    ForceMode.Acceleration);
+body.AddForce((nextVelocity - body.linearVelocity) 
+    / Time.fixedDeltaTime, ForceMode.Acceleration);
 ```
 
 위치 오차만 강하게 줄이면 물체가 목표를 지나치거나 심하게 흔들릴 수 있어 속도 감쇠와 상한을 함께 둡니다.
@@ -290,7 +293,7 @@ Vector3 toRayOrigin = cameraRay.origin - origin;
 float b = Vector3.Dot(toRayOrigin, cameraRay.direction);
 float c = toRayOrigin.sqrMagnitude - radius * radius;
 float discriminant = b * b - c;
-if (discriminant < 0f) return cameraRay.direction;   // 광선이 구를 비켜 가면 카메라 방향
+if (discriminant < 0f) return cameraRay.direction; // 광선이 구를 비켜 가면 카메라 방향
 float distance = -b + Mathf.Sqrt(discriminant);
 if (distance <= 0f) return cameraRay.direction;
 return (cameraRay.GetPoint(distance) - origin).normalized;
@@ -323,9 +326,11 @@ return (cameraRay.GetPoint(distance) - origin).normalized;
 
 ```csharp
 // PsychokinesisController.ReleaseHeld() — 투척 방향 결정
-Vector3 direction = ray.GetPoint(distance) - heldObject.Body.worldCenterOfMass;
+Vector3 direction = 
+    ray.GetPoint(distance) - heldObject.Body.worldCenterOfMass;
 // 카메라와 물체 사이의 가까운 장애물을 조준해 역방향 발사 방지
-if (Vector3.Dot(direction, ray.direction) <= 0f) direction = ray.direction;
+if (Vector3.Dot(direction, ray.direction) <= 0f) 
+    direction = ray.direction;
 velocity = direction.normalized * throwSpeed;
 ```
 
@@ -418,11 +423,11 @@ Shatter();
 
 ```csharp
 // PsychokinesisObject.CalculateDamage() — 현재 질량에서 원래 질량을 복원해 등급 계산 요청
-controller.TryCalculateObjectDamage(body.mass / sizeFactor, sizeFactor,
+controller.TryCalculateObjectDamage(body.mass / sizeFactor, sizeFactor, 
     out int overriddenDamage, out groggy);
+
 // PsychokinesisController.TryCalculateObjectDamage() — 등급별 atkScale을 고른 뒤 현재 공격력과 크기 배율 반영
-damage = Mathf.Max(1, Mathf.RoundToInt(
-    combatEntity.CurrentStats.Atk * atkScale * sizeFactor));
+damage = Mathf.Max(1, Mathf.RoundToInt(combatEntity.CurrentStats.Atk * atkScale * sizeFactor));
 groggy = Mathf.RoundToInt(damage * objectGroggyScale);
 ```
 
@@ -541,16 +546,7 @@ public IObjectPoolItem Get()
     if (pool.Count == 0) Expand(expandSize);
     return pool.Pop();
 }
-```
 
-처음에 생성해 둘 수량과 다 사용했을 때 늘릴 수량을 따로 정해, 자주 사용하는 파편은 시작할 때 넉넉히 준비하고 모자랄 때만 조금씩 늘립니다.
-`Get()`은 비활성 객체를 반환하며, 호출자가 형태·위치·회전을 적용한 뒤 활성화합니다.
-
-`ApplyVariant()`는 선택된 형태의 Mesh·Material·BoxCollider·질량·스케일을 풀 객체에 적용합니다.
-형태마다 별도 풀을 만드는 대신 크기별 객체를 여러 외형으로 재사용하는 구조입니다. 
-외형을 바꾼 뒤에는 무게중심과 회전 관성을 다시 계산해, 이전 형태의 물리 값이 남지 않게 합니다.
-
-```csharp
 // WallFragmentSpawner.SpawnVariant() — 크기별 풀에서 비활성 객체를 꺼내 외형을 입힌 뒤 위치를 정하고 활성화
 WallFragment fragment =
     (WallFragment)ObjectPoolManager.Instance.GetObjectOrNull(pool.Key);
@@ -569,6 +565,15 @@ transform.localScale = prefab.transform.localScale;
 body.ResetCenterOfMass();
 body.ResetInertiaTensor();
 ```
+
+처음에 생성해 둘 수량과 다 사용했을 때 늘릴 수량을 따로 정해, 자주 사용하는 파편은 시작할 때 넉넉히 준비하고 모자랄 때만 조금씩 늘립니다.
+`Get()`은 비활성 객체를 반환하며, 호출자가 형태·위치·회전을 적용한 뒤 활성화합니다.
+
+
+`ApplyVariant()`는 선택된 형태의 Mesh·Material·BoxCollider·질량·스케일을 풀 객체에 적용합니다.
+형태마다 별도 풀을 만드는 대신 크기별 객체를 여러 외형으로 재사용하는 구조입니다. 
+외형을 바꾼 뒤에는 무게중심과 회전 관성을 다시 계산해, 이전 형태의 물리 값이 남지 않게 합니다.
+
 
 ### 3.3 작은 파편의 수명과 반환
 
@@ -1058,6 +1063,7 @@ UI 전반에 같은 규칙 세 가지를 적용했습니다.
 
 ```csharp
 // Crosshair.Update() — 조준점 링·사거리 표시 조건
+PsychokinesisObject held = psychokinesis != null ? psychokinesis.HeldObject : null;
 PsychokinesisObject focused = PsychokinesisObject.OutlinedObject;
 // 염동력 대상이 없으면 말을 걸 수 있는 NPC에도 같은 링을 띄운다 (외곽선과 같은 우선순위)
 MissionNPC npc = focused == null ? MissionNPC.OutlinedNPC : null;
@@ -1515,21 +1521,20 @@ MSAA 마스크로 가장자리 표현을 보완합니다.
 ```mermaid
 %%{init: {"flowchart": {"padding": 8}}}%%
 flowchart TB
-    Boss[보스 불투명 서브메시 /<br>커버리지·깊이] --> Player{플레이어와<br>화면에서 겹치는가}
-    Player -->|예| PMask[플레이어 마스크 /<br>보스에 가려짐·<br>맨 앞에 보임]
-    Player -->|아니오| Black[검은 텍스처로<br>대체]
-    Boss --> Ignore[채우지 않을 가림 /<br>바닥·수련장 벽·<br>1.5m 미만 파편]
-    PMask --> Outline[가려진 플레이어<br>외곽선]
-    PMask --> Fill[가려진 보스<br>실루엣 채우기 /<br>가린 비율 20% 이상]
-    Black --> Fill
-    Ignore --> Fill
-%% 격자: Boss Player - - | Ignore Black PMask Outline | - Fill - -
-%% 화살표 Player -> PMask: 나감=오른쪽 들어감=위
-%% 화살표 PMask -> Fill: 나감=아래 들어감=오른쪽
-%% 화살표 Ignore -> Fill: 나감=아래 들어감=왼쪽
+    InView{보스가<br>화면 안에 있는가}
+    InView -->|아니오| None([그리지 않음])
+    InView -->|예| Mask[보스·플레이어 마스크 그리기]
+    Mask -->|다른 물체가 보스를 가림| Fill["<div style=width:120px>가려진 보스<br>실루엣 채우기</div>"]
+    Mask -->|보스가 플레이어를 가림| Outline["<div style=width:120px>가려진 플레이어<br>외곽선 그리기</div>"]
+%% 격자: InView InView | Mask Mask | Fill Outline
+%% 격자 밖: None
+%% 화살표 InView -> None: 나감=오른쪽 들어감=왼쪽
+%% 화살표 InView -> Mask: 나감=아래 들어감=위
+%% 화살표 Mask -> Fill: 나감=아래 들어감=위 자리=76
+%% 화살표 Mask -> Outline: 나감=아래 들어감=위 자리=268
 ```
 
-이 다이어그램은 보스 마스크와 플레이어 마스크, 채우지 않을 가림(바닥·수련장 벽의 깊이와 작은 파편 마스크)을 조합해 가려진 플레이어 외곽선과 가려진 보스 실루엣을 그리는 패스 구성을 도식화한 것입니다.
+이 다이어그램은 보스가 화면 안에 있을 때 보스와 플레이어의 마스크를 그리고, 무엇이 무엇을 가리는지에 따라 가려진 보스 실루엣을 채우거나 가려진 플레이어 외곽선을 그리는 흐름을 도식화한 것입니다.
 
 **보스와 플레이어가 화면에서 겹칠 때만 플레이어 마스크를 만들고, 바닥·수련장 벽·작은 파편에 가린 부분은 실루엣 채우기에서 뺍니다.**
 
@@ -1550,6 +1555,7 @@ return half4(_FillColor.rgb, _FillColor.a * alpha);
 ```
 
 맨 앞에 보이는 면이 플레이어이거나 작은 파편인 부분은 칠하지 않고 비웁니다.
+플레이어 마스크는 보스와 플레이어가 화면에서 겹칠 때만 그리고, 겹치지 않으면 검은 텍스처로 대체합니다.
 반투명 서브메시는 빼고 불투명 부분만 마스크로 그립니다.
 사망한 보스는 채우지 않고(그로기로 쓰러진 보스는 채움), 바닥이나 수련장 벽처럼 의도된 가림은 칠하지 않습니다.
 
@@ -1763,11 +1769,11 @@ else
 
 ### 10.3 한계와 개선 과제
 
-- **성능 측정:** 파편 풀이 고갈되면 생성·물리·배치 검사 비용이 남고, 보스 가림 실루엣은 채우기를 켠 프레임마다 마스크와 깊이를 한 번 더 그립니다. GC·프레임 시간과 해상도별 GPU 시간은 프로파일러로 재야 합니다.
-- **시간 제어 범위:** 정지·감속은 `TimeFreezable`을 연결한 물체와 로컬 시간을 사용하는 코드에만 적용됩니다(§4.4).
-- **데이터와 저장:** 칩·보상·임무·씬 이름이 실제 에셋과 일치해야 하고, 저장 파일의 버전 변환·백업은 추가 과제입니다.
-- **통합 확인이 남은 경로:** 플레이어가 없는 타이틀에서의 `Instance` 호출과 휴머노이드 분신이 남은 상태의 로비 복귀, 임무를 이동한 뒤의 저장 복원, 씬 전환 실패 복구와 반복 전환, 음소거·설정의 재실행 뒤 값, 시간 역행 중 입력 제한은 실제 플레이로 더 확인해야 합니다.
-- **한글 입력:** 칩 검색의 조합 중 글자 처리는 입력 모듈에 의존하므로, Windows·macOS 빌드의 한글 입력기에서 각각 확인이 필요합니다.
+- **성능 측정:** 파편 풀이 고갈되면 생성·물리·배치 검사 비용이 남고, 보스 가림 실루엣은 채우기를 켠 프레임마다 마스크와 깊이를 한 번 더 그립니다. 아직 프로파일러로 GC·프레임 시간과 해상도별 GPU 시간을 재지 못했습니다.
+- **시간 제어 범위:** 정지·감속은 `TimeFreezable`을 붙인 물체와 로컬 시간을 사용하는 코드에만 적용되어, 공격 예고나 맵 환경도 하나씩 연결해야 합니다(§4.4). 플레이어를 제외한 모든 요소가 멈추는 구조가 더 좋았을 것입니다.
+- **파편 모양:** 개발 비용을 줄이려고 미리 만든 파편을 크기별로 조합해서, 파편이 원래 물체의 모양을 따르지 않습니다(§3.5).
+- **UI 통일 도구:** 에디터 도구가 오브젝트 이름·경로에 의존해, 창 구조가 바뀌면 도구도 함께 고쳐야 합니다(§7.7).
+- **피해 계산:** 염동력 공격과 스킬의 피해가 공격력에만 비례해, 칩으로 공격력이 오르면 모든 공격이 같은 비율로 강해지고 공격마다 성격을 나누기 어렵습니다. 피해 구간도 공격력 대비 배율로 나눠, 피격 연출만으로는 얼마나 강해졌는지 알기 어렵습니다(§2.8·§8.8). "기본 피해 + 공격력 × 계수"처럼 공격마다 기본값과 계수를 따로 두는 방식으로 바꾸는 것이 다음 과제입니다.
 
 ### 10.4 배운 점과 회고
 
@@ -1800,4 +1806,4 @@ UI/UX에 공을 들인 것은 제 개발 모토가 **"플레이하기 편한 경
 
 특히 **여러 셰이더를 활용해 연출을 만들어 본 경험**이 인상 깊었습니다(§8.1 「셰이더 한눈에 보기」).
 
-다음에는 맵 기믹, 휴머노이드 보스와 분신의 합동 패턴·페이즈, 세분화된 데미지 밸런싱을 더하고 싶습니다.
+다음에는 맵 기믹, 휴머노이드 보스와 분신의 합동 패턴·페이즈, 세분화된 데미지 밸런싱을 더하고 싶습니다. 특히 본체와 분신이 시간차로 공격해 피할 수 없는 순간이나, 보스가 확률적으로 공격을 튕겨내거나 무시하는 판정처럼 플레이어가 불합리하다고 느낄 부분을 팀과 함께 다듬고 싶습니다.

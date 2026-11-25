@@ -73,22 +73,23 @@
       "tab": "구조",
       "title": {"text": "1.5 전체 구조", "verbatim": true},
       "lead": {
-        "text": "염동력·시간 정지·보스 공격이 모두 같은 염동력 물체(`PsychokinesisObject`)를 다루고, 물체가 준 피해는 `CombatManager` 한 곳을 거쳐 그 결과가 다시 물체의 파편화로 돌아옵니다.",
+        "text": "염동력·시간 정지·보스 공격이 모두 같은 염동력 물체(`PsychokinesisObject`)를 다루고,\n물체가 준 피해는 `CombatManager` 한 곳을 거쳐 그 결과가 다시 물체의 파편화로 돌아옵니다.",
         "verbatim": true
       },
       "sectionPath": ["1. 프로젝트 개요", "1.5 전체 구조"],
+      "pointsTitle": {"text": "왜 이렇게 나눴나", "verbatim": true},
       "points": [
         {
-          "label": "이유",
+          "label": "",
           "text": "들기·투척·시간 정지·보스의 투하가 같은 물체의 중력·충돌·시간 상태를 바꾸므로, 바꾸기 전 값을 저장하고 되돌리는 일을 각 기능이 아니라 `PsychokinesisObject`가 맡게 했습니다(§2.6).",
           "verbatim": true
         },
         {
-          "label": "이유",
+          "label": "",
           "text": "충돌했다는 사실과 실제로 피해가 들어갔는지는 다르므로, 공용 전투 이벤트(`CombatManager`)의 처리 결과를 받아 파편화를 결정합니다(§2.7·§5.1).",
           "verbatim": true
         },
-        {"label": "이유", "text": "저장 목록을 읽는 시점에는 플레이어 스탯이 준비되지 않을 수 있어, 목록 복원과 장착 적용을 나눴습니다(§6.3).", "verbatim": true}
+        {"label": "", "text": "저장 목록을 읽는 시점에는 플레이어 스탯이 준비되지 않을 수 있어, 목록 복원과 장착 적용을 나눴습니다(§6.3).", "verbatim": true}
       ],
       "visuals": [{"kind": "mermaid", "n": 1, "fp": "flowchart TB"}]
     },
@@ -102,11 +103,21 @@
       "lead": {"text": "공격 예고는 범위만이 아니라 **언제 맞는지**도 보여 줍니다.", "verbatim": true},
       "sectionPath": ["8. UI/UX ② 전투 피드백과 비주얼 효과", "8.3 공격 예고 — 범위·박자·바닥에 붙는 표시"],
       "points": [
-        {"label": "", "text": "`AttackTelegraph`는 바닥에 범위 외곽선을 그린 뒤 안쪽을 정해진 시간 동안 차오르게 하고, 공격이 들어가는 순간 가득 채운 뒤 사라집니다.", "verbatim": true},
+        {
+          "label": "",
+          "text": "`AttackTelegraph`는 바닥에 범위 외곽선을 그린 뒤 안쪽을 정해진 시간 동안 차오르게 하고, 공격이 들어가는 순간 가득 채운 뒤 사라집니다.",
+          "verbatim": true
+        },
         {"label": "", "text": "시간 정지로 보스를 멈춰 두면 예고도 그 진행도에서 멈춰, 정지가 풀린 뒤 남은 시간을 그대로 읽을 수 있습니다.", "verbatim": true}
       ],
       "visuals": [
-        {"kind": "image", "src": "images/telegraph-fill.mp4", "w": 1200, "h": 900, "caption": {"text": "차르카로사우루스 보스의 양손 내려찍기 예고 — 보스 몸 중심의 넓은 원형 범위가 차오른 뒤 내려찍기와 함께 사라짐", "verbatim": true}},
+        {
+          "kind": "image",
+          "src": "images/telegraph-fill.mp4",
+          "w": 1200,
+          "h": 900,
+          "caption": {"text": "차르카로사우루스 보스의 양손 내려찍기 예고 — 보스 몸 중심의 넓은 원형 범위가 차오른 뒤 내려찍기와 함께 사라짐", "verbatim": true}
+        },
         {"kind": "table", "n": 1, "fp": "메서드|역할"}
       ]
     },
@@ -119,7 +130,14 @@
       "title": {"text": "8.4 플레이어 전투 피드백 — 피격 강도와 빠른 기상", "verbatim": true},
       "lead": {"text": "플레이어가 맞았을 때는 피격 강도에 따라 연출의 겹을 늘립니다.", "verbatim": true},
       "sectionPath": ["8. UI/UX ② 전투 피드백과 비주얼 효과", "8.4 플레이어 전투 피드백 — 피격 강도와 빠른 기상"],
-      "points": [],
+      "points": [
+        {
+          "label": "",
+          "text": "`DamageVignette`는 텍스처 없이 화면 사각형을 조금씩 줄인 둥근 사각형 고리 16겹을 이어 그려, 화면 끝은 진하고 안쪽은 투명한 그라데이션을 만듭니다.",
+          "verbatim": true
+        },
+        {"label": "", "text": "더 강한 연출이 재생 중이면 약한 연출이 덮어쓰지 않습니다.", "verbatim": true}
+      ],
       "visuals": [{"kind": "table", "n": 1, "fp": "피격|화면 가장자리|체력바|카메라|히트스톱"}]
     },
     {
@@ -132,11 +150,21 @@
       "lead": {"text": "보스가 어떤 상태인지를 HUD 숫자만이 아니라 몸의 움직임으로도 읽을 수 있게 했습니다.", "verbatim": true},
       "sectionPath": ["8. UI/UX ② 전투 피드백과 비주얼 효과", "8.5 보스 전투 피드백 — 피해 구간과 몸으로 보여 주는 상태", "무력화·기절을 자세로 보여 줌"],
       "points": [
-        {"label": "", "text": "각 겹은 사용하는 쪽이 `Begin()`/`End()`를 짝지어 부르면 가중치가 서서히 오르내리고, 횟수로 세므로 겹쳐 걸어도 안전합니다.", "verbatim": true},
+        {
+          "label": "",
+          "text": "각 겹은 사용하는 쪽이 `Begin()`/`End()`를 짝지어 부르면 가중치가 서서히 오르내리고, 횟수로 세므로 겹쳐 걸어도 안전합니다.",
+          "verbatim": true
+        },
         {"label": "", "text": "모든 흔들림·반짝이·숨은 보스의 시계(`TimeFreezable`)를 따라 시간 정지 중에는 그 자세로 멈춥니다.", "verbatim": true}
       ],
       "visuals": [
-        {"kind": "image", "src": "images/dizzy-sway.png", "w": 800, "h": 600, "caption": {"text": "벽에 돌진해 부딪힌 페르데로스 보스가 기절한 모습 — 머리 위를 맴도는 반짝이", "verbatim": true}},
+        {
+          "kind": "image",
+          "src": "images/dizzy-sway.png",
+          "w": 800,
+          "h": 600,
+          "caption": {"text": "벽에 돌진해 부딪힌 페르데로스 보스가 기절한 모습 — 머리 위를 맴도는 반짝이", "verbatim": true}
+        },
         {"kind": "table", "n": 1, "fp": "겹|표현|사용하는 곳|함께 나오는 연출"}
       ]
     },
@@ -151,16 +179,495 @@
       "sectionPath": ["8. UI/UX ② 전투 피드백과 비주얼 효과", "8.5 보스 전투 피드백 — 피해 구간과 몸으로 보여 주는 상태", "마무리 일격과 사망 연출"],
       "points": [
         {"label": "", "text": "보스의 숨을 끊는 순간은 한 번뿐인 장면이라 가장 긴 연출을 붙였습니다.", "verbatim": true},
-        {"label": "", "text": "이 다이어그램은 마무리 일격의 히트스톱·슬로모션부터 쓰러짐과 홀로그램 소멸, 보상창이 열리기까지의 연출 순서를 도식화한 것입니다.", "verbatim": true}
+        {
+          "label": "",
+          "text": "이 다이어그램은 마무리 일격의 히트스톱·슬로모션부터 쓰러짐과 홀로그램 소멸, 보상창이 열리기까지의 연출 순서를 도식화한 것입니다.",
+          "verbatim": true
+        }
       ],
       "visuals": [
         {"kind": "mermaid", "n": 1, "fp": "flowchart TB"},
-        {"kind": "image", "src": "images/boss-death.mp4", "w": 900, "h": 674, "caption": {"text": "마무리 일격과 사망 연출 — 차르카로사우루스 보스가 쓰러진 뒤 홀로그램으로 바뀌어 사라지는 모습", "verbatim": true}}
+        {
+          "kind": "image",
+          "src": "images/boss-death.mp4",
+          "w": 900,
+          "h": 674,
+          "caption": {"text": "마무리 일격과 사망 연출 — 차르카로사우루스 보스가 쓰러진 뒤 홀로그램으로 바뀌어 사라지는 모습", "verbatim": true}
+        }
       ]
     },
     {
-      "key": "boss-tier",
+      "key": "time-overview",
+      "after": "^",
+      "chapter": "time",
+      "layout": "visual",
+      "tab": "구조",
+      "title": {"text": "4.1 멈출 물체만 따로 정하는 시간 정지", "verbatim": false},
+      "lead": {
+        "text": "시간 정지는 플레이어를 포함한 게임 전체의 `Time.timeScale`을 0으로 만드는 대신, 정지 가능한 객체에 `TimeFreezable`을 붙여 적용합니다.",
+        "verbatim": true
+      },
+      "sectionPath": ["4. 플레이어만 움직이는 시간 정지", "4.1 개요 — 멈출 물체만 따로 정하는 시간 정지"],
+      "points": [
+        {"label": "", "text": "플레이어는 움직이면서 멈춘 물체를 들거나 공격할 수 있습니다.", "verbatim": true},
+        {
+          "label": "",
+          "text": "개별 정지와 전체 정지는 중첩해서 적용합니다. 개별 정지 횟수가 남아 있으면 정지하고, 전체 시간 효과가 여러 개라면 가장 낮은 배율을 사용합니다.",
+          "verbatim": true
+        }
+      ],
+      "visuals": [{"kind": "mermaid", "n": 1, "fp": "classDiagram"}]
+    },
+    {
+      "key": "local-time",
+      "after": "time-overview",
+      "chapter": "time",
+      "layout": "code",
+      "tab": "구현",
+      "title": {"text": "4.2 시간이 풀린 뒤의 원래 움직임 복원", "verbatim": true},
+      "lead": {"text": "객체는 정지·감속 동안 누적된 시간 차이를 반영해 자신의 시간을 계산합니다.", "verbatim": true},
+      "sectionPath": ["4. 플레이어만 움직이는 시간 정지", "4.2 시간이 풀린 뒤의 원래 움직임 복원"],
+      "points": [
+        {
+          "label": "",
+          "text": "Animator의 원래 속도와 Rigidbody의 운동 상태를 저장하고, 정지 시 Rigidbody를 Kinematic으로 전환하며 관련 DOTween을 일시정지합니다.",
+          "verbatim": true
+        },
+        {"label": "", "text": "해제 시에는 저장된 상태를 복구합니다.", "verbatim": true},
+        {"label": "", "text": "보스 행동·이동 등 시간 영향을 받아야 하는 코드는 이 로컬 시간과 배율을 사용해야 합니다.", "verbatim": true}
+      ],
+      "visuals": [
+        {
+          "kind": "image",
+          "src": "images/time-freeze.png",
+          "w": 1170,
+          "h": 878,
+          "caption": {"text": "시간이 정지된 보스·물체들과 움직이는 플레이어", "verbatim": true}
+        },
+        {"kind": "code", "n": 1, "fp": "// TimeFreezable.LocalTime·LocalDeltaTime·LocalFixedDeltaTim"}
+      ],
+      "from": {
+        "key": "local-time",
+        "sectionPath": ["4. 플레이어만 움직이는 시간 정지", "4.2 시간이 풀린 뒤의 원래 움직임 복원"],
+        "sig": ["4.2 시간이 풀린 뒤의 원래 움직임 복원|code|1|// TimeFreezable.LocalTime·LocalDeltaTime·LocalFixedDeltaTim"]
+      }
+    },
+    {
+      "key": "freeze-except",
+      "after": "local-time",
+      "chapter": "time",
+      "layout": "full",
+      "tab": "결과",
+      "title": {"text": "4.3 멈춘 세계에서도 움직이는 든 물체", "verbatim": true},
+      "lead": {"text": "물체를 들면 전체 시간 정지에서 제외합니다. 따라서 시간 정지와 염동력은 독립된 화면 효과가 아니라 같은 물체 상태를 공유합니다.", "verbatim": true},
+      "sectionPath": ["4. 플레이어만 움직이는 시간 정지", "4.3 멈춘 세계에서도 움직이는 든 물체"],
+      "points": [
+        {
+          "label": "",
+          "text": "홀로그램은 전환 중인 객체에만 덧그립니다.\n완전히 덮이면 원래 `sharedMaterials`를 보관하고 홀로그램 재질로 교체해, 정지 내내 별도 오버레이를 반복해서 그리는 범위를 줄입니다.",
+          "verbatim": true
+        }
+      ],
+      "visuals": [
+        {
+          "kind": "image",
+          "src": "images/freeze-hold.png",
+          "w": 1170,
+          "h": 878,
+          "caption": {"text": "시간 정지 중 들어서 정지가 풀린 물체와, 아직 멈춰 있는 페르데로스 보스", "verbatim": true}
+        },
+        {
+          "kind": "image",
+          "src": "images/psycho-slam.png",
+          "w": 1170,
+          "h": 878,
+          "caption": {"text": "염동 내려찍기 스킬 — 홀로그램으로 멈춘 휴머노이드 보스", "verbatim": true},
+          "sectionPath": ["4. 플레이어만 움직이는 시간 정지", "4.3 멈춘 세계에서도 움직이는 든 물체", "염동 내려찍기 — 개별 정지·물리 이동·카메라 조율"]
+        }
+      ],
+      "from": {
+        "key": "freeze-except",
+        "sectionPath": ["4. 플레이어만 움직이는 시간 정지", "4.3 멈춘 세계에서도 움직이는 든 물체"],
+        "sig": [
+          "4.3 멈춘 세계에서도 움직이는 든 물체|image|images/freeze-hold.png|1",
+          "염동 내려찍기 — 개별 정지·물리 이동·카메라 조율|image|images/psycho-slam.png|1"
+        ]
+      }
+    },
+    {
+      "key": "time-choice",
+      "after": "freeze-except",
+      "chapter": "time",
+      "layout": "full",
+      "tab": "선택",
+      "title": {"text": "4.4 고민과 선택", "verbatim": true},
+      "lead": {"text": "게임 시간을 어떻게 멈출까 — 물체마다 따로 도는 시간", "verbatim": true},
+      "sectionPath": ["4. 플레이어만 움직이는 시간 정지", "4.4 고민과 선택"],
+      "points": [
+        {
+          "label": "이유",
+          "text": "`Time.timeScale`을 직접 바꾸면 플레이어까지 모두 멈춥니다. 시간 정지 중에도 플레이어와 든 물체는 움직여야 했으므로, 객체마다 시간을 따로 다루는 별도의 시간 체계를 도입했습니다.",
+          "verbatim": true
+        },
+        {
+          "label": "비용",
+          "text": "`TimeFreezable`을 붙이거나 그 시계를 넘긴 요소만 멈추므로, 공격 예고 표시나 맵 환경까지 모두 멈추려면 하나씩 연결해야 합니다.",
+          "verbatim": true
+        }
+      ],
+      "visuals": [{"kind": "table", "n": 1, "fp": "방법|장점|비용"}]
+    },
+    {
+      "key": "debris-choice",
+      "chapter": "debris",
+      "layout": "full",
+      "tab": "선택",
+      "title": {"text": "3.5 고민과 선택", "verbatim": true},
+      "lead": {"text": "파편을 어떻게 만들까 — 미리 만든 파편 형태를 크기별로 조합", "verbatim": true},
+      "sectionPath": ["3. 부서진 조각을 다시 사용하는 파편", "3.5 고민과 선택"],
+      "points": [
+        {
+          "label": "이유",
+          "text": "크기별 조합은 개발 비용이 낮아 먼저 구현했고, 실제 전투에 붙여 보니 생각보다 어색하지 않고 잘 어울려 그대로 확정했습니다.",
+          "verbatim": true
+        },
+        {"label": "비용", "text": "그래서 파편은 원래 물체의 모양을 따르지 않습니다.", "verbatim": true}
+      ],
+      "visuals": [{"kind": "table", "n": 1, "fp": "방법|장점|비용"}],
+      "from": {
+        "key": "debris-choice",
+        "sectionPath": ["3. 부서진 조각을 다시 사용하는 파편", "3.5 고민과 선택"],
+        "sig": ["3.5 고민과 선택|table|1|방법|장점|비용"]
+      }
+    },
+    {
+      "key": "boss-env-attack",
+      "chapter": "boss",
+      "layout": "screens",
+      "tab": "결과",
+      "title": {"text": "5.3 주변 물체를 떨어뜨리고 던지는 보스 공격", "verbatim": true},
+      "lead": {"text": "보스가 만들어 낸 파편도 플레이어가 들어 던질 수 있어 공격 물체가 곧 전투 자원이 됩니다.", "verbatim": true},
+      "sectionPath": ["5. 보스 패턴과 전투 판정", "5.3 주변 물체를 떨어뜨리고 던지는 보스 공격"],
+      "points": [
+        {
+          "label": "",
+          "text": "낙하물은 보스와 따로 자기 시간 상태에 따라 떨어지고, 착지 판정은 충돌 콜백이 아니라 예상 낙하 시간 뒤의 범위 판정입니다.",
+          "verbatim": true
+        },
+        {"label": "", "text": "보스가 만들어 낸 파편도 플레이어가 들어 던질 수 있어 공격 물체가 곧 전투 자원이 됩니다.", "verbatim": true}
+      ],
+      "visuals": [
+        {
+          "kind": "image",
+          "src": "images/boss-drop-pattern.png",
+          "w": 1170,
+          "h": 878,
+          "caption": {"text": "페르데로스 보스의 투하 패턴 — 바닥의 원형 공격 범위 예고", "verbatim": true},
+          "sectionPath": ["5. 보스 패턴과 전투 판정", "5.2 보스 판단과 직접 확장한 패턴"]
+        },
+        {
+          "kind": "image",
+          "src": "images/charge-wall-hit.png",
+          "w": 1520,
+          "h": 1140,
+          "caption": {"text": "벽에 돌진하여 충돌한 페르데로스 보스와 벽에서 튀어나온 파편", "verbatim": true}
+        },
+        {
+          "kind": "image",
+          "src": "images/charge-wall-debris.png",
+          "w": 660,
+          "h": 495,
+          "caption": {"text": "벽에 돌진하여 충돌한 페르데로스 보스와 왼쪽 벽 쪽으로 튀는 파편", "verbatim": true}
+        }
+      ],
+      "from": {
+        "key": "boss-env-attack",
+        "sectionPath": ["5. 보스 패턴과 전투 판정", "5.3 주변 물체를 떨어뜨리고 던지는 보스 공격"],
+        "sig": [
+          "5.2 보스 판단과 직접 확장한 패턴|image|images/boss-drop-pattern.png|1",
+          "5.3 주변 물체를 떨어뜨리고 던지는 보스 공격|image|images/charge-wall-debris.png|1",
+          "5.3 주변 물체를 떨어뜨리고 던지는 보스 공격|image|images/charge-wall-hit.png|1"
+        ]
+      }
+    },
+    {
+      "key": "reward-link",
+      "chapter": "growth",
+      "layout": "visual",
+      "tab": "구현",
+      "title": {"text": "임무 표와 보상 표의 연결", "verbatim": true},
+      "lead": {"text": "보상을 테이블 방식으로 바꾸면서 `BossRewardDTO`(TSV 한 줄)와 `BossRewardDef`(조회용 보상 줄)를 나눴습니다.", "verbatim": true},
+      "sectionPath": ["6. 칩·스킬·임무와 보상·저장", "6.2 임무 완료 시 정해진 칩 보상", "임무 표와 보상 표의 연결"],
+      "points": [
+        {
+          "label": "",
+          "text": "`BossRewardTable.Load()`는 범위가 뒤집혔거나 지급 개수가 0 이하인 줄을 지급할 때가 아니라 표를 읽을 때 빼고, `MissionTable`은 임무의 `Reward`(RewardId)로 보상 줄을 찾아 `MissionDef.RewardRows`에 담습니다.",
+          "verbatim": true
+        }
+      ],
+      "visuals": [
+        {"kind": "mermaid", "n": 1, "fp": "erDiagram"},
+        {
+          "kind": "image",
+          "src": "images/boss-reward.jpg",
+          "w": 1920,
+          "h": 1080,
+          "caption": {"text": "임무 완료 화면 — 획득한 증강 칩이 한 줄로 표시됨", "verbatim": true},
+          "sectionPath": ["6. 칩·스킬·임무와 보상·저장", "6.2 임무 완료 시 정해진 칩 보상"]
+        }
+      ],
+      "from": {
+        "key": "reward-link",
+        "sectionPath": ["6. 칩·스킬·임무와 보상·저장", "6.2 임무 완료 시 정해진 칩 보상", "임무 표와 보상 표의 연결"],
+        "sig": ["6.2 임무 완료 시 정해진 칩 보상|image|images/boss-reward.jpg|1", "임무 표와 보상 표의 연결|mermaid|1|erDiagram"]
+      }
+    },
+    {
+      "key": "psy-throw",
+      "after": "psy-follow",
+      "chapter": "psy",
+      "layout": "code",
+      "tab": "구현",
+      "title": {"text": "2.5 당겨 모은 뒤 조준점으로 던지기", "verbatim": true},
+      "lead": {
+        "text": "좌클릭을 누르면 물체의 현재 위치에서 손 앞의 가까운 지점까지 짧은 시간 동안 `SmoothStep()`으로 당겨 모읍니다.\n이 동안 추종 세기·가속 상한·속도 상한에 당김 배율(기본 최대 3배)을 곱해, 무거운 물체도 빠르게 손 앞으로 모입니다.",
+        "verbatim": true
+      },
+      "sectionPath": ["2. 물리 기반 염동력", "2.5 당겨 모은 뒤 조준점으로 던지기"],
+      "points": [
+        {"label": "", "text": "좌클릭을 떼면 화면 중앙 광선을 따라 처음 닿는 장애물 지점을 구하고, 물체 중심에서 그 지점을 향해 발사합니다.", "verbatim": true},
+        {
+          "label": "",
+          "text": "카메라와 물체 사이의 가까운 장애물을 조준해 방향이 카메라 반대쪽이 되면, 카메라 방향을 그대로 사용해 물체가 뒤로 날아가지 않게 합니다.",
+          "verbatim": true
+        },
+        {"label": "", "text": "물체는 던진 뒤 한 번만 투척 피해를 줄 수 있습니다.", "verbatim": true}
+      ],
+      "visuals": [
+        {
+          "kind": "image",
+          "src": "images/psychokinesis-demo.mp4",
+          "w": 1120,
+          "h": 840,
+          "caption": {"text": "염동력으로 든 물체를 던져 훈련용 더미에 맞히는 장면", "verbatim": true}
+        },
+        {"kind": "code", "n": 1, "fp": "// PsychokinesisController.ReleaseHeld() — 투척 방향 결정"}
+      ]
+    },
+    {
+      "key": "debris-life",
+      "after": "debris-pool",
+      "chapter": "debris",
+      "layout": "visual",
+      "tab": "흐름",
+      "title": {"text": "3.3 작은 파편의 수명과 반환", "verbatim": true},
+      "lead": {"text": "작은 파편과 금속 조각은 연출용이라 바닥(Ground 레이어)하고만 충돌해 플레이어·보스·다른 물체와 부딪히지 않습니다.", "verbatim": true},
+      "sectionPath": ["3. 부서진 조각을 다시 사용하는 파편", "3.3 작은 파편의 수명과 반환"],
+      "points": [
+        {"label": "", "text": "생성할 때도 다른 파편과 겹치는 것을 허용하고 빈자리를 찾는 재시도 횟수를 제한해, 연출용 파편의 연산 비용을 줄였습니다.", "verbatim": true},
+        {"label": "", "text": "작은 파편은 생성 즉시 일정 시간만 기다리는 대신, 바닥 지지 여부와 선형·각속도를 검사합니다.", "verbatim": true},
+        {
+          "label": "",
+          "text": "정해진 시간이 지나서가 아니라 바닥에 지지되고 느려진 상태가 이어져야 축소·반환되고, 다시 움직이면 처음부터 다시 확인합니다.",
+          "verbatim": true
+        }
+      ],
+      "visuals": [{"kind": "mermaid", "n": 1, "fp": "stateDiagram-v2"}]
+    },
+    {
+      "key": "death-flash",
+      "after": "player-scope",
+      "chapter": "troubleshooting",
+      "layout": "problem",
+      "tab": "문제 해결",
+      "title": {"text": "9.3 사망 후 로비로 갈 때 새 씬이 잠깐 비치던 문제", "verbatim": true},
+      "lead": null,
+      "sectionPath": ["9. 트러블슈팅", "9.3 사망 후 로비로 갈 때 새 씬이 잠깐 비치던 문제"],
+      "points": [
+        {
+          "label": "증상",
+          "text": "사망 화면에서 로비로 갈 때, 다 꺼져 있어야 할 로딩 중에 새 씬이 먼저 비쳤다가 켜짐 연출 직전에 다시 꺼졌습니다(시연 중 직접 발견, §10.2).",
+          "verbatim": true
+        },
+        {"label": "원인", "text": "사망 화면이 내려가며 `ScreenGlitch.Clear()`로 화면 꺼짐(PowerOff) 값까지 지웠습니다.", "verbatim": true},
+        {
+          "label": "해결",
+          "text": "`DeathScreen`은 `SceneLoadManager`가 로딩 중이면 자신이 넣은 채도·가장자리 어둡기만 되돌리고, 화면 꺼짐·글리치는 전환 쪽에 맡깁니다.",
+          "verbatim": true
+        },
+        {"label": "결과", "text": "고친 뒤 사망 화면에서 로비로 넘어갈 때 새 씬이 먼저 비치지 않는 것을 플레이로 확인했습니다.", "verbatim": true}
+      ],
+      "visuals": [{"kind": "code", "n": 1, "fp": "// DeathScreen.OnDestroy() — 씬 전환 중이면 전환이 사용하는 화면 꺼짐은 남기고 자신"}]
+    },
+    {
+      "key": "psy-restore",
+      "after": "psy-throw",
+      "chapter": "psy",
+      "layout": "visual",
+      "tab": "흐름",
+      "title": {"text": "2.6 놓았을 때 물체의 원래 상태 복원", "verbatim": true},
+      "lead": {"text": "든 물체는 손 앞을 따라다니는 동안 플레이어·중력·시간 정지와 다르게 반응해야 합니다.", "verbatim": true},
+      "sectionPath": ["2. 물리 기반 염동력", "2.6 놓았을 때 물체의 원래 상태 복원"],
+      "points": [
+        {
+          "label": "",
+          "text": "드는 순간 바꾼 값은 모두 저장해 두었다가 놓을 때 그대로 되돌리고, 시간 정지 중에 놓으면 정지 예외 해제를 정지가 끝난 뒤로 미룹니다.",
+          "verbatim": true
+        },
+        {"label": "", "text": "들고 있는 동안 무시한 플레이어와의 충돌은, 놓을 때 들기 전 상태 그대로 콜라이더 쌍별로 되돌립니다.", "verbatim": true},
+        {
+          "label": "",
+          "text": "빼 둔 레이어는 트리거로도 감지되지 않으므로, 물체의 타격 판정은 별도 레이어(`PsychokinesisHit`)의 트리거로 합니다.",
+          "verbatim": true
+        },
+        {"label": "", "text": "이 트리거는 몬스터 레이어만 감지하도록 두어, 보스에 닿으면 밀어내지 않고 피해·파편화만 일어납니다.", "verbatim": true}
+      ],
+      "visuals": [{"kind": "mermaid", "n": 1, "fp": "sequenceDiagram"}]
+    },
+    {
+      "key": "psy-damage",
+      "after": "psy-restore",
+      "chapter": "psy",
+      "layout": "code",
+      "tab": "구현",
+      "title": {"text": "무게 등급과 크기로 정하는 물체 피해", "verbatim": true},
+      "lead": {"text": "던지거나 휘두른 물체의 피해는 물체의 무게 등급과 크기로 정합니다.", "verbatim": true},
+      "sectionPath": ["2. 물리 기반 염동력", "2.8 손을 뻗는 순간 맞는 기본 공격", "무게 등급과 크기로 정하는 물체 피해"],
+      "points": [
+        {
+          "label": "설계 변경",
+          "text": "처음에는 질량과 속도를 곱한 운동량으로 피해를 계산했고, 보스 전투 밸런스를 조정하면서 공격력 기반 등급 규칙으로 바꿔 확정했습니다.",
+          "verbatim": true
+        },
+        {
+          "label": "AI 활용",
+          "text": "그 기준에서 값을 계산해 보고 씬에 적용하는 일은 AI 코딩 에이전트에 맡겼고, 적용한 값으로 보스전을 직접 플레이해 전투 시간과 무력화 횟수가 기준에 맞는지 확인했습니다.",
+          "verbatim": true
+        },
+        {
+          "label": "크기 배율",
+          "text": "질량이 커진 만큼 무게 등급이 올라가 피해가 두 번 커지지 않도록, 키운 배율을 `sizeFactor`에 따로 쌓아 두고 현재 질량을 이 배율로 나눠 원래 등급을 정한 뒤 피해에 배율을 곱합니다.",
+          "verbatim": true
+        }
+      ],
+      "visuals": [
+        {
+          "kind": "code",
+          "n": 1,
+          "fp": "// PsychokinesisObject.CalculateDamage() — 현재 질량에서 원래 질량을 복원",
+          "slideText": "// PsychokinesisObject.CalculateDamage() — 현재 질량에서 원래 질량을 복원해 등급 계산 요청\ncontroller.TryCalculateObjectDamage(body.mass / sizeFactor, sizeFactor, out int overriddenDamage, out groggy);\n\n// PsychokinesisController.TryCalculateObjectDamage() — 등급별 atkScale을 고른 뒤 현재 공격력과 크기 배율 반영\ndamage = Mathf.Max(1, Mathf.RoundToInt(combatEntity.CurrentStats.Atk * atkScale * sizeFactor));\ngroggy = Mathf.RoundToInt(damage * objectGroggyScale);"
+        }
+      ]
+    },
+    {
+      "key": "psy-aim",
+      "after": "psy-control",
+      "chapter": "psy",
+      "layout": "visual",
+      "tab": "구현",
+      "title": {"text": "2.3 조준과 선택", "verbatim": true},
+      "lead": {"text": "`OverlapBoxNonAlloc()`으로 카메라 방향 직육면체 범위의 후보를 수집합니다.", "verbatim": true},
+      "sectionPath": ["2. 물리 기반 염동력", "2.3 조준과 선택"],
+      "points": [
+        {"label": "", "text": "후보가 여러 개일 경우 화면 중심과의 거리를 우선하고, 비슷한 후보는 플레이어와의 거리로 비교합니다.", "verbatim": true},
+        {"label": "", "text": "화면 비율을 반영해 중심 거리를 계산하고, 더 좋은 후보에 대해서만 가림 검사를 수행합니다.", "verbatim": true},
+        {"label": "", "text": "카메라와 플레이어 사이, 즉 플레이어 뒤쪽에 있는 물체는 후보로 삼지 않습니다.", "verbatim": true},
+        {"label": "", "text": "선택된 물체는 외곽선으로 표시하고, 지금 들 수 있는지에 따라 외곽선 색을 바꿉니다.", "verbatim": true}
+      ],
+      "visuals": [
+        {
+          "kind": "image",
+          "src": "images/targeting-candidates.png",
+          "w": 720,
+          "h": 540,
+          "caption": {
+            "text": "타겟팅 범위 안 세 물체의 후보 라벨 — 화면 중심 거리가 가장 작은 물체가 선택됨(초록), 가려진 물체는 Blocked(회색), 나머지는 후보(노랑)(에디터 씬 뷰 Gizmo)",
+            "verbatim": true
+          }
+        }
+      ]
+    },
+    {
+      "key": "debris-material",
+      "after": "debris-life",
+      "chapter": "debris",
+      "layout": "visual",
+      "tab": "구현",
+      "title": {"text": "3.4 재질별 파괴", "verbatim": true},
+      "lead": {"text": "맵에 배치된 염동력 소품은 모두 금속 조각으로 부서지고, 벽에서 떨어진 파편이나 보스 패턴이 만든 물체는 돌 파편으로 부서집니다.", "verbatim": true},
+      "sectionPath": ["3. 부서진 조각을 다시 사용하는 파편", "3.4 재질별 파괴"],
+      "points": [
+        {
+          "label": "",
+          "text": "벽 충돌 파편은 충돌 지점 정면을 비우고 벽의 좌우·위쪽으로 퍼뜨려, 생성 직후 서로 겹치지 않게 합니다.\n금속 조각은 판 앞뒤 면의 UV를 0~1로 만들어, 어떤 소품의 머티리얼을 입혀도 원본 텍스처가 조각 면에 입혀집니다.",
+          "verbatim": false
+        }
+      ],
+      "visuals": [
+        {
+          "kind": "image",
+          "src": "images/prop-shatter.png",
+          "w": 890,
+          "h": 738,
+          "caption": {
+            "text": "통·상자·탱크 소품의 원본 모양과, 질량에 따라 3·4·6개로 부서진 금속 조각(원본 저장소의 메시·머티리얼·텍스처로 그린 이미지, 게임 화면 아님)",
+            "verbatim": true
+          }
+        },
+        {"kind": "table", "n": 1, "fp": "구분|금속 조각|돌 파편", "slideBreakParen": true, "slideBreakAfter": ["벽 파편,"]}
+      ]
+    },
+    {
+      "key": "camera-shake",
       "after": "player-hit",
+      "chapter": "fx",
+      "layout": "code",
+      "tab": "구현",
+      "title": {"text": "trauma 기반 카메라 흔들림", "verbatim": true},
+      "lead": {"text": "카메라 흔들림은 충격량(trauma, 0~1)을 쌓고 그 제곱으로 세기를 정합니다.", "verbatim": true},
+      "sectionPath": ["8. UI/UX ② 전투 피드백과 비주얼 효과", "8.4 플레이어 전투 피드백 — 피격 강도와 빠른 기상", "trauma 기반 카메라 흔들림"],
+      "points": [
+        {"label": "", "text": "약한 충격은 아주 작게, 강한 충격은 확실하게 흔들리고, 여러 충격이 겹치면 더해지되 1을 넘지 않습니다.", "verbatim": true},
+        {
+          "label": "",
+          "text": "위치·회전 흔들림은 축마다 다른 Perlin 노이즈를 사용하고, 노이즈 시간은 실제 시간으로 진행해 히트스톱 중에도 흔들림이 이어집니다.",
+          "verbatim": true
+        },
+        {"label": "", "text": "플레이어 피격, 보스 피격 구간, 보스 그로기·사망이 모두 같은 `AddTrauma(양, 사라지는 시간)`를 부릅니다.", "verbatim": true}
+      ],
+      "visuals": [
+        {"kind": "code", "n": 1, "fp": "// CameraController.AddTrauma() — 충격을 trauma로 쌓고 사라지는 속도 설정"},
+        {
+          "kind": "image",
+          "src": "images/camera-shake.mp4",
+          "w": 1600,
+          "h": 900,
+          "caption": {"text": "강 구간 피격 연출 — 큰 통을 던져 맞힌 순간 카메라가 흔들림", "verbatim": true}
+        }
+      ]
+    },
+    {
+      "key": "shake-choice",
+      "after": "camera-shake",
+      "chapter": "fx",
+      "layout": "full",
+      "tab": "선택",
+      "title": {"text": "카메라 흔들림을 어떻게 만들까 — 트윈에서 trauma로", "verbatim": true},
+      "lead": null,
+      "sectionPath": ["8. UI/UX ② 전투 피드백과 비주얼 효과", "8.8 고민과 선택"],
+      "points": [
+        {
+          "label": "문제",
+          "text": "처음에는 DOTween의 Punch로 흔들림을 만들려 했는데, 정해진 방향(좌우)으로만 매번 같은 모양으로 왕복해 맞을 때마다 같은 흔들림이 기계적으로 보였습니다.",
+          "verbatim": true
+        },
+        {"label": "결과", "text": "그래서 충격량을 값 하나로 모으고 노이즈로 방향을 정하는 방식으로 바꿨습니다(§8.4).", "verbatim": true}
+      ],
+      "visuals": [{"kind": "table", "n": 1, "fp": "방법|장점|비용"}]
+    },
+    {
+      "key": "boss-tier",
+      "after": "shake-choice",
       "chapter": "fx",
       "layout": "code",
       "tab": "구현",
@@ -181,7 +688,265 @@
         "sectionPath": ["8. UI/UX ② 전투 피드백과 비주얼 효과", "8.5 보스 전투 피드백 — 피해 구간과 몸으로 보여 주는 상태", "받은 피해를 공격자 공격력과 비교한 세 구간"],
         "sig": ["받은 피해를 공격자 공격력과 비교한 세 구간|code|1|// BossHitFeedback.GetTier() — 받은 피해를 공격력 배율과 비교해 피격 단계 결정"]
       }
+    },
+    {
+      "key": "overview",
+      "chapter": "intro",
+      "layout": "overview",
+      "tab": "개요",
+      "title": {"text": "1.1 게임 소개", "verbatim": true},
+      "lead": {"text": "ODDITY는 염동력과 초능력 스킬을 사용해 보스와 싸우는 3D 보스 러시 액션 게임입니다.", "verbatim": true},
+      "sectionPath": ["1. 프로젝트 개요", "1.1 게임 소개"],
+      "points": [
+        {"label": "", "text": "플레이어는 주변 물체를 들어 휘두르거나 던지고, 시간 정지를 비롯한 여러 초능력 스킬을 조합해 보스와 전투합니다.", "verbatim": true},
+        {"label": "", "text": "임무는 차르카로사우루스, 페르데로스, 휴머노이드 보스의 전투 씬으로 연결됩니다.", "verbatim": true},
+        {
+          "label": "",
+          "text": "대형 보스의 투하·투척·충격파와 휴머노이드의 검격·반격 등 서로 다른 패턴에 대응하면서, 주변 물체와 파편을 공격 자원으로 활용하는 구조입니다.",
+          "verbatim": true
+        }
+      ],
+      "visuals": [
+        {
+          "kind": "mermaid",
+          "n": 1,
+          "fp": "flowchart TB",
+          "sectionPath": ["1. 프로젝트 개요", "1.1 게임 소개"],
+          "caption": {"text": "게임 전체 흐름", "verbatim": false}
+        }
+      ],
+      "from": {"key": "overview", "sectionPath": ["1. 프로젝트 개요", "1.1 게임 소개"], "sig": ["1.1 게임 소개|mermaid|1|flowchart TB"]}
+    },
+    {
+      "key": "overview-systems",
+      "after": "overview",
+      "chapter": "intro",
+      "layout": "visual",
+      "tab": "개요",
+      "title": {"text": "1.1 게임 소개", "verbatim": true},
+      "lead": null,
+      "sectionPath": ["1. 프로젝트 개요", "1.1 게임 소개"],
+      "points": [
+        {
+          "label": "염동력 조작",
+          "text": "우클릭으로 화면 중앙의 물체를 들고, 좌클릭으로 기본 공격을 하거나 들고 있는 물체를 조준점 방향으로 던집니다. 카메라를 빠르게 돌리면 들고 있는 물체를 휘두릅니다.",
+          "verbatim": false
+        },
+        {"label": "시간 정지", "text": "게임 전체가 아니라 정지 가능한 물체만 멈추므로, 플레이어는 움직이면서 멈춘 물체를 들거나 공격할 수 있습니다.", "verbatim": true},
+        {
+          "label": "보스",
+          "text": "대형 보스는 투하·투척·충격파, 휴머노이드는 검격·반격 패턴을 사용합니다. 피해와 별도인 무력화 피해를 입혀 무력화 게이지를 모두 깎으면 그로기에 빠집니다.",
+          "verbatim": true
+        },
+        {
+          "label": "증강 칩",
+          "text": "격자에 칩을 배치해 장착하면 공격력·최대 체력·최대 스태미나 같은 스탯이 오르고, 스킬 칩의 경우 스킬 슬롯 5칸에 들어갑니다.",
+          "verbatim": true
+        }
+      ],
+      "pointsTitle": {"text": "핵심 시스템", "verbatim": false},
+      "visuals": [
+        {
+          "kind": "table",
+          "n": 1,
+          "fp": "동작|조작",
+          "sectionPath": ["1. 프로젝트 개요", "1.1 게임 소개"],
+          "caption": {"text": "조작", "verbatim": false}
+        }
+      ]
+    },
+    {
+      "key": "psy-control",
+      "chapter": "psy",
+      "layout": "visual",
+      "tab": "흐름",
+      "title": {"text": "2.2 조작 입력과 물체 상태", "verbatim": true},
+      "lead": {"text": "염동력은 마우스 좌우 버튼으로 들기·던지기·기본 공격을 모두 처리합니다.", "verbatim": true},
+      "sectionPath": ["2. 물리 기반 염동력", "2.2 조작 입력과 물체 상태"],
+      "points": [
+        {"label": "", "text": "같은 좌클릭이라도 물체를 들고 있는지에 따라 기본 공격과 투척 준비로 나뉩니다.", "verbatim": true},
+        {"label": "", "text": "들기에는 조건이 있습니다. 물체 질량이 플레이어의 들 수 있는 최대 질량 이하이고, 스태미나가 최소량 이상이어야 합니다.", "verbatim": true},
+        {
+          "label": "",
+          "text": "들고 있는 동안에는 초당 일정량의 스태미나를 소모하고, 스태미나가 바닥나거나 물체가 플레이어에게서 일정 거리 이상 멀어지면 놓습니다.",
+          "verbatim": true
+        }
+      ],
+      "visuals": [{"kind": "mermaid", "n": 1, "fp": "stateDiagram-v2"}],
+      "from": {
+        "key": "psy-control",
+        "sectionPath": ["2. 물리 기반 염동력", "2.2 조작 입력과 물체 상태"],
+        "sig": ["2.2 조작 입력과 물체 상태|mermaid|1|stateDiagram-v2"]
+      }
+    },
+    {
+      "key": "psy-follow",
+      "chapter": "psy",
+      "layout": "code",
+      "tab": "구현",
+      "title": {"text": "2.4 물리 추종과 휘두르기", "verbatim": true},
+      "lead": {"text": "홀딩 위치와 현재 위치의 차이로 가속도를 만들고, 목표 속도와 물체 속도의 차이로 감쇠를 적용합니다.", "verbatim": true},
+      "sectionPath": ["2. 물리 기반 염동력", "2.4 물리 추종과 휘두르기"],
+      "points": [
+        {"label": "", "text": "위치 오차만 강하게 줄이면 물체가 목표를 지나치거나 심하게 흔들릴 수 있어 속도 감쇠와 상한을 함께 둡니다.", "verbatim": true},
+        {"label": "", "text": "휘두르기 판정은 든 직후 바로 허용하지 않고, 목표 위치에 도착한 상태와 카메라 회전·물체의 상대 속도를 함께 사용합니다.", "verbatim": true}
+      ],
+      "visuals": [
+        {
+          "kind": "image",
+          "src": "images/psychokinesis-hold.png",
+          "w": 1170,
+          "h": 878,
+          "caption": {"text": "염동력으로 물체를 들어 조종하는 플레이어", "verbatim": true}
+        },
+        {"kind": "code", "n": 1, "fp": "// PsychokinesisController.FixedUpdate() — 위치 오차로 가속도를 만들고 목"}
+      ],
+      "from": {
+        "key": "psy-follow",
+        "sectionPath": ["2. 물리 기반 염동력", "2.4 물리 추종과 휘두르기"],
+        "sig": [
+          "2.4 물리 추종과 휘두르기|code|1|// PsychokinesisController.FixedUpdate() — 위치 오차로 가속도를 만들고 목",
+          "2.4 물리 추종과 휘두르기|image|images/psychokinesis-hold.png|1"
+        ]
+      }
+    },
+    {
+      "key": "psy-hold-aim",
+      "after": "psy-follow",
+      "chapter": "psy",
+      "layout": "full",
+      "tab": "구현",
+      "title": {"text": "물체를 조준점 위에 두는 홀딩 위치", "verbatim": true},
+      "lead": {"text": "3인칭 카메라는 플레이어 어깨 쪽으로 비켜 있어 카메라 정면 방향으로 일정 거리 앞에 물체를 두면 물체가 화면 중앙의 조준점에서 벗어납니다.", "verbatim": true},
+      "sectionPath": ["2. 물리 기반 염동력", "2.4 물리 추종과 휘두르기", "물체를 조준점 위에 두는 홀딩 위치"],
+      "points": [
+        {
+          "label": "",
+          "text": "홀딩 위치는 플레이어 상체 높이의 기준점을 중심으로 한 구(반지름 = 홀딩 거리)와 카메라 중앙 광선의 먼 쪽 교점으로 정합니다.\n이렇게 하면 물체는 늘 조준점 위에 보이면서 플레이어와의 거리도 일정하게 유지됩니다.",
+          "verbatim": false
+        }
+      ],
+      "visuals": [
+        {
+          "kind": "image",
+          "src": "images/hold-aim-game.png",
+          "w": 1183,
+          "h": 887,
+          "caption": {"text": "게임 뷰 — 화면 중앙에 놓인 든 물체, 왼쪽에 어깨 쪽으로 비켜 보이는 플레이어", "verbatim": true}
+        },
+        {
+          "kind": "image",
+          "src": "images/hold-aim-scene.png",
+          "w": 1127,
+          "h": 845,
+          "caption": {
+            "text": "같은 순간을 위에서 본 씬 뷰 — 플레이어 상체 기준점을 중심으로 한 주황 구 외곽에 위치한 물체와, 플레이어 옆으로 비켜 있는 카메라(에디터 씬 뷰 Gizmo)",
+            "verbatim": true
+          }
+        }
+      ]
+    },
+    {
+      "key": "psy-hold-lag",
+      "after": "psy-hold-aim",
+      "chapter": "psy",
+      "layout": "visual",
+      "tab": "구현",
+      "title": {"text": "회전 속도에 따라 뒤따라오는 물체", "verbatim": true},
+      "lead": {"text": "홀딩 방향은 조준 방향으로 바로 맞추지 않고 보간으로 따라가게 합니다.", "verbatim": true},
+      "sectionPath": ["2. 물리 기반 염동력", "2.4 물리 추종과 휘두르기", "회전 속도에 따라 뒤따라오는 물체"],
+      "points": [
+        {"label": "", "text": "카메라 회전 속도가 빠를수록 따라가는 시간을 길게 잡고, 천천히 조준할 때는 짧게 잡아 거의 바로 따라옵니다.", "verbatim": true},
+        {"label": "", "text": "뒤처지는 각도에는 상한(기본 60°)을 두어 빠르게 돌려도 물체가 화면 밖으로 밀려나지 않게 합니다.", "verbatim": true},
+        {"label": "", "text": "빠르게 휘두르면 물체가 무게를 가진 것처럼 뒤따라오고, 조준할 때는 정확히 따라오도록 했습니다.", "verbatim": true},
+        {
+          "label": "",
+          "text": "휘두르기 판정은 투척 준비 중이거나 놓는 중이 아닐 때 카메라의 **수평 회전 속도**가 기준(기본 180°/s)을 넘는 순간 짧은 시간(기본 0.12초) 동안 켜집니다.",
+          "verbatim": true
+        }
+      ],
+      "visuals": [
+        {
+          "kind": "image",
+          "src": "images/hold-lag-fast.png",
+          "w": 741,
+          "h": 556,
+          "caption": {"text": "빠르게 돌릴 때 휘두르기 판정이 켜지고 조준 지점보다 뒤처져 따라오는 물체(에디터 씬 뷰 Gizmo)", "verbatim": true}
+        }
+      ]
+    },
+    {
+      "key": "debris-pool",
+      "chapter": "debris",
+      "layout": "code",
+      "tab": "구현",
+      "title": {"text": "3.2 미리 만들어 다시 사용하는 파편", "verbatim": true},
+      "lead": {"text": "물체가 부서질 때마다 파편을 생성하고 파괴하는 비용을 줄이기 위해, 작은 파편처럼 자주 사용하는 객체를 미리 생성해 두고 다시 사용합니다.", "verbatim": true},
+      "sectionPath": ["3. 부서진 조각을 다시 사용하는 파편", "3.2 미리 만들어 다시 사용하는 파편"],
+      "points": [
+        {
+          "label": "",
+          "text": "처음에 생성해 둘 수량과 다 사용했을 때 늘릴 수량을 따로 정해, 자주 사용하는 파편은 시작할 때 넉넉히 준비하고 모자랄 때만 조금씩 늘립니다.",
+          "verbatim": true
+        },
+        {
+          "label": "",
+          "text": "`ApplyVariant()`는 선택된 형태의 Mesh·Material·BoxCollider·질량·스케일을 풀 객체에 적용합니다.",
+          "verbatim": true
+        },
+        {"label": "", "text": "형태마다 별도 풀을 만드는 대신 크기별 객체를 여러 외형으로 재사용하는 구조입니다.", "verbatim": true}
+      ],
+      "visuals": [{"kind": "code", "n": 1, "fp": "// ObjectPool.Get() — 비어 있으면 확장 수량만큼 늘린 뒤 꺼냄"}],
+      "from": {
+        "key": "debris-pool",
+        "sectionPath": ["3. 부서진 조각을 다시 사용하는 파편", "3.2 미리 만들어 다시 사용하는 파편"],
+        "sig": ["3.2 미리 만들어 다시 사용하는 파편|code|1|// ObjectPool.Get() — 비어 있으면 확장 수량만큼 늘린 뒤 꺼냄"]
+      }
     }
   ],
-  "hide": []
+  "hide": [
+    {
+      "key": "save-restore",
+      "from": {
+        "key": "save-restore",
+        "sectionPath": ["6. 칩·스킬·임무와 보상·저장", "6.3 이어하기의 칩·장착 복원"],
+        "sig": ["6.3 이어하기의 칩·장착 복원|mermaid|1|sequenceDiagram"]
+      }
+    },
+    {
+      "key": "scene-settle",
+      "from": {
+        "key": "scene-settle",
+        "sectionPath": ["7. UI/UX ① 화면 UI·조작과 씬 전환", "7.6 씬 전환 — 화면·UI·소리를 함께 끄고 켜기"],
+        "sig": [
+          "7.6 씬 전환 — 화면·UI·소리를 함께 끄고 켜기|image|images/scene-reveal.mp4|1",
+          "7.6 씬 전환 — 화면·UI·소리를 함께 끄고 켜기|mermaid|1|flowchart TB"
+        ]
+      }
+    },
+    {
+      "key": "boss-move-choice",
+      "from": {
+        "key": "boss-move-choice",
+        "sectionPath": ["5. 보스 패턴과 전투 판정", "5.6 고민과 선택"],
+        "sig": ["5.6 고민과 선택|table|2|방법|장점|비용"]
+      }
+    }
+  ],
+  "deckText": [
+    {
+      "slide": "debris-choice",
+      "field": "point",
+      "n": 2,
+      "value": "물체마다 다른 조각을 만들지 않고 돌·금속 두 가지 조각으로만 나누어서, 파편은 원래 물체의 모양을 따르지 않습니다.",
+      "from": "그래서 파편은 원래 물체의 모양을 따르지 않습니다."
+    },
+    {
+      "slide": "local-time",
+      "field": "code",
+      "n": 2,
+      "value": "// TimeFreezable.LocalTime·LocalDeltaTime·LocalFixedDeltaTime — 정지·감속 동안의 시간 차이를 반영한 객체별 시간\npublic float LocalTime => Time.time - pausedDuration\n    - (Time.time - pauseStartTime) * (1f - appliedTimeScale);\npublic float LocalDeltaTime\n    => Time.deltaTime * appliedTimeScale;\npublic float LocalFixedDeltaTime\n    => Time.fixedDeltaTime * appliedTimeScale;",
+      "from": "// TimeFreezable.LocalTime·LocalDeltaTime·LocalFixedDeltaTime — 정지·감속 동안의 시간 차이를 반영한 객체별 시간\npublic float LocalTime => Time.time - pausedDuration\n    - (Time.time - pauseStartTime) * (1f - appliedTimeScale);\npublic float LocalDeltaTime => Time.deltaTime * appliedTimeScale;\npublic float LocalFixedDeltaTime => Time.fixedDeltaTime * appliedTimeScale;"
+    }
+  ]
 }
