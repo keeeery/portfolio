@@ -691,8 +691,7 @@ Intent 방식을 도입하면서 이 패턴들을 그 구조(`BossMeleePattern`)
 파편은 크기별 풀(§3)에서 큰 것 1개·중간 5개·작은 것 9개를 꺼냅니다. 돌진할 때는 보스가 벽 앞을 막고 있으므로, 기본 생성 메서드 대신 충돌 지점 좌우를 비우고 벽을 따라 옆·위로 튀게 했습니다(`SpawnAlongWall()`).
 
 ```csharp
-// WallFragmentSpawner.SpawnFragments()
-// 돌진 충돌이면 충돌 지점의 정면을 비우고 벽을 따라 좌우·위로 생성·발사
+// WallFragmentSpawner.SpawnFragments() — 돌진 충돌이면 정면을 비우고 벽을 따라 좌우·위로 생성·발사
 float side = Random.value < 0.5f ? -1f : 1f;
 
 // 생성 위치: 좌우로 SideGap만큼 비운 뒤 벽면 위에 흩뿌림
@@ -1407,6 +1406,7 @@ public void AddTrauma(float amount, float fadeTime = 0f)
     trauma = Mathf.Clamp01(trauma + amount);
     currentDecay = fadeTime > 0f ? trauma / fadeTime : traumaDecay;
 }
+
 // CameraController.UpdateTrauma() — 일부: 세기는 trauma², 노이즈 시간은 실제 시간으로 진행
 float power = trauma * trauma;
 noiseTime += Time.unscaledDeltaTime * shakeFrequency;
@@ -1536,7 +1536,7 @@ MSAA 마스크로 가장자리 표현을 보완합니다.
 
 #### 서로 가리는 보스와 플레이어 — 가려진 쪽을 드러내는 두 가지 표현
 
-![보스의 앞발에 가려진 플레이어가 흰 외곽선으로 보이는 화면](images/occlusion-player-outline.png) ![들고 있는 물체(초록 외곽선)에 가려진 훈련용 더미가 붉은 실루엣으로 보이는 화면](images/occlusion-silhouette.png)
+![보스의 앞발에 가려진 플레이어가 흰 외곽선으로 보이는 화면](images/occlusion-player-outline.png) ![들고 있는 물체에 가려진 훈련용 더미가 붉은 실루엣으로 보이는 화면](images/occlusion-silhouette.png)
 
 큰 보스와 싸우면 두 가지 가림이 생깁니다.
 보스가 플레이어를 가리면 내 캐릭터의 위치를 놓치고, 염동력으로 들고 있는 물체나 기둥·잔해가 보스를 가리면 보스의 자세와 공격 준비를 읽지 못합니다.
@@ -1575,10 +1575,13 @@ flowchart TB
 땅에 살짝 묻힌 발처럼 맞닿은 부분이 깜빡이며 칠해지는 현상을 줄였습니다.
 
 ```hlsl
-// BossOcclusionOutline.shader — FillAmount(): 보스 실루엣을 채울 양(0~1)을 구하는 부분
-half hidden = saturate((bossDepth - sceneDepth - _FillMinGap) / FILL_FADE_DISTANCE);
-half player = SAMPLE_TEXTURE2D_X(_BossOcclusionPlayerMask, sampler_PointClamp, uv).b;
-half debris = SAMPLE_TEXTURE2D_X(_BossOcclusionDebrisMask, sampler_PointClamp, uv).b;
+// BossOcclusionOutline.FillAmount() — 보스 실루엣을 채울 양(0~1) 계산
+half hidden = 
+    saturate((bossDepth - sceneDepth - _FillMinGap) / FILL_FADE_DISTANCE);
+half player = 
+    SAMPLE_TEXTURE2D_X(_BossOcclusionPlayerMask, sampler_PointClamp, uv).b;
+half debris = 
+    SAMPLE_TEXTURE2D_X(_BossOcclusionDebrisMask, sampler_PointClamp, uv).b;
 return boss.r * hidden * (1.0 - player) * (1.0 - debris) * (1.0 - behindIgnored);
 
 // Screen Fill 패스 — 구한 양만큼 채우기 색을 칠함
@@ -1658,9 +1661,12 @@ Punch를 여러 개 겹쳐도 같은 모양의 왕복이 더해질 뿐이라 이
 - 겹칠 때 무조건 밀어내도록 하면 물리적으로 부자연스러운 움직임이 나타남
 - 대형 보스의 배 아래쪽으로 들어가면 무적이 됨
 
-이 문제들을 자연스럽게 풀기 위해 많이 고민했고, §4.4의 부위별 충돌 무시·측면 이동·16방향 탈출 검사 구조로 구현했습니다(보스의 부위 콜라이더는 §4.4 이미지). 다만 지금 방식도 정답은 아니라고 생각합니다.
+이 문제들을 자연스럽게 풀기 위해 많이 고민했고, §4.4의 부위별 충돌 무시·측면 이동·16방향 탈출 검사 구조로 구현했습니다(보스의 부위 콜라이더는 §4.4 이미지).
+배 아래에서 무적이 되는 상황은 차르카로사우루스에서만 나왔습니다. 페르데로스는 뒤로 뛰어 거리를 벌리는 홉 동작이 있지만, 차르카로사우루스는 이 동작이 없어 배 아래로 파고든 플레이어에게 정면 공격이 닿지 않았기 때문입니다.
+그래서 이 보스에 근접 포효 패턴을 더했습니다. 플레이어가 몸 가까이에 0.75초 이상 머물면 포효하며 반경 6.5m 범위를 예고하고, 포효 정점에 범위 안의 플레이어를 밀어낸 뒤 밀려난 거리에서 닿는 정면 공격으로 바로 이어 갑니다(음파 연출은 §8.5).
+포효 패턴을 넣은 뒤로는 배 아래에 머물러도 밀려나 무적 상태가 이어지지 않았습니다.
+다만 몸 겹침을 처리하는 지금 방식도 정답은 아니라고 생각합니다.
 고친 뒤 플레이로 확인해 보니, 보스 몸에 끼는 현상은 전보다 많이 자연스러워졌지만 가끔은 아직 어색합니다.
-배 아래에서 무적이 되는 상황은 차르카로사우루스에서만 나와, 이 보스에 주변을 밀어내는 포효 패턴(§8.5)을 더해 해결했습니다.
 2D에서는 고려할 필요도 없던 문제였지만, 3D에서는 생각보다 고려할 문제가 많았습니다.
 
 ```mermaid
@@ -1680,7 +1686,9 @@ flowchart TB
 %% 화살표 Deep -> Stay: 나감=오른쪽 들어감=위
 ```
 
-이 다이어그램은 플레이어가 보스 몸과 겹쳤을 때 매 프레임 통과시킬지, 밀어낼지, 옆으로 비켜설지, 끼인 곳에서 빠져나갈지를 고르는 판단 순서를 도식화한 것입니다(`PlayerController.PushOutOfBodies()`). 보스가 밀고 들어온 부위는 충돌을 끄고 떨어진 부위는 되돌리며, 빼낼 때는 이동 입력·보스 정지·오래 겹침 중 하나일 때입니다. 세 갈래 모두 `CharacterController.Move`로 한 프레임에 조금씩 움직여 벽은 뚫지 않습니다.
+이 다이어그램은 플레이어가 보스 몸과 겹쳤을 때 매 프레임 통과시킬지, 밀어낼지, 옆으로 비켜설지, 끼인 곳에서 빠져나갈지를 고르는 판단 순서를 도식화한 것입니다(`PlayerController.PushOutOfBodies()`). 
+
+보스가 밀고 들어온 부위는 충돌을 끄고 떨어진 부위는 되돌리며, 빼낼 때는 이동 입력·보스 정지·오래 겹침 중 하나일 때입니다. 세 갈래 모두 `CharacterController.Move`로 한 프레임에 조금씩 움직여 벽은 뚫지 않습니다.
 
 ![끼임 탈출 방향 검사 — 페르데로스의 왼쪽 다리와 몸통 사이에 끼인 플레이어가 수평 16방향을 0.25m씩 검사해, 가깝고 몸 중심 바깥쪽인 방향(1.25m)으로 빠져나감](images/boss-escape-directions.png)
 

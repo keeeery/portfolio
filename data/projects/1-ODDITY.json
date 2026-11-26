@@ -393,9 +393,9 @@
         "lead": {"text": "홀딩 방향은 조준 방향으로 바로 맞추지 않고 보간으로 따라가게 합니다.", "verbatim": true},
         "sectionPath": ["2. 물리 기반 염동력", "2.4 물리 추종과 휘두르기", "회전 속도에 따라 뒤따라오는 물체"],
         "points": [
+          {"label": "", "text": "빠르게 휘두르면 물체가 무게를 가진 것처럼 뒤따라오고, 조준할 때는 정확히 따라오도록 했습니다.", "verbatim": true},
           {"label": "", "text": "카메라 회전 속도가 빠를수록 따라가는 시간을 길게 잡고, 천천히 조준할 때는 짧게 잡아 거의 바로 따라옵니다.", "verbatim": true},
           {"label": "", "text": "뒤처지는 각도에는 상한(기본 60°)을 두어 빠르게 돌려도 물체가 화면 밖으로 밀려나지 않게 합니다.", "verbatim": true},
-          {"label": "", "text": "빠르게 휘두르면 물체가 무게를 가진 것처럼 뒤따라오고, 조준할 때는 정확히 따라오도록 했습니다.", "verbatim": true},
           {
             "label": "",
             "text": "휘두르기 판정은 투척 준비 중이거나 놓는 중이 아닐 때 카메라의 **수평 회전 속도**가 기준(기본 180°/s)을 넘는 순간 짧은 시간(기본 0.12초) 동안 켜집니다.",
@@ -462,10 +462,9 @@
           {"label": "", "text": "들고 있는 동안 무시한 플레이어와의 충돌은, 놓을 때 들기 전 상태 그대로 콜라이더 쌍별로 되돌립니다.", "verbatim": true},
           {
             "label": "",
-            "text": "빼 둔 레이어는 트리거로도 감지되지 않으므로, 물체의 타격 판정은 별도 레이어(`PsychokinesisHit`)의 트리거로 합니다.",
-            "verbatim": true
-          },
-          {"label": "", "text": "이 트리거는 몬스터 레이어만 감지하도록 두어, 보스에 닿으면 밀어내지 않고 피해·파편화만 일어납니다.", "verbatim": true}
+            "text": "빼 둔 레이어는 트리거로도 감지되지 않으므로, 물체의 타격 판정은 별도 레이어(`PsychokinesisHit`)의 트리거로 합니다.\n이 트리거는 몬스터 레이어만 감지하도록 두어, 보스에 닿으면 밀어내지 않고 피해·파편화만 일어납니다.",
+            "verbatim": false
+          }
         ],
         "visuals": [{"kind": "mermaid", "n": 1, "fp": "sequenceDiagram"}],
         "edited": true
@@ -519,12 +518,12 @@
             "text": "처음에 생성해 둘 수량과 다 사용했을 때 늘릴 수량을 따로 정해, 자주 사용하는 파편은 시작할 때 넉넉히 준비하고 모자랄 때만 조금씩 늘립니다.",
             "verbatim": true
           },
+          {"label": "", "text": "형태마다 별도 풀을 만드는 대신 크기별 객체를 여러 외형으로 재사용하는 구조입니다.", "verbatim": true},
           {
             "label": "",
             "text": "`ApplyVariant()`는 선택된 형태의 Mesh·Material·BoxCollider·질량·스케일을 풀 객체에 적용합니다.",
             "verbatim": true
-          },
-          {"label": "", "text": "형태마다 별도 풀을 만드는 대신 크기별 객체를 여러 외형으로 재사용하는 구조입니다.", "verbatim": true}
+          }
         ],
         "visuals": [{"kind": "code", "n": 1, "fp": "// ObjectPool.Get() — 비어 있으면 확장 수량만큼 늘린 뒤 꺼냄"}],
         "edited": true
@@ -543,11 +542,10 @@
             "text": "생성할 때도 다른 파편과 겹치는 것을 허용하고 빈자리를 찾는 재시도 횟수를 제한해, 연출용 파편의 연산 비용을 줄였습니다.",
             "verbatim": true
           },
-          {"label": "", "text": "작은 파편은 생성 즉시 일정 시간만 기다리는 대신, 바닥 지지 여부와 선형·각속도를 검사합니다.", "verbatim": true},
           {
             "label": "",
-            "text": "정해진 시간이 지나서가 아니라 바닥에 지지되고 느려진 상태가 이어져야 축소·반환되고, 다시 움직이면 처음부터 다시 확인합니다.",
-            "verbatim": true
+            "text": "작은 파편은 생성 즉시 일정 시간만 기다리는 대신, 바닥 지지 여부와 선형·각속도를 검사합니다.\n정해진 시간이 지나서가 아니라 바닥에 지지되고 느려진 상태가 이어져야 축소·반환되고, 다시 움직이면 처음부터 다시 확인합니다.",
+            "verbatim": false
           }
         ],
         "visuals": [{"kind": "mermaid", "n": 1, "fp": "stateDiagram-v2"}],
@@ -734,10 +732,9 @@
         "points": [
           {
             "label": "",
-            "text": "Animator의 원래 속도와 Rigidbody의 운동 상태를 저장하고, 정지 시 Rigidbody를 Kinematic으로 전환하며 관련 DOTween을 일시정지합니다.",
-            "verbatim": true
+            "text": "Animator의 원래 속도와 Rigidbody의 운동 상태를 저장하고, 정지 시 Rigidbody를 Kinematic으로 전환하며 관련 DOTween을 일시정지합니다.\n해제 시에는 저장된 상태를 복구합니다.",
+            "verbatim": false
           },
-          {"label": "", "text": "해제 시에는 저장된 상태를 복구합니다.", "verbatim": true},
           {"label": "", "text": "보스 행동·이동 등 시간 영향을 받아야 하는 코드는 이 로컬 시간과 배율을 사용해야 합니다.", "verbatim": true}
         ],
         "visuals": [
@@ -885,12 +882,12 @@
         "sectionPath": ["7. UI/UX ① 화면 UI·조작과 씬 전환", "7.4 UI 연출 부품과 스타일 통일", "에디터 도구로 한 번에 맞춘 UI"],
         "points": [
           {
-            "label": "",
+            "label": "필요성",
             "text": "UI가 프리팹이 아니라 여러 씬에 직접 배치되어 값도 제각각이라, 손으로 고쳤다면 씬마다 값을 하나씩 확인하느라 오래 걸렸을 것입니다.",
             "verbatim": true
           },
-          {"label": "", "text": "규칙은 제가 정하고, 그 규칙을 한 번에 적용하는 에디터 도구는 AI 코딩 에이전트를 활용해 만들었습니다.", "verbatim": false},
-          {"label": "", "text": "도구는 다시 실행해도 같은 결과가 되도록 이미 만든 것을 지우고 새로 만들거나, 이미 맞춰진 것은 건너뜁니다.", "verbatim": true}
+          {"label": "AI 활용", "text": "규칙은 제가 정하고, 그 규칙을 한 번에 적용하는 에디터 도구는 AI 코딩 에이전트를 활용해 만들었습니다.", "verbatim": false},
+          {"label": "재실행", "text": "도구는 다시 실행해도 같은 결과가 되도록 이미 만든 것을 지우고 새로 만들거나, 이미 맞춰진 것은 건너뜁니다.", "verbatim": true}
         ],
         "visuals": [
           {
@@ -946,11 +943,25 @@
         "sectionPath": ["8. UI/UX ② 전투 피드백과 비주얼 효과", "8.3 공격 예고 — 범위·박자·바닥에 붙는 표시"],
         "points": [
           {
-            "label": "",
+            "label": "박자",
             "text": "`AttackTelegraph`는 바닥에 범위 외곽선을 그린 뒤 안쪽을 정해진 시간 동안 차오르게 하고, 공격이 들어가는 순간 가득 채운 뒤 사라집니다.",
             "verbatim": true
           },
-          {"label": "", "text": "시간 정지로 보스를 멈춰 두면 예고도 그 진행도에서 멈춰, 정지가 풀린 뒤 남은 시간을 그대로 읽을 수 있습니다.", "verbatim": true}
+          {
+            "label": "시간\n정지",
+            "text": "시간 정지로 보스를 멈춰 두면 예고도 그 진행도에서 멈춰, 정지가 풀린 뒤 남은 시간을 그대로 읽을 수 있습니다.",
+            "verbatim": true
+          },
+          {
+            "label": "바닥\n데칼",
+            "text": "표시는 `BossTelegraph.shader`로 그리는 화면 공간 데칼로, 바닥 높이 근처 상자 안에서 위를 향한 면에만 그려 단차 위에도 틈 없이 붙고 벽 옆면·구멍 아래에는 그리지 않습니다.",
+            "verbatim": false
+          },
+          {
+            "label": "스텐실\n마스크",
+            "text": "보스 몸체·소품에는 `TelegraphMaskFeature`가 스텐실 비트 128을 기록해, 예고가 그 위에 묻지 않게 합니다.",
+            "verbatim": false
+          }
         ],
         "visuals": [
           {
@@ -959,8 +970,7 @@
             "w": 1200,
             "h": 900,
             "caption": {"text": "차르카로사우루스 보스의 양손 내려찍기 예고 — 보스 몸 중심의 넓은 원형 범위가 차오른 뒤 내려찍기와 함께 사라짐", "verbatim": true}
-          },
-          {"kind": "table", "n": 1, "fp": "메서드|역할"}
+          }
         ],
         "edited": true
       },
@@ -986,7 +996,7 @@
       {
         "key": "camera-shake",
         "chapter": "fx",
-        "layout": "code",
+        "layout": "visual",
         "tab": "구현",
         "title": {"text": "trauma 기반 카메라 흔들림", "verbatim": true},
         "lead": {"text": "카메라 흔들림은 충격량(trauma, 0~1)을 쌓고 그 제곱으로 세기를 정합니다.", "verbatim": true},
@@ -1001,14 +1011,14 @@
           {"label": "", "text": "플레이어 피격, 보스 피격 구간, 보스 그로기·사망이 모두 같은 `AddTrauma(양, 사라지는 시간)`를 부릅니다.", "verbatim": true}
         ],
         "visuals": [
-          {"kind": "code", "n": 1, "fp": "// CameraController.AddTrauma() — 충격을 trauma로 쌓고 사라지는 속도 설정"},
           {
             "kind": "image",
             "src": "images/camera-shake.mp4",
             "w": 1600,
             "h": 900,
             "caption": {"text": "강 구간 피격 연출 — 큰 통을 던져 맞힌 순간 카메라가 흔들림", "verbatim": true}
-          }
+          },
+          {"kind": "code", "n": 1, "fp": "// CameraController.AddTrauma() — 충격을 trauma로 쌓고 사라지는 속도 설정"}
         ],
         "edited": true
       },
@@ -1023,58 +1033,56 @@
         "points": [
           {
             "label": "문제",
-            "text": "처음에는 DOTween의 Punch로 흔들림을 만들려 했는데, 정해진 방향(좌우)으로만 매번 같은 모양으로 왕복해 맞을 때마다 같은 흔들림이 기계적으로 보였습니다.",
-            "verbatim": true
+            "text": "DOTween의 Punch로 흔들림을 만들려 했는데, 정해진 방향(좌우)으로만 매번 같은 모양으로 왕복해 맞을 때마다 같은 흔들림이 기계적으로 보였습니다.",
+            "verbatim": false
           },
-          {"label": "결과", "text": "그래서 충격량을 값 하나로 모으고 노이즈로 방향을 정하는 방식으로 바꿨습니다(§8.4).", "verbatim": true}
+          {
+            "label": "결과",
+            "text": "충격량을 값 하나로 모으고 노이즈로 방향을 정하는 방식으로 바꿔, 매 프레임 흔들리는 방향이 달라지고 겹친 충격도 쌓이게 했습니다.",
+            "verbatim": false
+          }
         ],
-        "visuals": [{"kind": "table", "n": 1, "fp": "방법|장점|비용"}],
+        "visuals": [{"kind": "table", "n": 1, "fp": "방법|장점|비용", "slideBreakAfter": ["위치 흔들기"]}],
         "edited": true
       },
       {
         "key": "boss-tier",
         "chapter": "fx",
-        "layout": "code",
+        "layout": "full",
         "tab": "구현",
         "title": {"text": "받은 피해를 공격자 공격력과 비교한 세 구간", "verbatim": true},
         "lead": {"text": "`BossHitFeedback`은 보스가 맞을 때마다 피해 크기를 약·중·강 세 구간으로 나누고, 구간이 높을수록 연출의 겹을 늘립니다.", "verbatim": true},
         "sectionPath": ["8. UI/UX ② 전투 피드백과 비주얼 효과", "8.5 보스 전투 피드백 — 피해 구간과 몸으로 보여 주는 상태", "받은 피해를 공격자 공격력과 비교한 세 구간"],
         "points": [
           {
-            "label": "이유",
+            "label": "",
             "text": "모든 피해가 공격력을 바탕으로 계산되므로, 칩·패시브로 공격력이 바뀌거나 보스가 달라져도 같은 종류의 공격은 같은 구간에 들어갑니다.",
             "verbatim": true
           },
           {"label": "", "text": "약한 피격은 기본 공격처럼 자주 들어오므로 히트스톱을 걸지 않아 조작 흐름을 끊지 않습니다.", "verbatim": true}
         ],
-        "visuals": [{"kind": "code", "n": 1, "fp": "// BossHitFeedback.GetTier() — 받은 피해를 공격력 배율과 비교해 피격 단계 결정"}],
-        "edited": true
-      },
-      {
-        "key": "boss-dizzy",
-        "chapter": "fx",
-        "layout": "visual",
-        "tab": "",
-        "title": {"text": "무력화·기절을 자세로 보여 줌", "verbatim": true},
-        "lead": {"text": "보스가 어떤 상태인지를 HUD 숫자만이 아니라 몸의 움직임으로도 읽을 수 있게 했습니다.", "verbatim": true},
-        "sectionPath": ["8. UI/UX ② 전투 피드백과 비주얼 효과", "8.5 보스 전투 피드백 — 피해 구간과 몸으로 보여 주는 상태", "무력화·기절을 자세로 보여 줌"],
-        "points": [
-          {
-            "label": "",
-            "text": "각 겹은 사용하는 쪽이 `Begin()`/`End()`를 짝지어 부르면 가중치가 서서히 오르내리고, 횟수로 세므로 겹쳐 걸어도 안전합니다.",
-            "verbatim": true
-          },
-          {"label": "", "text": "모든 흔들림·반짝이·숨은 보스의 시계(`TimeFreezable`)를 따라 시간 정지 중에는 그 자세로 멈춥니다.", "verbatim": true}
-        ],
         "visuals": [
           {
             "kind": "image",
-            "src": "images/dizzy-sway.png",
-            "w": 800,
-            "h": 600,
-            "caption": {"text": "벽에 돌진해 부딪힌 페르데로스 보스가 기절한 모습 — 머리 위를 맴도는 반짝이", "verbatim": true}
+            "src": "images/hit-effect-s.mp4",
+            "w": 720,
+            "h": 540,
+            "caption": {"text": "약 구간 피격 연출 — 작은 섬광과 빛줄기 파티클", "verbatim": true}
           },
-          {"kind": "table", "n": 1, "fp": "겹|표현|사용하는 곳|함께 나오는 연출"}
+          {
+            "kind": "image",
+            "src": "images/hit-effect-m.mp4",
+            "w": 720,
+            "h": 540,
+            "caption": {"text": "중 구간 피격 연출 — 큰 섬광과 빛줄기 파티클", "verbatim": true}
+          },
+          {
+            "kind": "image",
+            "src": "images/hit-effect-l.mp4",
+            "w": 720,
+            "h": 540,
+            "caption": {"text": "강 구간 피격 연출 — 더 큰 섬광과 긴 빛줄기 파티클", "verbatim": true}
+          }
         ],
         "edited": true
       },
@@ -1084,25 +1092,24 @@
         "layout": "visual",
         "tab": "",
         "title": {"text": "마무리 일격과 사망 연출", "verbatim": true},
-        "lead": {"text": "월드가 원래 속도로 돌아온 뒤에도 플레이어·카메라 회전은 느린 채 남고, 보상창은 홀로그램 소멸이 끝난 뒤에 열립니다.", "verbatim": true},
+        "lead": {"text": "보스의 숨을 끊는 순간은 한 번뿐인 장면이라 가장 긴 연출을 붙였습니다.", "verbatim": true},
         "sectionPath": ["8. UI/UX ② 전투 피드백과 비주얼 효과", "8.5 보스 전투 피드백 — 피해 구간과 몸으로 보여 주는 상태", "마무리 일격과 사망 연출"],
         "points": [
-          {"label": "", "text": "보스의 숨을 끊는 순간은 한 번뿐인 장면이라 가장 긴 연출을 붙였습니다.", "verbatim": true},
           {
             "label": "",
-            "text": "이 다이어그램은 마무리 일격의 히트스톱·슬로모션부터 쓰러짐과 홀로그램 소멸, 보상창이 열리기까지의 연출 순서를 도식화한 것입니다.",
-            "verbatim": true
+            "text": "세 피해 구간과 별개로, 숨을 끊는 피격에는 가장 큰 충격과 많은 입자를 터뜨리고 이 충격만 슬로모션 배율에 맞춰 게임 시간으로 느리게 퍼뜨립니다.\n월드가 원래 속도로 돌아온 뒤에도 플레이어·카메라 회전은 느린 채 남고, 보상창은 홀로그램 소멸이 끝난 뒤에 열립니다.",
+            "verbatim": false
           }
         ],
         "visuals": [
-          {"kind": "mermaid", "n": 1, "fp": "flowchart TB"},
           {
             "kind": "image",
             "src": "images/boss-death.mp4",
-            "w": 900,
-            "h": 674,
+            "w": 1536,
+            "h": 864,
             "caption": {"text": "마무리 일격과 사망 연출 — 차르카로사우루스 보스가 쓰러진 뒤 홀로그램으로 바뀌어 사라지는 모습", "verbatim": true}
-          }
+          },
+          {"kind": "mermaid", "n": 1, "fp": "flowchart TB"}
         ],
         "edited": true
       },
@@ -1112,30 +1119,15 @@
         "layout": "visual",
         "tab": "구현",
         "title": {"text": "서로 가리는 보스와 플레이어 — 가려진 쪽을 드러내는 두 가지 표현", "verbatim": true},
-        "lead": {
-          "text": "처음에는 보스에 가려진 플레이어의 외곽선만 그렸고, 이후 같은 RendererFeature에 다른 물체에 가려진 보스 부분을 반투명 실루엣으로 채우는 패스를 추가했습니다.",
-          "verbatim": true
-        },
+        "lead": {"text": "큰 보스와 싸우면 보스가 플레이어를 가리거나, 들고 있는 물체·잔해가 보스를 가리는 두 가지 가림이 생깁니다.", "verbatim": false},
         "sectionPath": ["8. UI/UX ② 전투 피드백과 비주얼 효과", "8.6 외곽선과 가림 — 안 보이는 대상을 드러내기", "서로 가리는 보스와 플레이어 — 가려진 쪽을 드러내는 두 가지 표현"],
         "points": [
-          {"label": "문제", "text": "1차 시연에서 가장 많이 받은 피드백도 들고 있는 물체가 보스를 가린다는 것이었습니다(§10.2).", "verbatim": true},
           {
-            "label": "구현",
-            "text": "처음에는 보스에 가려진 플레이어의 외곽선만 그렸고, 이후 같은 RendererFeature에 다른 물체에 가려진 보스 부분을 반투명 실루엣으로 채우는 패스를 추가했습니다.",
-            "verbatim": true
+            "label": "",
+            "text": "보스에 가려진 플레이어는 외곽선으로, 다른 물체에 가려진 보스 부분은 반투명 실루엣으로 드러내고, 두 표현 모두 같은 RendererFeature에서 그립니다.",
+            "verbatim": false
           }
         ],
-        "visuals": [{"kind": "mermaid", "n": 1, "fp": "flowchart TB"}]
-      },
-      {
-        "key": "boss-occlusion-screens",
-        "chapter": "fx",
-        "layout": "screens",
-        "tab": "결과",
-        "title": {"text": "서로 가리는 보스와 플레이어 — 가려진 쪽을 드러내는 두 가지 표현", "verbatim": true},
-        "lead": {"text": "큰 보스와 싸우면 두 가지 가림이 생깁니다.", "verbatim": true},
-        "sectionPath": ["8. UI/UX ② 전투 피드백과 비주얼 효과", "8.6 외곽선과 가림 — 안 보이는 대상을 드러내기", "서로 가리는 보스와 플레이어 — 가려진 쪽을 드러내는 두 가지 표현"],
-        "points": [],
         "visuals": [
           {
             "kind": "image",
@@ -1149,8 +1141,9 @@
             "src": "images/occlusion-silhouette.png",
             "w": 960,
             "h": 720,
-            "caption": {"text": "들고 있는 물체(초록 외곽선)에 가려진 훈련용 더미가 붉은 실루엣으로 보이는 화면", "verbatim": true}
-          }
+            "caption": {"text": "들고 있는 물체에 가려진 훈련용 더미가 붉은 실루엣으로 보이는 화면", "verbatim": true}
+          },
+          {"kind": "mermaid", "n": 1, "fp": "flowchart TB"}
         ],
         "edited": true
       },
@@ -1163,12 +1156,29 @@
         "lead": {"text": "보스는 플레이어를 뚫고 지나가고, 플레이어는 보스에게 막히도록 만들려고 했습니다.", "verbatim": true},
         "sectionPath": ["9. 트러블슈팅", "9.1 가장 오래 붙잡은 문제 — 보스 몸체와 플레이어 자세"],
         "points": [
-          {"label": "문제", "text": "플레이어가 보스 몸 안쪽으로 들어가짐", "verbatim": true},
-          {"label": "문제", "text": "대형 보스의 배 아래쪽으로 들어가면 무적이 됨", "verbatim": true},
-          {"label": "해결", "text": "§4.5의 부위별 충돌 무시·측면 이동·16방향 탈출 검사 구조로 구현했습니다.", "verbatim": false},
+          {"label": "문제", "text": "플레이어가 보스 몸 안쪽으로 들어가고, 대형 보스의 배 아래쪽에서는 무적이 됨", "verbatim": false},
+          {
+            "label": "해결",
+            "text": "몸 겹침은 §4.4의 부위별 충돌 무시·측면 이동·탈출 검사 구조로, 배 아래 무적은 차르카로사우루스에 근접 포효 패턴을 더해 해결했습니다.",
+            "verbatim": false
+          },
+          {
+            "label": "결과",
+            "text": "보스 몸에 끼는 현상은 전보다 많이 자연스러워졌지만 가끔은 아직 어색하고, 포효 패턴을 넣은 뒤로는 배 아래에 머물러도 무적 상태가 이어지지 않았습니다.",
+            "verbatim": false
+          },
           {"label": "배운 점", "text": "2D에서는 고려할 필요도 없던 문제였지만, 3D에서는 생각보다 고려할 문제가 많았습니다.", "verbatim": true}
         ],
-        "visuals": [{"kind": "mermaid", "n": 1, "fp": "flowchart TB"}]
+        "visuals": [
+          {
+            "kind": "image",
+            "src": "images/boss-escape-directions.png",
+            "w": 1200,
+            "h": 900,
+            "caption": {"text": "끼임 탈출 방향 검사", "verbatim": false}
+          }
+        ],
+        "edited": true
       },
       {
         "key": "player-scope",
@@ -1877,20 +1887,35 @@
       {
         "key": "crosshair",
         "chapter": "ui",
-        "layout": "code",
+        "layout": "visual",
         "tab": "구현",
         "title": {"text": "몰입을 깨지 않고 정보를 주는 조준점", "verbatim": true},
         "lead": {"text": "`Crosshair`는 가운데 점에 상황별 표시를 겹쳐, 화면 중앙만 보고도 지금 할 수 있는 행동을 알 수 있게 합니다.", "verbatim": true},
         "sectionPath": ["7. UI/UX ① 화면 UI·조작과 씬 전환", "7.2 조작 안내 — 조준점·키 안내·시스템 메시지", "몰입을 깨지 않고 정보를 주는 조준점"],
         "points": [
           {
-            "label": "",
-            "text": "판정(`HasAttackTarget`)은 기본 공격과 같은 광선·사거리를 사용하고, 여러 곳에서 읽어도 프레임마다 한 번만 Raycast하도록 결과를 보관합니다.",
+            "label": "+ 표시",
+            "text": "판정(`HasAttackTarget`)은 기본 공격과 같은 광선·사거리를 사용하고, 프레임마다 한 번만 Raycast하도록 결과를 보관합니다.",
             "verbatim": false
           },
-          {"label": "", "text": "`CombatManager`의 처리 결과에서 받은 피해가 0보다 크고 보낸 쪽이 플레이어인 이벤트로만 띄웁니다.", "verbatim": false}
+          {"label": "× 표시", "text": "`CombatManager`의 처리 결과에서 받은 피해가 0보다 크고 보낸 쪽이 플레이어인 이벤트로만 띄웁니다.", "verbatim": false}
         ],
-        "visuals": [{"kind": "code", "n": 1, "fp": "// Crosshair.Update() — 조준점 링·사거리 표시 조건"}]
+        "visuals": [
+          {
+            "kind": "image",
+            "src": "images/crosshair-hit.png",
+            "w": 400,
+            "h": 300,
+            "caption": {"text": "조준점 — 링과 +·× 표시가 동시에 표시됨", "verbatim": true}
+          },
+          {
+            "kind": "table",
+            "n": 1,
+            "fp": "표시|나타나는 조건|알려 주는 것",
+            "slideBreakParen": true,
+            "slideBreakAfter": ["짧은 선,", "화면 중앙에", "위에서도"]
+          }
+        ]
       },
       {
         "key": "ui-tools",
@@ -1901,10 +1926,13 @@
         "lead": {"text": "초반에 UI 규칙을 정하지 않아 팀원마다 기준 해상도(1920×1080·3840×2160)와 배율이 다른 창이 쌓였습니다.", "verbatim": true},
         "sectionPath": ["7. UI/UX ① 화면 UI·조작과 씬 전환", "7.4 UI 연출 부품과 스타일 통일", "에디터 도구로 한 번에 맞춘 UI"],
         "points": [
+          {
+            "label": "",
+            "text": "UI가 프리팹이 아니라 여러 씬에 직접 배치되어 값도 제각각이라, 손으로 고쳤다면 씬마다 값을 하나씩 확인하느라 오래 걸렸을 것입니다.",
+            "verbatim": true
+          },
           {"label": "", "text": "규칙은 제가 정하고, 그 규칙을 한 번에 적용하는 에디터 도구는 AI 코딩 에이전트를 활용해 만들었습니다.", "verbatim": false},
-          {"label": "", "text": "도구는 다시 실행해도 같은 결과가 되도록 이미 만든 것을 지우고 새로 만들거나, 이미 맞춰진 것은 건너뜁니다.", "verbatim": true},
-          {"label": "", "text": "Unity 콘솔에서 오류를 찾고, AI의 컴파일 확인이 실제로는 실행되지 않았음을 확인함", "verbatim": true},
-          {"label": "", "text": "X 버튼 크기에까지 0.65가 곱해진 것을 찾아 고침", "verbatim": true}
+          {"label": "", "text": "도구는 다시 실행해도 같은 결과가 되도록 이미 만든 것을 지우고 새로 만들거나, 이미 맞춰진 것은 건너뜁니다.", "verbatim": true}
         ],
         "visuals": [
           {
@@ -1919,13 +1947,34 @@
       {
         "key": "ui-tools-table",
         "chapter": "ui",
-        "layout": "full",
+        "layout": "problem",
         "tab": "",
-        "title": {"text": "에디터 도구로 한 번에 맞춘 UI", "verbatim": true},
-        "lead": null,
+        "title": {"text": "AI와 함께 한 과정", "verbatim": true},
+        "lead": {"text": "규칙은 제가 정했고, 팀원이 만든 창까지 바뀌는 작업이라 팀과 협의한 뒤 전체에 적용했습니다.", "verbatim": true},
         "sectionPath": ["7. UI/UX ① 화면 UI·조작과 씬 전환", "7.4 UI 연출 부품과 스타일 통일", "에디터 도구로 한 번에 맞춘 UI"],
-        "points": [],
-        "visuals": [{"kind": "table", "n": 1, "fp": "도구|하는 일"}]
+        "points": [
+          {
+            "label": "범위 정하기",
+            "text": "**AI** 기준 해상도를 하나로 맞추려면 코드에 박힌 크기 값 100여 곳(대부분 팀원 코드)을 고쳐야 한다고 조사함\n**내 판단** 해상도 통일은 접고, X 버튼 크기가 창마다 다른 원인인 0.65 배율이 걸린 임무 창 세 개만 고치기로 함",
+            "verbatim": false
+          },
+          {
+            "label": "첫 구현",
+            "text": "**AI** 도구를 만들고 \"컴파일 오류 없음\"이라고 보고함\n**내 판단** Unity 콘솔에서 오류를 찾고, AI의 컴파일 확인이 실제로는 실행되지 않았음을 확인함",
+            "verbatim": false
+          },
+          {
+            "label": "적용 뒤 점검",
+            "text": "**AI** `UICanvasScaleBaker`로 창 배율을 1로 굽고 안쪽 값에 0.65를 곱함\n**내 판단** X 버튼 크기에까지 0.65가 곱해진 것을 찾아 고침",
+            "verbatim": false
+          },
+          {
+            "label": "HUD 프리팹 변환",
+            "text": "**AI** `HUDPrefabBuilder` 첫 버전으로 씬의 HUD를 프리팹으로 바꿈\n**내 판단** 씬에서 `DeathScreen`·`BossIntroTitle`이 빠진 것을 찾아 되돌리고, 기존 오브젝트를 그대로 프리팹 인스턴스로 바꾸도록 고침",
+            "verbatim": false
+          }
+        ],
+        "visuals": []
       },
       {
         "key": "telegraph",
@@ -1937,11 +1986,25 @@
         "sectionPath": ["8. UI/UX ② 전투 피드백과 비주얼 효과", "8.3 공격 예고 — 범위·박자·바닥에 붙는 표시"],
         "points": [
           {
-            "label": "",
+            "label": "박자",
             "text": "`AttackTelegraph`는 바닥에 범위 외곽선을 그린 뒤 안쪽을 정해진 시간 동안 차오르게 하고, 공격이 들어가는 순간 가득 채운 뒤 사라집니다.",
             "verbatim": true
           },
-          {"label": "", "text": "시간 정지로 보스를 멈춰 두면 예고도 그 진행도에서 멈춰, 정지가 풀린 뒤 남은 시간을 그대로 읽을 수 있습니다.", "verbatim": true}
+          {
+            "label": "시간\n정지",
+            "text": "시간 정지로 보스를 멈춰 두면 예고도 그 진행도에서 멈춰, 정지가 풀린 뒤 남은 시간을 그대로 읽을 수 있습니다.",
+            "verbatim": true
+          },
+          {
+            "label": "바닥\n데칼",
+            "text": "표시는 `BossTelegraph.shader`로 그리는 화면 공간 데칼로, 바닥 높이 근처 상자 안에서 위를 향한 면에만 그려 단차 위에도 틈 없이 붙고 벽 옆면·구멍 아래에는 그리지 않습니다.",
+            "verbatim": false
+          },
+          {
+            "label": "스텐실\n마스크",
+            "text": "보스 몸체·소품에는 `TelegraphMaskFeature`가 스텐실 비트 128을 기록해, 예고가 그 위에 묻지 않게 합니다.",
+            "verbatim": false
+          }
         ],
         "visuals": [
           {
@@ -1950,8 +2013,7 @@
             "w": 1200,
             "h": 900,
             "caption": {"text": "차르카로사우루스 보스의 양손 내려찍기 예고 — 보스 몸 중심의 넓은 원형 범위가 차오른 뒤 내려찍기와 함께 사라짐", "verbatim": true}
-          },
-          {"kind": "table", "n": 1, "fp": "메서드|역할"}
+          }
         ]
       },
       {
@@ -1975,7 +2037,7 @@
       {
         "key": "camera-shake",
         "chapter": "fx",
-        "layout": "code",
+        "layout": "visual",
         "tab": "구현",
         "title": {"text": "trauma 기반 카메라 흔들림", "verbatim": true},
         "lead": {"text": "카메라 흔들림은 충격량(trauma, 0~1)을 쌓고 그 제곱으로 세기를 정합니다.", "verbatim": true},
@@ -1990,14 +2052,14 @@
           {"label": "", "text": "플레이어 피격, 보스 피격 구간, 보스 그로기·사망이 모두 같은 `AddTrauma(양, 사라지는 시간)`를 부릅니다.", "verbatim": true}
         ],
         "visuals": [
-          {"kind": "code", "n": 1, "fp": "// CameraController.AddTrauma() — 충격을 trauma로 쌓고 사라지는 속도 설정"},
           {
             "kind": "image",
             "src": "images/camera-shake.mp4",
             "w": 1600,
             "h": 900,
             "caption": {"text": "강 구간 피격 연출 — 큰 통을 던져 맞힌 순간 카메라가 흔들림", "verbatim": true}
-          }
+          },
+          {"kind": "code", "n": 1, "fp": "// CameraController.AddTrauma() — 충격을 trauma로 쌓고 사라지는 속도 설정"}
         ]
       },
       {
@@ -2011,56 +2073,55 @@
         "points": [
           {
             "label": "문제",
-            "text": "처음에는 DOTween의 Punch로 흔들림을 만들려 했는데, 정해진 방향(좌우)으로만 매번 같은 모양으로 왕복해 맞을 때마다 같은 흔들림이 기계적으로 보였습니다.",
-            "verbatim": true
+            "text": "DOTween의 Punch로 흔들림을 만들려 했는데, 정해진 방향(좌우)으로만 매번 같은 모양으로 왕복해 맞을 때마다 같은 흔들림이 기계적으로 보였습니다.",
+            "verbatim": false
           },
-          {"label": "결과", "text": "그래서 충격량을 값 하나로 모으고 노이즈로 방향을 정하는 방식으로 바꿨습니다(§8.4).", "verbatim": true}
+          {
+            "label": "결과",
+            "text": "충격량을 값 하나로 모으고 노이즈로 방향을 정하는 방식으로 바꿔, 매 프레임 흔들리는 방향이 달라지고 겹친 충격도 쌓이게 했습니다.",
+            "verbatim": false
+          }
         ],
-        "visuals": [{"kind": "table", "n": 1, "fp": "방법|장점|비용"}]
+        "visuals": [{"kind": "table", "n": 1, "fp": "방법|장점|비용", "slideBreakAfter": ["위치 흔들기"]}]
       },
       {
         "key": "boss-tier",
         "chapter": "fx",
-        "layout": "code",
+        "layout": "full",
         "tab": "구현",
         "title": {"text": "받은 피해를 공격자 공격력과 비교한 세 구간", "verbatim": true},
         "lead": {"text": "`BossHitFeedback`은 보스가 맞을 때마다 피해 크기를 약·중·강 세 구간으로 나누고, 구간이 높을수록 연출의 겹을 늘립니다.", "verbatim": true},
         "sectionPath": ["8. UI/UX ② 전투 피드백과 비주얼 효과", "8.5 보스 전투 피드백 — 피해 구간과 몸으로 보여 주는 상태", "받은 피해를 공격자 공격력과 비교한 세 구간"],
         "points": [
           {
-            "label": "이유",
+            "label": "",
             "text": "모든 피해가 공격력을 바탕으로 계산되므로, 칩·패시브로 공격력이 바뀌거나 보스가 달라져도 같은 종류의 공격은 같은 구간에 들어갑니다.",
             "verbatim": true
           },
           {"label": "", "text": "약한 피격은 기본 공격처럼 자주 들어오므로 히트스톱을 걸지 않아 조작 흐름을 끊지 않습니다.", "verbatim": true}
         ],
-        "visuals": [{"kind": "code", "n": 1, "fp": "// BossHitFeedback.GetTier() — 받은 피해를 공격력 배율과 비교해 피격 단계 결정"}]
-      },
-      {
-        "key": "boss-dizzy",
-        "chapter": "fx",
-        "layout": "visual",
-        "tab": "",
-        "title": {"text": "무력화·기절을 자세로 보여 줌", "verbatim": true},
-        "lead": {"text": "보스가 어떤 상태인지를 HUD 숫자만이 아니라 몸의 움직임으로도 읽을 수 있게 했습니다.", "verbatim": true},
-        "sectionPath": ["8. UI/UX ② 전투 피드백과 비주얼 효과", "8.5 보스 전투 피드백 — 피해 구간과 몸으로 보여 주는 상태", "무력화·기절을 자세로 보여 줌"],
-        "points": [
-          {
-            "label": "",
-            "text": "각 겹은 사용하는 쪽이 `Begin()`/`End()`를 짝지어 부르면 가중치가 서서히 오르내리고, 횟수로 세므로 겹쳐 걸어도 안전합니다.",
-            "verbatim": true
-          },
-          {"label": "", "text": "모든 흔들림·반짝이·숨은 보스의 시계(`TimeFreezable`)를 따라 시간 정지 중에는 그 자세로 멈춥니다.", "verbatim": true}
-        ],
         "visuals": [
           {
             "kind": "image",
-            "src": "images/dizzy-sway.png",
-            "w": 800,
-            "h": 600,
-            "caption": {"text": "벽에 돌진해 부딪힌 페르데로스 보스가 기절한 모습 — 머리 위를 맴도는 반짝이", "verbatim": true}
+            "src": "images/hit-effect-s.mp4",
+            "w": 720,
+            "h": 540,
+            "caption": {"text": "약 구간 피격 연출 — 작은 섬광과 빛줄기 파티클", "verbatim": true}
           },
-          {"kind": "table", "n": 1, "fp": "겹|표현|사용하는 곳|함께 나오는 연출"}
+          {
+            "kind": "image",
+            "src": "images/hit-effect-m.mp4",
+            "w": 720,
+            "h": 540,
+            "caption": {"text": "중 구간 피격 연출 — 큰 섬광과 빛줄기 파티클", "verbatim": true}
+          },
+          {
+            "kind": "image",
+            "src": "images/hit-effect-l.mp4",
+            "w": 720,
+            "h": 540,
+            "caption": {"text": "강 구간 피격 연출 — 더 큰 섬광과 긴 빛줄기 파티클", "verbatim": true}
+          }
         ]
       },
       {
@@ -2069,23 +2130,23 @@
         "layout": "visual",
         "tab": "",
         "title": {"text": "마무리 일격과 사망 연출", "verbatim": true},
-        "lead": {"text": "월드가 원래 속도로 돌아온 뒤에도 플레이어·카메라 회전은 느린 채 남고, 보상창은 홀로그램 소멸이 끝난 뒤에 열립니다.", "verbatim": true},
+        "lead": {"text": "보스의 숨을 끊는 순간은 한 번뿐인 장면이라 가장 긴 연출을 붙였습니다.", "verbatim": true},
         "sectionPath": ["8. UI/UX ② 전투 피드백과 비주얼 효과", "8.5 보스 전투 피드백 — 피해 구간과 몸으로 보여 주는 상태", "마무리 일격과 사망 연출"],
         "points": [
-          {"label": "", "text": "보스의 숨을 끊는 순간은 한 번뿐인 장면이라 가장 긴 연출을 붙였습니다.", "verbatim": true},
           {
             "label": "",
-            "text": "이 다이어그램은 마무리 일격의 히트스톱·슬로모션부터 쓰러짐과 홀로그램 소멸, 보상창이 열리기까지의 연출 순서를 도식화한 것입니다.",
+            "text": "세 피해 구간과 별개로, 숨을 끊는 피격에는 가장 큰 충격과 많은 입자를 터뜨리고 이 충격만 슬로모션 배율에 맞춰 게임 시간으로 느리게 퍼뜨립니다.",
             "verbatim": true
-          }
+          },
+          {"label": "", "text": "월드가 원래 속도로 돌아온 뒤에도 플레이어·카메라 회전은 느린 채 남고, 보상창은 홀로그램 소멸이 끝난 뒤에 열립니다.", "verbatim": true}
         ],
         "visuals": [
           {"kind": "mermaid", "n": 1, "fp": "flowchart TB"},
           {
             "kind": "image",
             "src": "images/boss-death.mp4",
-            "w": 900,
-            "h": 674,
+            "w": 1536,
+            "h": 864,
             "caption": {"text": "마무리 일격과 사망 연출 — 차르카로사우루스 보스가 쓰러진 뒤 홀로그램으로 바뀌어 사라지는 모습", "verbatim": true}
           }
         ]
@@ -2096,30 +2157,15 @@
         "layout": "visual",
         "tab": "구현",
         "title": {"text": "서로 가리는 보스와 플레이어 — 가려진 쪽을 드러내는 두 가지 표현", "verbatim": true},
-        "lead": {
-          "text": "처음에는 보스에 가려진 플레이어의 외곽선만 그렸고, 이후 같은 RendererFeature에 다른 물체에 가려진 보스 부분을 반투명 실루엣으로 채우는 패스를 추가했습니다.",
-          "verbatim": true
-        },
+        "lead": {"text": "큰 보스와 싸우면 보스가 플레이어를 가리거나, 들고 있는 물체·잔해가 보스를 가리는 두 가지 가림이 생깁니다.", "verbatim": false},
         "sectionPath": ["8. UI/UX ② 전투 피드백과 비주얼 효과", "8.6 외곽선과 가림 — 안 보이는 대상을 드러내기", "서로 가리는 보스와 플레이어 — 가려진 쪽을 드러내는 두 가지 표현"],
         "points": [
-          {"label": "문제", "text": "1차 시연에서 가장 많이 받은 피드백도 들고 있는 물체가 보스를 가린다는 것이었습니다(§10.2).", "verbatim": true},
           {
             "label": "구현",
             "text": "처음에는 보스에 가려진 플레이어의 외곽선만 그렸고, 이후 같은 RendererFeature에 다른 물체에 가려진 보스 부분을 반투명 실루엣으로 채우는 패스를 추가했습니다.",
             "verbatim": true
           }
         ],
-        "visuals": [{"kind": "mermaid", "n": 1, "fp": "flowchart TB"}]
-      },
-      {
-        "key": "boss-occlusion-screens",
-        "chapter": "fx",
-        "layout": "screens",
-        "tab": "결과",
-        "title": {"text": "서로 가리는 보스와 플레이어 — 가려진 쪽을 드러내는 두 가지 표현", "verbatim": true},
-        "lead": {"text": "큰 보스와 싸우면 두 가지 가림이 생깁니다.", "verbatim": true},
-        "sectionPath": ["8. UI/UX ② 전투 피드백과 비주얼 효과", "8.6 외곽선과 가림 — 안 보이는 대상을 드러내기", "서로 가리는 보스와 플레이어 — 가려진 쪽을 드러내는 두 가지 표현"],
-        "points": [],
         "visuals": [
           {
             "kind": "image",
@@ -2133,8 +2179,9 @@
             "src": "images/occlusion-silhouette.png",
             "w": 960,
             "h": 720,
-            "caption": {"text": "들고 있는 물체(초록 외곽선)에 가려진 훈련용 더미가 붉은 실루엣으로 보이는 화면", "verbatim": true}
-          }
+            "caption": {"text": "들고 있는 물체에 가려진 훈련용 더미가 붉은 실루엣으로 보이는 화면", "verbatim": true}
+          },
+          {"kind": "mermaid", "n": 1, "fp": "flowchart TB"}
         ]
       },
       {
@@ -2206,6 +2253,6 @@
         "visuals": [{"kind": "code", "n": 1, "fp": "// DeathScreen.OnDestroy() — 씬 전환 중이면 전환이 사용하는 화면 꺼짐은 남기고 자신"}]
       }
     ],
-    "applied": "682b457ccf09c4d9"
+    "applied": "64d4d50570d941cf"
   }
 }
