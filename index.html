@@ -1689,7 +1689,7 @@
           <div className="wrap">
             <SecHead en={no} title={p.title} big />
             {/* 한 줄 소개(768px 이상): 쉼표 뒤마다 끊은 덩어리(inline-block)로 — 줄이 넘칠 때 쉼표 자리에서 바뀜(덩어리 하나가 한 줄보다 길면 그 안에서 줄 길이를 고르게) 휴대폰은 덩어리 없이 보통 줄바꿈 */}
-            {p.tagline && <p className="reveal -mt-4 mb-12 md:mb-16 max-w-[760px] text-lg md:text-xl leading-snug text-[var(--muted)]">{p.tagline.split(/(?<=,)\s+/).map((seg, i) => <Fragment key={i}>{i > 0 && ' '}<span className="md:inline-block md:[text-wrap:balance]"><Inline text={seg} /></span></Fragment>)}</p>}
+            {p.tagline && <p className="reveal -mt-4 mb-12 md:mb-16 text-lg md:text-xl leading-snug text-[var(--muted)]">{p.tagline.split(/(?<=,)\s+/).map((seg, i) => <Fragment key={i}>{i > 0 && ' '}<span className="md:inline-block md:[text-wrap:balance]"><Inline text={seg} /></span></Fragment>)}</p>}
             <div className={hasCover ? 'split reveal' : 'reveal'}>
               {hasCover && (
                 <div className="media cover-fade relative">
@@ -2068,7 +2068,7 @@
               {prof.email && <p className="mt-6 text-lg"><a className="tlink" href={`mailto:${prof.email}`}>{prof.email}</a><CopyButton text={prof.email} /></p>}
               {isUrl(prof.github) && <p className="mt-2"><Ext className="tlink text-[var(--muted)]" href={prof.github}>{shortUrl(prof.github)}</Ext></p>}
               {links.map((l) => <p key={l.url} className="mt-2"><Ext className="tlink text-[var(--muted)]" href={l.url}>{shortUrl(l.url)}</Ext></p>)}
-              <p className="print-only mt-2 text-[var(--sub)]">{visibleUrl(PAGE_URL)}</p>
+              <p className="print-only mt-2"><Ext className="tlink text-[var(--muted)]" href={new URL(PAGE_URL, PDF_BASE || location.href).href}>{visibleUrl(PAGE_URL)}</Ext></p>
             </div>
             <div>
               <p className="eyebrow">{t('en.project')}</p>

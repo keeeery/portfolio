@@ -14,6 +14,7 @@
 - 페이지를 넓은 화면 폭(--layout-px, 기본 1040 — theme/pdf.css의 /* layout-px: N */)으로 배치한 뒤 A4에 맞게 줄여 인쇄 → 화면 배치를 따름.
 - theme/pdf.css(PDF 전용 배치 손질)를 인쇄에만 덧씌움(페이지가 이 파일을 불러오지 않아도 도구가 넣음).
 - 글씨 규칙(이미 잘 보이는 글은 키우지 않기 · 가장 큰 글 대비 비율 한도 · 캡션 같은 종류는 같은 크기), 흐린 배경 굳히기, 링크를 배포 주소로.
+- 만들 때마다 data/portfolio.json의 generatedAt(마지막 업데이트)을 오늘 날짜로 갱신(PDF에 찍히는 날짜가 만든 날과 같게).
 - 그림은 만드는 동안만 줄여 넘김(긴 변 1400px · JPEG 80, 투명한 그림은 PNG 유지). 원본 파일은 안 건드림.
 
 환경에 따라 방식을 고름(mac 품질은 그대로, Windows는 Windows에서 되는 방식)
@@ -23,6 +24,7 @@
 필요한 것: Google Chrome(또는 Chromium·Edge), 파이썬 3.8 이상(표준 라이브러리만).
 """
 import argparse
+import datetime
 import base64
 import functools
 import http.server
@@ -68,6 +70,22 @@ def pdf_name():
         pass
     name = re.sub(r'[\\/:*?"<>|]', "", name)
     return unicodedata.normalize("NFC", f"{name}-포트폴리오.pdf" if name else "포트폴리오.pdf")
+
+
+def touch_generated_at():
+    """PDF를 만들 때마다 data/portfolio.json의 generatedAt(= 페이지의 '마지막 업데이트')을 오늘 날짜로 갱신 — PDF에 찍히는 날짜가 만든 날과 같게."""
+    path = os.path.join(ROOT, "data", "portfolio.json")
+    try:
+        with open(path, encoding="utf-8") as f:
+            text = f.read()
+        today = datetime.date.today().isoformat()
+        new = re.sub(r'("generatedAt"\s*:\s*")[^"]*(")', lambda m: m.group(1) + today + m.group(2), text, count=1)
+        if new != text:
+            with open(path, "w", encoding="utf-8", newline="") as f:
+                f.write(new)
+            print(f"마지막 업데이트 날짜를 {today}로 갱신했습니다(data/portfolio.json)")
+    except Exception as e:
+        print(f"경고: 마지막 업데이트 날짜를 갱신하지 못했습니다({e})", file=sys.stderr)
 
 
 def find_chrome(given):
@@ -940,6 +958,7 @@ def main():
     if args.pages and args.src:                                         # 그림만 그리기
         print(rasterize(env, chrome, os.path.abspath(args.src), os.path.abspath(args.pages), args.pages_scale)); return
 
+    touch_generated_at()
     css_text = (read_text(args.css) if args.css else read_text(PDF_CSS)) + "\n" + read_text(PDF_FONT_CSS)
     cfg = config_from(css_text)
     layout_px = args.layout_px or int(num_directive(css_text, "layout-px", REF_LAYOUT_PX))
