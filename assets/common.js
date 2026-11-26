@@ -79,9 +79,10 @@ const PF = (() => {
     const st = document.createElement('style');
     st.textContent = `.pf-vid{position:absolute;overflow:hidden;z-index:1;background:transparent;pointer-events:none}
 .pf-vid[hidden]{display:none}
+.pf-vid.pf-vid-click{pointer-events:auto;cursor:pointer;user-select:none;-webkit-user-select:none}
 .pf-vid video{display:block;width:100%;height:100%;pointer-events:none}
 .pf-vid-btn{position:absolute;right:8px;bottom:8px;width:34px;height:34px;padding:0;border:0;border-radius:50%;background:rgba(0,0,0,.6);color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;opacity:0;transition:opacity .15s;pointer-events:auto}
-img:hover+.pf-vid .pf-vid-btn,.lb-vid:hover .pf-vid-btn,.pf-vid.is-paused .pf-vid-btn,.pf-vid-btn:hover,.pf-vid-btn:focus-visible{opacity:1}
+img:hover+.pf-vid .pf-vid-btn,.pf-vid.pf-vid-click:hover .pf-vid-btn,.lb-vid:hover .pf-vid-btn,.pf-vid.is-paused .pf-vid-btn,.pf-vid-btn:hover,.pf-vid-btn:focus-visible{opacity:1}
 @media (hover:none){.pf-vid-btn{opacity:.8}}
 img.pf-vid-under{opacity:0}
 @media print{.pf-vid{display:none!important}img.pf-vid-under{opacity:1!important}}`;
@@ -152,6 +153,13 @@ img.pf-vid-under{opacity:0}
       img.after(box);
       const v = { img, box, video, user: reduce, vis: false, shown: false };
       box.querySelector('.pf-vid-btn').addEventListener('click', (e) => { e.preventDefault(); e.stopPropagation(); v.user = !v.user; sync(v); });   // 일시정지·재생은 이 버튼으로만(영상 자체는 클릭을 받지 않음)
+      // 직접 고침(2026-11-26): 슬라이드(.pf-scene)에는 이미지 확대가 없으므로 영상 영역 아무 곳을 눌러도 일시정지·재생(장면 넘기기로 번지지 않게 막음).
+      //   상세 문서·포트폴리오 페이지는 그대로(영상은 클릭을 받지 않아 이미지처럼 눌러짐 — 상세 문서는 확대)
+      if (img.closest('.pf-scene')) {
+        box.classList.add('pf-vid-click');
+        box.addEventListener('click', (e) => { e.preventDefault(); e.stopPropagation(); v.user = !v.user; sync(v); });
+        box.addEventListener('mousedown', (e) => e.preventDefault());   // 연달아 누를 때(더블클릭) 아래 캡션 글자가 블록 선택되지 않게
+      }
       video.addEventListener('error', () => { box.remove(); v.ready = false; img.classList.remove('pf-vid-under'); }, true);
       video.addEventListener('loadeddata', () => { v.ready = true; place(v); });   // 영상이 없으면 대표 화면 이미지만 남김
       v.io = new IntersectionObserver(([en]) => {

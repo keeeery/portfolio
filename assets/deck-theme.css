@@ -451,7 +451,15 @@ html .pf-scene .note { border-radius: 0 calc(var(--radius) * .5) calc(var(--radi
 .dk-quad.q2 > .cards { grid-column: 1 / -1; column-gap: 28px; }   /* 시각 자료 2개: 카드 줄이 두 칸 폭을 그대로 이어받음 */
 .pf-sizing .dk-quad.q2 { grid-template-rows: minmax(0, 1fr) auto; }
 .dk-quad.q2 > .vis { justify-content: flex-start; align-self: start; }
+/* 직접 고침(2026-11-26): 위 줄 세 칸 배치(.dk-quad.q3, --pf-layout: row3) — 시각 자료 3개 위 줄에 같은 폭, 카드 줄은 세 칸 폭 전체 */
+.dk-quad.q3 { grid-template-columns: repeat(3, minmax(0, 1fr)); align-items: start; }
+.dk-quad.q3 > .cards { grid-column: 1 / -1; column-gap: 28px; }
+.pf-sizing .dk-quad.q3 { grid-template-rows: minmax(0, 1fr) auto; }
 .dk-quad.q2 .vbox[data-kind="table"] :is(.vmedia, .fit-in) { overflow: visible; }   /* 표 테두리(1px)가 상자 끝에 걸려도 잘리지 않게 */   /* 이미지·표 위 끝을 맞춤(높이는 matchQuad가 같게) */
 .cards.row.titled { grid-template-columns: repeat(var(--n, 3), minmax(0, 1fr)); }   /* 가로 카드 줄의 제목형 라벨: 카드마다 라벨 칸 + 글 칸 */
 .pf-scene .cards.row.titled .ncard { grid-column: auto; grid-template-columns: max-content minmax(0, 1fr); }
 .pf-sizing .dk-split > .vis { align-self: stretch; }   /* 크기 계산 때만 칸 높이를 다 줌(fitVisuals가 그 높이로 맞춤) — 끝나면 내용 높이로 돌아가야 위아래 맞춤(alignToMedia)이 바르게 잼 */
+
+/* 직접 추가(2026-11-26): 폭을 정한 다이어그램 칸·묶음 글(<div style=width:Npx…>)은 Mermaid 글 상자의 200px 한도를 풂.
+   Mermaid는 글 상자 폭이 정확히 200px로 재지면 그 폭으로 줄바꿈 상자를 만드는데, 브라우저 확대 배율(90%·170%·180% 등)에 따라 그렇게 재져 칸이 좁아지고 글이 잘림 — 100%와 같은 칸이 되게 */
+foreignObject > div:has(> span div[style*="width"]) { max-width: none !important; }

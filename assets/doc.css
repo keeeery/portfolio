@@ -592,3 +592,7 @@ dialog.lightbox::backdrop { background: rgba(10, 11, 14, .82); }
           transition: translate var(--rail-dur) var(--rail-ease), visibility 0s; }
 }
 @media print { .rail-fab, .rail-bar { display: none !important; } }
+
+/* 직접 추가(2026-11-26): 폭을 정한 다이어그램 칸·묶음 글(<div style=width:Npx…>)은 Mermaid 글 상자의 200px 한도를 풂.
+   Mermaid는 글 상자 폭이 정확히 200px로 재지면 그 폭으로 줄바꿈 상자를 만드는데, 브라우저 확대 배율(90%·170%·180% 등)에 따라 그렇게 재져 칸이 좁아지고 글이 잘림 — 100%와 같은 칸이 되게 */
+foreignObject > div:has(> span div[style*="width"]) { max-width: none !important; }

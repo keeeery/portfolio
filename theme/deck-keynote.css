@@ -63,6 +63,7 @@
 .pf-scene :is(.ncard, .fstep) { border-radius: 22px; }
 .pf-scene .note { border-left-color: var(--accent); }
 .pf-scene .fstep.res { border-color: transparent; }
+.pf-scene .fstep:has(> .labelchip.accent) { background: var(--accent-soft); border-color: transparent; }   /* 해결 단계 카드 바탕 = 3.5·8.8 「고민과 선택」 이유·결과 카드와 같은 --accent-soft(표의 채택 행 바탕, 2026-11-26) */
 .pf-scene .vbox[data-kind="image"] .vmedia, .pf-scene .pi-cover { background: transparent; border-radius: 20px; box-shadow: none; }
 .pf-scene .ncard .num, .pf-scene .toc-list .n { background: var(--accent-fill); }
 
@@ -258,16 +259,22 @@
   font-size: 13px; font-weight: 700; line-height: 1; text-box: trim-both cap alphabetic;
   background: color-mix(in srgb, var(--ink) 22%, var(--bg)); color: var(--ink); }
 #d-psy-damage .cards.row .ncard:nth-child(2) > div > .lb { background: #D97757; color: #fff; }
-#d-psy-damage .cards.row .ncard:nth-child(2) { background: color-mix(in srgb, #D97757 16%, var(--card)); border-color: transparent; }   /* 「AI 활용」 카드 은은한 주황 — 결과 카드(.fstep.res, 초록 16%)와 같은 규칙 */
+#d-psy-damage .cards.row .ncard:nth-child(2) { background: color-mix(in srgb, #D97757 16%, var(--bg)); border-color: transparent; }   /* 「AI 활용」 카드 은은한 주황 — 결과 카드(.fstep.res, 초록 16%)와 같은 규칙 */
 #d-psy-damage .cards.row .ncard > div > p { margin: 0; padding: 14px 18px; align-self: center; }
 /* 제목 칸은 ㉔ 기본 회색, 「AI 활용」(2번 카드)만 Claude 주황 */
 #d-psy-damage .cards.titled .ncard:nth-child(2) > .num.tl { background: #D97757; color: #fff; }
-#d-ui-tools { --pf-layout: side; }   /* ODDITY 7.4 에디터 도구로 맞춘 UI — 9장(d-psy-aim)처럼 왼쪽 이미지 하나, 오른쪽 카드 세로로 */
+#d-telegraph { --pf-layout: side; --pf-vis-scale: .95; }   /* ODDITY 8.3 공격 예고 — 9장(d-psy-aim)처럼 왼쪽 이미지 539px·오른쪽 카드 462px 세로(캡션 두 줄이라 .95) */
+#d-telegraph .ncard > .num.tl { white-space: pre; line-height: 1.35; text-box: none; }   /* 두 줄 라벨(「시간 / 정지」「바닥 / 데칼」「스텐실 / 마스크」, 라벨 글의 \n) */
+#d-ui-tools { --pf-layout: side; --pf-vis-scale: .912; }   /* ODDITY 7.4 에디터 도구로 맞춘 UI — 9장(d-psy-aim)처럼 왼쪽 이미지 539px·오른쪽 카드 462px 세로(캡션 한 줄이라 .912) */
+#d-ui-tools .cards.titled .ncard:nth-child(2) > .num.tl { background: #D97757; color: #fff; }   /* 7.4 「AI 활용」 제목 칸 = Claude 주황(2.8 d-psy-damage와 같은 규칙, 2026-11-26) */
+#d-ui-tools .cards.titled .ncard:nth-child(2) { background: color-mix(in srgb, #D97757 16%, var(--bg)); border-color: transparent; }   /* 「AI 활용」 카드 바탕 은은한 주황 */
+#d-psy-restore .ncard p, #d-local-time .ncard p, #d-debris-life .ncard p { white-space: pre-line; }   /* 합친 카드의 두 문장 사이 줄바꿈(\n)을 화면에도(2026-11-26) */
+#d-overview, #d-time-overview, #d-local-time, #d-psy-hold-lag { --pf-cards: plain; }   /* 요점 카드 번호 빼기 — 차례·대등 목록이 아닌 카드(소개 문단, 종류가 다른 두 이야기, 요약 → 세부), project-deck.js plainCards(2026-11-26) */
 #d-ui-tools-table .fstep > p { white-space: pre-line; }   /* ODDITY 7.4 AI와 함께 한 과정 — 카드마다 「AI」 줄과 「내 판단」 줄 */
 #d-ui-tools-table .fstep > p > strong { display: inline-block; width: 4.8em; margin-right: 10px; padding: 4px 0; border-radius: 6px; text-align: center;
   font-size: 12px; font-weight: 700; line-height: 1; text-box: trim-both cap alphabetic; vertical-align: 1px; }   /* 「AI」·「내 판단」 머리말 = 같은 폭의 작은 칸 */
-#d-ui-tools-table .fstep > p > strong:first-of-type { background: color-mix(in srgb, var(--ink) 22%, var(--bg)); color: var(--ink); }   /* AI = 회색 */
-#d-ui-tools-table .fstep > p > strong:last-of-type { background: var(--accent); color: #fff; margin-top: 8px; }   /* 내 판단 = 강조색, 윗줄과 8px 띄움 */
+#d-ui-tools-table .fstep > p > strong:first-of-type { background: color-mix(in srgb, #D97757 16%, var(--bg)); color: #D97757; }   /* AI = 옅은 Claude 주황 바탕 + 주황 글씨(2.6 d-psy-damage 「AI 활용」 카드 바탕과 같은 규칙) */
+#d-ui-tools-table .fstep > p > strong:last-of-type { background: var(--accent); color: #fff; margin-top: 8px; }   /* 내 판단 = 꽉 찬 강조색(옅은 AI 칸과 세기 차이로 강조), 윗줄과 8px 띄움 */
 #d-psy-hold-lag { --pf-layout: side; --pf-vis-scale: .913; }   /* ODDITY 2.4 회전 속도에 따라 뒤따라오는 물체 — 9장(d-psy-aim)처럼 왼쪽 이미지 하나, 오른쪽 카드 세로로 */   /* 카드 글의 줄바꿈(\n, 「정합니다.」 뒤)을 화면에도 */
 /* ODDITY 3.5 고민과 선택 — 「이유」·「비용」 카드를 11장(d-psy-damage)처럼 왼쪽 라벨 칸 + 글로. 이유 = 파랑, 비용 = 빨강(라벨 칸 진하게, 카드 바탕은 16% 디밍) */
 #d-debris-choice .cards.row .ncard, #d-time-choice .cards.row .ncard { padding: 0; gap: 0; overflow: hidden; grid-template-columns: minmax(0, 1fr); --tl-w: 43.1px; }   /* 라벨 칸 폭 = 라벨(13px·700) + 양옆 10px — 전역 라벨 칸 규칙과 같게, 두 카드 같은 폭 */
@@ -275,12 +282,29 @@
 #d-debris-choice .cards.row .ncard > div > .lb, #d-time-choice .cards.row .ncard > div > .lb { display: block; align-self: stretch; align-content: center; text-align: center; margin: 0; padding: 0 10px; white-space: nowrap;
   font-size: 13px; font-weight: 700; line-height: 1; text-box: trim-both cap alphabetic; color: #fff; }
 #d-debris-choice .cards.row .ncard > div > p, #d-time-choice .cards.row .ncard > div > p { margin: 0; padding: 14px 18px; align-self: center; }
-#d-debris-choice .cards.row .ncard:nth-child(1) > div > .lb, #d-time-choice .cards.row .ncard:nth-child(1) > div > .lb { background: #3B7DD8; }
-#d-debris-choice .cards.row .ncard:nth-child(1), #d-time-choice .cards.row .ncard:nth-child(1) { background: color-mix(in srgb, #3B7DD8 16%, var(--card)); border-color: transparent; }
+#d-debris-choice .cards.row .ncard:nth-child(1) > div > .lb, #d-time-choice .cards.row .ncard:nth-child(1) > div > .lb { background: var(--accent-fill); }   /* 이유 라벨 칸 = 표의 「채택」 배지 색 */
+#d-debris-choice .cards.row .ncard:nth-child(1), #d-time-choice .cards.row .ncard:nth-child(1) { background: var(--accent-soft); border-color: transparent; }   /* 이유 카드 바탕 = 표의 채택 행 바탕 */
 #d-debris-choice .cards.row .ncard:nth-child(2) > div > .lb, #d-time-choice .cards.row .ncard:nth-child(2) > div > .lb { background: #D9534F; }
-#d-debris-choice .cards.row .ncard:nth-child(2), #d-time-choice .cards.row .ncard:nth-child(2) { background: color-mix(in srgb, #D9534F 16%, var(--card)); border-color: transparent; }
+#d-debris-choice .cards.row .ncard:nth-child(2), #d-time-choice .cards.row .ncard:nth-child(2) { background: color-mix(in srgb, #D9534F 16%, var(--bg)); border-color: transparent; }
+/* ODDITY 8.8 고민과 선택(카메라 흔들림) — 「문제」·「결과」 카드를 3.5(d-debris-choice)처럼 왼쪽 라벨 칸 + 글로. 문제 = 회색 칸, 결과 = 파랑 칸 + 카드 바탕 16% 디밍 */
+#d-shake-choice .cards.row .ncard { padding: 0; gap: 0; overflow: hidden; grid-template-columns: minmax(0, 1fr); --tl-w: 43.1px; }
+#d-shake-choice .cards.row .ncard > div { display: grid; grid-template-columns: var(--tl-w) minmax(0, 1fr); padding: 0; align-self: stretch; }
+#d-shake-choice .cards.row .ncard > div > .lb { display: block; align-self: stretch; align-content: center; text-align: center; margin: 0; padding: 0 10px; white-space: nowrap;
+  font-size: 13px; font-weight: 700; line-height: 1; text-box: trim-both cap alphabetic;
+  background: color-mix(in srgb, var(--ink) 22%, var(--bg)); color: var(--ink); }
+#d-shake-choice .cards.row .ncard > div > p { margin: 0; padding: 14px 18px; align-self: center; }
+#d-shake-choice .cards.row .ncard:nth-child(2) > div > .lb { background: var(--accent-fill); color: #fff; }   /* 결과 라벨 칸 = 표의 「채택」 배지 색(--accent-fill) */
+#d-shake-choice .cards.row .ncard:nth-child(2) { background: var(--accent-soft); border-color: transparent; }   /* 결과 카드 바탕 = 표의 채택 행 바탕(--accent-soft)과 같은 색 */
+#d-shake-choice table.md-table :is(td, th):nth-child(2) { width: 366px; }   /* 표 열 폭 — 장점·비용 칸의 각 줄이 한 줄로 끝나게(외톨이 줄 「쌓임」「없음」 없앰), 방법 칸은 남는 폭 */
+#d-shake-choice table.md-table :is(td, th):nth-child(3) { width: 514px; }
+.pf-scene .fstep.res { background: color-mix(in srgb, var(--ok) 16%, var(--bg)); }   /* 결과 단계 카드(초록)도 같은 비율 — 배너 색 16% + 페이지 바탕(--bg), --accent-soft와 같은 계산(common.js mix(A, BG, 0.84)) */
 #d-debris-pool { --pf-layout: side; }   /* ODDITY 3.2 미리 만들어 다시 사용하는 파편 — 코드 하나(24줄) 왼쪽, 오른쪽 카드 세로로 */
 #d-crosshair { --pf-layout: quad; }   /* ODDITY 7.2 조준점 — 이미지·표 위, 카드 2장 아래 2×2 */
+#d-camera-shake { --pf-layout: quad; }   /* ODDITY 8.4 카메라 흔들림 — 영상·코드 위, 카드 3장 아래 */
+#d-boss-finish { --pf-layout: quad; }   /* ODDITY 8.5 마무리 일격 — 영상·다이어그램 위(카드와 같은 폭, 같은 높이), 번호 없는 카드 하나 아래 */
+#d-boss-finish .ncard { padding-inline: calc(18px - 1.25px); }
+#d-boss-finish .ncard p { white-space: pre-line; }   /* 요점 글의 줄바꿈(\n)을 화면에도 */
+#d-boss-occlusion { --pf-layout: row3; }   /* ODDITY 8.6 서로 가리는 보스와 플레이어 — 이미지·이미지·다이어그램 위 줄 세 칸, 카드 2장 아래 줄 (2026-11-26) */
 #d-crosshair .ncard p { white-space: pre-line; }
 #d-crosshair table.md-table :is(td, th) { white-space: nowrap; }   /* 표 칸은 자동으로 꺾지 않고, 슬라이드 전용 줄바꿈(slideBreakParen·slideBreakAfter)만 */
 #d-boss-intent { --pf-layout: side; }   /* ODDITY 4.1 보스 패턴 구조 — 표 왼쪽, 카드 오른쪽 세로로 */
@@ -304,3 +328,6 @@
 #d-debris-material .rcol .vbox[data-kind="table"], #d-debris-material .rcol .vbox[data-kind="table"] .fit-in { width: max-content !important; }   /* 배치 맞추기가 적은 표 칸 폭(inline)을 표 내용 폭으로 덮음 */
 #d-debris-material table.md-table { width: auto; }   /* 표 열 = 줄이 꺾이지 않는 내용 폭(칸 안 여백 없이) */
 #d-debris-material table.md-table :is(th, td) { white-space: nowrap; }
+#d-player-scope .vbox[data-kind="code"], #d-player-scope .vbox[data-kind="code"] .fit-in { width: 540px !important; }   /* ODDITY 9.2 로비로 오면 플레이어가 사라지던 버그 — 코드 칸을 넓혀 첫 줄 주석을 한 줄로 */
+#d-death-flash .vbox[data-kind="code"], #d-death-flash .vbox[data-kind="code"] .fit-in { width: 580px !important; }   /* ODDITY 9.3 사망 화면 장면 — 코드 칸을 줄여 첫 줄 주석이 「자신의」부터 다음 줄로 */
+#d-death-flash .vbox[data-kind="code"] .fit-in pre code { word-break: keep-all; }   /* 낱말 중간에서 꺾지 않음 */

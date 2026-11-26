@@ -244,8 +244,11 @@
   //   「이유」·「구현」 같은 종류 라벨은 그대로 번호 + 작은 라벨.
   const KIND_LB = new Set(['기능', '구현', '이유', '문제', '원인', '해결', '결과', '배운 점', '비용']);
   const titledPts = (points) => points.length > 1 && points.every((p) => p.label && !KIND_LB.has(p.label)) && new Set(points.map((p) => p.label)).size === points.length;
+  // 직접 고침(2026-11-26): 장면별 번호 끄기 — theme CSS `#d-<key> { --pf-cards: plain }`이면 그 장면의 요점 카드에 번호를 붙이지 않음(fitSlide가 그리기 전에 정함)
+  let plainCards = false;
   const ncards = (points, { row = false, num = true, two = false, head = '', rowTitled = false } = {}) => {
     if (!points.length) return '';
+    if (plainCards) num = false;
     const titled = num && (!row || rowTitled) && !two && titledPts(points);   // 직접 고침(2026-11-25): rowTitled = 가로 카드 줄에서도 제목형 라벨(2×2 배치)
     return `<div class="cards${row ? ' row' : ''}${two ? ' two' : ''}${titled ? ' titled' : ''}" style="--n:${Math.min(points.length, 4)}">${head ? `<p class="colhead">${inline(head)}</p>` : ''}${points.map((pt, i) => titled
       ? `<div class="ncard"><span class="num tl">${esc(PF.label(pt.label))}</span><div><p>${inline(txt(pt))}</p></div></div>`
@@ -270,7 +273,9 @@
       return `<div class="dk dk-side flip${tight}" style="--vw:${variant.vw}fr">${vis(vs)}${flowHtml(points, 'col')}</div>`;
     }
     // 직접 고침(2026-11-25): 2×2 배치 — 시각 자료마다 자기 칸(.vis)에서 크기를 맞추고 카드는 네 번째 칸
-    if (variant.quad && (vs.length === 3 || vs.length === 2)) return `<div class="dk dk-quad${vs.length === 2 ? ' q2' : ''}${tight}">${vs.map((x) => vis([x])).join('')}${ncards(points, { num: true, row: vs.length === 2, rowTitled: true, head: txt(sl.pointsTitle) })}</div>`;   // 시각 자료 2개면 위 줄 두 칸, 카드는 아래 줄에 나란히
+    // 직접 고침(2026-11-26): 위 줄 세 칸 배치(--pf-layout: row3) — 시각 자료 3개가 위 줄에 나란히, 카드는 아래 줄에 나란히
+    if (variant.row3 && vs.length === 3) return `<div class="dk dk-quad q3${tight}">${vs.map((x) => vis([x])).join('')}${ncards(points, { num: points.length > 1, row: true, rowTitled: true, head: txt(sl.pointsTitle) })}</div>`;   // 카드가 하나면 번호 없이
+    if (variant.quad && (vs.length === 3 || vs.length === 2)) return `<div class="dk dk-quad${vs.length === 2 ? ' q2' : ''}${tight}">${vs.map((x) => vis([x])).join('')}${ncards(points, { num: points.length > 1, row: vs.length === 2, rowTitled: true, head: txt(sl.pointsTitle) })}</div>`;   // 요점이 하나면 번호 칸 없는 카드. 시각 자료 2개면 위 줄 두 칸, 카드는 아래 줄에 나란히
     // 요점이 없으면(나눈 장면 등) 옆 칸이 비지 않게 시각 자료를 가로 전체로
     if (sl.layout === 'full' || variant.stack || !points.length) return `<div class="dk dk-stack${tight}">${vis(vs)}${ncards(points, { row: true, num: sl.layout !== 'full', head: txt(sl.pointsTitle) })}</div>`;
     // 직접 고침(2026-11-25): 시각 자료가 표 하나면 표 칸을 내용 폭에 맞추고(.tfit) 남는 폭을 카드에
@@ -344,6 +349,69 @@
       const img = boxes.find((b) => b.dataset.kind === 'image'), tb = boxes.find((b) => b.dataset.kind === 'table');
       const im = img?.querySelector(':scope > .vmedia'), table = tb?.querySelector('table');
       const body = s.querySelector('.pf-body'), fill = s.querySelector('.pf-fill');
+      // 직접 고침(2026-11-26): 이미지·코드 2칸 — 코드는 글자 크기 고정이라 폭에 따라 높이가 정해짐. 이미지 높이 = 코드 상자 높이, 두 칸 합 = 본문 폭
+      // 직접 고침(2026-11-26): 다이어그램·이미지 2칸 — 둘 다 비율이 정해져 있어 같은 높이 H에서 두 칸 합 ≤ 본문 폭, 다이어그램은 원래 크기 이하, 장면에 들어가는 가장 큰 H. 남는 폭은 다이어그램 판에(카드 줄과 같은 폭)
+      const db = boxes.find((b) => b.dataset.kind === 'mermaid'), dm = db?.querySelector(':scope > .vmedia'), svg = dm?.querySelector('svg');
+      if (im && dm && svg && !table && im.offsetHeight && svg.viewBox?.baseVal?.width) {
+        const ar = im.offsetWidth / im.offsetHeight;                     // 이미지 비율은 풀기 전에(맞춤 상자 크기가 풀리면 높이가 0일 수 있음)
+        // 두 번째로 부를 때(whenReady 뒤) 앞에서 넣은 크기를 먼저 풀고 잼
+        dk.style.gridTemplateColumns = ''; dk.style.justifyContent = ''; db.style.width = ''; img.style.width = '';
+        ['width', 'height', 'display', 'alignItems', 'justifyContent'].forEach((k) => { dm.style[k] = ''; im.style[k] = ''; });
+        ['width', 'height', 'maxWidth'].forEach((k) => { svg.style[k] = ''; });
+        const gap = parseFloat(getComputedStyle(dk).columnGap) || 0, W = dk.clientWidth;
+        const vb = svg.viewBox.baseVal, ard = vb.width / vb.height;
+        const padX = dm.offsetWidth - svg.clientWidth, padY = dm.offsetHeight - svg.clientHeight;
+        const dFirst = boxes.indexOf(db) < boxes.indexOf(img);
+        const set = (H, dw) => {
+          const sh = H - padY, sw = sh * ard, iw = Math.round(H * ar);
+          dw = dw ?? Math.ceil(sw + padX);
+          dk.style.gridTemplateColumns = dFirst ? `${dw}px ${iw}px` : `${iw}px ${dw}px`; dk.style.justifyContent = 'center';   // 칸 순서는 장면의 자료 순서대로
+          db.style.width = `${dw}px`; Object.assign(dm.style, { width: `${dw}px`, height: `${H}px`, display: 'flex', alignItems: 'center', justifyContent: 'center' });
+          Object.assign(svg.style, { width: `${sw}px`, height: `${sh}px`, maxWidth: 'none' });
+          img.style.width = `${iw}px`; Object.assign(im.style, { width: `${iw}px`, height: `${H}px` });
+          return { dw, iw };
+        };
+        for (let H = Math.floor(vb.height + padY); H > 120; H -= 2) {
+          const sw = (H - padY) * ard, iw = Math.round(H * ar);
+          if (Math.ceil(sw + padX) + gap + iw > W) continue;
+          const { iw: i2 } = set(H);
+          if (fill.offsetHeight > body.clientHeight - 6) continue;       // 아래 6px 여유 — 소수점 높이 때문에 카드 아래 모서리가 잘리지 않게
+          set(H, W - gap - i2);                                          // 남는 폭은 다이어그램 판에 — 위 줄 = 카드 줄 폭
+          return;
+        }
+        return;
+      }
+      const cb = boxes.find((b) => b.dataset.kind === 'code'), cm = cb?.querySelector(':scope > .vmedia');
+      if (im && cm && !table && im.offsetHeight) {
+        const ar = im.offsetWidth / im.offsetHeight, gap = parseFloat(getComputedStyle(dk).columnGap) || 0, W = dk.clientWidth;
+        const setC = (t) => { cb.style.width = `${t}px`; cb.querySelectorAll('.fit-in').forEach((e) => { e.style.width = `${t}px`; e.style.zoom = ''; }); return cm.offsetHeight; };
+        let best = null;
+        for (let t = Math.round(W * 0.35); t <= W * 0.75; t += 4) {
+          const h = setC(t), w = Math.round(h * ar);
+          if (w + gap + t <= W && (!best || w + t > best.w + best.t)) best = { t, h, w };
+        }
+        if (best) {
+          const t = W - gap - best.w, h = setC(t);                     // 남는 폭은 코드 상자에(넓어져도 줄이 덜 꺾일 뿐 높이는 그대로이거나 낮아짐)
+          const w = Math.round(h * ar);
+          dk.style.gridTemplateColumns = `${w}px ${W - gap - w}px`; setC(W - gap - w);
+          img.style.width = `${w}px`; Object.assign(im.style, { width: `${w}px`, height: `${cm.offsetHeight}px` });
+          // 남는 세로 자리가 있으면 이미지를 키움 — 코드 상자는 같은 높이로 늘리고(글은 가운데), 코드 줄이 더 꺾이지 않는 선까지
+          const lines0 = h, fit = () => fill.offsetHeight <= body.clientHeight;
+          let ok = { w, h: cm.offsetHeight };
+          for (let H = ok.h + 4; H < 900; H += 4) {
+            const w2 = Math.round(H * ar), t2 = W - gap - w2;
+            cm.style.minHeight = ''; if (setC(t2) > lines0) break;           // 코드 폭이 좁아져 줄이 꺾이면 멈춤
+            dk.style.gridTemplateColumns = `${w2}px ${t2}px`; img.style.width = `${w2}px`; Object.assign(im.style, { width: `${w2}px`, height: `${H}px` });
+            Object.assign(cm.style, { minHeight: `${H}px`, display: 'flex', flexDirection: 'column', justifyContent: 'center' });
+            if (!fit()) break;
+            ok = { w: w2, h: H };
+          }
+          const t3 = W - gap - ok.w; setC(t3);
+          dk.style.gridTemplateColumns = `${ok.w}px ${t3}px`; img.style.width = `${ok.w}px`; Object.assign(im.style, { width: `${ok.w}px`, height: `${ok.h}px` });
+          Object.assign(cm.style, { minHeight: `${ok.h}px`, display: 'flex', flexDirection: 'column', justifyContent: 'center' });
+        }
+        return;
+      }
       if (!im || !table || !im.offsetHeight || !body || !fill) return;
       const ar = im.offsetWidth / im.offsetHeight;
       const gap = parseFloat(getComputedStyle(dk).columnGap) || 0;
@@ -374,6 +442,34 @@
       }
       dk.style.gridTemplateColumns = ''; dk.style.justifyContent = ''; img.style.width = ''; tb.style.width = ''; table.style.width = '';
     });
+    // 직접 고침(2026-11-26): 위 줄 세 칸(.dk-quad.q3) — 세 칸의 그림 높이를 같게(이미지는 칸 폭까지, 다이어그램은 같은 높이의 판 안에 원래 크기 이하로), 장면에 들어가는 가장 큰 높이
+    s.querySelectorAll('.dk-quad.q3').forEach((dk) => {
+      const body = s.querySelector('.pf-body'), fill = s.querySelector('.pf-fill');
+      const items = [...dk.querySelectorAll(':scope > .vis > .vbox')].map((b) => ({ b, m: b.querySelector(':scope > .vmedia'), svg: b.querySelector(':scope > .vmedia svg') }))
+        .filter((x) => x.m && (x.b.dataset.kind === 'image' || x.svg));
+      if (items.length !== 3) return;
+      items.forEach(({ b, m, svg }) => { b.style.width = ''; ['width', 'height', 'display', 'alignItems', 'justifyContent'].forEach((k) => { m.style[k] = ''; }); if (svg) ['width', 'height', 'maxWidth'].forEach((k) => { svg.style[k] = ''; }); });
+      const gap = parseFloat(getComputedStyle(dk).columnGap) || 0, colW = Math.floor((dk.clientWidth - 2 * gap) / 3);
+      const ars = items.map(({ b, m }) => {
+        if (b.dataset.kind !== 'image') return 0;
+        const im = m.querySelector('img, video'); const w = +im?.getAttribute('width') || im?.naturalWidth || im?.videoWidth, h = +im?.getAttribute('height') || im?.naturalHeight || im?.videoHeight;
+        return w && h ? w / h : 4 / 3;
+      });
+      const set = (H) => items.forEach(({ b, m, svg }, k) => {
+        if (svg) {
+          const vb = svg.viewBox?.baseVal; if (!vb?.width) return;
+          const pad = 16, sc = Math.min((colW - 2 * pad) / vb.width, (H - 2 * pad) / vb.height, 1);
+          Object.assign(m.style, { width: `${colW}px`, height: `${H}px`, display: 'flex', alignItems: 'center', justifyContent: 'center' });
+          Object.assign(svg.style, { width: `${vb.width * sc}px`, height: `${vb.height * sc}px`, maxWidth: 'none' });
+          b.style.width = `${colW}px`;
+        } else {
+          const w = Math.min(colW, Math.round(H * ars[k]));
+          Object.assign(m.style, { width: `${w}px`, height: `${Math.round(w / ars[k])}px` }); b.style.width = `${colW}px`;
+        }
+      });
+      const Hmax = Math.round(colW / Math.max(...ars.filter(Boolean), 0.01));
+      for (let H = Hmax; H > 120; H -= 4) { set(H); if (fill.offsetHeight <= body.clientHeight) return; }
+    });
     return s;
   }
   // 장면 id에 걸린 CSS 변수(theme CSS의 `#d-<key> { … }`)를 그리기 전에 읽음 — 빈 장면 껍데기를 잠깐 붙여 계산값을 봄
@@ -387,16 +483,18 @@
       : [{ vw: 1.4 }, { vw: 1.7 }, { vw: 1.15 }, { vw: 1.4, tight: true }, { stack: true }, { stack: true, tight: true }];
     // 직접 고침(2026-11-25): 장면별 배치 고정 — theme CSS `#d-<key> { --pf-layout: side }`(그림 칸 + 카드 칸) / `stack`(위아래). 맞는 후보가 없으면 원래 후보로
     const fl = sceneVar(sid, '--pf-layout');
+    const plain = sceneVar(sid, '--pf-cards') === 'plain';
     if (fl === 'side' || fl === 'stack') { const f = V.filter((v) => (fl === 'stack') === !!v.stack); if (f.length) V = f; }
     else if (fl === 'side-split' && vis.length > 1) V = [{ vw: 1, split: true }, { vw: 1.2, split: true }, { vw: 0.85, split: true }, { vw: 1, split: true, tight: true }];
     // 직접 고침(2026-11-25): 2×2 배치(--pf-layout: quad) — 시각 자료 3개가 왼쪽 위·오른쪽 위·왼쪽 아래, 카드가 오른쪽 아래
     else if (fl === 'quad' && (vis.length === 3 || vis.length === 2)) V = [{ quad: true }, { quad: true, tight: true }];
+    else if (fl === 'row3' && vis.length === 3) V = [{ row3: true }, { row3: true, tight: true }];   // 직접 고침(2026-11-26): 위 줄 세 칸
     const build = (v) => {
       const s = PF.scene({ id: sid, tpl: 'D', eyebrow: meta.eyebrow || meta.chapter, rlabel: meta.rlabel, rhtml: meta.rhtml, title: txt(sl.title).replace(SEC_NO, '') || meta.chapter, sub: part, lead: part && part !== `1/${part.split('/')[1]}` ? '' : txt(sl.lead), foot: meta.foot, sec: meta.chapter, group: meta.chapter, stitle: txt(sl.title) });
       s.classList.add(`l-${sl.layout || 'visual'}`);
       if (meta.err) s.dataset.pfErr = meta.err;
       if (sl.edited) s.dataset.pfEdited = '1';                       // 장면 고치기로 고친 장면(미리보기 개요에 ✎)
-      PF.body(s).innerHTML = `<div class="pf-fill">${bodyHtml(sl, vs, v)}</div>`;
+      plainCards = plain; try { PF.body(s).innerHTML = `<div class="pf-fill">${bodyHtml(sl, vs, v)}</div>`; } finally { plainCards = false; }
       stripSecRefs(s);
       if (meta.auto) s.querySelector('.pf-foot > span').insertAdjacentHTML('beforeend', '<span class="pf-autoband" data-pf-ui="note">예전 데이터로 자동 구성 — /portfolio-build를 다시 실행하면 슬라이드가 됩니다</span>');
       return PF.balanceX(matchQuad(PF.fitVisuals(s)));                            // 직접 고침(2026-11-25): 본문 좌우 여백 같게(PF.balanceX)
@@ -405,6 +503,8 @@
     let best = null;
     for (const v of V) { const s = build(v); if (!PF.fitsM(s)) continue; const sc = PF.visScore(s); if (!best || sc > best.sc + 0.05) best = { s, sc }; }
     if (best) return [best.s];
+    // 직접 고침(2026-11-26): 2×2 배치는 표를 나누지 않음 — 그리는 순간 글꼴·이미지가 덜 들어와 잠깐 안 맞아도, whenReady 뒤 matchQuad가 다시 맞춤
+    if (V[0]?.quad) return [build(V[V.length - 1])];
     // 표가 하한에서도 안 들어가면 행을 반으로 나눠 "계속" 장면으로
     //   표가 여럿이면 행이 가장 많은 표 하나만 나눕니다(같으면 앞의 것). 나머지 표는 앞 장면에 온전히 남음
     const nrows = (v) => v.el.querySelectorAll('tbody tr').length;
