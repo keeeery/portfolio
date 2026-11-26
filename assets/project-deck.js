@@ -242,6 +242,8 @@
   // ── 장면 틀(deck.slides[].layout) ──
   const txt = (t) => (t && typeof t === 'object' ? t.text : t) || '';
   const SEC_NO = /^\s*(\d+(?:\.\d+)*)\.?\s+/;                         // 직접 고침(2026-11-25): 절 제목 앞 번호(「2.2 」·「2. 」)
+  const SEC_OVERVIEW = /^개요\s*[—–-]\s*/;                            // 직접 고침(2026-11-27): 번호 뒤 「개요 — 」(「2.1 개요 — 선택 흐름」 → 「선택 흐름」), 슬라이드 화면에서만
+  const secTitle = (t) => t.replace(SEC_NO, '').replace(SEC_OVERVIEW, '');
   // 직접 고침(2026-11-25): 요점마다 서로 다른 제목형 라벨(「시간 정지」·「보스」…)이 있으면 번호 칸 대신 라벨을 왼쪽 칸에(.cards.titled).
   //   「이유」·「구현」 같은 종류 라벨은 그대로 번호 + 작은 라벨.
   const KIND_LB = new Set(['기능', '구현', '이유', '문제', '원인', '해결', '결과', '배운 점', '비용']);
@@ -257,7 +259,7 @@
     if (points.length === 1) num = false;   // 직접 고침(2026-11-26, 규칙 R1): 카드가 하나면 모든 배치에서 번호 없음
     const kindOff = !keepKind || points.length === 1;
     points = points.map((p) => (kindOff && p.label && KIND_LB.has(p.label) && txt(p) ? { ...p, label: '' } : p));
-    const titled = num && (!row || rowTitled) && !two && titledPts(points);   // 직접 고침(2026-11-25): rowTitled = 가로 카드 줄에서도 제목형 라벨(2×2 배치)
+    const titled = num && (!row || rowTitled) && titledPts(points);   // 직접 고침(2026-11-25): rowTitled = 가로 카드 줄에서도 제목형 라벨(2×2 배치) · (2026-11-27) 2열(two)에서도 제목형 라벨
     // 직접 고침(2026-11-26, 규칙 R4·R5): 카드에 원래 라벨(data 값)을 data-lb로 — 테마가 라벨별 색(「AI 활용」 주황, 「이유」·「비용」 등)을 걺
     const dlb = (pt) => (pt.label ? ` data-lb="${esc(pt.label)}"` : '');
     return `<div class="cards${row ? ' row' : ''}${two ? ' two' : ''}${titled ? ' titled' : ''}" style="--n:${Math.min(points.length, 4)}">${head ? `<p class="colhead">${inline(head)}</p>` : ''}${points.map((pt, i) => titled
@@ -273,7 +275,7 @@
     const tight = variant.tight ? ' tight' : '';
     if (!vs.length) {
       if (sl.layout === 'problem') return `<div class="dk dk-text${tight}">${flowHtml(points, variant.stack || variant.tight ? 'row' : 'col')}</div>`;
-      return `<div class="dk dk-text${tight}">${ncards(points, { two: points.length >= 3 && !variant.stack, num: sl.layout !== 'overview', head: txt(sl.pointsTitle) })}</div>`;
+      return `<div class="dk dk-text${tight}">${ncards(points, { two: points.length >= 3 && !variant.stack, num: sl.layout !== 'overview' || titledPts(points), head: txt(sl.pointsTitle) })}</div>`;   // 직접 고침(2026-11-27): 글만 있는 장면도 라벨이 모두 제목형이면 라벨 칸 카드
     }
     // 직접 고침(2026-11-26, 슬라이드 규칙 R18 — theme/deck-rules.md): 화면 틀은 「FEATURE 01」 칸 대신 그림을 위에 나란히, 설명은 아래 카드 줄(번호 없음)
     if (sl.layout === 'screens') return `<div class="dk dk-stack scr-cards${tight}"><div class="vis" data-arr="row">${vs.join('')}</div>${ncards(points, { row: true, num: false })}</div>`;
@@ -502,7 +504,7 @@
     else if (fl === 'quad' && (vis.length === 3 || vis.length === 2)) V = [{ quad: true }, { quad: true, tight: true }];
     else if (fl === 'row3' && vis.length === 3) V = [{ row3: true }, { row3: true, tight: true }];   // 직접 고침(2026-11-26): 위 줄 세 칸
     const build = (v) => {
-      const s = PF.scene({ id: sid, tpl: 'D', eyebrow: meta.eyebrow || meta.chapter, rlabel: meta.rlabel, rhtml: meta.rhtml, title: txt(sl.title).replace(SEC_NO, '') || meta.chapter, sub: part, lead: part && part !== `1/${part.split('/')[1]}` ? '' : txt(sl.lead), foot: meta.foot, sec: meta.chapter, group: meta.chapter, stitle: txt(sl.title) });
+      const s = PF.scene({ id: sid, tpl: 'D', eyebrow: meta.eyebrow || meta.chapter, rlabel: meta.rlabel, rhtml: meta.rhtml, title: secTitle(txt(sl.title)) || meta.chapter, sub: part, lead: part && part !== `1/${part.split('/')[1]}` ? '' : txt(sl.lead), foot: meta.foot, sec: meta.chapter, group: meta.chapter, stitle: txt(sl.title) });
       s.classList.add(`l-${sl.layout || 'visual'}`);
       if (meta.err) s.dataset.pfErr = meta.err;
       if (sl.edited) s.dataset.pfEdited = '1';                       // 장면 고치기로 고친 장면(미리보기 개요에 ✎)
@@ -639,14 +641,24 @@
       // 직접 고침(2026-11-25): 절 목록 제목 앞 번호(「2.2 」) 떼기
       // 직접 고침(2026-11-25): 이어진 같은 절(sectionPath 마지막 제목)의 장면은 한 줄로 묶고, 슬라이드가 둘 이상이면 쪽 번호를 목차처럼 「p.시작 — 끝」으로
       const groups = [];
+      // 직접 고침(2026-11-27): 바로 위 줄의 절 아래 하위 제목(예: 3.3 아래 「배치 확정 — …」) 장면도 그 줄에 묶음 — Folk Sack §3.3
+      const pathOf = (x) => (x.sl.sectionPath || []).map((t) => PF.normTitle(t));
       slides.forEach((x) => {
         const sec = PF.normTitle((x.sl.sectionPath || []).at(-1) || txt(x.sl.title));
+        const path = pathOf(x);
         const g = groups.at(-1);
-        if (g && g.sec === sec) g.items.push(x); else groups.push({ sec, items: [x] });
+        const sub = g && g.path.length > 0 && path.length > g.path.length && g.path.every((t, k) => path[k] === t);
+        if (g && (g.sec === sec || sub)) g.items.push(x); else groups.push({ sec, path, items: [x] });
       });
+      // 직접 고침(2026-11-27): 한 줄에 묶인 장면들의 제목이 서로 다르면 첫 장면 제목 대신 절 이름(번호 뗌)으로 — Folk Sack §2.7 「고민과 선택」(결정·AI 과정)
+      const groupTitle = (g) => {
+        const x = g.items[0];
+        if (g.items.every((y) => txt(y.sl.title) === txt(x.sl.title))) return secTitle(txt(x.sl.title));
+        return secTitle((x.sl.sectionPath || []).at(-1) || '') || secTitle(txt(x.sl.title));
+      };
       const list = groups.map((g, i) => {
         const x = g.items[0], all = g.items.flatMap((y) => y.scenes);
-        return item(String(i + 1), txt(x.sl.title).replace(SEC_NO, '') || c.title, PF.tab(x.sl.tab), all[0].id, roomy ? txt(x.sl.lead) : '', all.length > 1 ? all.at(-1).id : '');
+        return item(String(i + 1), groupTitle(g) || c.title, PF.tab(x.sl.tab), all[0].id, roomy ? txt(x.sl.lead) : '', all.length > 1 ? all.at(-1).id : '');
       }).join('');
       // 직접 고침(2026-11-25): 장 표지 오른쪽 위 「장면 n개」 빼기
       // 직접 고침(2026-11-25): 장 표지 윗줄(프로젝트 이름) 빼기 — 꼬리말 왼쪽에 늘 있음

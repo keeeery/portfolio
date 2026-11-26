@@ -335,14 +335,17 @@
   function natOf(box) {
     const k = box.dataset.kind, media = box.querySelector(':scope > .vmedia');
     if (k === 'image') { const w = +box.dataset.w || 0, h = +box.dataset.h || 0; return { k, ar: w && h ? w / h : 16 / 9, max: w ? 1.25 : Infinity, nw: w || 1600 }; }
+    // 직접 고침(2026-11-27): 다이어그램 판 안쪽 여백(px·py) — 판 크기를 그림 비율 그대로 잡으면 여백만큼 칸 비율이 어긋나 한쪽에 빈칸이 생김.
+    //   contain이 여백을 뺀 칸에서 그림 비율을 맞추고 판 = 그림 + 여백으로 돌려줌(값은 CSS에서 읽음)
+    const pads = () => { const cs = getComputedStyle(media); return { px: (parseFloat(cs.paddingLeft) || 0) + (parseFloat(cs.paddingRight) || 0), py: (parseFloat(cs.paddingTop) || 0) + (parseFloat(cs.paddingBottom) || 0) }; };
     if (k === 'mermaid' && box.dataset.split) {
       const p = JSON.parse(box.dataset.split), nw = p.w1 + p.w2 + SPLIT_SEP;
-      return { k, ar: nw / p.H, nw, max: DIAG_MAX_PX / 16, split: true };
+      return { k, ar: nw / p.H, nw, max: DIAG_MAX_PX / 16, split: true, ...pads() };
     }
     if (k === 'mermaid') {
       const svg = media.querySelector('svg'); const vb = svg?.viewBox?.baseVal;
       const w = vb?.width || 400, h = vb?.height || 300;
-      return { k, ar: w / h, nw: w, max: DIAG_MAX_PX / 16 };               // 다이어그램 글자는 DIAG_MAX_PX까지만 키움
+      return { k, ar: w / h, nw: w, max: DIAG_MAX_PX / 16, ...pads() };   // 다이어그램 글자는 DIAG_MAX_PX까지만 키움
     }
     const fin = media.querySelector(':scope > .fit-in');
     Object.assign(fin.style, { zoom: '1', width: 'max-content' });
@@ -375,16 +378,19 @@
         const cw = Math.floor(Math.min(w, t.nw)), ch = t.hAt(cw);
         return { w: cw, h: ch, over: ch > h + 0.5 };
       }
-      let bw = Math.min(w, h * t.ar);
-      const lim = w <= h * t.ar ? 'w' : 'h';                             // 폭에 막힘(가로로 긴 그림) / 높이에 막힘(세로로 긴 그림)
+      const px = t.px || 0, py = t.py || 0;                              // 다이어그램 판 여백(그림 말고) — 그림은 여백을 뺀 칸에 맞춤
+      const iw = Math.max(1, w - px), ih = Math.max(1, h - py);
+      let bw = Math.min(iw, ih * t.ar);
+      const lim = iw <= ih * t.ar ? 'w' : 'h';                           // 폭에 막힘(가로로 긴 그림) / 높이에 막힘(세로로 긴 그림)
       if (t.max !== Infinity && t.nw) bw = Math.min(bw, t.nw * t.max);
-      return { w: Math.max(1, Math.floor(bw)), h: Math.max(1, Math.floor(bw / t.ar)), lim };
+      bw = Math.max(1, Math.floor(bw));
+      return { w: bw + px, h: Math.max(1, Math.floor(bw / t.ar)) + py, lim, iw: bw };
     };
     if (arr === 'one' || n === 1) out[0] = contain(0, W, H - caps[0]);
     else if (arr === 'col') {
       // 세로로 쌓기: 표는 똑같이 나눈 몫까지 받되 칸 폭에서의 실제 높이가 더 작으면 그만큼만(남는 높이는 다이어그램·그림에)
       const avail = H - GAP * (n - 1) - caps.reduce((a, c) => a + c, 0);
-      const need = nat.map((t) => (t.table ? Math.min(avail / n, t.hAt(W)) : t.k === 'code' ? t.hAt(Math.min(W, t.nw)) : W / t.ar));
+      const need = nat.map((t) => (t.table ? Math.min(avail / n, t.hAt(W)) : t.k === 'code' ? t.hAt(Math.min(W, t.nw)) : (W - (t.px || 0)) / t.ar + (t.py || 0)));   // 직접 고침(2026-11-27): 다이어그램은 판 여백까지
       const f = Math.min(1, avail / Math.max(1, need.reduce((a, x) => a + x, 0)));
       // 직접 고침(2026-11-25): 코드는 글자 하한 아래로 줄지 않으므로, 하한에서 필요한 높이를 먼저 떼어 두고 남는 높이를 나머지에 비율대로
       const share = need.map((x) => x * f);
@@ -412,7 +418,7 @@
     return { out, nat, caps };
   }
   // 시각 자료가 원래 크기의 몇 배로 보이는가(1 이상은 1). 배치 고르기 점수
-  const scaleOf = (t, o) => (t.table ? (o.z ?? 0.9) : t.k === 'code' ? (o.over ? 0.01 : Math.min(1, o.w / t.nw)) : Math.min(1, o.w / (t.nw || 1600)));   // 코드: 칸에 안 들어가면 그 배치를 피하고, 넓을수록(줄바꿈이 적을수록) 좋음
+  const scaleOf = (t, o) => (t.table ? (o.z ?? 0.9) : t.k === 'code' ? (o.over ? 0.01 : Math.min(1, o.w / t.nw)) : Math.min(1, (o.iw ?? o.w) / (t.nw || 1600)));   // 다이어그램은 판 여백을 뺀 그림 폭(o.iw)으로   // 코드: 칸에 안 들어가면 그 배치를 피하고, 넓을수록(줄바꿈이 적을수록) 좋음
   // 장면 점수 = 시각 자료마다 log(보이는 배율)의 합(PF.fitVisuals 뒤). 클수록 그림·코드가 크게 보임
   const visScore = (s) => [...s.querySelectorAll('.vbox[data-sc]')].reduce((x, b) => x + Math.log(Math.max(0.01, +b.dataset.sc)), 0);
   // 직접 추가(2026-11-25): 슬라이드 전역 규칙 — 본문 내용의 좌우 여백을 같게.
@@ -474,6 +480,8 @@
     s.classList.add('pf-sizing');
     // 직접 고침(2026-11-25): 장면별 그림 크기 손잡이 — theme CSS에서 `#d-<key> { --pf-vis-scale: .85 }`처럼 주면 그림 영역을 그 비율로 줄여 맞춤(1 이하만)
     const vk = Math.min(1, parseFloat(getComputedStyle(s).getPropertyValue('--pf-vis-scale')) || 1);
+    // 직접 고침(2026-11-27): 장면별 다이어그램 나누기 끄기 — theme CSS `#d-<key> { --pf-split: none }`이면 세로로 긴 다이어그램도 한 덩어리로
+    const noSplit = getComputedStyle(s).getPropertyValue('--pf-split').trim() === 'none';
     const plans = [...s.querySelectorAll('.vis')].map((vis) => {
       const boxes = [...vis.children].filter((e) => e.classList.contains('vbox') && e.dataset.kind);
       // 원문을 찾지 못한 자리(.vbox.err, 띠만 있음)는 크기를 정하지 않으므로 그 높이를 칸에서 빼고 세로로 쌓음
@@ -487,7 +495,7 @@
       sizeArea(vis, boxes, W, H, col);
       // 직접 추가(2026-11-25): 세로로 긴 다이어그램이 SPLIT_EFF 미만이면 두 도막으로 나눠 다시 맞춰 봄 → SPLIT_GAIN배 이상 커질 때만 남김
       for (const box of boxes) {
-        if (box.dataset.kind !== 'mermaid' || box.dataset.split || !(+box.dataset.eff < SPLIT_EFF)) continue;
+        if (noSplit || box.dataset.kind !== 'mermaid' || box.dataset.split || !(+box.dataset.eff < SPLIT_EFF)) continue;
         const svg = box.querySelector(':scope > .vmedia > svg'), vb = svg?.viewBox?.baseVal;
         if (!vb || vb.height <= vb.width) continue;
         const plan = planSplit(svg); if (!plan) continue;
@@ -553,7 +561,7 @@
         if (t.k === 'image' || t.k === 'mermaid') {
           Object.assign(media.style, { width: `${o.w}px`, height: `${o.h}px` });
           if (t.k === 'mermaid') {
-            const eff = 16 * o.w / t.nw;
+            const eff = 16 * (o.iw ?? o.w) / t.nw;                         // 직접 고침(2026-11-27): 판 여백을 뺀 그림 폭으로
             box.dataset.eff = eff.toFixed(1);                                // 참고 지표는 최종 장면에서만(noteFill)
             box.dataset.lim = best.a === 'one' ? o.lim : 'multi';             // 다른 자료와 함께면 막힌 쪽이 아니라 '함께 있어서'가 원인
             box.dataset.vb = `${Math.round(t.nw)}×${Math.round(t.nw / t.ar)}`;

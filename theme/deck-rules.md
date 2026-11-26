@@ -18,7 +18,7 @@ ODDITY 슬라이드를 장면마다 손보며 정한 판단을 다른 프로젝�
 | R2 | 카드가 1장이고 종류 라벨이 있음 | 라벨을 뺌(「선택」 장면이어도) | `ncards` `kindOff` | reward-link |
 | R3 | 종류 라벨(기능·구현·이유·문제·원인·해결·결과·배운 점·비용, `KIND_LB`)이 「선택」(tab `선택`)이 아닌 장면에 있음 | 라벨을 화면에서 뺌(data·원문은 그대로). 문제 해결 장면(layout `problem`)의 단계 라벨은 그대로 | `ncards` `keepKind` | 구현·흐름 장면 전부 |
 | R4 | 라벨이 「AI 활용」(AI와 함께 한 일을 말하는 카드에는 이 라벨을 닮) | **배너 + 디밍** — 라벨 칸 #D97757·흰 글자 + 카드 바탕 주황 16% | 렌더러가 카드에 `data-lb` → ㉖ | psy-damage·ui-tools |
-| R5 | 가로 카드 줄(`.cards.row`)에 라벨이 있음 | 번호 대신 카드 왼쪽 라벨 칸(회색, 13px·700·양옆 10px). 이유·결과 = `--accent-fill` 칸 + `--accent-soft` 바탕, 비용·단점 = #D9534F 칸 + 16% 바탕 | ㉖ (`--tl-w`로 장면마다 칸 폭 맞춤 가능) | debris-choice·time-choice·shake-choice·psy-damage |
+| R5 | 가로 카드 줄(`.cards.row`)에 라벨이 있음 | 번호 대신 카드 왼쪽 라벨 칸(회색, 13px·700·양옆 10px). 이유·결과 = `--accent-fill` 칸 + `--accent-soft` 바탕, 비용·단점 = #D9534F 칸 + 16% 바탕, 한계 = #6E6E73 칸 + 16% 바탕(제목형 라벨 칸 .num.tl에도) | ㉖ (`--tl-w`로 장면마다 칸 폭 맞춤 가능) | debris-choice·time-choice·shake-choice·psy-damage·(Folk Sack) render-choice·broadcast-order |
 | R6 | 카드 글에 `\n`(합친 카드) | 화면에서도 줄바꿈(`pre-line`) | ㉖ | psy-restore·local-time |
 | R18 | 화면 장면(layout `screens`) | 「FEATURE 01」 칸을 쓰지 않음 — 그림은 위에 나란히, 설명은 아래 카드 줄(번호 없음, 카드 줄 폭 = 그림 줄 폭) | `bodyHtml` screens 분기 + ㉖ `.scr-cards` | Folk Sack lobby-screens |
 | — | 서로 다른 제목형 라벨이 2장 이상 | 번호 대신 라벨 칸(`.cards.titled`) | `titledPts` (예전부터) | overview-systems·telegraph |

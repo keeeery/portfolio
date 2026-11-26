@@ -422,6 +422,9 @@ html .pf-scene .note { border-radius: 0 calc(var(--radius) * .5) calc(var(--radi
 /* 직접 고침(2026-11-25): 제목형 라벨 카드(.cards.titled) — 번호 원 대신 라벨을 왼쪽 칸에. 칸 폭 = 그 묶음에서 가장 긴 라벨 */
 .cards.titled { grid-template-columns: max-content minmax(0, 1fr); column-gap: 0; }
 .cards.titled .ncard { grid-column: 1 / -1; grid-template-columns: subgrid; column-gap: 12px; }
+/* 직접 고침(2026-11-27): 2열 제목형 라벨 카드 — 열마다 라벨 칸 + 글 칸, 같은 열 카드끼리 라벨 칸 폭을 맞춤 */
+.cards.two.titled { grid-template-columns: max-content minmax(0, 1fr) max-content minmax(0, 1fr); column-gap: 12px; }   /* 두 열 사이 = 위아래 카드 간격(.cards gap 12px), 카드 안 라벨·글 칸 사이는 .ncard가 따로 정함 */
+.cards.two.titled .ncard { grid-column: span 2; }
 .ncard > .num.tl { width: auto; height: auto; min-height: 26px; padding: 0 12px; border-radius: 13px; white-space: nowrap; font-size: 14px; }
 
 /* 직접 고침(2026-11-25): 표 하나 + 카드(.dk-side.tfit) — 표 칸 = 줄이 꺾이지 않는 표 내용 폭, 나머지는 카드 */

@@ -254,13 +254,14 @@
 #d-psy-damage .cards.row .ncard { --tl-w: 69.2px; }   /* 「설계 변경」·「크기 배율」 칸 폭(13px·양옆 10px) */
 #d-telegraph { --pf-layout: side; --pf-vis-scale: .978; }   /* ODDITY 8.3 공격 예고 — 카드 칸 417px에 이미지 높이를 맞춤(이미지 556×417·카드 462px), 9장 기준(539×404)보다 조금 큼 (2026-11-26) */
 #d-telegraph .ncard > .num.tl { white-space: pre; line-height: 1.35; text-box: none; }   /* 두 줄 라벨(「시간 / 정지」「바닥 / 데칼」「스텐실 / 마스크」, 라벨 글의 \n) */
+.pf-scene .ncard[data-lb*="\A"] > .num.tl { white-space: pre; line-height: 1.35; text-box: none; }   /* 라벨 글에 \n이 있으면 어느 장면이든 그 자리에서 줄바꿈(Folk Sack 「절차적 / 맵 생성」, 2026-11-27) */
 #d-ui-tools { --pf-layout: side; --pf-vis-scale: .912; }   /* ODDITY 7.4 에디터 도구로 맞춘 UI — 9장(d-psy-aim)처럼 왼쪽 이미지 539px·오른쪽 카드 462px 세로(캡션 한 줄이라 .912) */
 #d-overview, #d-time-overview, #d-local-time, #d-psy-hold-lag { --pf-cards: plain; }   /* 요점 카드 번호 빼기 — 차례·대등 목록이 아닌 카드(소개 문단, 종류가 다른 두 이야기, 요약 → 세부), project-deck.js plainCards(2026-11-26) */
-#d-ui-tools-table .fstep > p { white-space: pre-line; }   /* ODDITY 7.4 AI와 함께 한 과정 — 카드마다 「AI」 줄과 「내 판단」 줄 */
-#d-ui-tools-table .fstep > p > strong { display: inline-block; width: 4.8em; margin-right: 10px; padding: 4px 0; border-radius: 6px; text-align: center;
+#d-ui-tools-table .fstep > p, [data-pf-project="2-Folk-Sack"] #d-render-ai .fstep > p { white-space: pre-line; }   /* ODDITY 7.4·Folk Sack 2.7 AI와 함께 한 과정 — 카드마다 「AI」 줄과 「내 판단」 줄 */
+#d-ui-tools-table .fstep > p > strong, [data-pf-project="2-Folk-Sack"] #d-render-ai .fstep > p > strong { display: inline-block; width: 4.8em; margin-right: 10px; padding: 4px 0; border-radius: 6px; text-align: center;
   font-size: 12px; font-weight: 700; line-height: 1; text-box: trim-both cap alphabetic; vertical-align: 1px; }   /* 「AI」·「내 판단」 머리말 = 같은 폭의 작은 칸 */
-#d-ui-tools-table .fstep > p > strong:first-of-type { background: color-mix(in srgb, #D97757 16%, var(--bg)); color: #D97757; }   /* AI = 옅은 Claude 주황 바탕 + 주황 글씨(2.6 d-psy-damage 「AI 활용」 카드 바탕과 같은 규칙) */
-#d-ui-tools-table .fstep > p > strong:last-of-type { background: var(--accent); color: #fff; margin-top: 8px; }   /* 내 판단 = 꽉 찬 강조색(옅은 AI 칸과 세기 차이로 강조), 윗줄과 8px 띄움 */
+#d-ui-tools-table .fstep > p > strong:first-of-type, [data-pf-project="2-Folk-Sack"] #d-render-ai .fstep > p > strong:first-of-type { background: color-mix(in srgb, #D97757 16%, var(--bg)); color: #D97757; }   /* AI = 옅은 Claude 주황 바탕 + 주황 글씨(2.6 d-psy-damage 「AI 활용」 카드 바탕과 같은 규칙) */
+#d-ui-tools-table .fstep > p > strong:last-of-type, [data-pf-project="2-Folk-Sack"] #d-render-ai .fstep > p > strong:last-of-type { background: var(--accent); color: #fff; margin-top: 8px; }   /* 내 판단 = 꽉 찬 강조색(옅은 AI 칸과 세기 차이로 강조), 윗줄과 8px 띄움 */
 #d-psy-hold-lag { --pf-layout: side; --pf-vis-scale: .913; }   /* ODDITY 2.4 회전 속도에 따라 뒤따라오는 물체 — 9장(d-psy-aim)처럼 왼쪽 이미지 하나, 오른쪽 카드 세로로 */   /* 카드 글의 줄바꿈(\n, 「정합니다.」 뒤)을 화면에도 */
 /* ODDITY 3.5·5.4·8.8 고민과 선택 — 「이유」·「비용」·「문제」·「결과」 카드의 왼쪽 라벨 칸과 색은 ㉖ 공통 규칙(R5) */
 #d-shake-choice table.md-table :is(td, th):nth-child(2) { width: 366px; }   /* 표 열 폭 — 장점·비용 칸의 각 줄이 한 줄로 끝나게(외톨이 줄 「쌓임」「없음」 없앰), 방법 칸은 남는 폭 */
@@ -301,10 +302,21 @@
 #d-death-flash .vbox[data-kind="code"] .fit-in pre code { word-break: keep-all; }   /* 낱말 중간에서 꺾지 않음 */
 
 /* ── Folk Sack 장면별(2026-11-26, theme/deck-rules.md 규칙) — 장면 id가 프로젝트마다 겹칠 수 있어 [data-pf-project="2-Folk-Sack"]로 그 프로젝트에만 ── */
-[data-pf-project="2-Folk-Sack"] :is(#d-what, #d-arch, #d-gen-pipeline, #d-multi-chunk, #d-burial-states) { --pf-cards: plain; }   /* R8 번호 없음 — 1.1 개요·1.5 구조·2.1 생성 순서·3.4 동시 낙하·4.1 매몰 상태(구현과 이유, 차례가 아닌 카드) */
+[data-pf-project="2-Folk-Sack"] :is(#d-what, #d-gen-pipeline, #d-multi-chunk, #d-burial-states) { --pf-cards: plain; }   /* R8 번호 없음 — 1.1 개요·2.1 생성 순서·3.4 동시 낙하·4.1 매몰 상태(구현과 이유, 차례가 아닌 카드) */
 [data-pf-project="2-Folk-Sack"] #d-burial-states { --pf-layout: quad; }   /* R10 4.1 매몰 상태 — 다이어그램·이미지 위 두 칸, 카드 2장 아래 */
 [data-pf-project="2-Folk-Sack"] #d-fog-map { --pf-layout: side; --pf-vis-scale: .855; }   /* R9 6.3 안개와 지도 — 왼쪽 이미지 539×404·오른쪽 카드 462px(캡션 한 줄) */
-/* (Folk Sack 2.3 map-contract — R11 side-split은 이미지 286px, quad는 코드 칸 넘침이라 기본 배치: 코드·이미지 왼쪽 세로, 카드 오른쪽) */
+[data-pf-project="2-Folk-Sack"] #d-tsv-rules { --pf-layout: side-split; --pf-split: none; }   /* 2.3 표(TSV)로 관리하는 지형 규칙 — 왼쪽 DTO→Def 다이어그램(나누지 않고 한 덩어리), 오른쪽 카드 2장 위·코드 아래(2026-11-27) */
+[data-pf-project="2-Folk-Sack"] #d-tsv-rules .dk-split { grid-template-columns: 383px 624px !important; justify-content: center !important; }   /* 2.3 — 오른쪽 칸을 624px로 넓혀 코드의 가장 긴 줄(「채굴 가능한 타일의 MaxDurability는 1 이상이어야 합니다」, 586px + 양옆 18px)을 한 줄로, 왼쪽은 예전 다이어그램 폭 383px(합 1035px ≤ 본문 1136px)(2026-11-27) */
+[data-pf-project="2-Folk-Sack"] #d-tsv-rules .vbox[data-kind="code"] pre { padding-block: 35px !important; }   /* 2.3 — 2번 카드가 한 줄이 되고(약 24px) 코드가 꺾이지 않아(약 18px) 낮아진 만큼 코드 위아래 여백을 14px → 35px로, 왼쪽 다이어그램 크기 유지 */
+[data-pf-project="2-Folk-Sack"] #d-render-ai .dk-side.flip { grid-template-columns: minmax(0, 1fr) 596px !important; justify-content: center !important; }   /* 2.7 AI와 함께 한 과정 — 문제 틀의 뒤집은 옆 배치를 되돌려 왼쪽 프로토타입 이미지, 오른쪽 AI·내 판단 카드. 카드 칸 596px = 가장 긴 줄(「덩어리를 셀 모양 그대로 만들고, …떨어지게 함」 496px)이 한 줄로 들어가는 폭, 이미지는 남는 폭으로 줄어듦(2026-11-27) */
+[data-pf-project="2-Folk-Sack"] #d-render-ai .dk-side.flip > .vis { order: 0; }
+[data-pf-project="2-Folk-Sack"] #d-collapse-steps { --pf-layout: side-split; }   /* 3.3 덩어리 하나가 떨어져 자리 잡기까지 — 10장처럼 왼쪽 낙하 덩어리 이미지, 오른쪽 단계 카드 4장 위·취소 표 아래(2026-11-27) */
+[data-pf-project="2-Folk-Sack"] #d-collapse-steps .dk-split { grid-template-columns: minmax(0, 1fr) 610px !important; justify-content: center !important; }   /* 오른쪽 칸 610px — 표의 두 줄 칸을 줄여 본문 넘침(3.6px)을 없앰, 이미지는 남는 폭 */
+[data-pf-project="2-Folk-Sack"] #d-collapse-placement .vbox[data-kind="image"] .cap { display: none; }   /* 3.3 배치 확정 — 도식 안에 칸 제목·설명·범례가 있어 긴 그림 설명(alt)은 숨기고 도식을 크게(2026-11-27) */
+[data-pf-project="2-Folk-Sack"] #d-lobby-screens { --pf-vis-scale: .93; }   /* 7.3 대기방 프리뷰·채팅·승자 표시 — 이미지 두 장 + 카드 두 장이 본문 칸을 25px 넘쳐 이미지를 조금 작게(2026-11-27) */
+[data-pf-project="2-Folk-Sack"] #d-map-contract { --pf-layout: side-split; }   /* 2.4 접속 시 같은 맵 재생성 — 10장(d-tsv-rules)처럼 왼쪽 이미지, 오른쪽 카드 2장 위·코드 아래(deck-edits에서 이미지를 첫 자료로, 2026-11-27) */
+[data-pf-project="2-Folk-Sack"] #d-map-contract .dk-split { grid-template-columns: 568px 534px !important; justify-content: center !important; }   /* 2.4 — 오른쪽 칸 534px(코드 첫 줄 주석 497px + 양옆 18px)로 코드가 꺾이지 않게, 왼쪽은 이미지 폭 568px(합 1130px ≤ 본문 1136px)(2026-11-27) */
+[data-pf-project="2-Folk-Sack"] #d-map-contract .vbox[data-kind="code"] pre { padding-block: 32px !important; }   /* 2.4 — 코드가 꺾이지 않아 낮아진 만큼(2줄, 약 36px) 위아래 여백을 14px → 32px로, 이미지 크기 유지 */
 
 /* ── Arcanist 장면별(2026-11-26, theme/deck-rules.md 규칙) ── */
 [data-pf-project="3-Arcanist"] :is(#d-what, #d-card-exec, #d-restore-seq, #d-skip-spawn) { --pf-cards: plain; }   /* R8 번호 없음 — 1.1 소개·3.3 이유와 구현·6.1 기능과 기록 항목·6.2 서로 다른 두 이야기 */
@@ -329,11 +341,13 @@
   font-size: 13px; font-weight: 700; line-height: 1; text-box: trim-both cap alphabetic;
   background: color-mix(in srgb, var(--ink) 22%, var(--bg)); color: var(--ink); }
 .pf-scene .cards.row .ncard > div:has(> .lb) > p { margin: 0; padding: 14px 18px; align-self: center; }
-/*   선택 장면 라벨 색 — 이유·결과 = 표의 「채택」 배지 색 칸 + 채택 행 바탕, 비용·단점 = 빨강 칸 + 16% 바탕, 그 밖(문제 등) = 회색 칸 */
+/*   선택 장면 라벨 색 — 이유·결과 = 표의 「채택」 배지 색 칸 + 채택 행 바탕, 비용·단점 = 빨강 칸 + 16% 바탕, 한계 = 짙은 회색 칸 + 16% 바탕, 그 밖(문제 등) = 회색 칸 */
 .pf-scene .cards.row .ncard:is([data-lb="이유"], [data-lb="결과"]) { background: var(--accent-soft); border-color: transparent; }
 .pf-scene .cards.row .ncard:is([data-lb="이유"], [data-lb="결과"]) > div > .lb { background: var(--accent-fill); color: #fff; }
 .pf-scene .cards.row .ncard:is([data-lb="비용"], [data-lb="단점"]) { background: color-mix(in srgb, #D9534F 16%, var(--bg)); border-color: transparent; }
 .pf-scene .cards.row .ncard:is([data-lb="비용"], [data-lb="단점"]) > div > .lb { background: #D9534F; color: #fff; }
+.pf-scene .cards .ncard[data-lb="한계"] { background: color-mix(in srgb, #6E6E73 16%, var(--bg)); border-color: transparent; }   /* 한계 = 짙은 회색 칸 + 16% 바탕(중립 단서, 다크 모드에서도 흰 글씨가 읽히게 고정 색, 2026-11-27) */
+.pf-scene .cards .ncard[data-lb="한계"] > div > .lb, .pf-scene .cards .ncard[data-lb="한계"] > .num.tl { background: #6E6E73; color: #fff; }   /* 가로 왼쪽 칸(.lb)·제목형 라벨 칸(.num.tl) 모두 */
 /* R4 「AI 활용」 칸 = Claude 주황, 카드 바탕 주황 16%(결과 카드 초록 16%와 같은 계산) — 세로 제목 칸(.num.tl)·가로 왼쪽 칸(.lb) 모두 */
 .pf-scene .ncard[data-lb="AI 활용"] { background: color-mix(in srgb, #D97757 16%, var(--bg)); border-color: transparent; }
 .pf-scene .cards .ncard[data-lb="AI 활용"] > .num.tl, .pf-scene .cards .ncard[data-lb="AI 활용"] > div > .lb { background: #D97757; color: #fff; }
@@ -343,3 +357,6 @@
 .pf-scene .dk-stack.scr-cards > .cards { width: 0; min-width: 100%; gap: 16px; }
 .pf-scene.pf-sizing .dk-stack.scr-cards { grid-template-columns: none; justify-content: normal; }
 .pf-scene.pf-sizing .dk-stack.scr-cards > .cards { width: auto; min-width: 0; }
+
+/* 다이어그램 판 안쪽 여백 — 슬라이드만 16px → 12px(상세 문서는 doc.css 16px 그대로, 2026-11-27) */
+.pf-scene .vbox[data-kind="mermaid"] .vmedia { padding: 12px; }

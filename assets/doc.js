@@ -394,8 +394,7 @@ try { window.mermaid?.initialize({ startOnLoad: false }); } catch (_) { /* */ }
       const acc = /^\s*accTitle\s*:\s*(.+)$/m.exec(code.textContent)?.[1]?.trim();
       fig.dataset.label = acc || PF.t('doc.diagram-n', { n });
       fig.append(div, pdiv);
-      fig.insertAdjacentHTML('beforeend', `<div class="mmd-bar"><details class="mmd-src"><summary>${T('doc.diagram-src')}</summary><pre><code>${esc(code.textContent)}</code></pre></details>` +
-        `<button type="button" class="mmd-zoom">${T('doc.zoom')}</button></div>`);
+      fig.insertAdjacentHTML('beforeend', `<div class="mmd-bar"><details class="mmd-src"><summary>${T('doc.diagram-src')}</summary><pre><code>${esc(code.textContent)}</code></pre></details></div>`);
       (code.closest('pre') || code).replaceWith(fig);
       figs.push(fig);
     });
@@ -520,7 +519,7 @@ try { window.mermaid?.initialize({ startOnLoad: false }); } catch (_) { /* */ }
     doc.addEventListener('click', (e) => {
       const img = e.target.closest('img');
       if (img && !img.closest('a')) return zoom({ src: img.currentSrc || img.src, caption: img.alt, video: img.dataset.pfVidBase });
-      const hit = e.target.closest('.mmd-zoom') || (!e.target.closest('a') && e.target.closest('.mmd-screen'));   // 다이어그램 안 링크(click)는 그대로 열림
+      const hit = (!e.target.closest('a') && e.target.closest('.mmd-screen'));   // 다이어그램 안 링크(click)는 그대로 열림
       if (hit) { const fig = hit.closest('.mmd'), svg = fig.querySelector('.mmd-screen svg'); if (svg) zoom({ svg, caption: fig.dataset.label }); }
     });
     // 다이어그램 원문 패널: 그림 폭(fit-content)이 아니라 본문 칸 폭(코드 블록과 같은 폭·위치)으로 펼침
