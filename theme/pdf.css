@@ -127,3 +127,9 @@
   #others .card-print > .mt-5 { grid-row: 5; align-self: end; }
   #others .card-print > .mt-auto { grid-row: 6; }
 }
+@media print {
+  /* 프로젝트 요약: 줄 사이 64px(위아래 32px씩) → 36px — 구분선 없이 띄운 간격이 넓어 보여서 */
+  .gl-row { padding: 18px 0 !important; }
+  .gl-row:first-child { padding-top: 0 !important; }
+  .gl-row:last-child { padding-bottom: 0 !important; }
+}
