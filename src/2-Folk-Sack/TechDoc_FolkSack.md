@@ -159,12 +159,16 @@ flowchart TB
         Handler --> GS["GameSession<br/>RoomState"]
         GS -->|확정 결과| Room
     end
-    TSV[("TSV + Seed + Profile")] --> GEN["클라이언트 / 서버<br/>지형 생성기"]
+    subgraph Shared["공유 리소스"]
+        TSV[("TSV + Seed + Profile")] --> GEN["클라이언트 / 서버<br/>지형 생성기"]
+    end
     RC -->|WebSocket 요청| Room
     Room -->|WebSocket 방송| RC
     GEN -->|초기 맵| GS
     GEN -->|초기 맵| TM
 %% 격자: Input RC Room | INV - Handler | HUD - GS | EXP TM GEN | Map - TSV
+%% 묶음 맞춤: Shared = Srv 좌우
+%% 묶음 맞춤: Shared = Client 아래
 %% 화살표 RC -> INV: 나감=아래 들어감=오른쪽
 %% 화살표 GS -> Room: 나감=오른쪽 들어감=오른쪽
 ```
