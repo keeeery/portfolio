@@ -1392,7 +1392,7 @@ Screen Space Overlay UI는 월드의 화면 꺼짐 효과로 숨겨지지 않아
 
 #### trauma 기반 카메라 흔들림
 
-![강 구간 피격 연출 — 큰 통을 던져 맞힌 순간 카메라가 흔들림](images/camera-shake.mp4)
+![강 구간 피격 연출 — trauma 기반 카메라 흔들림](images/camera-shake.mp4)
 
 카메라 흔들림은 충격량(trauma, 0~1)을 쌓고 그 **제곱**으로 세기를 정합니다.
 약한 충격은 아주 작게, 강한 충격은 확실하게 흔들리고, 여러 충격이 겹치면 더해지되 1을 넘지 않습니다.
@@ -1450,7 +1450,9 @@ noiseTime += Time.unscaledDeltaTime * shakeFrequency;
 ```csharp
 // BossHitFeedback.GetTier() — 받은 피해를 공격력 배율과 비교해 피격 단계 결정
 if (damageEvent.Info.Reaction == HitReaction.Knockdown) return HitTier.Strong;
-int atk = damageEvent.Sender is CombatEntity attacker && attacker != null ? attacker.CurrentStats.Atk : 0;
+int atk = damageEvent.Sender is CombatEntity attacker && attacker != null 
+    ? attacker.CurrentStats.Atk 
+    : 0;
 if (atk <= 0) atk = fallbackAtk;
 if (receivedDamage >= atk * strongHitAtkScale) return HitTier.Strong;
 if (receivedDamage >= atk * mediumHitAtkScale) return HitTier.Medium;
