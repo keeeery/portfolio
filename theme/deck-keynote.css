@@ -232,15 +232,15 @@
 #d-psy-control { --pf-vis-scale: .85; --pf-cards-scale: 1.06; }   /* ODDITY 2.2 조작 입력과 물체 상태 — 상태 다이어그램 조금 작게, 카드는 넓혀 두 줄로 */
 #d-psy-aim { --pf-vis-scale: .95; }   /* ODDITY 2.3 조준과 선택 — 이미지 5% 작게 */
 #d-psy-follow { --pf-layout: side-split; }   /* ODDITY 2.4 물리 추종과 휘두르기 — 왼쪽에 이미지, 오른쪽에 카드 위·코드 아래 */
-#d-psy-hold-aim, #d-freeze-except { --pf-layout: stack; --pf-arr: row; }   /* ODDITY 2.4 홀딩 위치 — 이미지 2개 위 나란히, 카드 하나 아래 */
+#d-psy-hold-aim, #d-freeze-except , #d-boss-overview, #d-boss-env-attack, #d-reward-link { --pf-layout: stack; --pf-arr: row; }   /* ODDITY 2.4 홀딩 위치 — 이미지 2개 위 나란히, 카드 하나 아래 */
 /* 카드 줄 폭 = 이미지 줄 폭: 열을 이미지 줄 내용 폭으로 잡고(카드는 폭 계산에서 빠짐) 카드 칸 사이도 이미지 사이(16px)와 같게.
    배치 맞추기 중(.pf-sizing은 장면 자신에 붙음)에는 원래 폭으로 남은 높이를 잼 */
-#d-psy-hold-aim .dk-stack, #d-freeze-except .dk-stack { grid-template-columns: max-content; justify-content: center; }
-#d-psy-hold-aim .dk-stack > .cards, #d-freeze-except .dk-stack > .cards { width: 0; min-width: 100%; gap: 16px; }
-#d-psy-hold-aim.pf-sizing .dk-stack, #d-freeze-except.pf-sizing .dk-stack { grid-template-columns: none; justify-content: normal; }
-#d-psy-hold-aim.pf-sizing .dk-stack > .cards, #d-freeze-except.pf-sizing .dk-stack > .cards { width: auto; min-width: 0; }
-#d-psy-hold-aim .ncard, #d-freeze-except .ncard { padding-inline: calc(18px - 1.25px); }   /* 카드 양쪽 끝 ↔ 글 18px(테두리 1.25px 포함) */
-#d-psy-hold-aim .ncard p, #d-freeze-except .ncard p { white-space: pre-line; }
+#d-psy-hold-aim .dk-stack, #d-freeze-except .dk-stack , #d-boss-overview .dk-stack, #d-boss-env-attack .dk-stack, #d-reward-link .dk-stack { grid-template-columns: max-content; justify-content: center; }
+#d-psy-hold-aim .dk-stack > .cards, #d-freeze-except .dk-stack > .cards , #d-boss-overview .dk-stack > .cards, #d-boss-env-attack .dk-stack > .cards, #d-reward-link .dk-stack > .cards { width: 0; min-width: 100%; gap: 16px; }
+#d-psy-hold-aim.pf-sizing .dk-stack, #d-freeze-except.pf-sizing .dk-stack , #d-boss-overview.pf-sizing .dk-stack, #d-boss-env-attack.pf-sizing .dk-stack, #d-reward-link.pf-sizing .dk-stack { grid-template-columns: none; justify-content: normal; }
+#d-psy-hold-aim.pf-sizing .dk-stack > .cards, #d-freeze-except.pf-sizing .dk-stack > .cards , #d-boss-overview.pf-sizing .dk-stack > .cards, #d-boss-env-attack.pf-sizing .dk-stack > .cards, #d-reward-link.pf-sizing .dk-stack > .cards { width: auto; min-width: 0; }
+#d-psy-hold-aim .ncard, #d-freeze-except .ncard , #d-boss-overview .ncard, #d-boss-env-attack .ncard, #d-reward-link .ncard { padding-inline: calc(18px - 1.25px); }   /* 카드 양쪽 끝 ↔ 글 18px(테두리 1.25px 포함) */
+#d-psy-hold-aim .ncard p, #d-freeze-except .ncard p , #d-boss-overview .ncard p, #d-boss-env-attack .ncard p, #d-reward-link .ncard p { white-space: pre-line; }
 #d-local-time { --pf-layout: side-split; }   /* ODDITY 4.2 시간이 풀린 뒤의 원래 움직임 복원 — 10장(d-psy-follow)처럼 왼쪽에 이미지, 오른쪽에 카드 위·코드 아래 */
 #d-psy-throw { --pf-layout: side-split; }   /* ODDITY 2.5 당겨 모은 뒤 조준점으로 던지기 — 10장(d-psy-follow)처럼 왼쪽에 영상, 오른쪽에 카드 위·코드 아래 */
 #d-psy-throw .pf-lead { white-space: pre-line; }
@@ -262,6 +262,12 @@
 #d-psy-damage .cards.row .ncard > div > p { margin: 0; padding: 14px 18px; align-self: center; }
 /* 제목 칸은 ㉔ 기본 회색, 「AI 활용」(2번 카드)만 Claude 주황 */
 #d-psy-damage .cards.titled .ncard:nth-child(2) > .num.tl { background: #D97757; color: #fff; }
+#d-ui-tools { --pf-layout: side; }   /* ODDITY 7.4 에디터 도구로 맞춘 UI — 9장(d-psy-aim)처럼 왼쪽 이미지 하나, 오른쪽 카드 세로로 */
+#d-ui-tools-table .fstep > p { white-space: pre-line; }   /* ODDITY 7.4 AI와 함께 한 과정 — 카드마다 「AI」 줄과 「내 판단」 줄 */
+#d-ui-tools-table .fstep > p > strong { display: inline-block; width: 4.8em; margin-right: 10px; padding: 4px 0; border-radius: 6px; text-align: center;
+  font-size: 12px; font-weight: 700; line-height: 1; text-box: trim-both cap alphabetic; vertical-align: 1px; }   /* 「AI」·「내 판단」 머리말 = 같은 폭의 작은 칸 */
+#d-ui-tools-table .fstep > p > strong:first-of-type { background: color-mix(in srgb, var(--ink) 22%, var(--bg)); color: var(--ink); }   /* AI = 회색 */
+#d-ui-tools-table .fstep > p > strong:last-of-type { background: var(--accent); color: #fff; margin-top: 8px; }   /* 내 판단 = 강조색, 윗줄과 8px 띄움 */
 #d-psy-hold-lag { --pf-layout: side; --pf-vis-scale: .913; }   /* ODDITY 2.4 회전 속도에 따라 뒤따라오는 물체 — 9장(d-psy-aim)처럼 왼쪽 이미지 하나, 오른쪽 카드 세로로 */   /* 카드 글의 줄바꿈(\n, 「정합니다.」 뒤)을 화면에도 */
 /* ODDITY 3.5 고민과 선택 — 「이유」·「비용」 카드를 11장(d-psy-damage)처럼 왼쪽 라벨 칸 + 글로. 이유 = 파랑, 비용 = 빨강(라벨 칸 진하게, 카드 바탕은 16% 디밍) */
 #d-debris-choice .cards.row .ncard, #d-time-choice .cards.row .ncard { padding: 0; gap: 0; overflow: hidden; grid-template-columns: minmax(0, 1fr); --tl-w: 43.1px; }   /* 라벨 칸 폭 = 라벨(13px·700) + 양옆 10px — 전역 라벨 칸 규칙과 같게, 두 카드 같은 폭 */
@@ -274,6 +280,15 @@
 #d-debris-choice .cards.row .ncard:nth-child(2) > div > .lb, #d-time-choice .cards.row .ncard:nth-child(2) > div > .lb { background: #D9534F; }
 #d-debris-choice .cards.row .ncard:nth-child(2), #d-time-choice .cards.row .ncard:nth-child(2) { background: color-mix(in srgb, #D9534F 16%, var(--card)); border-color: transparent; }
 #d-debris-pool { --pf-layout: side; }   /* ODDITY 3.2 미리 만들어 다시 사용하는 파편 — 코드 하나(24줄) 왼쪽, 오른쪽 카드 세로로 */
+#d-crosshair { --pf-layout: quad; }   /* ODDITY 7.2 조준점 — 이미지·표 위, 카드 2장 아래 2×2 */
+#d-crosshair .ncard p { white-space: pre-line; }
+#d-crosshair table.md-table :is(td, th) { white-space: nowrap; }   /* 표 칸은 자동으로 꺾지 않고, 슬라이드 전용 줄바꿈(slideBreakParen·slideBreakAfter)만 */
+#d-boss-intent { --pf-layout: side; }   /* ODDITY 4.1 보스 패턴 구조 — 표 왼쪽, 카드 오른쪽 세로로 */
+#d-boss-intent .dk-side.tfit { grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); }   /* 칸 글이 길어 내용 폭 대신 비율로, 칸 안에서 줄바꿈 */
+#d-boss-intent .dk-side.tfit table.md-table { width: 100%; }
+#d-boss-intent .dk-side.tfit > .vis, #d-boss-intent .dk-side.tfit > .cards { align-self: center !important; margin-top: 0 !important; }   /* 캡션 없는 표 — 표와 카드 열을 세로 가운데로(맞춤 계산이 표를 다시 맞추기 전 높이로 어긋나서) */
+#d-boss-intent .dk-side.tfit table.md-table td { white-space: normal; }
+#d-boss-intent .dk-side.tfit table.md-table td:first-child, #d-boss-intent .dk-side.tfit table.md-table th { white-space: nowrap; }
 #d-debris-life { --pf-vis-scale: .7565; }   /* ODDITY 3.3 작은 파편의 수명과 반환 — 상태 다이어그램 글자를 8장(d-psy-control)과 같은 크기로 */
 #d-debris-material { --pf-layout: side-split; }   /* ODDITY 3.4 재질별 파괴 — 왼쪽 이미지(남는 폭을 다 씀), 오른쪽 칸은 표 위·번호 없는 카드 아래(표 내용 폭) */
 #d-debris-material .dk-split { grid-template-columns: minmax(0, 1fr) max-content; }

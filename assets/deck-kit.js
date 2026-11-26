@@ -62,7 +62,7 @@
   const Q = new URLSearchParams(location.search);
   const PF = window.PFScene;
   const T = (PF._t = { mount: null, ready: null, timeout: null, firstYes: null });
-  let deck = null, scenes = [], cur = 0, hud = null, opts = {}, scope = 'all', K = 1, io = null, mountedOnce = false, ov = null, ovBuilt = false, hint = null, hintClosed = false;
+  let deck = null, scenes = [], cur = 0, hud = null, pop = null, opts = {}, scope = 'all', K = 1, io = null, mountedOnce = false, ov = null, ovBuilt = false, hint = null, hintClosed = false;
   // 보기 선택 기억: 같은 <id>.github.io 출처를 여러 레포가 나눠 쓰므로 키에 레포 경로를 넣음(portfolio-structure §3-4 조건 6)
   const VIEW_KEY = `pf-view:${location.pathname.replace(/[^/]*$/, '')}`;
   // 직접 추가: 장면을 옮겨도 주소(#s=…)를 바꾸지 않고, 보던 장면을 sessionStorage에 기억 → 새로고침·뒤로로 다시 열면 그 장면(page-anchor.js와 같은 키)
@@ -277,6 +277,7 @@
   function onKey(e) {
     if (e.defaultPrevented || e.altKey || e.ctrlKey || e.metaKey || editable(e.target) || document.querySelector('dialog[open]')) return;
     const k = e.key;
+    if (k === 'Escape' && saveOpen()) { e.preventDefault(); return toggleSave(false, true); }
     if (k === 'Escape' && helpOpen()) { e.preventDefault(); return toggleHelp(false); }
     if (k === 'o' || k === 'O') { e.preventDefault(); return openOverview(); }
     if (k === 'f' || k === 'F') { e.preventDefault(); return toggleFull(); }
@@ -505,6 +506,57 @@
     on = on ?? box.hidden;
     box.hidden = !on; b.setAttribute('aria-expanded', String(on));
   }
+  const saveOpen = () => !!pop && !pop.querySelector('.pf-hud-menu').hidden;
+  function toggleSave(on, refocus) {                                    // 저장 메뉴(다운로드 아이콘)
+    if (!hud) return;
+    const m = pop.querySelector('.pf-hud-menu'), b = hud.querySelector('[data-a=save]');
+    on = on ?? m.hidden;
+    if (on) { toggleHelp(false); m.style.right = `${Math.max(8, document.documentElement.clientWidth - b.getBoundingClientRect().right - 8)}px`; }   // 메뉴 오른쪽 끝 = 다운로드 아이콘 + 8px
+    m.hidden = !on; b.setAttribute('aria-expanded', String(on));
+    if (on) m.querySelector('[role=menuitem]')?.focus({ preventScroll: true });
+    else if (refocus) b.focus({ preventScroll: true });
+  }
+  // ── 하단 바 아이콘 설명(직접 고침 2026-11-25): 마우스를 잠시 올려 두면 버튼 위 가운데에 알림(.pf-hud-msg)과 같은 모양으로 기능 이름을 띄움.
+  //    브라우저 기본 말풍선(title)과 겹치지 않게 title은 data-tip으로 옮김(나중에 다시 써도 MutationObserver가 옮김). 스크린리더에는 aria-description으로 남김
+  // 아이콘 설명이 알림(PPTX 만드는 중 등)과 옆으로 겹치면 알림을 설명 위로 비켜 올림(사이 4px). 설명이 사라지면 제자리로
+  let hudTip = null;
+  function dodgeMsg() {
+    const m = pop?.querySelector('.pf-hud-msg'); if (!m) return;
+    let up = 0;
+    if (hudTip && !hudTip.hidden && m.textContent) {
+      const a = hudTip.getBoundingClientRect(), b = m.getBoundingClientRect();
+      if (a.left < b.right && b.left < a.right) up = a.height + 4;
+    }
+    m.style.transform = up ? `translateY(${-up}px)` : '';
+  }
+  function hudTips() {
+    const tip = hudTip = document.createElement('span');
+    tip.className = 'pf-hud-tip'; tip.setAttribute('aria-hidden', 'true'); tip.hidden = true;
+    pop.appendChild(tip);
+    const SEL = 'button, a.pf-hud-home';
+    const own = (el) => el.matches?.(SEL) && !el.closest('.pf-hud-menu');
+    const move = (el) => { if (!own(el) || !el.hasAttribute('title')) return; el.dataset.tip = el.title; el.setAttribute('aria-description', el.title); el.removeAttribute('title'); };
+    hud.querySelectorAll('[title]').forEach(move);
+    new MutationObserver((ms) => ms.forEach((m) => move(m.target))).observe(hud, { subtree: true, attributes: true, attributeFilter: ['title'] });
+    let timer = 0, on = null;
+    const hide = () => { clearTimeout(timer); timer = 0; on = null; if (!tip.hidden) { tip.hidden = true; dodgeMsg(); } };
+    const show = (el) => {
+      const t = el.dataset.tip || el.getAttribute('aria-label') || ''; if (!t || el.getAttribute('aria-expanded') === 'true') return;
+      tip.textContent = t; tip.hidden = false;
+      const hr = hud.getBoundingClientRect(), br = el.getBoundingClientRect(), w = tip.getBoundingClientRect().width;   // 소수점 폭까지(끝 간격이 정확히 8px)
+      const x = Math.min(Math.max(br.left + br.width / 2 - hr.left, w / 2 + 8), hr.width - w / 2 - 8);   // 버튼 위 가운데, 화면 밖으로 나가면 안쪽으로
+      tip.style.left = `${hr.left + x}px`;                                 // 화면 기준(상자가 화면에 고정)
+      dodgeMsg();
+    };
+    hud.addEventListener('pointerover', (e) => {
+      if (e.pointerType && e.pointerType !== 'mouse') return;
+      const el = e.target.closest(SEL); if (!el || !own(el) || el === on) return;
+      hide(); on = el; timer = setTimeout(() => show(el), 500);
+    });
+    hud.addEventListener('pointerout', (e) => { const el = e.target.closest(SEL); if (el && el === on && !el.contains(e.relatedTarget)) hide(); });
+    hud.addEventListener('pointerdown', hide, true);
+    addEventListener('scroll', hide, { passive: true });
+  }
   function buildHud() {
     const skip = document.createElement('a');
     skip.className = 'pf-skiplink pf-screen-only'; skip.href = '#deck'; skip.textContent = L('ui.skip');
@@ -522,8 +574,12 @@
       <button type="button" data-a="view"><span class="l"></span><span class="s"></span></button>
       <button type="button" data-a="overview" aria-haspopup="dialog" aria-label="${LH('ui.overview')}" title="${LH('ui.overview-tip')}"><span aria-hidden="true">▦</span> <span class="l">${LH('ui.overview')}</span></button>
       ${opts.scope && hasDoc ? '<button type="button" data-a="scope" aria-pressed="false" title="PDF에서 부록 빼기"><span class="l">요약만</span><span class="s">요약</span></button>' : ''}
-      <button type="button" data-a="print" class="pf-print" aria-label="${LH('ui.pdf')}" title="${LH('ui.pdf')}"><span class="l">${LH('ui.pdf')}</span><span class="s">${LH('ui.pdf-short')}</span><small></small></button>
-      ${opts.pptx ? `<button type="button" data-a="pptx" class="pf-pptx" title="${LH('ui.pptx-tip')}"><span class="l">${LH('ui.pptx')}</span><span class="s">${LH('ui.pptx-short')}</span></button>` : ''}
+      <!-- 직접 고침(2026-11-25): 저장은 다운로드 아이콘 하나(포트폴리오 페이지·자기소개서와 같은 그림) → 누르면 [PDF로 저장]·[PPTX로 저장] 메뉴 -->
+      <span class="pf-hud-save"><button type="button" data-a="save" aria-haspopup="menu" aria-expanded="false" aria-controls="pf-hud-menu" aria-label="저장" title="저장(PDF${opts.pptx ? '·PPTX' : ''})"><svg class="pf-save-ico" aria-hidden="true" focusable="false" viewBox="0 0 12 12" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2.25v5.25M3.4 5 6 7.6 8.6 5M2.25 9.75h7.5"/></svg></button>
+        <span class="pf-hud-menu" id="pf-hud-menu" role="menu" aria-label="저장" hidden>
+          <button type="button" role="menuitem" data-a="print" class="pf-print"><span class="t">${LH('ui.pdf')}</span><small></small></button>
+          ${opts.pptx ? `<button type="button" role="menuitem" data-a="pptx" class="pf-pptx" title="${LH('ui.pptx-tip')}"><span class="t">${LH('ui.pptx')}</span></button>` : ''}
+        </span></span>
       ${window.PFMode ? PFMode.button() : ''}
       <button type="button" data-a="help" aria-expanded="false" aria-controls="pf-hud-help" aria-label="저장 안내" title="저장 안내(PDF${opts.pptx ? '·PPTX' : ''})">?</button>
       <button type="button" data-a="anyway" hidden>${LH('ui.print-anyway')}</button>
@@ -532,20 +588,37 @@
       <div class="pf-hud-help" id="pf-hud-help" hidden>${HELP}${opts.pptx ? HELP_PPTX : ''}${HELP_LOCAL(!!opts.pptx)}</div>
       <span class="pf-sr" aria-live="polite" aria-atomic="true"></span>`;
     live = hud.querySelector('.pf-sr');
-    hud.addEventListener('click', (e) => {
+    // 하단 바 위에 뜨는 것(저장 메뉴·알림·아이콘 설명)은 바 밖에 둠 — 각 상자가 화면에 바로 고정돼야 뒤 흐림(backdrop-filter)이 페이지에 닿음. pop은 상자를 만들지 않는 묶음(display: contents)
+    pop = document.createElement('div');
+    pop.className = 'pf-hud-pop pf-screen-only';
+    pop.append(hud.querySelector('.pf-hud-menu'), hud.querySelector('.pf-hud-msg'));
+    const onClick = (e) => {
       const b = e.target.closest('button'); if (!b || b.getAttribute('aria-disabled') === 'true') return;
       const a = b.dataset.a;
       if (a === 'prev') go(cur - 1, { focus: false }); else if (a === 'next') go(cur + 1, { focus: false });
       else if (a === 'overview') openOverview();
       else if (a === 'scope') setScope(scope === 'summary' ? 'all' : 'summary');
-      else if (a === 'print') print();
-      else if (a === 'pptx') { toggleHelp(false); opts.pptx(b); }
-      else if (a === 'help') toggleHelp();
+      else if (a === 'save') toggleSave();
+      else if (a === 'print') { toggleSave(false); print(); }
+      else if (a === 'pptx') { toggleSave(false); toggleHelp(false); opts.pptx(hud.querySelector('[data-a=save]')); }
+      else if (a === 'help') { toggleSave(false); toggleHelp(); }
       else if (a === 'view') setView((nextView ?? view) === 'deck' ? 'scroll' : 'deck');
       else if (a === 'zoom-in') setZoom(zi + 1); else if (a === 'zoom-out') setZoom(zi - 1);
       else if (a === 'anyway') PF.printAnyway();
+    };
+    hud.addEventListener('click', onClick); pop.addEventListener('click', onClick);
+    pop.querySelector('.pf-hud-menu').addEventListener('keydown', (e) => {   // 메뉴 안: ↑↓ 옮기기 · Esc·Tab 닫기
+      const items = [...pop.querySelectorAll('.pf-hud-menu [role=menuitem]')].filter((x) => x.offsetParent);
+      const i = items.indexOf(document.activeElement);
+      if (e.key === 'ArrowDown' || e.key === 'ArrowUp') { e.preventDefault(); e.stopPropagation(); items[(i + (e.key === 'ArrowDown' ? 1 : -1) + items.length) % items.length]?.focus(); }
+      else if (e.key === 'Home' || e.key === 'End') { e.preventDefault(); e.stopPropagation(); items[e.key === 'Home' ? 0 : items.length - 1]?.focus(); }
+      else if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); toggleSave(false, true); }
+      else if (e.key === 'Tab') toggleSave(false);
+      else if (e.key === ' ' || e.key.startsWith('Arrow') || e.key.startsWith('Page')) e.stopPropagation();   // 메뉴에서 누른 키로 장면이 넘어가지 않게
     });
-    deck.before(skip, hud);                                   // DOM 순서: 건너뛰기 → HUD → 슬라이드
+    document.addEventListener('pointerdown', (e) => { if (saveOpen() && !e.target.closest?.('.pf-hud-save, .pf-hud-menu')) toggleSave(false); });
+    hudTips();
+    deck.before(skip, hud, pop);                              // DOM 순서: 건너뛰기 → HUD → 위에 뜨는 층 → 슬라이드
   }
   let msg = '';
   function hudMsg(t) { msg = t || ''; hudSync(); }                    // 아래 띠 알림(PPTX 만드는 중 등). 빈 글자 = 지움
@@ -568,11 +641,12 @@
     const zo = zw.querySelector('[data-a=zoom-out]'), zn = zw.querySelector('[data-a=zoom-in]');
     zo.setAttribute('aria-disabled', String(zi <= 0)); zo.title = `축소 (지금 ${pct}%)`;
     zn.setAttribute('aria-disabled', String(zi >= ZOOMS.length - 1 || K >= scrollWidthCap() - 1e-3)); zn.title = `확대 (지금 ${pct}%)`;
-    hud.querySelector('.pf-print small').textContent = L('ui.pages', { n: printed().length });
+    pop.querySelector('.pf-print small').textContent = L('ui.pages', { n: printed().length });
     const r = root.dataset.pfReady;
     hud.querySelector('[data-a=anyway]').hidden = r !== 'timeout';
     const imgs = deck ? [...deck.querySelectorAll('img')] : [];
-    hud.querySelector('.pf-hud-msg').textContent = r === 'timeout' ? L('ui.not-ready', { done: imgs.filter((i) => i.complete).length, total: imgs.length }) : msg;
+    pop.querySelector('.pf-hud-msg').textContent = r === 'timeout' ? L('ui.not-ready', { done: imgs.filter((i) => i.complete).length, total: imgs.length }) : msg;
+    dodgeMsg();
   }
   function badge() {
     const b = hud?.querySelector('.pf-hud-badge'); if (!b) return;

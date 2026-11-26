@@ -71,7 +71,7 @@
     await render();
     PF.refitOnLateFont(render);
     // 직접 고침(2026-11-25): 그림이 늦게 들어와 크기가 바뀐 장면도 좌우 여백을 다시 맞춤(PF.balanceX — 장면을 그릴 때도 한 번 함)
-    PFScene.whenReady().then(() => deck.querySelectorAll(':scope > .pf-scene').forEach((s) => PF.balanceX(s))).catch(() => {});
+    PFScene.whenReady().then(() => deck.querySelectorAll(':scope > .pf-scene').forEach((s) => PF.balanceX(matchQuad(s)))).catch(() => {});   // 2×2 배치 이미지·표 높이도 다시(matchQuad)
   }
 
   // ── 장면 모델: deck(schemaVersion 2) 또는 자동 구성 ──
@@ -244,9 +244,9 @@
   //   「이유」·「구현」 같은 종류 라벨은 그대로 번호 + 작은 라벨.
   const KIND_LB = new Set(['기능', '구현', '이유', '문제', '원인', '해결', '결과', '배운 점', '비용']);
   const titledPts = (points) => points.length > 1 && points.every((p) => p.label && !KIND_LB.has(p.label)) && new Set(points.map((p) => p.label)).size === points.length;
-  const ncards = (points, { row = false, num = true, two = false, head = '' } = {}) => {
+  const ncards = (points, { row = false, num = true, two = false, head = '', rowTitled = false } = {}) => {
     if (!points.length) return '';
-    const titled = num && !row && !two && titledPts(points);
+    const titled = num && (!row || rowTitled) && !two && titledPts(points);   // 직접 고침(2026-11-25): rowTitled = 가로 카드 줄에서도 제목형 라벨(2×2 배치)
     return `<div class="cards${row ? ' row' : ''}${two ? ' two' : ''}${titled ? ' titled' : ''}" style="--n:${Math.min(points.length, 4)}">${head ? `<p class="colhead">${inline(head)}</p>` : ''}${points.map((pt, i) => titled
       ? `<div class="ncard"><span class="num tl">${esc(PF.label(pt.label))}</span><div><p>${inline(txt(pt))}</p></div></div>`
       : `<div class="ncard${num ? '' : ' nonum'}">${num ? `<span class="num" aria-hidden="true">${i + 1}</span>` : ''}<div>${pt.label ? `<span class="lb">${esc(PF.label(pt.label))}</span>` : ''}<p>${inline(txt(pt))}</p></div></div>`).join('')}</div>`;
@@ -269,6 +269,8 @@
       if (variant.stack || !points.length) return `<div class="dk dk-stack${tight}">${vis(vs)}${points.length ? flowHtml(points, 'row') : ''}</div>`;
       return `<div class="dk dk-side flip${tight}" style="--vw:${variant.vw}fr">${vis(vs)}${flowHtml(points, 'col')}</div>`;
     }
+    // 직접 고침(2026-11-25): 2×2 배치 — 시각 자료마다 자기 칸(.vis)에서 크기를 맞추고 카드는 네 번째 칸
+    if (variant.quad && (vs.length === 3 || vs.length === 2)) return `<div class="dk dk-quad${vs.length === 2 ? ' q2' : ''}${tight}">${vs.map((x) => vis([x])).join('')}${ncards(points, { num: true, row: vs.length === 2, rowTitled: true, head: txt(sl.pointsTitle) })}</div>`;   // 시각 자료 2개면 위 줄 두 칸, 카드는 아래 줄에 나란히
     // 요점이 없으면(나눈 장면 등) 옆 칸이 비지 않게 시각 자료를 가로 전체로
     if (sl.layout === 'full' || variant.stack || !points.length) return `<div class="dk dk-stack${tight}">${vis(vs)}${ncards(points, { row: true, num: sl.layout !== 'full', head: txt(sl.pointsTitle) })}</div>`;
     // 직접 고침(2026-11-25): 시각 자료가 표 하나면 표 칸을 내용 폭에 맞추고(.tfit) 남는 폭을 카드에
@@ -334,6 +336,46 @@
         .replace(SEC_OF, '');                                             // 「§5.5의 부위별 …」→「부위별 …」
     });
   }
+  // 직접 고침(2026-11-25): 2×2 배치(.dk-quad.q2) — 위 줄 이미지와 표의 높이를 같게(표는 원래 행 높이, 이미지를 그 높이에 맞춤),
+  //   위 줄 폭(이미지 + 간격 + 표) = 아래 카드 줄 폭. 표 폭은 카드 글이 본문 폭 전체일 때보다 줄이 늘지 않는 선에서 가장 좁게
+  function matchQuad(s) {
+    s.querySelectorAll('.dk-quad.q2').forEach((dk) => {
+      const boxes = [...dk.querySelectorAll(':scope > .vis > .vbox')];
+      const img = boxes.find((b) => b.dataset.kind === 'image'), tb = boxes.find((b) => b.dataset.kind === 'table');
+      const im = img?.querySelector(':scope > .vmedia'), table = tb?.querySelector('table');
+      const body = s.querySelector('.pf-body'), fill = s.querySelector('.pf-fill');
+      if (!im || !table || !im.offsetHeight || !body || !fill) return;
+      const ar = im.offsetWidth / im.offsetHeight;
+      const gap = parseFloat(getComputedStyle(dk).columnGap) || 0;
+      dk.style.gridTemplateColumns = ''; dk.style.justifyContent = '';
+      const W = dk.clientWidth;
+      const ps = [...dk.querySelectorAll(':scope > .cards .ncard p')];
+      const lines = () => ps.map((p) => Math.round(p.offsetHeight / (parseFloat(getComputedStyle(p).lineHeight) || 24)));
+      const set = (w, t, h) => {
+        dk.style.gridTemplateColumns = `${w}px ${t}px`; dk.style.justifyContent = 'center';
+        img.style.width = `${w}px`; Object.assign(im.style, { width: `${w}px`, height: `${h}px` });
+      };
+      const setT = (t) => {
+        tb.style.width = `${t}px`; table.style.width = '100%'; table.style.height = '';
+        tb.querySelectorAll('.vmedia, .fit-in').forEach((e) => { e.style.width = `${t}px`; e.style.zoom = ''; });   // 표 상자 폭도 함께, 축소는 풂(표는 원래 크기)
+        return table.offsetHeight;
+      };
+      const realT = (t) => Math.max(t, Math.ceil(table.getBoundingClientRect().width / ((tb.getBoundingClientRect().width / tb.offsetWidth) || 1)) + 1);   // 소수점 폭까지 올리고 1px 여유(배율에 따라 오른쪽 테두리가 잘리지 않게)   // 칸이 꺾이지 않는 표는 내용 폭보다 좁아지지 않음
+      // 기준: 카드 줄이 본문 폭 전체일 때의 줄 수
+      dk.style.gridTemplateColumns = `${W / 2 - gap / 2}px ${W / 2 - gap / 2}px`;
+      const base = lines();
+      for (let t = Math.round(W * 0.3); t <= W; t += 4) {
+        let h = setT(t), rt = realT(t);
+        if (rt !== t) { h = setT(rt); rt = realT(rt); }                    // 내용 폭으로 다시 잡은 뒤 높이를 다시 잼
+        const w = Math.round(h * ar);
+        if (w + gap + rt > W) continue;
+        set(w, rt, h);
+        if (fill.offsetHeight <= body.clientHeight && lines().every((n, k) => n <= base[k])) return;
+      }
+      dk.style.gridTemplateColumns = ''; dk.style.justifyContent = ''; img.style.width = ''; tb.style.width = ''; table.style.width = '';
+    });
+    return s;
+  }
   // 장면 id에 걸린 CSS 변수(theme CSS의 `#d-<key> { … }`)를 그리기 전에 읽음 — 빈 장면 껍데기를 잠깐 붙여 계산값을 봄
   const sceneVar = (id, name) => {
     const probe = document.createElement('section'); probe.className = 'pf-scene'; probe.id = id; probe.style.display = 'none';
@@ -347,6 +389,8 @@
     const fl = sceneVar(sid, '--pf-layout');
     if (fl === 'side' || fl === 'stack') { const f = V.filter((v) => (fl === 'stack') === !!v.stack); if (f.length) V = f; }
     else if (fl === 'side-split' && vis.length > 1) V = [{ vw: 1, split: true }, { vw: 1.2, split: true }, { vw: 0.85, split: true }, { vw: 1, split: true, tight: true }];
+    // 직접 고침(2026-11-25): 2×2 배치(--pf-layout: quad) — 시각 자료 3개가 왼쪽 위·오른쪽 위·왼쪽 아래, 카드가 오른쪽 아래
+    else if (fl === 'quad' && (vis.length === 3 || vis.length === 2)) V = [{ quad: true }, { quad: true, tight: true }];
     const build = (v) => {
       const s = PF.scene({ id: sid, tpl: 'D', eyebrow: meta.eyebrow || meta.chapter, rlabel: meta.rlabel, rhtml: meta.rhtml, title: txt(sl.title).replace(SEC_NO, '') || meta.chapter, sub: part, lead: part && part !== `1/${part.split('/')[1]}` ? '' : txt(sl.lead), foot: meta.foot, sec: meta.chapter, group: meta.chapter, stitle: txt(sl.title) });
       s.classList.add(`l-${sl.layout || 'visual'}`);
@@ -355,7 +399,7 @@
       PF.body(s).innerHTML = `<div class="pf-fill">${bodyHtml(sl, vs, v)}</div>`;
       stripSecRefs(s);
       if (meta.auto) s.querySelector('.pf-foot > span').insertAdjacentHTML('beforeend', '<span class="pf-autoband" data-pf-ui="note">예전 데이터로 자동 구성 — /portfolio-build를 다시 실행하면 슬라이드가 됩니다</span>');
-      return PF.balanceX(PF.fitVisuals(s));                            // 직접 고침(2026-11-25): 본문 좌우 여백 같게(PF.balanceX)
+      return PF.balanceX(matchQuad(PF.fitVisuals(s)));                            // 직접 고침(2026-11-25): 본문 좌우 여백 같게(PF.balanceX)
     };
     // 들어가는 변형 중 시각 자료가 가장 크게 보이는 것(같으면 앞의 것). 가로로 긴 다이어그램은 위아래 배치가, 세로로 긴 것은 옆 배치가 이김
     let best = null;
@@ -481,7 +525,17 @@
       const s = PF.scene({ id: chId, tpl: 'CH', kind: 'bare', cls: mode === 'compact' ? 'compact' : '', foot, sec: c.title, group: c.title, stitle: c.title });
       const roomy = mode === 'roomy';
       // 직접 고침(2026-11-25): 절 목록 제목 앞 번호(「2.2 」) 떼기
-      const list = slides.map((x, i) => item(String(i + 1), txt(x.sl.title).replace(SEC_NO, '') || c.title, PF.tab(x.sl.tab), x.scenes[0].id, roomy ? txt(x.sl.lead) : '')).join('');
+      // 직접 고침(2026-11-25): 이어진 같은 절(sectionPath 마지막 제목)의 장면은 한 줄로 묶고, 슬라이드가 둘 이상이면 쪽 번호를 목차처럼 「p.시작 — 끝」으로
+      const groups = [];
+      slides.forEach((x) => {
+        const sec = PF.normTitle((x.sl.sectionPath || []).at(-1) || txt(x.sl.title));
+        const g = groups.at(-1);
+        if (g && g.sec === sec) g.items.push(x); else groups.push({ sec, items: [x] });
+      });
+      const list = groups.map((g, i) => {
+        const x = g.items[0], all = g.items.flatMap((y) => y.scenes);
+        return item(String(i + 1), txt(x.sl.title).replace(SEC_NO, '') || c.title, PF.tab(x.sl.tab), all[0].id, roomy ? txt(x.sl.lead) : '', all.length > 1 ? all.at(-1).id : '');
+      }).join('');
       // 직접 고침(2026-11-25): 장 표지 오른쪽 위 「장면 n개」 빼기
       // 직접 고침(2026-11-25): 장 표지 윗줄(프로젝트 이름) 빼기 — 꼬리말 왼쪽에 늘 있음
       PF.body(s).innerHTML = `
