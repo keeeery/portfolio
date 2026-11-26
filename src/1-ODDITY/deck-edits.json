@@ -518,7 +518,7 @@
           "src": "images/camera-shake.mp4",
           "w": 1600,
           "h": 900,
-          "caption": {"text": "강 구간 피격 연출 — 큰 통을 던져 맞힌 순간 카메라가 흔들림", "verbatim": true}
+          "caption": {"text": "강 구간 피격 연출 — trauma 기반 카메라 흔들림", "verbatim": true}
         },
         {"kind": "code", "n": 1, "fp": "// CameraController.AddTrauma() — 충격을 trauma로 쌓고 사라지는 속도 설정"}
       ]

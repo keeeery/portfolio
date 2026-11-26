@@ -1016,7 +1016,7 @@
             "src": "images/camera-shake.mp4",
             "w": 1600,
             "h": 900,
-            "caption": {"text": "강 구간 피격 연출 — 큰 통을 던져 맞힌 순간 카메라가 흔들림", "verbatim": true}
+            "caption": {"text": "강 구간 피격 연출 — trauma 기반 카메라 흔들림", "verbatim": true}
           },
           {"kind": "code", "n": 1, "fp": "// CameraController.AddTrauma() — 충격을 trauma로 쌓고 사라지는 속도 설정"}
         ],
@@ -2253,6 +2253,6 @@
         "visuals": [{"kind": "code", "n": 1, "fp": "// DeathScreen.OnDestroy() — 씬 전환 중이면 전환이 사용하는 화면 꺼짐은 남기고 자신"}]
       }
     ],
-    "applied": "64d4d50570d941cf"
+    "applied": "cb400d298bddc706"
   }
 }
