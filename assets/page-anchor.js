@@ -242,10 +242,27 @@ ${SHINE('.pf-skel i')}
   .pf-skel .sk-pill { height: 64px; margin-top: 0; }
 }
 .pf-skel .sk-t { height: 30px; width: 58%; margin-bottom: 28px; }
-.pf-skel.sk-deck { display: grid; place-items: center; }
-.pf-skel .sk-sl { width: min(92vw, (100vh - 96px) * 16 / 9); aspect-ratio: 16 / 9; border-radius: 12px; padding: 5%; box-sizing: border-box;
-  border: 1px solid var(--sk); display: flex; flex-direction: column; justify-content: center; }
-.pf-skel .sk-sl .sk-t { width: 46%; height: 40px; }
+/* 슬라이드 — deck-kit.js fit()·deck-kit.css와 같은 규칙: 장면은 하단 바(54px)를 뺀 자리에 16:9로 꽉 맞춰 가운데, 모서리 없음.
+   하단 바는 실제와 같은 칸 배치(왼쪽 ← ‹ 쪽 번호 › · 진행 막대 · 오른쪽 아이콘 6개: 보기·개요·저장·전체 화면·밝기·도움말). 칸 34px 안에 아이콘 크기(20px) 원만 그림 */
+.pf-skel.sk-deck { --hud: var(--pf-hud-h, 54px); }
+.pf-skel .sk-stg { position: absolute; left: 0; right: 0; top: 0; bottom: var(--hud); container-type: size; display: grid; place-items: center; }
+.pf-skel .sk-sl { width: min(100cqw, 100cqh * 16 / 9); aspect-ratio: 16 / 9; padding: 5.5% 6%; box-sizing: border-box;
+  box-shadow: 0 0 0 1px var(--sk); display: flex; flex-direction: column; justify-content: center; }
+.pf-skel .sk-sl i { height: clamp(8px, 1.5cqw, 16px); margin-bottom: clamp(8px, 1.4cqw, 16px); }
+.pf-skel .sk-sl .sk-t { width: 46%; height: clamp(20px, 3.6cqw, 48px); margin-bottom: clamp(16px, 3cqw, 40px); }
+.pf-skel .sk-hud { position: absolute; left: 0; right: 0; bottom: 0; height: var(--hud); display: flex; align-items: center; gap: 8px; padding: 0 20px; box-sizing: border-box;
+  box-shadow: inset 0 1px 0 var(--sk); }
+.pf-skel .sk-hud b { flex: none; width: 34px; height: 34px; display: grid; place-items: center; }
+.pf-skel .sk-hud b i, .pf-skel .sk-hud i { margin: 0; }
+.pf-skel .sk-hud b i { width: 20px; height: 20px; border-radius: 50%; }
+.pf-skel .sk-hud .sk-cnt { flex: none; width: 49px; display: grid; place-items: center; } .pf-skel .sk-hud .sk-cnt i { width: 40px; height: 12px; border-radius: 4px; }
+.pf-skel .sk-hud .sk-prog { flex: 1 1 80px; min-width: 0; margin: 0 4px 0 7px; height: 4px; border-radius: 2px; }   /* 오른쪽 4px·도움말 -3px: 실제 바의 접힌 확대 칸·밝기 단추 폭 차이만큼(재서 맞춤) */
+.pf-skel .sk-hud b.sk-help { margin-left: -3px; }
+@media (max-width: 430px) {
+  .pf-skel .sk-hud { gap: 2px; padding: 0 8px; }                 /* deck-kit.css 맨 끝 휴대폰 규칙과 같게 */
+  .pf-skel .sk-hud .sk-prog, .pf-skel .sk-hud b.sk-help { display: none; }
+  .pf-skel .sk-hud b.sk-next { margin-right: auto; }
+}
 ${KEYS}
 @media print { .pf-skel { display: none !important; } }`;
     const W = (w, c = '') => `<i class="${c}" style="width:${w}%"></i>`;
@@ -338,7 +355,9 @@ ${KEYS}
       const snapped = !own() && snapHtml();
       info.kind = snapped ? 'snapshot' : own() ? 'deck' : isDoc ? (isLetter ? 'letter' : 'doc') : 'cover';
       if (snapped) el.innerHTML = `<div class="sk-bars sk-breathe">${snapped}</div>`;
-      else if (own()) { el.className = 'pf-skel sk-deck'; el.innerHTML = `<div class="sk-sl sk-breathe"><i class="sk-t"></i>${W(80)}${W(72)}${W(64)}${W(40)}</div>`; }
+      else if (own()) { el.className = 'pf-skel sk-deck'; const B = (c = '') => `<b class="${c}"><i></i></b>`;
+        el.innerHTML = `<div class="sk-breathe"><div class="sk-stg"><div class="sk-sl"><i class="sk-t"></i>${W(80)}${W(72)}${W(64)}${W(40)}</div></div>`
+          + `<div class="sk-hud">${B()}${B()}<span class="sk-cnt"><i></i></span>${B('sk-next')}<i class="sk-prog"></i>${B()}${B()}${B()}${B()}${B()}${B('sk-help')}</div></div>`; }
       else if (isDoc && el.attachShadow) {
         const sr = el.attachShadow({ mode: 'open' });
         sr.innerHTML = `<style>${pageCss()}\n${DOC_CSS}</style>${docHtml()}`;

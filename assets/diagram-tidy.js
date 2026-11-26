@@ -1024,6 +1024,33 @@
       }
       labelBoxes.push({ l: R.l, t: R.t, r: R.r, b: R.b, cluster: true });
     });
+    // %% 묶음 맞춤: A = B [좌우|아래] — 묶음 A의 테두리를 묶음 B에 맞춤(안의 칸은 그대로, 되돌림 선 자리까지 넓힌 뒤 적용)
+    //   좌우(기본): A의 왼쪽·오른쪽 끝을 B와 같게. 아래: 두 묶음의 아랫변을 더 아래쪽에 맞춤(칸이 잘리지 않게). 여러 줄 적을 수 있음
+    //   한쪽에 되돌림 화살표 자리가 있어 칸 가운데와 테두리 가운데가 어긋난 서버 묶음 옆에 다른 묶음을 같은 폭으로 놓을 때
+    for (const am of src.matchAll(/^\s*%%\s*(?:묶음\s*맞춤|group-align)\s*:\s*(\S+)\s*=\s*(\S+)(?:\s+(좌우|아래|sides|bottom))?\s*$/gim)) {
+      const cgs = [am[1], am[2]].map((id) => [...svg.querySelectorAll('g.cluster')].find((g) => g.id === id));
+      if (cgs.some((g) => !g?.querySelector(':scope > rect'))) continue;
+      const box = (cg) => {
+        const rect = cg.querySelector(':scope > rect'), m = toRoot(cg);
+        const a = tp(m, { x: +rect.getAttribute('x'), y: +rect.getAttribute('y') }), z = tp(m, { x: +rect.getAttribute('x') + +rect.getAttribute('width'), y: +rect.getAttribute('y') + +rect.getAttribute('height') });
+        return { rect, m, l: Math.min(a.x, z.x), t: Math.min(a.y, z.y), r: Math.max(a.x, z.x), b: Math.max(a.y, z.y) };
+      };
+      const put = (B, n) => {
+        const inv = B.m.inverse(), p1 = tp(inv, { x: n.l, y: n.t }), p2 = tp(inv, { x: n.r, y: n.b });
+        B.rect.setAttribute('x', p1.x.toFixed(2)); B.rect.setAttribute('y', p1.y.toFixed(2));
+        B.rect.setAttribute('width', (p2.x - p1.x).toFixed(2)); B.rect.setAttribute('height', (p2.y - p1.y).toFixed(2));
+      };
+      const A = box(cgs[0]), B = box(cgs[1]);
+      if (/아래|bottom/i.test(am[3] || '')) { const bb = Math.max(A.b, B.b); put(A, { ...A, b: bb }); put(B, { ...B, b: bb }); }
+      else {
+        put(A, { ...A, l: B.l, r: B.r });
+        const lab = cgs[0].querySelector(':scope > g.cluster-label'), lt = lab?.transform?.baseVal?.consolidate?.()?.matrix;
+        if (lt) {                                                          // 이름표는 새 가운데 위로
+          const pm = toRoot(lab.parentNode), q = tp(pm, { x: lt.e, y: lt.f }), nq = tp(pm.inverse(), { x: q.x + ((B.l + B.r) - (A.l + A.r)) / 2, y: q.y });
+          lab.setAttribute('transform', `translate(${nq.x.toFixed(2)}, ${nq.y.toFixed(2)})`);
+        }
+      }
+    }
     // %% 선 메모: A -> B: 글 — 선 옆에 메모 칸과 같은 모양의 상자를 띄우고 점선으로 이음(Mermaid 메모는 칸에만 붙음)
     //   기준점은 그 선의 글자 오른쪽 끝(글자가 없으면 선의 가장 긴 토막 가운데). 그림에 메모 칸이 있으면 그 열(왼쪽 끝)에 맞춤
     for (const mm of src.matchAll(MEMO_RE)) {

@@ -12,6 +12,11 @@
 :root {
   --accent: #2F6FEB;
   --accent-fill: var(--accent);   /* 흰 글자를 올리는 칠(PF.applyTheme가 대비 4.5:1 이상으로 맞춤) */
+  --accent-hover: var(--t-accent-hover, color-mix(in srgb, var(--accent-fill) 94%, #fff));    /* 직접 추가(2026-11-26): 채움 버튼 마우스 올림 — 살짝 밝게 */
+  --accent-active: var(--t-accent-active, color-mix(in srgb, var(--accent-fill) 92%, #000));  /* 채움 버튼 눌림 — 살짝 어둡게 */
+  --nb-hover: var(--ink);                                    /* 직접 추가(2026-11-26): Apple 중립 테두리 버튼 — 마우스 올림: 글자색 쪽으로 칠함 */
+  --nb-active: color-mix(in srgb, var(--ink) 94%, #000);     /* 눌림: 한 단 더 진하게 */
+  --nb-text: var(--paper);                                   /* 칠 위 글자 */
   --accent-ink: color-mix(in srgb, var(--accent) 64%, #fff);
   --accent-soft: color-mix(in srgb, var(--accent) 16%, var(--paper));
   --accent-line: color-mix(in srgb, var(--accent) 45%, var(--paper));
@@ -40,7 +45,7 @@ a { color: inherit; }
 img { max-width: 100%; }
 code { font-family: var(--mono); font-size: .88em; background: var(--accent-soft); color: var(--accent-ink);
        padding: 1px 6px; border-radius: 5px; word-break: break-all; }
-:focus-visible { outline: 2px solid var(--accent-ink); outline-offset: 2px; border-radius: 4px; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 4px; }   /* 직접 수정(2026-11-26): Apple 포커스 링(2px #0071E3 · 간격 3px) — 포트폴리오 페이지와 같게. 글자 강조색(--accent-ink)을 따라가지 않음 */
 .sr-only, .pf-sr-only { position: absolute !important; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden;
            clip: rect(0 0 0 0); clip-path: inset(50%); white-space: nowrap; border: 0; }
 .print-only { display: none; }
@@ -66,9 +71,12 @@ code { font-family: var(--mono); font-size: .88em; background: var(--accent-soft
 .btn { display: inline-flex; align-items: center; gap: 4px; font: inherit; font-size: 13.5px; font-weight: 700; text-decoration: none;
        padding: 7px 14px; border-radius: var(--pill); border: 1px solid var(--line-2); background: transparent; color: var(--ink);
        cursor: pointer; white-space: nowrap; transition: border-color .15s, background .15s, box-shadow .15s; }
-.btn:hover { border-color: var(--accent-line); background: var(--accent-soft); }
+:root[data-pf-mode="light"] { --nb-hover: color-mix(in srgb, var(--ink) 92%, var(--paper)); --nb-active: var(--ink); }   /* 직접 수정(2026-11-26): 밝은 화면은 짙은 칠 */
+.btn:hover { border-color: var(--nb-hover); background: var(--nb-hover); color: var(--nb-text); }   /* Apple 중립 테두리 버튼: 글자색 쪽으로 칠하고 글자는 바탕색으로 반전(옅은 강조색 틴트 대신) */
 .btn.primary { background: var(--accent-fill); border-color: var(--accent-fill); color: #fff; }
-.btn.primary:hover { background: var(--accent-fill); box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent) 28%, transparent); }
+.btn.primary:hover { background: var(--accent-hover); border-color: var(--accent-hover); color: #fff; }   /* 직접 수정(2026-11-26): Apple 방식 — 고리 대신 칠이 살짝 밝아짐 */
+.btn.primary:active { background: var(--accent-active); border-color: var(--accent-active); }   /* 눌림: 살짝 어둡게(크기 변화 없음) */
+.btn:not(.primary):active { background: var(--nb-active); border-color: var(--nb-active); }   /* 테두리 버튼 눌림: 올림보다 한 단 더 진하게 */
 .actions { display: flex; flex-wrap: wrap; gap: 8px; }
 
 /* ── 머리 줄 ───────────────────────────── */
@@ -88,7 +96,7 @@ code { font-family: var(--mono); font-size: .88em; background: var(--accent-soft
 .crumb b { color: var(--ink); font-weight: 800; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .newtab-note { font-size: 12.5px; color: var(--faint); }
 .doc-head .pf-mode { margin-left: auto; padding: 0; width: 34px; height: 34px; justify-content: center; cursor: pointer; background-color: var(--paper); }   /* 밝은·어두운 화면 전환 — 포트폴리오 페이지처럼 불투명한 바탕색(투명한 머리 줄 밑으로 지나가는 본문에 묻히지 않게) */
-.doc-head .pf-mode:hover { background: linear-gradient(var(--accent-soft), var(--accent-soft)) var(--paper); }   /* 마우스를 올려도 불투명 바탕 위에 옅은 강조색 */
+.doc-head .pf-mode:hover { background: var(--nb-hover); color: var(--nb-text); }   /* 마우스 올림도 다른 테두리 버튼과 같게(불투명 칠) */
 
 @media print { .doc-head .pf-mode { display: none; } }
 /* 직접 수정: 목차가 보이는 폭(≥1280px)에서는 [← 돌아가기 › 제목] 줄을 목차 칸 폭 안에 한 줄로 — 넘치는 제목은 끝을 …으로 자름(목차 폭은 지금 프로젝트 이름이 모두 들어가게 --toc-w) */
@@ -119,6 +127,7 @@ code { font-family: var(--mono); font-size: .88em; background: var(--accent-soft
 #toc .toc-title::before { content: ''; position: absolute; left: 0; right: 0; bottom: 100%; height: 160px; background: var(--paper); pointer-events: none; }   /* 제목 위로 올라간 목록 가림(칸 밖은 칸이 잘라 평소엔 안 보임) */   /* 높이 20 + 10 = 30px — 목록 칸은 그 아래부터(위 ˄ 화살표가 「목차」 글자에서 너무 멀지 않게 16 → 10) */
 #toc-links { flex: 1 1 auto; min-height: 0; overflow-y: auto; overscroll-behavior: contain; padding: 0 16px 0 0; scrollbar-width: none; }   /* 직접 수정: 오른쪽 16px = 예전 여백 6 + 막대 자리 10(막대는 아래 .toc-bar가 따로 그림) · 아래 여백은 목록 안이 아니라 목차 칸 밖(.toc의 아래 margin) · 위 여백(padding-top)은 페이지 끝에서 common.js tocBar가 넣음 */
 #toc-links::-webkit-scrollbar { display: none; }
+#toc-links.fits { flex: none; height: auto; position: sticky; top: calc(var(--head-h, 56px) + var(--side-gap) + 30px); z-index: 1; }   /* 직접 수정(2026-11-26): 넘치지 않는 목록은 띠에 칸이 밀려 올라가도 목록은 제자리(제목 아래) — 칸 높이가 아니라 목록 높이로 줄여 칸 안에서 sticky */
 /* 직접 수정: 옆 목차의 스크롤 막대는 목록에 붙은 기본 막대 대신 따로 그림(.toc-bar — common.js tocBar). 「목차」 제목 안에 넣어 제목과 함께 제자리(제목 아래부터 목록 칸 높이만큼),
    페이지 끝 띠에 목차 칸이 밀려 올라가면 칸이 막대 아래쪽을 잘라 막대 영역이 좁아짐 — 위 끝은 제자리, 아래 끝은 목록 끝선과 함께(스크롤과 같은 프레임).
    모양은 예전 막대와 같음: 자리 10px, 손잡이 4px, 평소 숨김 — 목차에 마우스를 올리면 보임. 끌기·홈 누르기·휠은 목록을 스크롤 */
@@ -545,7 +554,8 @@ dialog.lightbox::backdrop { background: rgba(10, 11, 14, .82); }
                   transform: translateY(calc(-1 * var(--cap-d, 84px))); visibility: hidden; transition: var(--hd-out), visibility 0s .22s; }   /* 숨음: 화면 위로 */
 .tcap.on .cap-pill { transform: none; visibility: visible; transition: var(--hd-in), visibility 0s; }
 .tcap .btn { min-height: 36px; padding: 0 16px; font-size: 13px; border-color: transparent; background: transparent; color: var(--ink); }
-.tcap .btn:hover { border-color: transparent; background: color-mix(in srgb, var(--ink) 8%, transparent); }
+.tcap .btn:hover { border-color: transparent; background: color-mix(in srgb, var(--ink) 8%, transparent); color: var(--ink); }   /* 캡슐 안 글자 버튼은 반전 없이 그대로 */
+.tcap .btn:not(:disabled):active { border-color: transparent; background: color-mix(in srgb, var(--ink) 14%, transparent); color: var(--ink); }
 @media (prefers-reduced-motion: reduce) { .tcap .cap-pill, .tcap.on .cap-pill { transition: none; } }
 @media print { .tcap { display: none !important; } }
 
@@ -562,7 +572,7 @@ dialog.lightbox::backdrop { background: rgba(10, 11, 14, .82); }
    단추 글자는 목차 제목('목차')과 같은 줄 높이 — 단추 + 카드 묶음 영역 전체가 목차와 같은 높이에서 시작.
  */
 .rail-bar { height: 23px; margin-bottom: -6px; }
-.rail-fab { display: none; position: fixed; z-index: 41; right: var(--pad); top: calc(var(--rail-y, 68px) - 2px);   /* 단추(25px) 세로 가운데 = 목차 제목 줄(20px) 세로 가운데 */
+.rail-fab { display: none; position: fixed; z-index: 41; right: max(var(--pad), calc((100% - var(--page-max)) / 2 + var(--pad)));   /* 직접 수정(2026-11-26): 창이 틀(--page-max)보다 넓으면 창 끝 대신 틀 오른쪽 끝(카드 위)에 — % = 스크롤 막대를 뺀 창 폭 */ top: calc(var(--rail-y, 68px) - 2px);   /* 단추(25px) 세로 가운데 = 목차 제목 줄(20px) 세로 가운데 */
             font: inherit; font-size: 12.5px; font-weight: 700; color: var(--muted); background: none; border: 0; padding: 2px 4px; cursor: pointer; }
 .rail-fab:hover { color: var(--accent-ink); }
 @media screen and (min-width: 1440px) { .rail-fab { display: block; } }
@@ -570,14 +580,15 @@ dialog.lightbox::backdrop { background: rgba(10, 11, 14, .82); }
 /* 넓은 화면 접기·펴기 움직임: 오른쪽 칸 자리(칸 300 + 간격 40)를 0까지 줄이면 가운데 정렬된 본문이 오른쪽으로 옮겨 가고, 폭이 고정된 카드는 오른쪽으로 밀려 나가며 흐려짐(페이지 끝에서 잘림).
    펼 때는 거꾸로. 간격은 칸 사이 gap 대신 목차 오른쪽·카드 왼쪽 여백으로(자리 0이면 간격도 0). .pf-rail-anim(처음 누른 뒤)일 때만 움직임 */
 @media screen and (min-width: 1440px) {
-  .doc-page { overflow-x: clip; column-gap: 0; grid-template-columns: calc(var(--toc-w) + var(--gap)) minmax(0, 1fr) calc(var(--rail-w) + var(--gap)); }
+  body { overflow-x: clip; }   /* 직접 수정(2026-11-26): 밀려 나간 카드를 틀(.doc-page) 끝이 아니라 창 끝에서 자름 — 틀보다 넓은 창에서 열고 닫을 때 빈 곳 앞에서 잘려 보이지 않게(창 ≤ 틀이면 예전과 같음) */
+  .doc-page { column-gap: 0; grid-template-columns: calc(var(--toc-w) + var(--gap)) minmax(0, 1fr) calc(var(--rail-w) + var(--gap)); }
   .toc { margin-right: var(--gap); }
   .rail { width: calc(var(--rail-w) + 2 * var(--rail-bleed)); margin-left: calc(var(--gap) - var(--rail-bleed)); justify-self: start; }
   html.pf-rail-off .doc-page { grid-template-columns: calc(var(--toc-w) + var(--gap)) minmax(0, 1fr) 0px; }
-  html.pf-rail-off .rail { translate: 24px 0; visibility: hidden; pointer-events: none; }
+  html.pf-rail-off .rail { translate: 24px 0; opacity: 0; visibility: hidden; pointer-events: none; }   /* 직접 수정(2026-11-26): 흐려짐(opacity) 추가 — 틀보다 넓은 창에서 카드가 빈 곳 앞 틀 끝에서 뚝 잘려 보이지 않게 */
   html.pf-rail-anim .doc-page { transition: grid-template-columns var(--rail-dur) var(--rail-ease); }
-  html.pf-rail-anim .rail { transition: translate var(--rail-dur) var(--rail-ease), visibility 0s; }
-  html.pf-rail-anim.pf-rail-off .rail { transition: translate var(--rail-dur) var(--rail-ease), visibility 0s var(--rail-dur); }
+  html.pf-rail-anim .rail { transition: translate var(--rail-dur) var(--rail-ease), opacity calc(var(--rail-dur) * .6) ease-in calc(var(--rail-dur) * .4), visibility 0s; }   /* 펼 때 = 닫기의 역재생: 앞 40%는 투명, 가까이 온 뒤 60% 동안 나타남(ease-out의 거꾸로 ease-in) */
+  html.pf-rail-anim.pf-rail-off .rail { transition: translate var(--rail-dur) var(--rail-ease), opacity calc(var(--rail-dur) * .6) ease-out, visibility 0s var(--rail-dur); }   /* 닫을 때는 틀 끝에 닿기 전에 먼저 흐려짐 */
 }
 @media (prefers-reduced-motion: reduce) { html.pf-rail-anim :is(.doc-page, .rail) { transition: none !important; } }
 /* 중간 폭(1280~1440px): 목차는 그대로, 오른쪽 칸은 늘 접힌 채로 시작(넓은 화면에서 열어 두었어도 이 폭으로 줄면 닫힘).

@@ -607,6 +607,8 @@
           <button type="button" role="menuitem" data-a="print" class="pf-print"><span class="t">${LH('ui.pdf')}</span><small></small><span class="k" aria-hidden="true">${MOD}P</span></button>
           ${opts.pptx ? `<button type="button" role="menuitem" data-a="pptx" class="pf-pptx" title="${LH('ui.pptx-tip')}"><span class="t">${LH('ui.pptx')}</span></button>` : ''}
         </span></span>
+      <!-- 직접 추가(2026-11-26): 전체 화면 켜기·끄기(F와 같음) — 아이콘은 deck-kit.css 맨 끝, 상태(aria-pressed·설명)는 hudSync -->
+      ${root.requestFullscreen ? '<button type="button" data-a="full" aria-pressed="false"><span class="l">전체 화면</span></button>' : ''}
       ${window.PFMode ? PFMode.button() : ''}
       <button type="button" data-a="help" aria-expanded="false" aria-controls="pf-hud-help" aria-label="도움말" title="도움말">?</button>
       <button type="button" data-a="anyway" hidden>${LH('ui.print-anyway')}</button>
@@ -631,6 +633,7 @@
       else if (a === 'help') { toggleSave(false); toggleHelp(); }
       else if (a === 'view') setView((nextView ?? view) === 'deck' ? 'scroll' : 'deck');
       else if (a === 'zoom-in') setZoom(zi + 1); else if (a === 'zoom-out') setZoom(zi - 1);
+      else if (a === 'full') toggleFull();
       else if (a === 'anyway') PF.printAnyway();
     };
     hud.addEventListener('click', onClick); pop.addEventListener('click', onClick);
@@ -661,6 +664,13 @@
     vb.querySelector('.l').textContent = L(view === 'deck' ? 'ui.to-scroll' : 'ui.to-deck');
     vb.querySelector('.s').textContent = L(view === 'deck' ? 'ui.to-scroll-short' : 'ui.to-deck-short');
     vb.title = `${L(view === 'deck' ? 'ui.to-scroll-tip' : 'ui.to-deck-tip')} (V)`;   // 단축키는 아이콘 설명에서 회색 글자로
+    const fb = hud.querySelector('[data-a=full]');
+    if (fb) {
+      const on = !!document.fullscreenElement;
+      fb.dataset.on = String(on);   // aria-pressed 대신 data-on — 눌림 색(강조색 원)이 늘 켜져 보이지 않게 아이콘만 바꿈
+      fb.querySelector('.l').textContent = on ? '전체 화면 끝내기' : '전체 화면';
+      fb.title = `${on ? '전체 화면 끝내기' : '전체 화면'} (F)`;
+    }
     const sc = hud.querySelector('[data-a=scope]');
     if (sc) sc.setAttribute('aria-pressed', String(scope === 'summary'));
     const zw = hud.querySelector('.pf-hud-zoom'), pct = Math.round(K / scrollBase() * 100);
@@ -987,6 +997,7 @@
       T.mount = performance.now();
       addEventListener('resize', onResize);
       document.addEventListener('fullscreenchange', onResize);
+      document.addEventListener('fullscreenchange', hudSync);   // 직접 추가: 전체 화면 버튼 아이콘·설명(F·Esc로 바꿔도 맞춤)
       addEventListener('keydown', onKey);
       addEventListener('hashchange', onHash);
       addEventListener('popstate', onPop);

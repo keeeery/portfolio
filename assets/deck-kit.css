@@ -160,7 +160,7 @@
   /* 버튼 영역은 모두 원형(34×34) — 옅은 원 바탕, 올리면 조금 더 진하게 */
   .pf-hud button, .pf-hud a.pf-hud-home { width: 34px !important; height: 34px !important; min-width: 34px; padding: 0 !important; border-radius: 50% !important; background: transparent; }
   .pf-hud button:hover, .pf-hud a.pf-hud-home:hover { background: color-mix(in srgb, var(--ink, #fff) 14%, transparent); }
-  .pf-hud button[aria-pressed="true"], .pf-hud button[aria-expanded="true"] { background: color-mix(in srgb, var(--accent-ink, #6D9AF1) 22%, transparent); }
+  .pf-hud button[aria-pressed="true"], .pf-hud button[aria-expanded="true"] { background: color-mix(in srgb, var(--accent, #2F6FEB) 22%, transparent); }   /* 직접 수정(2026-11-26): 디밍은 원래 파랑(--accent) 기준 — 글자 강조색(--accent-ink)을 따로 밝은 파랑으로 둔 뒤에도 바탕 색이 변하지 않게 */
   .pf-hud button[aria-disabled="true"] { background: transparent; }
   /* 아이콘 정렬: 윗선(1px)이 띠 안쪽 높이를 홀수로 만들어 버튼이 반 픽셀 어긋났음 → 선을 안쪽 그림자로 바꿔 높이를 54px 그대로 씀 · 달 아이콘도 20px로 */
   .pf-hud { border-top: 0; box-shadow: inset 0 1px 0 var(--line, #24242C); }
@@ -331,6 +331,9 @@ html[data-view="scroll"].pf-zooming .pf-deck > .pf-scene { zoom: 1; transform: s
   /* 달: 모양 그대로 좌표만 1.042배 — 그림 위아래·좌우 여백 2.5px(다른 아이콘과 같음, 재서 맞춤, 직접 고침 2026-11-26). 해는 원래 맞음 */
   .pf-hud button[data-a="mode"] { --ic: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.9' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 14.94A8.34 8.34 0 0 1 9.06 4a8.34 8.34 0 1 0 10.94 10.94z'/%3E%3C/svg%3E"); }
   .pf-hud button[data-a="mode"]:has(svg circle) { --ic: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.9' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='3.5'/%3E%3Cpath d='M12 4v1.5M12 18.5V20M4 12h1.5M18.5 12H20M6.35 6.35l1.06 1.06M16.6 16.6l1.06 1.06M6.35 17.65l1.06-1.06M16.6 7.4l1.06-1.06'/%3E%3C/svg%3E"); }
+  /* 직접 추가(2026-11-26): 전체 화면 — 네 모서리가 바깥으로(켜기) / 안으로(끄기). 같은 규칙(4~20 눈금·선 1.9) */
+  .pf-hud button[data-a="full"] { --ic: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.9' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4 9V4h5M15 4h5v5M20 15v5h-5M9 20H4v-5'/%3E%3C/svg%3E"); }
+  .pf-hud button[data-a="full"][data-on="true"] { --ic: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.9' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M9 4v5H4M20 9h-5V4M15 20v-5h5M4 15h5v5'/%3E%3C/svg%3E"); }
   .pf-hud button[data-a="save"] .pf-save-ico, .pf-hud button[data-a="mode"] > svg { display: none !important; }
   .pf-hud a.pf-hud-home::before, .pf-hud button[data-a]:not([data-a="anyway"])::before { content: '' !important; display: block !important; position: absolute !important; inset: 0 !important; margin: auto !important;
     width: 20px !important; height: 20px !important; background-image: none !important; background-color: currentColor !important;
@@ -347,4 +350,11 @@ html[data-view="scroll"].pf-zooming .pf-deck > .pf-scene { zoom: 1; transform: s
   html[data-view="scroll"] .pf-hud .pf-hud-zoom { width: 76px; }
   .pf-hud .pf-hud-count { padding: 0 !important; }   /* 쪽 번호 양옆도 버튼과 같은 8px(글자 안쪽 여백 4px 없앰) */
   .pf-hud .pf-hud-prog { margin: 0 7px !important; }  /* 진행 막대 양옆 15px(8 + 7): 아이콘은 원 안에 7px 여백이 있어, 막대 끝~아이콘 그림 거리를 아이콘 그림 사이(약 22px)와 같게 */   /* 34 + 8 + 34 */
+}
+
+/* 직접 고침(2026-11-26): 휴대폰 폭 하단 바가 화면 밖으로 넘치던 것 — 위의 넓은 화면 규칙(좌우 20px·칸 사이 8px·확대 칸)이 760px·430px 규칙을 덮어
+   오른쪽 아이콘(밝기)이 455px까지 밀려났음. 맨 끝에 다시 정함: 좌우 8px · 칸 사이 2px · 확대 칸은 숨김(휴대폰은 두 손가락 확대) → 360px 폭에도 들어감 */
+@media screen and (max-width: 430px) {
+  .pf-hud { gap: 2px; padding: 0 8px; }
+  .pf-hud .pf-hud-zoom, html[data-view="scroll"] .pf-hud .pf-hud-zoom { display: none; }
 }

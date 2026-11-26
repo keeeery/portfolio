@@ -33,14 +33,19 @@
     :root {
       --top-h: calc(56px + var(--safe-t)); --safe-t: env(safe-area-inset-top, 0px); --safe-b: env(safe-area-inset-bottom, 0px); --ext-h: 40px; --ext-up: 8px; --ext-bg: 37px;                                                     /* 머리 막대 높이 */
       --bg: var(--t-bg, #0A0A0D);                                        /* 바탕 */
-      --band: color-mix(in srgb, var(--ink) 4%, var(--bg));              /* 배경색이 다른 띠(layout.json background: tinted) */
+      --band: var(--t-band, color-mix(in srgb, var(--ink) 4%, var(--bg)));   /* 배경색이 다른 띠(layout.json background: tinted) — 직접 수정(2026-11-26): 테마 --t-band가 있으면 그 색 */
       --card: var(--t-surface, #131318);                                 /* 띠 위 카드 */
       --line: var(--t-line, rgba(255,255,255,.09));
       --ink: var(--t-ink, #F5F5F7);                                      /* 제목 글 */
       --muted: color-mix(in srgb, var(--t-body, #C7C7CC) 85%, var(--ink)); /* 본문 글: 테마 본문색을 제목 글 쪽으로 15% — 어두운 테마에선 조금 밝게, 밝은 테마에선 조금 진하게 */
       --sub: var(--t-muted, #86868B);                                    /* 작은 보조 글 */
       --accent: var(--t-accent, var(--accent-profile, #2F6FEB));         /* 테마 강조색 → 없으면 profile.md 강조색 */
-      --accent-ink: var(--accent);                                       /* 글자에 쓰는 강조색 = 버튼 강조색과 같은 값(섞지 않음) */
+      --accent-ink: var(--t-accent-ink, var(--accent));                  /* 글자에 쓰는 강조색 = 버튼 강조색과 같은 값(섞지 않음) — 직접 수정(2026-11-26): 테마 --t-accent-ink가 있으면 글자·링크만 그 색 */
+      --accent-hover: var(--t-accent-hover, color-mix(in srgb, var(--accent) 94%, #fff));    /* 직접 추가(2026-11-26): 채움 버튼 마우스 올림 — 살짝 밝게(Apple #0071E3 → #0076DF) */
+      --accent-active: var(--t-accent-active, color-mix(in srgb, var(--accent) 92%, #000));  /* 채움 버튼 눌림 — 살짝 어둡게(Apple #006EDB) */
+      --nb-hover: var(--ink);                                            /* 직접 추가(2026-11-26): Apple 중립 테두리 버튼 — 마우스 올림: 글자색 쪽으로 칠함(어두운 화면은 밝은 칠 + 어두운 글자) */
+      --nb-active: color-mix(in srgb, var(--ink) 94%, #000);             /* 눌림: 한 단 더 진하게(Apple #EDEDF2) */
+      --nb-text: var(--bg);                                              /* 칠 위 글자 */
       --divider: color-mix(in srgb, var(--ink) 70%, var(--bg));        /* 구분선(정보 표 줄 · 설명용 칩 외곽선): 밝은 회색(밝은 테마에선 짙은 회색) */
       --meta-label: var(--ink);                                         /* 정보 표 항목명(장르·기간…): 외곽선 버튼 글자색과 같게 */
       color-scheme: var(--t-scheme, dark);
@@ -55,11 +60,15 @@
     .accent { color: var(--accent-ink); }
     .btn { display: inline-flex; align-items: center; gap: 6px; min-height: 40px; padding: 0 18px; border-radius: var(--t-pill, 999px); font-size: 14px; font-weight: 600;
       border: 1px solid var(--line); color: var(--ink); background: transparent; cursor: pointer; transition: background .15s, border-color .15s, box-shadow .15s; white-space: nowrap; }
-    /* 마우스 올림: 자기소개서·프로젝트 문서 페이지(doc.css)의 버튼과 같게 — 테두리는 옅은 강조색, 바탕은 강조색을 아주 옅게 / 주 버튼은 바깥에 강조색 고리 */
-    .btn:hover { border-color: color-mix(in srgb, var(--accent) 45%, var(--bg)); background: color-mix(in srgb, var(--accent) 16%, var(--bg)); }
-    .btn:disabled { opacity: .6; cursor: progress; }
+    /* 마우스 올림(직접 수정 2026-11-26): Apple 중립 테두리 버튼 방식 — 글자색 쪽으로 칠하고 글자는 바탕색으로 반전(옅은 강조색 틴트 대신). 주 버튼은 아래 .btn-solid:hover(칠이 살짝 밝아짐). 상세 문서(doc.css)와 같게 */
+    :root[data-pf-mode="light"] { --nb-hover: color-mix(in srgb, var(--ink) 92%, var(--bg)); --nb-active: var(--ink); }   /* 밝은 화면: 짙은 칠(Apple #272729 → #18181A) */
+    .btn:hover { border-color: var(--nb-hover); background: var(--nb-hover); color: var(--nb-text); }
+    .btn:disabled { opacity: .36; cursor: progress; }   /* 직접 수정(2026-11-26): Apple 비활성 투명도 — 어두운 화면 .36 · 밝은 화면 .42 */
+    :root[data-pf-mode="light"] .btn:disabled { opacity: .42; }
     .btn-solid { background: var(--accent); border-color: var(--accent); color: #fff; }
-    .btn-solid:hover { background: var(--accent); border-color: var(--accent); box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent) 28%, transparent); }
+    .btn-solid:hover { background: var(--accent-hover); border-color: var(--accent-hover); color: #fff; }   /* 직접 수정(2026-11-26): Apple 방식 — 바깥 강조색 고리 대신 칠이 살짝 밝아짐 */
+    .btn-solid:not(:disabled):active { background: var(--accent-active); border-color: var(--accent-active); }   /* 눌림: 칠이 살짝 어두워짐(크기 변화 없음) */
+    .btn:not(.btn-solid):not(:disabled):active { background: var(--nb-active); border-color: var(--nb-active); }   /* 테두리 버튼 눌림: 올림보다 한 단 더 진하게 */
     .btn-sm { min-height: 34px; padding: 0 14px; font-size: 13px; }
     /* [PDF로 저장]: 모든 화면에서 다운로드 아이콘(글자는 화면 낭독기·title로). 누르면 바로 아래에 작은 창 — [새 탭에서 열기] · [파일로 받기] */
     .pdf-wrap { position: relative; }
@@ -129,8 +138,8 @@
     .pdf-menu .btn-solid .pm-save { display: block; margin-left: 2px; }   /* 글과 아이콘 사이는 다른 버튼과 같게(.btn 간격 + .nt-icon 여백) */
     .pdf-menu .btn:not(.btn-solid) { border-color: transparent; background: transparent; }
     /* 마우스 올림은 캡슐 바(.cap-pill)와 같게(예전 그대로): 글자 버튼은 테두리 없이 옅은 회색 바탕, [파일로 받기]는 고리 없이 살짝 밝게 */
-    .pdf-menu .btn:not(.btn-solid):hover, .pdf-menu .btn:not(.btn-solid):focus-visible { background: color-mix(in srgb, var(--ink) 8%, transparent); }
-    .pdf-menu .btn-solid:hover { box-shadow: none; filter: brightness(1.1); }
+    .pdf-menu .btn:not(.btn-solid):hover, .pdf-menu .btn:not(.btn-solid):focus-visible { background: color-mix(in srgb, var(--ink) 8%, transparent); color: var(--ink); border-color: transparent; }   /* 캡슐 안 글자 버튼은 반전 없이 그대로(위 .btn:hover 예외) */
+    .pdf-menu .btn-solid:hover { box-shadow: none; filter: none; }   /* 칠은 위 .btn-solid:hover(--accent-hover) 그대로 */
     .pdf-menu svg { flex-shrink: 0; }
     @media (prefers-reduced-motion: reduce) { .pdf-menu, .pdf-menu *, .pdf-btn { animation: none !important; transition: none; } }
     .btn-icon { width: 34px; min-height: 34px; padding: 0; justify-content: center; }
@@ -145,7 +154,7 @@
                 color: inherit; opacity: .8; cursor: pointer; border-radius: 8px; transition: opacity .2s ease, color .2s ease; }
     .copy-btn:hover { opacity: 1; color: var(--ink); }
     .copy-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
-    .copy-btn.done { color: var(--accent); opacity: 1; }
+    .copy-btn.done { color: var(--accent-ink); opacity: 1; }   /* 직접 수정(2026-11-26): 글자·아이콘 파랑은 칠(--accent)이 아니라 글자 강조색(--accent-ink) */
     /* 공용 규칙 — 글자 링크(.tlink): 글자 링크는 모두 본문색(강조색은 버튼형 주 버튼 하나에만 — 캡슐 바 첫 버튼 [시연 영상]), 글자 아래 4px 띄운 1px 옅은 밑줄(글자색 35%)로 누를 수 있음을 표시.
        마우스를 올리면 밑줄이 글자색 그대로 진해지고, 본문색 링크는 글자도 제목 글 색으로. 인쇄(PDF)에서도 밑줄·링크 화살표(↗)는 화면과 같게 */
     .tlink { text-decoration-line: underline; text-decoration-thickness: 1px; text-underline-offset: 4px;
@@ -217,8 +226,9 @@
     .cap-pill :is(.btn), .hero-pill .btn { white-space: nowrap; flex-shrink: 0; }
     .cap-pill .btn:not(.btn-solid), .hero-pill .btn:not(.btn-solid) { border-color: transparent; background: transparent; }
     /* 캡슐 바 안의 마우스 올림은 일반 버튼과 따로(예전 그대로): 글자 버튼은 테두리 없이 옅은 회색 바탕, 강조색 버튼은 고리 없이 살짝 밝게 */
-    .cap-pill .btn:not(.btn-solid):hover, .hero-pill .btn:not(.btn-solid):hover { background: color-mix(in srgb, var(--ink) 8%, transparent); }
-    .cap-pill .btn-solid:hover, .hero-pill .btn-solid:hover { box-shadow: none; filter: brightness(1.1); }
+    .cap-pill .btn:not(.btn-solid):hover, .hero-pill .btn:not(.btn-solid):hover { background: color-mix(in srgb, var(--ink) 8%, transparent); color: var(--ink); border-color: transparent; }   /* 캡슐 안 글자 버튼은 반전 없이 그대로(위 .btn:hover 예외) */
+    .cap-pill .btn-solid:hover, .hero-pill .btn-solid:hover { box-shadow: none; filter: none; }   /* 직접 수정(2026-11-26): 밝기 필터 대신 --accent-hover 칠(위 .btn-solid:hover) */
+    .cap-pill .btn:not(.btn-solid):not(:disabled):active, .hero-pill .btn:not(.btn-solid):not(:disabled):active, .pdf-menu .btn:not(.btn-solid):not(:disabled):active { background: color-mix(in srgb, var(--ink) 14%, transparent); }   /* 글자 버튼 눌림: 올림(8%)보다 한 단 진하게 */
     /* 맨 위 머리의 캡슐 바: 제자리에 고정(움직임 없음) — 레퍼런스 크기에 맞춰 높이 64px(버튼 44px + 안쪽 여백 9px + 외곽선), 글자 15px */
     .hero-pill { display: inline-flex; gap: 9px; padding: 9px; }   /* 직접 수정: 칸 사이 = 안쪽 여백(호버 범위 기준으로 테두리 안쪽 → 버튼 · 버튼 → 버튼이 같게) */
     .hero-pill .btn { min-height: 44px; padding: 0 22px; font-size: 15px; }
@@ -588,7 +598,7 @@
     .top-tools-w { display: flex; height: 56px; align-items: center; justify-content: flex-end; }
     .top-tools-w > div { display: flex; align-items: center; gap: 8px; pointer-events: auto; }
     .top-tools .btn-icon { background-color: var(--bg); }              /* 화면 모드 버튼: 불투명한 바탕색(숨은 머리 막대 아래로 스크롤하는 내용에 묻히지 않게) */
-    .top-tools .btn-icon:hover { background-color: color-mix(in srgb, var(--accent) 16%, var(--bg)); }   /* 마우스 올림은 다른 버튼과 같게(위 불투명 바탕보다 우선) */
+    .top-tools .btn-icon:hover { background-color: var(--nb-hover); }   /* 마우스 올림은 다른 테두리 버튼과 같게(위 불투명 바탕보다 우선) */
     .nh-tools-space { flex-shrink: 0; width: var(--tools-w, 76px); }     /* 머리 막대 메뉴가 떠 있는 버튼 아래로 들어가지 않게 버튼 폭만큼 비워 둠(폭은 스크립트가 잼) */
     @media (min-width: 768px) { .nh-tools-space { margin-left: 8px; } }   /* 직접 수정: 마지막 메뉴(연락처) ↔ 버튼 = 머리 막대 간격 16 + 8 = 24px — 메뉴끼리 간격(md:gap-6 = 24px)과 같게. 좁은 화면은 메뉴 간격도 16px라 그대로 */
     /* 휴대폰: 띠를 불투명한 바탕색으로 — 아이폰 Safari는 화면 위에 띠가 붙어 있으면 상태 표시줄 칸을 띠의 바탕색 '단색'으로 칠함(페이지가 그 칸에 그릴 수 없음).
@@ -653,8 +663,7 @@
     @media print {
       @page { size: A4; margin: 12mm 14mm 12mm; }
       :root, .sec.proj { --bg: #fff !important; --band: #F7F8FC !important; --card: #fff !important; --line: #E3E5EE !important; --ink: #20233A !important;
-              --muted: #3B3F57 !important; --sub: #5C6178 !important; --accent-ink: var(--accent) !important;
-              --divider: #C9CBD6 !important; --meta-label: #20233A !important; color-scheme: light; }
+              --muted: #3B3F57 !important; --sub: #5C6178 !important; --accent-ink: var(--accent) !important;              --divider: #C9CBD6 !important; --meta-label: #20233A !important; color-scheme: light; }
       .sec.proj { color: var(--ink); }
       html { scroll-behavior: auto; }
       body { background: #fff !important; }

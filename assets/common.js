@@ -520,7 +520,7 @@ img.pf-vid-under{opacity:0}
   }
   const DARK_BG = [10, 10, 13];                                           // 어두운 기본 바탕(--bg #0A0A0D)
   const isHex = (v) => /^#[0-9a-f]{6}$/i.test(v || '');
-  function themeTokens(hex, { bg, a2, a3 } = {}) {
+  function themeTokens(hex, { bg, a2, a3, ink, fill } = {}) {
     if (!isHex(hex)) return null;
     const A = hexRgb(hex), WHITE = [255, 255, 255], BLACK = [0, 0, 0];
     const BG = isHex(bg) ? hexRgb(bg) : DARK_BG, far = contrast(BG, WHITE) >= contrast(BG, BLACK) ? WHITE : BLACK;
@@ -535,8 +535,11 @@ img.pf-vid-under{opacity:0}
     const soft = mix(A, BG, 0.84), chip = mix(A, BG, 0.72), mid = mix(A, BG, 0.35);
     const lift = (c) => { let x = c; for (let t = 0; t <= 1 && (contrast(x, BG) < 7 || contrast(x, soft) < 6); t += 0.02) x = mix(c, far, t); return x; };
     // 직접 수정(2026-11-24): 화면의 강조 글자색 = 강조색 그대로(바탕에 맞춰 밝히거나 어둡게 하지 않음 — 어두운·밝은 화면에서 같은 색). 인쇄용 '-p'는 그대로
-    const T = { '--accent': A, '--accent-ink': A, '--accent-fill': fillOf(A), '--accent-soft': soft, '--accent-chip': chip, '--accent-mid': mid,
-                '--accent-2': A2, '--accent-2-ink': A2, '--accent-2-fill': fillOf(A2), '--accent-3': A3,
+    // 직접 수정(2026-11-26): 테마에 --t-accent-ink가 있으면 글자·링크 강조색만 그 색(어두운 화면 #2997FF · 밝은 화면 #0066CC — 칠은 --t-accent 그대로). 없으면 위와 같이 강조색 그대로
+    // 직접 수정(2026-11-26): 테마에 --t-accent-fill이 있으면 흰 글자 칠도 그 색 그대로(4.5:1까지 자동으로 어둡게 하지 않음 — 어두운 화면 #2997FF는 흰 글자 대비 3.02를 알고 쓰는 값). 없으면 위와 같이 fillOf로 어둡게
+    const FILL = isHex(fill) ? hexRgb(fill) : null;
+    const T = { '--accent': A, '--accent-ink': isHex(ink) ? hexRgb(ink) : A, '--accent-fill': FILL || fillOf(A), '--accent-soft': soft, '--accent-chip': chip, '--accent-mid': mid,
+                '--accent-2': A2, '--accent-2-ink': A2, '--accent-2-fill': FILL && A2.every((v, i) => v === A[i]) ? FILL : fillOf(A2), '--accent-3': A3,
                 '--accent-ink-p': inkP, '--accent-fill-p': contrast(A, WHITE) >= 4.5 ? A : inkP, '--accent-soft-p': softP, '--accent-chip-p': chipP, '--accent-mid-p': midP };
     return Object.fromEntries(Object.entries(T).map(([k, v]) => [k, rgbHex(v)]));
   }
@@ -546,7 +549,7 @@ img.pf-vid-under{opacity:0}
   function applyTheme(hex) {
     lastAccent = hex;
     const accent = themeVar('--t-accent');
-    const t = themeTokens(isHex(accent) ? accent : hex, { bg: themeVar('--t-bg'), a2: themeVar('--t-accent-2'), a3: themeVar('--t-accent-3') });
+    const t = themeTokens(isHex(accent) ? accent : hex, { bg: themeVar('--t-bg'), a2: themeVar('--t-accent-2'), a3: themeVar('--t-accent-3'), ink: themeVar('--t-accent-ink'), fill: themeVar('--t-accent-fill') });
     if (t) Object.entries(t).forEach(([k, v]) => document.documentElement.style.setProperty(k, v));
     return t;
   }
@@ -780,7 +783,12 @@ img.pf-vid-under{opacity:0}
     const thumb = bar.firstChild;
     let raf = 0, h = 0, room = 0, max = 0, pad = 0;
     const lift = () => {                                                // 목록이 제목 밑으로 들어간 높이만큼 위 여백 + 스크롤 위치 보정(보이는 자리는 그대로)
-      const d = toc.offsetParent ? Math.max(0, Math.round(title.getBoundingClientRect().bottom - sc.getBoundingClientRect().top)) : 0;
+      // 직접 수정(2026-11-26): 목록이 칸 안에 다 들어가(스크롤 막대 없음) 여백을 줘도 소용없는 목차는 보정하지 않음 — 칸이 띠에 밀려 올라가는 것은 브라우저가 스크롤과 같은 프레임에 처리하는데,
+      //   여백·스크롤 위치를 스크립트로 바꾸면 한 프레임 늦어 목차가 떨려 보였음. 넘치는 목차만 보정
+      const rg = document.createRange(); rg.selectNodeContents(sc);
+      const fits = rg.getBoundingClientRect().height <= toc.clientHeight - title.offsetHeight - 1;   // 칸 높이 기준(목록 높이는 아래 .fits로 바뀌므로 기준으로 못 씀)
+      sc.classList.toggle('fits', fits);                                // doc.css: 넘치지 않는 목록은 sticky로 제자리(스크립트 없이 스크롤과 같은 프레임)
+      const d = toc.offsetParent && !fits ? Math.max(0, Math.round(title.getBoundingClientRect().bottom - sc.getBoundingClientRect().top)) : 0;
       if (d === pad) return;
       const top = sc.scrollTop, delta = d - pad;
       pad = d;

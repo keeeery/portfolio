@@ -279,9 +279,9 @@ table.kv td.role { color: var(--accent-ink); font-weight: 800; }
 .vbox[data-kind="mermaid"] .vmedia .pf-mpart > svg { overflow: hidden !important; height: auto !important; max-height: 100%; }   /* 상자 = 도막 비율(aspect-ratio는 splitDiagram이 적음) → 자른 곳 너머는 그리지 않음 */
 .vbox[data-kind="mermaid"] .vmedia .pf-mpart + .pf-mpart { border-left: 1px dashed var(--line); padding-left: 14px; }
 .vbox[data-kind="mermaid"] .vmedia .pf-cont circle { fill: var(--diagram-bg); stroke: var(--accent); stroke-width: 1.5px; }
-.vbox[data-kind="mermaid"] .vmedia .pf-cont text { fill: var(--accent); font: 700 9px Pretendard, sans-serif; }
+.vbox[data-kind="mermaid"] .vmedia .pf-cont text { fill: var(--accent-ink); font: 700 9px Pretendard, sans-serif; }   /* 직접 수정(2026-11-26): 이어짐 표시 글자 — 칠(--accent) 대신 글자 강조색(--accent-ink). 원(circle) 선은 그대로 */
 .vbox[data-kind="code"] .vmedia { display: block; background: var(--code-bg); border: 0; box-shadow: none; }
-.vbox[data-kind="table"] .vmedia { display: block; background: transparent; border: 0; border-radius: 0; }
+.vbox[data-kind="table"] .vmedia { display: block; background: transparent; border: 0; border-radius: 0; overflow: visible; }   /* 직접 고침(2026-11-26): 표 축소(zoom) 반올림으로 표가 상자보다 1px 남짓 넓어지면 오른쪽 테두리가 잘림 — 표 상자는 넘침을 숨기지 않음 */
 /* 직접 추가: 슬라이드 공용 — 이미지·영상 윤곽선(상세 문서 .pf-figure img와 같은 1px var(--line), 이미지 바로 바깥). 칸의 1px 테두리 자리에 그려 키노트 테마(테두리 투명)에서도 보이고, 영상(.pf-vid)은 칸 안쪽에만 겹쳐 가리지 않음 */
 /* 직접 고침(2026-11-25): 칸 테두리는 기본으로 투명, 이미지·영상·코드 칸의 외곽선은 가장자리 색이 바탕과 대비가 낮을 때만(.pf-edge, common.js setupEdges). 다이어그램은 외곽선 없음 */
 .pf-scene :is(.vmedia, .media):has(> img) { position: relative; }

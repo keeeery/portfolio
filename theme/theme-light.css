@@ -16,4 +16,6 @@
   --t-line-2: #AEAEB2;
   --t-shadow: rgb(20 22 30 / .08);
   --t-diagram: #FFFFFF;
+  --t-accent-ink: #0066CC;   /* 밝은 화면의 글자·링크(2026-11-26, Apple 링크 색): 바탕 대비 5.11 — 칠(#0071E3)은 theme.css 값을 그대로 씀 */
+  --t-band: #FAFAFC;         /* 띠 바탕(2026-11-26): 바탕(#F5F5F7)보다 어두운 #ECECEF 대신 한 단 밝게 */
 }

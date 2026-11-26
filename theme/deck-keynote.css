@@ -252,7 +252,7 @@
 #d-psy-damage .dk-stack .vbox[data-kind="code"], #d-psy-damage .dk-stack .vbox[data-kind="code"] .fit-in { width: 100% !important; }
 /* 가로 카드의 왼쪽 라벨 칸·「AI 활용」 주황은 ㉖ 공통 규칙. 이 장면은 세 카드의 칸 폭만 가장 긴 제목에 맞춰 같게(--tl-w) */
 #d-psy-damage .cards.row .ncard { --tl-w: 69.2px; }   /* 「설계 변경」·「크기 배율」 칸 폭(13px·양옆 10px) */
-#d-telegraph { --pf-layout: side; --pf-vis-scale: .95; }   /* ODDITY 8.3 공격 예고 — 9장(d-psy-aim)처럼 왼쪽 이미지 539px·오른쪽 카드 462px 세로(캡션 두 줄이라 .95) */
+#d-telegraph { --pf-layout: side; --pf-vis-scale: .978; }   /* ODDITY 8.3 공격 예고 — 카드 칸 417px에 이미지 높이를 맞춤(이미지 556×417·카드 462px), 9장 기준(539×404)보다 조금 큼 (2026-11-26) */
 #d-telegraph .ncard > .num.tl { white-space: pre; line-height: 1.35; text-box: none; }   /* 두 줄 라벨(「시간 / 정지」「바닥 / 데칼」「스텐실 / 마스크」, 라벨 글의 \n) */
 #d-ui-tools { --pf-layout: side; --pf-vis-scale: .912; }   /* ODDITY 7.4 에디터 도구로 맞춘 UI — 9장(d-psy-aim)처럼 왼쪽 이미지 539px·오른쪽 카드 462px 세로(캡션 한 줄이라 .912) */
 #d-overview, #d-time-overview, #d-local-time, #d-psy-hold-lag { --pf-cards: plain; }   /* 요점 카드 번호 빼기 — 차례·대등 목록이 아닌 카드(소개 문단, 종류가 다른 두 이야기, 요약 → 세부), project-deck.js plainCards(2026-11-26) */

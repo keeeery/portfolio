@@ -20,7 +20,7 @@ FONTS = {
     'Playfair Display': 'playfair-display', 'Nunito': 'nunito', 'JetBrains Mono': 'jetbrains-mono', 'Pretendard': None,
 }
 COLOR_KEYS = ['bg', 'surface', 'ink', 'body', 'muted', 'line', 'line-2']
-OPTIONAL_COLORS = ['accent', 'accent-2', 'accent-3', 'faint', 'code-bg', 'diagram']
+OPTIONAL_COLORS = ['accent', 'accent-2', 'accent-3', 'accent-ink', 'accent-fill', 'accent-hover', 'accent-active', 'band', 'faint', 'code-bg', 'diagram']   # accent-ink·accent-fill·accent-hover·accent-active·band: 직접 추가(2026-11-26)
 KNOWN = set(COLOR_KEYS + OPTIONAL_COLORS + ['scheme', 'radius', 'pill', 'shadow', 'display', 'grad', 'badge', 'glow', 'mark'])
 DEFAULT = {'bg': '#0A0A0D', 'surface': '#131318', 'ink': '#F4F4F6', 'body': '#BDBDC7', 'muted': '#9A9AA6', 'line': '#24242C', 'line-2': '#3D3D48'}
 
@@ -143,6 +143,11 @@ def main(path):
         faint = T.get('faint', '')
         if not re.fullmatch(r'#[0-9A-Fa-f]{6}', faint): faint = mixhex(C['muted'], C['bg'], 0.15)   # 꼴이 틀린 값은 위에서 이미 [고칠 것]
         C['faint'] = faint; need('faint', 'bg', 3, '흐린 글자 / 바탕', hard=False)
+        if re.fullmatch(r'#[0-9A-Fa-f]{6}', T.get('accent-ink', '')): need(T['accent-ink'], 'bg', 4.5, '강조 글자 / 바탕')
+        if re.fullmatch(r'#[0-9A-Fa-f]{6}', T.get('band', '')): need('ink', T['band'], 12, '제목 글자 / 띠')
+        if re.fullmatch(r'#[0-9A-Fa-f]{6}', T.get('accent-fill', '')): need('#FFFFFF', T['accent-fill'], 4.5, '흰 글자 / 칠(--t-accent-fill)', hard=False)   # 4.5 미달은 알려 주기만(어두운 화면 #2997FF = 3.02를 알고 쓰는 값)
+        for k, label in (('accent-hover', '버튼 올림 칠'), ('accent-active', '버튼 눌림 칠')):
+            if re.fullmatch(r'#[0-9A-Fa-f]{6}', T.get(k, '')): need('#FFFFFF', T[k], 4.5, f'흰 글자 / {label}')
         need('line', 'bg', 1.15, '구분선 / 바탕', hard=False); need('line-2', 'bg', 1.5, '알약 테두리 / 바탕', hard=False)
         need('surface', 'bg', 1.04, '카드 / 바탕(구분)', hard=False)
         chip = mixhex(C['bg'], C['ink'], 0.22); C['chip'] = chip; need('ink', 'chip', 4.5, '라벨 칩 글자 / 칩')
