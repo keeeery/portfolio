@@ -235,7 +235,7 @@ try { window.mermaid?.initialize({ startOnLoad: false }); } catch (_) { /* */ }
     (p.team?.role ? `<div class="role"><dt>${T('name.role')}</dt><dd>${inline(p.team.role)}</dd></div>` : '');
   const ext = [
     ...PF.repoLinks(p).map((r) => link({ href: r.url, label: esc(r.label), kind: 'external', cls: 'btn' })),   // 저장소가 둘 이상이면 'GitHub(역할)'
-    PF.isUrl(p.links?.video) && link({ href: p.links.video, label: T('name.video'), kind: 'external', cls: 'btn' }),
+    PF.isUrl(p.links?.video) && link({ href: p.links.video, label: PF.videoName(p), kind: 'external', cls: 'btn' }),
     ...PF.otherLinks(p).map((l) => link({ href: l.url, label: esc(l.label), kind: 'external', cls: 'btn' })),
   ].filter(Boolean);
   const deckBtn = noDeck ? '' : link({ href: deckUrl(), label: T('name.deck'), kind: 'page', cls: 'btn primary' });
@@ -244,7 +244,7 @@ try { window.mermaid?.initialize({ startOnLoad: false }); } catch (_) { /* */ }
   const railLinks = [
     !noDeck && link({ href: deckUrl(), label: T('name.deck'), kind: 'page' }),
     ...PF.repoLinks(p).map((r) => link({ href: r.url, label: esc(r.label), kind: 'external' })),
-    PF.isUrl(p.links?.video) && link({ href: p.links.video, label: T('name.video'), kind: 'external' }),
+    PF.isUrl(p.links?.video) && link({ href: p.links.video, label: PF.videoName(p), kind: 'external' }),
     ...PF.otherLinks(p).map((l) => link({ href: l.url, label: esc(l.label), kind: 'external' })),
     link({ href: srcPath(p.doc), label: T('doc.raw-md'), kind: 'file' }),   // 원문 마크다운은 맨 아래
   ].filter(Boolean);

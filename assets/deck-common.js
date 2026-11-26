@@ -171,7 +171,7 @@
 
   // 프로젝트 외부 링크(시연 영상 · GitHub · 그 밖의 링크) — data 순서 그대로. type으로 영문 라벨을 고름(보이는 이름은 문구 표에서 바뀔 수 있음)
   const extLinks = (p) => [
-    PF.isUrl(p.links?.video) && { type: 'video', label: PF.t('name.video'), url: p.links.video },
+    PF.isUrl(p.links?.video) && { type: 'video', label: PF.videoName(p), url: p.links.video },
     ...PF.repoLinks(p).map((r) => ({ type: 'github', label: r.label, url: r.url })),   // 저장소가 둘 이상이면 'GitHub(역할)'
     ...PF.otherLinks(p).map((l) => ({ type: 'extra', label: l.label, url: l.url, extra: true })),
   ].filter(Boolean);

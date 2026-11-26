@@ -176,10 +176,10 @@
     if (p.team?.role) meta.push(`<div class="wide"><dt>${T('name.role')}</dt><dd>${inline(p.team.role)}</dd></div>`);
     const extra = PF.otherLinks(p), repos = PF.repoLinks(p);   // 저장소가 둘 이상이면 'GitHub(역할)'
     const btns = [btn(PF.projectUrl(p.id), T('name.deck'), 'page', 'btn primary'), btn(PF.docUrl(p.id), T('name.doc'), 'page'),
-      ...repos.map((r) => btn(r.url, esc(r.label), 'external')),isUrl(p.links?.video) && btn(p.links.video, T('name.video'), 'external'),
+      ...repos.map((r) => btn(r.url, esc(r.label), 'external')),isUrl(p.links?.video) && btn(p.links.video, PF.videoName(p), 'external'),
       ...extra.map((l) => btn(l.url, esc(l.label), 'external'))].filter(Boolean);
     const urls = [[t('name.deck'), PF.visibleUrl(PF.projectUrl(p.id)), PF.projectUrl(p.id), 'page'], [t('name.doc'), PF.visibleUrl(PF.docUrl(p.id)), PF.docUrl(p.id), 'page'],
-      ...repos.map((r) => [r.label, shortUrl(r.url), r.url, 'external']),isUrl(p.links?.video) && [t('name.video'), shortUrl(p.links.video), p.links.video, 'external'],
+      ...repos.map((r) => [r.label, shortUrl(r.url), r.url, 'external']),isUrl(p.links?.video) && [PF.videoName(p), shortUrl(p.links.video), p.links.video, 'external'],
       ...extra.map((l) => [l.label, shortUrl(l.url), l.url, 'external'])].filter(Boolean);
     // 대표 이미지(직접 고친 기능): coverLogo가 있으면 플레이 화면(cover) 위에 로고를 겹침. 플레이 화면이 아직 없으면 어두운 바탕 위 같은 자리에 로고
     const bgImg = p.cover ? `<img class="cover-bg" src="${esc(PF.srcPath(p.id, p.cover))}" alt="${esc(p.title)} 대표 화면">` : '';
@@ -201,10 +201,10 @@
     if (p.team?.role) meta.push(`<div class="wide"><dt>${T('name.role')}</dt><dd>${inline(p.team.role)}</dd></div>`);
     const extra = PF.otherLinks(p), repos = PF.repoLinks(p);   // 저장소가 둘 이상이면 'GitHub(역할)'
     const btns = [btn(PF.projectUrl(p.id), T('name.deck'), 'page'), btn(PF.docUrl(p.id), T('name.doc'), 'page'),
-      ...repos.map((r) => btn(r.url, esc(r.label), 'external')),isUrl(p.links?.video) && btn(p.links.video, T('name.video'), 'external'),
+      ...repos.map((r) => btn(r.url, esc(r.label), 'external')),isUrl(p.links?.video) && btn(p.links.video, PF.videoName(p), 'external'),
       ...extra.map((l) => btn(l.url, esc(l.label), 'external'))].filter(Boolean);
     const urls = [[t('name.deck'), PF.visibleUrl(PF.projectUrl(p.id)), PF.projectUrl(p.id), 'page'], [t('name.doc'), PF.visibleUrl(PF.docUrl(p.id)), PF.docUrl(p.id), 'page'],
-      ...repos.map((r) => [r.label, shortUrl(r.url), r.url, 'external']),isUrl(p.links?.video) && [t('name.video'), shortUrl(p.links.video), p.links.video, 'external'],
+      ...repos.map((r) => [r.label, shortUrl(r.url), r.url, 'external']),isUrl(p.links?.video) && [PF.videoName(p), shortUrl(p.links.video), p.links.video, 'external'],
       ...extra.map((l) => [l.label, shortUrl(l.url), l.url, 'external'])].filter(Boolean);
     return `<article id="p-${esc(p.id)}" class="oc">
       <div class="oc-h"><h3>${esc(p.title)}</h3><p class="oc-team">${esc(PF.teamLabel(p.team))}</p></div>
@@ -236,7 +236,7 @@
 
   function projLinks(p) {
     return [link({ href: PF.projectUrl(p.id), label: T('name.deck'), kind: 'page' }), link({ href: PF.docUrl(p.id), label: T('name.doc-short'), kind: 'page' }),
-      ...PF.repoLinks(p).map((r) => link({ href: r.url, label: esc(r.label) })),isUrl(p.links?.video) && link({ href: p.links.video, label: T('name.video') })].filter(Boolean).join('');
+      ...PF.repoLinks(p).map((r) => link({ href: r.url, label: esc(r.label) })),isUrl(p.links?.video) && link({ href: p.links.video, label: PF.videoName(p) })].filter(Boolean).join('');
   }
 
   // 화면과 설명 짝 강조(마우스·키보드 포커스) + [PDF로 저장]

@@ -45,6 +45,11 @@ const PF = (() => {
     return rs.map((r) => ({ label: rs.length > 1 && r.role ? `GitHub(${r.role})` : 'GitHub', url: r.url }));
   };
   const otherLinks = (p) => (p?.links?.extra || []).filter((l) => !l.role && isUrl(l.url));
+  // 직접 고침(2026-11-26): 영상 링크 이름 — 게임은 「플레이 영상」, 장르가 앱·애플리케이션(게임이 아닌 것)이면 「시연 영상」
+  const videoName = (p) => {
+    const g = (p?.meta || []).find((m) => m.label === '장르')?.value || '';
+    return t(!/게임/.test(g) && /앱|애플리케이션|어플|\bapp(lication)?\b/i.test(g) ? 'name.video' : 'name.video-game');
+  };
 
   // 오류 문구의 경로는 사람이 읽게 디코딩(src/%EA%B8%B0… → src/기술…). 조각마다 encodeURIComponent로 만들었으므로 조각마다 되돌림(#·& 등 포함)
   const shownPath = (path) => String(path).split('/').map((s) => { try { return decodeURIComponent(s); } catch { return s; } }).join('/');
@@ -1104,7 +1109,7 @@ img.pf-vid-under{opacity:0}
   // ── 문구 표(assets/strings.js): t(키, 값) · tab(data의 탭 값) · label(data의 카드 라벨 값) · 페이지 시작 때 loadStrings()로 theme/strings.tsv를 읽음 ──
   const { t, tab, label, load: loadStrings, report: stringsReport } = PFStr;
 
-  return { videoPoster, videoSources, videoIcon, esc, inline, isUrl, shortUrl, repoLinks, otherLinks, loadJSON, loadText, encodePath, srcPath, projectUrl, docUrl, siteBase, visibleUrl, metaValue, teamLabel,
+  return { videoPoster, videoSources, videoIcon, esc, inline, isUrl, shortUrl, repoLinks, otherLinks, videoName, loadJSON, loadText, encodePath, srcPath, projectUrl, docUrl, siteBase, visibleUrl, metaValue, teamLabel,
            slugger, normTitle, resolveHeading, keyOk, deckSceneFor, mdHtml, headingsOf, ICON, NEWTAB, link, markNewTab, topCap, railToggle, themeTokens, applyTheme, mermaidConfig, hlMore, routeFolkSackTerrain, gatherFanIn, fitSides, docEnd, contrast, hexRgb, modeButton, setMode, getMode, hasLightMode,
            FILE_HELP, noDataHtml, isFile, notice, guardFileProtocol, noData, t, tab, label, loadStrings, stringsReport };
 })();

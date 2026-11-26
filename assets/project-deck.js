@@ -571,10 +571,9 @@
         used.add(sid);
         // 직접 고침(2026-11-25): 장면 머리 — 왼쪽 위 「장 제목 · 종류 라벨」, 오른쪽 위는 그 절의 상세 문서 링크(「상세 문서 §2.2 ↗」).
         //   제목 앞 절 번호는 떼고 링크의 §번호로. 번호가 제목에 없으면 sectionPath에서 가장 가까운 번호 붙은 절
-        const tab = PF.tab(sl.tab), path = sl.sectionPath || [];
-        //   직접 고침(2026-11-25): 프로젝트 개요 장(제목 「프로젝트 개요」 또는 key intro·overview)은 라벨 없이 장 제목만
-        const isIntro = /^(intro|overview)$/.test(c.key || '') || PF.normTitle(c.title || '') === PF.normTitle('프로젝트 개요');
-        const eyebrow = [c.title || '', isIntro ? '' : tab].filter(Boolean).join(' · ');
+        //   직접 고침(2026-11-26): 종류 라벨(구현·구조·흐름…)은 모든 장에서 빼고 장 제목만
+        const path = sl.sectionPath || [];
+        const eyebrow = c.title || '';
         const num = [txt(sl.title), ...[...path].reverse()].map((t) => (SEC_NO.exec(t || '') || [])[1]).find(Boolean) || '';
         const href = PF.docUrl(p.id, path.length ? `sec=${encodeURIComponent(path[path.length - 1])}` : '');
         const rhtml = PF.link({ href, kind: 'page', cls: 'pf-headlink', label: esc(num ? PF.t('deck.doc-ref', { n: num }) : PF.t('deck.doc-ref-plain')) });

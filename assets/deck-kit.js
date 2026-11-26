@@ -99,7 +99,7 @@
   // ── 배율 ── 한 장씩 보기: k = min(vw/1280, (vh − HUD)/720), 상한 없음 / 한 번에 보기: 간격·HUD 몫을 빼고 상한 1.5
   // 직접 추가(2026-11-24): 한 번에 보기 — 양옆을 겹쳐 그리는 스크롤 막대 폭(page-scrollbar.js .pf-sb, 14px)만큼 비우고, 아래 띠 [−][+]로 확대·축소(이 브라우저에 기억)
   const SB_W = 14, ZOOMS = [0.5, 0.6, 0.7, 0.8, 0.9, 1], ZOOM_MS = 280;
-  let zoomRaf = 0, nextView = null;
+  let zoomRaf = 0, nextView = null, viewBusy = false;   // viewBusy: 보기 전환 보간이 도는 중(클릭은 보간 층이 막고, 키는 이 값으로 막음)
   const ZOOM_KEY = `pf-zoom:${location.pathname.replace(/[^/]*$/, '')}`;
   let zi = (() => { try { const v = +localStorage.getItem(ZOOM_KEY); const i = ZOOMS.indexOf(v); return i >= 0 ? i : ZOOMS.indexOf(1); } catch { return ZOOMS.indexOf(1); } })();
   const sideGap = () => (matchMedia('(pointer: fine)').matches ? SB_W : 0);
@@ -274,13 +274,23 @@
   }
   const editable = (t) => t.closest?.('input, textarea, select, [contenteditable=""], [contenteditable="true"]');
   function scrollableX(t) { for (let n = t; n && n !== document.body; n = n.parentElement) { if (n.scrollWidth > n.clientWidth + 1 && /auto|scroll/.test(getComputedStyle(n).overflowX)) return true; } return false; }
+  // 글자 단축키는 입력기와 상관없이 자판 자리(e.code)로 읽음 — 한글 입력 상태면 e.key가 'ㅐ'·'ㄹ'·'ㅍ'(또는 'Process')라 영문으로 비교하면 안 맞음
+  const letterKey = (e) => { const m = /^Key([A-Z])$/.exec(e.code || ''); return m ? m[1].toLowerCase() : (/^[a-z]$/i.test(e.key) ? e.key.toLowerCase() : ''); };
   function onKey(e) {
     if (e.defaultPrevented || e.altKey || e.ctrlKey || e.metaKey || editable(e.target) || document.querySelector('dialog[open]')) return;
     const k = e.key;
     if (k === 'Escape' && saveOpen()) { e.preventDefault(); return toggleSave(false, true); }
     if (k === 'Escape' && helpOpen()) { e.preventDefault(); return toggleHelp(false); }
-    if (k === 'o' || k === 'O') { e.preventDefault(); return openOverview(); }
-    if (k === 'f' || k === 'F') { e.preventDefault(); return toggleFull(); }
+    const lk = letterKey(e);   // 한글 입력 상태에서도 같은 자리의 영문 키로(직접 고침 2026-11-26)
+    if (lk === 'o') { e.preventDefault(); return openOverview(); }
+    if (lk === 'f') { e.preventDefault(); return toggleFull(); }
+    // 보기 전환 V · 확대/축소 + − (= 키도 확대, 세로로 보기에서만 — 아이콘과 같은 규칙) — 직접 고침 2026-11-26
+    if (lk === 'v') { e.preventDefault(); if (viewBusy || e.repeat) return; return setView((nextView ?? view) === 'deck' ? 'scroll' : 'deck'); }   // 앞 전환이 끝나기 전·누르고 있는 동안은 무시(클릭과 같게)
+    const zin = k === '+' || k === '=' || e.code === 'Equal' || e.code === 'NumpadAdd', zout = k === '-' || k === '_' || k === '−' || e.code === 'Minus' || e.code === 'NumpadSubtract';   // 자리(code)로도 — 입력기가 'Process'를 줄 때
+    if (zin || zout) {
+      if (view !== 'scroll') return;
+      e.preventDefault(); return setZoom(zi + (zin ? 1 : -1));
+    }
     if (k === 'Home') { e.preventDefault(); return go(0); }
     if (k === 'End') { e.preventDefault(); return go(scenes.length - 1); }
     let d = 0;
@@ -451,8 +461,9 @@
       html.classList.remove('pf-vt-to-deck', 'pf-vt-to-scroll'); html.classList.add(dir);
       s.style.viewTransitionName = 'pf-vt-scene';
       const vt = document.startViewTransition(doSwitch);
+      viewBusy = true;
       vt.ready.catch(() => { /* 건너뛴 전환(빠르게 또 누름 등) — 바뀌는 것은 그대로 */ });
-      vt.finished.finally(() => { s.style.viewTransitionName = ''; html.classList.remove(dir); });
+      vt.finished.finally(() => { s.style.viewTransitionName = ''; html.classList.remove(dir); viewBusy = false; });
     } else doSwitch();
     say(cur, v === 'deck' ? '슬라이드 보기로 바꿨습니다.' : '한 번에 보기로 바꿨습니다.');
   }
@@ -489,16 +500,14 @@
   }
   // ── 물음표 안내(직접 고침 2026-11-26): 보는 사람(채용 담당자 등)용 「보는 방법·파일로 받기」는 어디서나,
   //    만드는 사람용 저장 절차·PPTX 고쳐 쓰기·다시 빌드 안내는 로컬 미리보기에서만(isLocal) 아래에 덧붙임
-  const HELP_VIEW = (pptx) => `<p><b>보는 방법</b></p>
-    <ul><li>다음·이전 장: <b>→ ←</b>, <b>Space</b>·<b>Shift+Space</b>, 마우스 휠</li>
-    <li>모든 슬라이드 한눈에 보기: <b>O</b> 또는 아래 띠의 개요 아이콘</li>
-    <li>세로로 이어서 보기: 아래 띠의 보기 전환 아이콘</li>
-    <li>전체 화면: <b>F</b></li></ul>
-    <p><b>파일로 받기</b> — 아래 띠의 다운로드 아이콘</p>
-    <ul><li>PDF: 인쇄 창의 <b>대상</b>에서 <b>"PDF로 저장"</b>을 고릅니다. Chrome·Edge에서 가장 정확하게 저장됩니다.</li>
-    ${pptx ? '<li>PPTX: PowerPoint 파일로 받습니다. PC에 Pretendard 글꼴이 없으면 줄바꿈이 조금 다를 수 있습니다.</li>' : ''}</ul>`;
-  const HELP_LOCAL = (pptx) => (isLocal ? `<div class="pf-help-local">
-    <p class="warn">여기부터는 미리보기(로컬 서버)에서만 보이는 만드는 사람용 안내입니다. 배포된 페이지에는 위의 「보는 방법」만 나옵니다.</p>
+  // 보는 사람용은 메뉴처럼 「기능 ……… 단축키」 줄(기능 왼쪽, 단축키 오른쪽 회색). 설명 문장은 맨 아래 작은 회색 글(상자 폭을 늘리지 않음)
+  const MAC = /Mac|iPhone|iPad/.test(navigator.platform), MOD = MAC ? '⌘ ' : 'Ctrl+', SHIFT = MAC ? '⇧ ' : 'Shift+';   // mac은 기호(⌘ ⇧), Windows는 글자(Ctrl+ Shift+) — 각 OS 메뉴의 표기
+  const helpRow = (name, key) => `<div class="pf-help-row"><span>${name}</span><span class="k">${key || ''}</span></div>`;
+  const HELP_VIEW = (pptx) => `<p class="pf-help-sec">단축키</p>
+    ${helpRow('다음 슬라이드', '→ / Space / 휠')}${helpRow('이전 슬라이드', `← / ${SHIFT}Space / 휠`)}${helpRow('모든 슬라이드 보기', 'O')}${helpRow('한 장씩 보기 / 세로로 보기', 'V')}${helpRow('확대 / 축소(세로로 보기에서)', '+ / −')}${helpRow('전체 화면', 'F')}${helpRow('PDF로 저장', MOD + 'P')}
+    <hr><p class="pf-help-note">PDF로 저장하려면 인쇄 창의 대상에서 "PDF로 저장"을 선택하세요(Chrome·Edge 권장).${pptx ? '<br>PPTX로 저장하는 PC에 Pretendard 글꼴이 없으면 줄바꿈이 조금 다르게 저장될 수 있습니다.' : ''}</p>`;
+  const HELP_LOCAL = (pptx) => (isLocal ? `<details class="pf-help-local"><summary>만드는 사람용 안내</summary>
+    <p class="warn">배포된 페이지에는 위의 「단축키」와 저장 설명만 나옵니다.</p>
     <p class="warn">여기서 저장한 PDF${pptx ? '·PPTX' : ''}의 링크는 이 컴퓨터 주소를 가리키므로, 제출용은 배포된 주소에서 저장하세요.</p>
     <p><b>제출용 PDF 저장 — Windows PC의 Chrome·Edge에서</b></p>
     <ol><li><b>배포된 주소</b>(github.io)에서 화면이 다 나타난 뒤 <b>[PDF로 저장]</b>을 누릅니다(Ctrl+P도 됩니다).</li>
@@ -509,12 +518,13 @@
     ${pptx ? `<p><b>PPTX로 저장하기 — PowerPoint에서 고쳐 쓰는 파일</b></p>
     <p>글·카드·표·코드는 PowerPoint에서 바로 고칠 수 있는 글상자·도형·표로, 그림은 원본 그림으로 들어갑니다. 다이어그램은 SVG 그림이라 PowerPoint 365에서 오른쪽 클릭 → <b>[도형으로 변환]</b>하면 상자와 글자를 하나씩 고칠 수 있습니다.</p>
     <p>글꼴은 화면과 같은 이름(Pretendard 등)으로 들어갑니다. PC에 그 글꼴이 없으면 PowerPoint가 다른 글꼴로 보여 줘 줄바꿈이 달라질 수 있습니다. 글꼴을 설치하거나 <b>[홈 → 바꾸기 → 글꼴 바꾸기]</b>로 한 번에 바꾸세요.</p>
-    <p>PPTX에서 고친 내용은 슬라이드(웹)에 돌아오지 않습니다. 내용이 틀렸으면 프로젝트 문서를 고치고 다시 빌드하세요.</p>` : ''}</div>` : '');
-  const helpOpen = () => !!hud && !hud.querySelector('.pf-hud-help').hidden;
+    <p>PPTX에서 고친 내용은 슬라이드(웹)에 돌아오지 않습니다. 내용이 틀렸으면 프로젝트 문서를 고치고 다시 빌드하세요.</p>` : ''}</details>` : '');
+  const helpOpen = () => !!pop && !pop.querySelector('.pf-hud-help').hidden;
   function toggleHelp(on) {
     if (!hud) return;
-    const box = hud.querySelector('.pf-hud-help'), b = hud.querySelector('[data-a=help]');
+    const box = pop.querySelector('.pf-hud-help'), b = hud.querySelector('[data-a=help]');
     on = on ?? box.hidden;
+    if (on) box.style.right = `${Math.max(8, document.documentElement.clientWidth - b.getBoundingClientRect().right - 8)}px`;   // 오른쪽 끝 = 물음표 아이콘 + 8px(저장 메뉴와 같은 규칙)
     box.hidden = !on; b.setAttribute('aria-expanded', String(on));
   }
   const saveOpen = () => !!pop && !pop.querySelector('.pf-hud-menu').hidden;
@@ -556,7 +566,7 @@
       // 끝의 괄호 단축키 「이름 (←)」는 괄호를 떼고 이름 뒤에 회색 글자로(메뉴의 단축키처럼). 괄호 안이 설명 문장이면(띄어쓰기 든 낱말) 그대로
       const km = t.match(/^(.*\S)\s*\(([^()]+)\)$/), keys = km && km[2].split(/,\s*/);
       if (keys && keys.every((k) => /^\S{1,12}$/.test(k))) {
-        const k = document.createElement('span'); k.className = 'k'; k.textContent = keys.join(', ');
+        const k = document.createElement('span'); k.className = 'k'; k.textContent = keys.map((x) => (MAC ? x.replace(/^Shift\+/, '⇧ ') : x)).join(' / ');   // mac은 ⇧ 기호, 여러 키는 「/」로(도움말과 같은 표기)
         tip.replaceChildren(km[1], k);
       } else tip.textContent = t;
       tip.hidden = false;
@@ -594,11 +604,11 @@
       <!-- 직접 고침(2026-11-25): 저장은 다운로드 아이콘 하나(포트폴리오 페이지·자기소개서와 같은 그림) → 누르면 [PDF로 저장]·[PPTX로 저장] 메뉴 -->
       <span class="pf-hud-save"><button type="button" data-a="save" aria-haspopup="menu" aria-expanded="false" aria-controls="pf-hud-menu" aria-label="저장" title="저장(PDF${opts.pptx ? '·PPTX' : ''})"><svg class="pf-save-ico" aria-hidden="true" focusable="false" viewBox="0 0 12 12" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2.25v5.25M3.4 5 6 7.6 8.6 5M2.25 9.75h7.5"/></svg></button>
         <span class="pf-hud-menu" id="pf-hud-menu" role="menu" aria-label="저장" hidden>
-          <button type="button" role="menuitem" data-a="print" class="pf-print"><span class="t">${LH('ui.pdf')}</span><small></small></button>
+          <button type="button" role="menuitem" data-a="print" class="pf-print"><span class="t">${LH('ui.pdf')}</span><small></small><span class="k" aria-hidden="true">${MOD}P</span></button>
           ${opts.pptx ? `<button type="button" role="menuitem" data-a="pptx" class="pf-pptx" title="${LH('ui.pptx-tip')}"><span class="t">${LH('ui.pptx')}</span></button>` : ''}
         </span></span>
       ${window.PFMode ? PFMode.button() : ''}
-      <button type="button" data-a="help" aria-expanded="false" aria-controls="pf-hud-help" aria-label="도움말" title="보는 방법·파일로 받기">?</button>
+      <button type="button" data-a="help" aria-expanded="false" aria-controls="pf-hud-help" aria-label="도움말" title="도움말">?</button>
       <button type="button" data-a="anyway" hidden>${LH('ui.print-anyway')}</button>
       ${isLocal ? '<span class="pf-hud-badge" role="img" hidden title="미리보기에서만 보이는 장면 배치 점검 결과(찾은 항목 수). 배포된 페이지·PDF에는 나오지 않습니다. 슬라이드에 &quot;내용이 잘렸습니다&quot; 띠가 있으면 그 장면의 글이 나온 파일(src/의 프로젝트 문서)을 줄이거나 /portfolio-edit로 장면을 나누고 /portfolio-build를 다시 실행하세요."></span>' : ''}
       <span class="pf-hud-msg" role="status" aria-live="polite"></span>
@@ -608,7 +618,7 @@
     // 하단 바 위에 뜨는 것(저장 메뉴·알림·아이콘 설명)은 바 밖에 둠 — 각 상자가 화면에 바로 고정돼야 뒤 흐림(backdrop-filter)이 페이지에 닿음. pop은 상자를 만들지 않는 묶음(display: contents)
     pop = document.createElement('div');
     pop.className = 'pf-hud-pop pf-screen-only';
-    pop.append(hud.querySelector('.pf-hud-menu'), hud.querySelector('.pf-hud-msg'));
+    pop.append(hud.querySelector('.pf-hud-menu'), hud.querySelector('.pf-hud-msg'), hud.querySelector('.pf-hud-help'));
     const onClick = (e) => {
       const b = e.target.closest('button'); if (!b || b.getAttribute('aria-disabled') === 'true') return;
       const a = b.dataset.a;
@@ -650,14 +660,14 @@
     const vb = hud.querySelector('[data-a=view]');
     vb.querySelector('.l').textContent = L(view === 'deck' ? 'ui.to-scroll' : 'ui.to-deck');
     vb.querySelector('.s').textContent = L(view === 'deck' ? 'ui.to-scroll-short' : 'ui.to-deck-short');
-    vb.title = L(view === 'deck' ? 'ui.to-scroll-tip' : 'ui.to-deck-tip');
+    vb.title = `${L(view === 'deck' ? 'ui.to-scroll-tip' : 'ui.to-deck-tip')} (V)`;   // 단축키는 아이콘 설명에서 회색 글자로
     const sc = hud.querySelector('[data-a=scope]');
     if (sc) sc.setAttribute('aria-pressed', String(scope === 'summary'));
     const zw = hud.querySelector('.pf-hud-zoom'), pct = Math.round(K / scrollBase() * 100);
     zw.inert = view !== 'scroll'; zw.setAttribute('aria-hidden', String(view !== 'scroll'));
     const zo = zw.querySelector('[data-a=zoom-out]'), zn = zw.querySelector('[data-a=zoom-in]');
-    zo.setAttribute('aria-disabled', String(zi <= 0)); zo.title = `축소 (지금 ${pct}%)`;
-    zn.setAttribute('aria-disabled', String(zi >= ZOOMS.length - 1 || K >= scrollWidthCap() - 1e-3)); zn.title = `확대 (지금 ${pct}%)`;
+    zo.setAttribute('aria-disabled', String(zi <= 0)); zo.title = `축소 (지금 ${pct}%) (−)`;
+    zn.setAttribute('aria-disabled', String(zi >= ZOOMS.length - 1 || K >= scrollWidthCap() - 1e-3)); zn.title = `확대 (지금 ${pct}%) (+)`;
     pop.querySelector('.pf-print small').textContent = L('ui.pages', { n: printed().length });
     const r = root.dataset.pfReady;
     hud.querySelector('[data-a=anyway]').hidden = r !== 'timeout';
@@ -739,6 +749,7 @@
     if (b) { b.focus({ preventScroll: true }); b.scrollIntoView({ block: 'center' }); }
   }
   function ovKey(e) {
+    if (letterKey(e) === 'o' && !e.altKey && !e.ctrlKey && !e.metaKey) { e.preventDefault(); ov.close(); return; }   // 열 때와 같은 O로 닫기(직접 고침 2026-11-26)
     const items = [...ov.querySelectorAll('.pf-ov-item')];
     const i = items.indexOf(document.activeElement); if (i < 0) return;
     const r = items[i].getBoundingClientRect(), cx = r.left + r.width / 2;
