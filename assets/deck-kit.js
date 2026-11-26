@@ -487,18 +487,29 @@
     const t = titleOf(s);
     live.textContent = `${pre ? pre + ' ' : ''}슬라이드 ${i + 1} / ${scenes.length}${s.dataset.sec ? ', ' + s.dataset.sec : ''}${t && t !== s.dataset.sec ? ', ' + t : ''}`;
   }
-  const HELP = `<p><b>PDF로 저장하기 — Windows PC의 Chrome·Edge에서 저장하세요</b></p>
+  // ── 물음표 안내(직접 고침 2026-11-26): 보는 사람(채용 담당자 등)용 「보는 방법·파일로 받기」는 어디서나,
+  //    만드는 사람용 저장 절차·PPTX 고쳐 쓰기·다시 빌드 안내는 로컬 미리보기에서만(isLocal) 아래에 덧붙임
+  const HELP_VIEW = (pptx) => `<p><b>보는 방법</b></p>
+    <ul><li>다음·이전 장: <b>→ ←</b>, <b>Space</b>·<b>Shift+Space</b>, 마우스 휠</li>
+    <li>모든 슬라이드 한눈에 보기: <b>O</b> 또는 아래 띠의 개요 아이콘</li>
+    <li>세로로 이어서 보기: 아래 띠의 보기 전환 아이콘</li>
+    <li>전체 화면: <b>F</b></li></ul>
+    <p><b>파일로 받기</b> — 아래 띠의 다운로드 아이콘</p>
+    <ul><li>PDF: 인쇄 창의 <b>대상</b>에서 <b>"PDF로 저장"</b>을 고릅니다. Chrome·Edge에서 가장 정확하게 저장됩니다.</li>
+    ${pptx ? '<li>PPTX: PowerPoint 파일로 받습니다. PC에 Pretendard 글꼴이 없으면 줄바꿈이 조금 다를 수 있습니다.</li>' : ''}</ul>`;
+  const HELP_LOCAL = (pptx) => (isLocal ? `<div class="pf-help-local">
+    <p class="warn">여기부터는 미리보기(로컬 서버)에서만 보이는 만드는 사람용 안내입니다. 배포된 페이지에는 위의 「보는 방법」만 나옵니다.</p>
+    <p class="warn">여기서 저장한 PDF${pptx ? '·PPTX' : ''}의 링크는 이 컴퓨터 주소를 가리키므로, 제출용은 배포된 주소에서 저장하세요.</p>
+    <p><b>제출용 PDF 저장 — Windows PC의 Chrome·Edge에서</b></p>
     <ol><li><b>배포된 주소</b>(github.io)에서 화면이 다 나타난 뒤 <b>[PDF로 저장]</b>을 누릅니다(Ctrl+P도 됩니다).</li>
     <li><b>대상</b>에서 <b>"PDF로 저장"</b>을 고릅니다. "Microsoft Print to PDF"·프린터가 골라져 있으면 A4로 바뀌고 날짜·주소가 찍힙니다.</li>
     <li><b>여백</b>은 <b>기본</b> 그대로 둡니다. Edge는 <b>시트당 페이지 수</b>도 1 그대로 둡니다. 용지 크기·배율 항목이 보이지 않는 것이 정상입니다.</li>
     <li>미리보기의 쪽 수가 버튼에 적힌 쪽 수와 같으면 저장합니다.</li></ol>
-    <p>Mac, 휴대폰·태블릿, Safari·Firefox는 지원 범위 밖입니다.</p>`;
-  // [PPTX로 저장](opts.pptx가 있을 때만) — assets/deck-pptx.js
-  const HELP_PPTX = `<p><b>PPTX로 저장하기 — PowerPoint에서 고쳐 쓰는 파일</b></p>
+    <p>Mac, 휴대폰·태블릿, Safari·Firefox는 지원 범위 밖입니다.</p>
+    ${pptx ? `<p><b>PPTX로 저장하기 — PowerPoint에서 고쳐 쓰는 파일</b></p>
     <p>글·카드·표·코드는 PowerPoint에서 바로 고칠 수 있는 글상자·도형·표로, 그림은 원본 그림으로 들어갑니다. 다이어그램은 SVG 그림이라 PowerPoint 365에서 오른쪽 클릭 → <b>[도형으로 변환]</b>하면 상자와 글자를 하나씩 고칠 수 있습니다.</p>
     <p>글꼴은 화면과 같은 이름(Pretendard 등)으로 들어갑니다. PC에 그 글꼴이 없으면 PowerPoint가 다른 글꼴로 보여 줘 줄바꿈이 달라질 수 있습니다. 글꼴을 설치하거나 <b>[홈 → 바꾸기 → 글꼴 바꾸기]</b>로 한 번에 바꾸세요.</p>
-    <p>PPTX에서 고친 내용은 슬라이드(웹)에 돌아오지 않습니다. 내용이 틀렸으면 프로젝트 문서를 고치고 다시 빌드하세요.</p>`;
-  const HELP_LOCAL = (pptx) => (isLocal ? `<p class="warn">지금은 미리보기(로컬 서버)입니다. 여기서 저장한 PDF${pptx ? '·PPTX' : ''}의 링크는 이 컴퓨터 주소를 가리키므로, 제출용은 배포된 주소에서 저장하세요.</p>` : '');
+    <p>PPTX에서 고친 내용은 슬라이드(웹)에 돌아오지 않습니다. 내용이 틀렸으면 프로젝트 문서를 고치고 다시 빌드하세요.</p>` : ''}</div>` : '');
   const helpOpen = () => !!hud && !hud.querySelector('.pf-hud-help').hidden;
   function toggleHelp(on) {
     if (!hud) return;
@@ -542,7 +553,13 @@
     const hide = () => { clearTimeout(timer); timer = 0; on = null; if (!tip.hidden) { tip.hidden = true; dodgeMsg(); } };
     const show = (el) => {
       const t = el.dataset.tip || el.getAttribute('aria-label') || ''; if (!t || el.getAttribute('aria-expanded') === 'true') return;
-      tip.textContent = t; tip.hidden = false;
+      // 끝의 괄호 단축키 「이름 (←)」는 괄호를 떼고 이름 뒤에 회색 글자로(메뉴의 단축키처럼). 괄호 안이 설명 문장이면(띄어쓰기 든 낱말) 그대로
+      const km = t.match(/^(.*\S)\s*\(([^()]+)\)$/), keys = km && km[2].split(/,\s*/);
+      if (keys && keys.every((k) => /^\S{1,12}$/.test(k))) {
+        const k = document.createElement('span'); k.className = 'k'; k.textContent = keys.join(', ');
+        tip.replaceChildren(km[1], k);
+      } else tip.textContent = t;
+      tip.hidden = false;
       const hr = hud.getBoundingClientRect(), br = el.getBoundingClientRect(), w = tip.getBoundingClientRect().width;   // 소수점 폭까지(끝 간격이 정확히 8px)
       const x = Math.min(Math.max(br.left + br.width / 2 - hr.left, w / 2 + 8), hr.width - w / 2 - 8);   // 버튼 위 가운데, 화면 밖으로 나가면 안쪽으로
       tip.style.left = `${hr.left + x}px`;                                 // 화면 기준(상자가 화면에 고정)
@@ -581,11 +598,11 @@
           ${opts.pptx ? `<button type="button" role="menuitem" data-a="pptx" class="pf-pptx" title="${LH('ui.pptx-tip')}"><span class="t">${LH('ui.pptx')}</span></button>` : ''}
         </span></span>
       ${window.PFMode ? PFMode.button() : ''}
-      <button type="button" data-a="help" aria-expanded="false" aria-controls="pf-hud-help" aria-label="저장 안내" title="저장 안내(PDF${opts.pptx ? '·PPTX' : ''})">?</button>
+      <button type="button" data-a="help" aria-expanded="false" aria-controls="pf-hud-help" aria-label="도움말" title="보는 방법·파일로 받기">?</button>
       <button type="button" data-a="anyway" hidden>${LH('ui.print-anyway')}</button>
       ${isLocal ? '<span class="pf-hud-badge" role="img" hidden title="미리보기에서만 보이는 장면 배치 점검 결과(찾은 항목 수). 배포된 페이지·PDF에는 나오지 않습니다. 슬라이드에 &quot;내용이 잘렸습니다&quot; 띠가 있으면 그 장면의 글이 나온 파일(src/의 프로젝트 문서)을 줄이거나 /portfolio-edit로 장면을 나누고 /portfolio-build를 다시 실행하세요."></span>' : ''}
       <span class="pf-hud-msg" role="status" aria-live="polite"></span>
-      <div class="pf-hud-help" id="pf-hud-help" hidden>${HELP}${opts.pptx ? HELP_PPTX : ''}${HELP_LOCAL(!!opts.pptx)}</div>
+      <div class="pf-hud-help" id="pf-hud-help" hidden>${HELP_VIEW(!!opts.pptx)}${HELP_LOCAL(!!opts.pptx)}</div>
       <span class="pf-sr" aria-live="polite" aria-atomic="true"></span>`;
     live = hud.querySelector('.pf-sr');
     // 하단 바 위에 뜨는 것(저장 메뉴·알림·아이콘 설명)은 바 밖에 둠 — 각 상자가 화면에 바로 고정돼야 뒤 흐림(backdrop-filter)이 페이지에 닿음. pop은 상자를 만들지 않는 묶음(display: contents)

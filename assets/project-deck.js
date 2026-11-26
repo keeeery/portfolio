@@ -10,6 +10,8 @@
 (() => {
   const Q = new URLSearchParams(location.search);
   const id = Q.get('p');
+  // 직접 고침(2026-11-26): 프로젝트 폴더 이름을 <html data-pf-project>에 — 장면 id(d-arch 등)가 프로젝트마다 겹쳐서, 테마의 장면별 규칙을 그 프로젝트에만 걸 때 씀
+  if (id) document.documentElement.dataset.pfProject = id;
   const deck = document.getElementById('deck');
   const info = (PFScene.info = { page: 'project', id, t: {}, summary: {}, overflow: [], errors: [], unresolved: [], notes: [], mode: '' });
   const mark = (k) => { info.t[k] = Math.round(performance.now()); };
@@ -246,13 +248,21 @@
   const titledPts = (points) => points.length > 1 && points.every((p) => p.label && !KIND_LB.has(p.label)) && new Set(points.map((p) => p.label)).size === points.length;
   // 직접 고침(2026-11-26): 장면별 번호 끄기 — theme CSS `#d-<key> { --pf-cards: plain }`이면 그 장면의 요점 카드에 번호를 붙이지 않음(fitSlide가 그리기 전에 정함)
   let plainCards = false;
+  // 직접 고침(2026-11-26, 슬라이드 규칙 R2·R3 — theme/deck-rules.md): 종류 라벨(KIND_LB)은 「선택」 장면(tab 선택)에서만 보임. 카드가 하나면 그 장면에서도 뺌.
+  //   문제 해결 장면(layout problem)은 flowHtml이라 그대로. fitSlide가 그리기 전에 정함
+  let keepKind = false;
   const ncards = (points, { row = false, num = true, two = false, head = '', rowTitled = false } = {}) => {
     if (!points.length) return '';
     if (plainCards) num = false;
+    if (points.length === 1) num = false;   // 직접 고침(2026-11-26, 규칙 R1): 카드가 하나면 모든 배치에서 번호 없음
+    const kindOff = !keepKind || points.length === 1;
+    points = points.map((p) => (kindOff && p.label && KIND_LB.has(p.label) && txt(p) ? { ...p, label: '' } : p));
     const titled = num && (!row || rowTitled) && !two && titledPts(points);   // 직접 고침(2026-11-25): rowTitled = 가로 카드 줄에서도 제목형 라벨(2×2 배치)
+    // 직접 고침(2026-11-26, 규칙 R4·R5): 카드에 원래 라벨(data 값)을 data-lb로 — 테마가 라벨별 색(「AI 활용」 주황, 「이유」·「비용」 등)을 걺
+    const dlb = (pt) => (pt.label ? ` data-lb="${esc(pt.label)}"` : '');
     return `<div class="cards${row ? ' row' : ''}${two ? ' two' : ''}${titled ? ' titled' : ''}" style="--n:${Math.min(points.length, 4)}">${head ? `<p class="colhead">${inline(head)}</p>` : ''}${points.map((pt, i) => titled
-      ? `<div class="ncard"><span class="num tl">${esc(PF.label(pt.label))}</span><div><p>${inline(txt(pt))}</p></div></div>`
-      : `<div class="ncard${num ? '' : ' nonum'}">${num ? `<span class="num" aria-hidden="true">${i + 1}</span>` : ''}<div>${pt.label ? `<span class="lb">${esc(PF.label(pt.label))}</span>` : ''}<p>${inline(txt(pt))}</p></div></div>`).join('')}</div>`;
+      ? `<div class="ncard"${dlb(pt)}><span class="num tl">${esc(PF.label(pt.label))}</span><div><p>${inline(txt(pt))}</p></div></div>`
+      : `<div class="ncard${num ? '' : ' nonum'}"${dlb(pt)}>${num ? `<span class="num" aria-hidden="true">${i + 1}</span>` : ''}<div>${pt.label ? `<span class="lb">${esc(PF.label(pt.label))}</span>` : ''}<p>${inline(txt(pt))}</p></div></div>`).join('')}</div>`;
   };
   const FLOW = { '문제': '', '원인': '', '해결': 'accent', '결과': 'ok', '배운 점': '' };   // data 값 → 칩 색(보이는 글자만 PF.label로 바뀜)
   const flowHtml = (points, dir) => `<div class="flow ${dir}" style="--n:${Math.min(points.length, 4)}">${points.map((pt) =>
@@ -265,7 +275,9 @@
       if (sl.layout === 'problem') return `<div class="dk dk-text${tight}">${flowHtml(points, variant.stack || variant.tight ? 'row' : 'col')}</div>`;
       return `<div class="dk dk-text${tight}">${ncards(points, { two: points.length >= 3 && !variant.stack, num: sl.layout !== 'overview', head: txt(sl.pointsTitle) })}</div>`;
     }
-    if (sl.layout === 'screens') {
+    // 직접 고침(2026-11-26, 슬라이드 규칙 R18 — theme/deck-rules.md): 화면 틀은 「FEATURE 01」 칸 대신 그림을 위에 나란히, 설명은 아래 카드 줄(번호 없음)
+    if (sl.layout === 'screens') return `<div class="dk dk-stack scr-cards${tight}"><div class="vis" data-arr="row">${vs.join('')}</div>${ncards(points, { row: true, num: false })}</div>`;
+    if (sl.layout === 'screens-legacy') {
       return `<div class="dk scr-row${tight}" style="--n:${vs.length}">${vs.map((v, i) => `<div class="fe-card">${vis([v])}${points[i] ? `<p class="fe-k">${esc(PF.t('en.feature'))} ${String(i + 1).padStart(2, '0')}</p>${points[i].label ? `<h3>${esc(PF.label(points[i].label))}</h3>` : ''}${txt(points[i]) ? `<p>${inline(txt(points[i]))}</p>` : ''}` : ''}</div>`).join('')}</div>`;
     }
     if (sl.layout === 'problem') {
@@ -494,7 +506,8 @@
       s.classList.add(`l-${sl.layout || 'visual'}`);
       if (meta.err) s.dataset.pfErr = meta.err;
       if (sl.edited) s.dataset.pfEdited = '1';                       // 장면 고치기로 고친 장면(미리보기 개요에 ✎)
-      plainCards = plain; try { PF.body(s).innerHTML = `<div class="pf-fill">${bodyHtml(sl, vs, v)}</div>`; } finally { plainCards = false; }
+      plainCards = plain; keepKind = txt(sl.tab) === '선택';
+      try { PF.body(s).innerHTML = `<div class="pf-fill">${bodyHtml(sl, vs, v)}</div>`; } finally { plainCards = false; keepKind = false; }
       stripSecRefs(s);
       if (meta.auto) s.querySelector('.pf-foot > span').insertAdjacentHTML('beforeend', '<span class="pf-autoband" data-pf-ui="note">예전 데이터로 자동 구성 — /portfolio-build를 다시 실행하면 슬라이드가 됩니다</span>');
       return PF.balanceX(matchQuad(PF.fitVisuals(s)));                            // 직접 고침(2026-11-25): 본문 좌우 여백 같게(PF.balanceX)

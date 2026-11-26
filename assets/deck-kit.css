@@ -71,7 +71,8 @@
     font: 500 13px/1.6 'Pretendard', system-ui, sans-serif; color: var(--ink, #E8E8EE); white-space: normal; }
   .pf-hud .pf-hud-help b { font-weight: 800; }
   .pf-hud .pf-hud-help p { margin: 0 0 6px; }
-  .pf-hud .pf-hud-help ol { margin: 4px 0 8px; padding-left: 20px; }
+  .pf-hud .pf-hud-help ol, .pf-hud .pf-hud-help ul { margin: 4px 0 8px; padding-left: 20px; }
+  .pf-hud .pf-hud-help .pf-help-local { margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--line, #24242C); }   /* 미리보기 전용 안내 — 보는 사람용과 선으로 구분 */
   .pf-hud .pf-hud-help .warn { color: color-mix(in srgb, #F79009 70%, var(--ink, #fff)); }
   .pf-sr { position: absolute !important; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); clip-path: inset(50%); white-space: nowrap; }
   @media (max-width: 1100px) { .pf-hud .pf-hud-note { display: none; } }
@@ -291,6 +292,7 @@ html[data-view="scroll"].pf-zooming .pf-deck > .pf-scene { zoom: 1; transform: s
   .pf-hud-pop .pf-hud-msg { right: 8px; max-width: 22em; padding: 6px 10px; }   /* 오른쪽 8px = 맨 오른쪽 아이콘 설명이 화면 끝에서 띄우는 간격(JS hudTips의 8) */
   .pf-hud-pop .pf-hud-msg:empty { display: none; }
   .pf-hud-pop .pf-hud-tip { left: 0; transform: translateX(-50%); padding: 6px 10px; white-space: nowrap; pointer-events: none; }   /* left는 JS가 버튼 가운데로 */
+  .pf-hud-pop .pf-hud-tip .k { margin-left: 6px; color: color-mix(in srgb, var(--ink, #fff) 45%, transparent); font-weight: 500; }   /* 단축키 — 이름 뒤 회색(괄호 없이) */
   .pf-hud-pop .pf-hud-menu { right: 16px; display: flex; flex-direction: column; padding: 2px; }                                    /* right는 JS가 다운로드 아이콘 + 8px로 */
   .pf-hud-pop [hidden] { display: none !important; }
   .pf-hud-pop .pf-hud-menu button { all: unset; box-sizing: border-box; display: flex; align-items: center; width: 100%; padding: 6px 8px; border-radius: 6px; cursor: pointer; white-space: nowrap;
