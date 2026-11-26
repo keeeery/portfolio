@@ -11,10 +11,13 @@
       "lead": {"text": "초반에 UI 규칙을 정하지 않아 팀원마다 기준 해상도(1920×1080·3840×2160)와 배율이 다른 창이 쌓였습니다.", "verbatim": true},
       "sectionPath": ["7. UI/UX ① 화면 UI·조작과 씬 전환", "7.4 UI 연출 부품과 스타일 통일", "에디터 도구로 한 번에 맞춘 UI"],
       "points": [
+        {
+          "label": "",
+          "text": "UI가 프리팹이 아니라 여러 씬에 직접 배치되어 값도 제각각이라, 손으로 고쳤다면 씬마다 값을 하나씩 확인하느라 오래 걸렸을 것입니다.",
+          "verbatim": true
+        },
         {"label": "", "text": "규칙은 제가 정하고, 그 규칙을 한 번에 적용하는 에디터 도구는 AI 코딩 에이전트를 활용해 만들었습니다.", "verbatim": false},
-        {"label": "", "text": "도구는 다시 실행해도 같은 결과가 되도록 이미 만든 것을 지우고 새로 만들거나, 이미 맞춰진 것은 건너뜁니다.", "verbatim": true},
-        {"label": "", "text": "Unity 콘솔에서 오류를 찾고, AI의 컴파일 확인이 실제로는 실행되지 않았음을 확인함", "verbatim": true},
-        {"label": "", "text": "X 버튼 크기에까지 0.65가 곱해진 것을 찾아 고침", "verbatim": true}
+        {"label": "", "text": "도구는 다시 실행해도 같은 결과가 되도록 이미 만든 것을 지우고 새로 만들거나, 이미 맞춰진 것은 건너뜁니다.", "verbatim": true}
       ],
       "visuals": [
         {
@@ -30,13 +33,34 @@
       "key": "ui-tools-table",
       "after": "ui-tools",
       "chapter": "ui",
-      "layout": "full",
+      "layout": "problem",
       "tab": "",
-      "title": {"text": "에디터 도구로 한 번에 맞춘 UI", "verbatim": true},
-      "lead": null,
+      "title": {"text": "AI와 함께 한 과정", "verbatim": true},
+      "lead": {"text": "규칙은 제가 정했고, 팀원이 만든 창까지 바뀌는 작업이라 팀과 협의한 뒤 전체에 적용했습니다.", "verbatim": true},
       "sectionPath": ["7. UI/UX ① 화면 UI·조작과 씬 전환", "7.4 UI 연출 부품과 스타일 통일", "에디터 도구로 한 번에 맞춘 UI"],
-      "points": [],
-      "visuals": [{"kind": "table", "n": 1, "fp": "도구|하는 일"}]
+      "points": [
+        {
+          "label": "범위 정하기",
+          "text": "**AI** 기준 해상도를 하나로 맞추려면 코드에 박힌 크기 값 100여 곳(대부분 팀원 코드)을 고쳐야 한다고 조사함\n**내 판단** 해상도 통일은 접고, X 버튼 크기가 창마다 다른 원인인 0.65 배율이 걸린 임무 창 세 개만 고치기로 함",
+          "verbatim": false
+        },
+        {
+          "label": "첫 구현",
+          "text": "**AI** 도구를 만들고 \"컴파일 오류 없음\"이라고 보고함\n**내 판단** Unity 콘솔에서 오류를 찾고, AI의 컴파일 확인이 실제로는 실행되지 않았음을 확인함",
+          "verbatim": false
+        },
+        {
+          "label": "적용 뒤 점검",
+          "text": "**AI** `UICanvasScaleBaker`로 창 배율을 1로 굽고 안쪽 값에 0.65를 곱함\n**내 판단** X 버튼 크기에까지 0.65가 곱해진 것을 찾아 고침",
+          "verbatim": false
+        },
+        {
+          "label": "HUD 프리팹 변환",
+          "text": "**AI** `HUDPrefabBuilder` 첫 버전으로 씬의 HUD를 프리팹으로 바꿈\n**내 판단** 씬에서 `DeathScreen`·`BossIntroTitle`이 빠진 것을 찾아 되돌리고, 기존 오브젝트를 그대로 프리팹 인스턴스로 바꾸도록 고침",
+          "verbatim": false
+        }
+      ],
+      "visuals": []
     },
     {
       "key": "boss-occlusion-screens",
@@ -86,7 +110,7 @@
         },
         {
           "label": "",
-          "text": "충돌했다는 사실과 실제로 피해가 들어갔는지는 다르므로, 공용 전투 이벤트(`CombatManager`)의 처리 결과를 받아 파편화를 결정합니다(§2.7·§5.1).",
+          "text": "충돌했다는 사실과 실제로 피해가 들어갔는지는 다르므로, 공용 전투 이벤트(`CombatManager`)의 처리 결과를 받아 파편화를 결정합니다(§2.7·§4.3).",
           "verbatim": true
         },
         {"label": "", "text": "저장 목록을 읽는 시점에는 플레이어 스탯이 준비되지 않을 수 있어, 목록 복원과 장착 적용을 나눴습니다(§6.3).", "verbatim": true}
@@ -202,12 +226,12 @@
       "chapter": "time",
       "layout": "visual",
       "tab": "구조",
-      "title": {"text": "4.1 멈출 물체만 따로 정하는 시간 정지", "verbatim": false},
+      "title": {"text": "5.1 멈출 물체만 따로 정하는 시간 정지", "verbatim": false},
       "lead": {
         "text": "시간 정지는 플레이어를 포함한 게임 전체의 `Time.timeScale`을 0으로 만드는 대신, 정지 가능한 객체에 `TimeFreezable`을 붙여 적용합니다.",
         "verbatim": true
       },
-      "sectionPath": ["4. 플레이어만 움직이는 시간 정지", "4.1 개요 — 멈출 물체만 따로 정하는 시간 정지"],
+      "sectionPath": ["5. 플레이어만 움직이는 시간 정지", "5.1 개요 — 멈출 물체만 따로 정하는 시간 정지"],
       "points": [
         {"label": "", "text": "플레이어는 움직이면서 멈춘 물체를 들거나 공격할 수 있습니다.", "verbatim": true},
         {
@@ -224,9 +248,9 @@
       "chapter": "time",
       "layout": "code",
       "tab": "구현",
-      "title": {"text": "4.2 시간이 풀린 뒤의 원래 움직임 복원", "verbatim": true},
+      "title": {"text": "5.2 시간이 풀린 뒤의 원래 움직임 복원", "verbatim": true},
       "lead": {"text": "객체는 정지·감속 동안 누적된 시간 차이를 반영해 자신의 시간을 계산합니다.", "verbatim": true},
-      "sectionPath": ["4. 플레이어만 움직이는 시간 정지", "4.2 시간이 풀린 뒤의 원래 움직임 복원"],
+      "sectionPath": ["5. 플레이어만 움직이는 시간 정지", "5.2 시간이 풀린 뒤의 원래 움직임 복원"],
       "points": [
         {
           "label": "",
@@ -248,8 +272,8 @@
       ],
       "from": {
         "key": "local-time",
-        "sectionPath": ["4. 플레이어만 움직이는 시간 정지", "4.2 시간이 풀린 뒤의 원래 움직임 복원"],
-        "sig": ["4.2 시간이 풀린 뒤의 원래 움직임 복원|code|1|// TimeFreezable.LocalTime·LocalDeltaTime·LocalFixedDeltaTim"]
+        "sectionPath": ["5. 플레이어만 움직이는 시간 정지", "5.2 시간이 풀린 뒤의 원래 움직임 복원"],
+        "sig": ["5.2 시간이 풀린 뒤의 원래 움직임 복원|code|1|// TimeFreezable.LocalTime·LocalDeltaTime·LocalFixedDeltaTim"]
       }
     },
     {
@@ -258,9 +282,9 @@
       "chapter": "time",
       "layout": "full",
       "tab": "결과",
-      "title": {"text": "4.3 멈춘 세계에서도 움직이는 든 물체", "verbatim": true},
+      "title": {"text": "5.3 멈춘 세계에서도 움직이는 든 물체", "verbatim": true},
       "lead": {"text": "물체를 들면 전체 시간 정지에서 제외합니다. 따라서 시간 정지와 염동력은 독립된 화면 효과가 아니라 같은 물체 상태를 공유합니다.", "verbatim": true},
-      "sectionPath": ["4. 플레이어만 움직이는 시간 정지", "4.3 멈춘 세계에서도 움직이는 든 물체"],
+      "sectionPath": ["5. 플레이어만 움직이는 시간 정지", "5.3 멈춘 세계에서도 움직이는 든 물체"],
       "points": [
         {
           "label": "",
@@ -282,14 +306,14 @@
           "w": 1170,
           "h": 878,
           "caption": {"text": "염동 내려찍기 스킬 — 홀로그램으로 멈춘 휴머노이드 보스", "verbatim": true},
-          "sectionPath": ["4. 플레이어만 움직이는 시간 정지", "4.3 멈춘 세계에서도 움직이는 든 물체", "염동 내려찍기 — 개별 정지·물리 이동·카메라 조율"]
+          "sectionPath": ["5. 플레이어만 움직이는 시간 정지", "5.3 멈춘 세계에서도 움직이는 든 물체", "염동 내려찍기 — 개별 정지·물리 이동·카메라 조율"]
         }
       ],
       "from": {
         "key": "freeze-except",
-        "sectionPath": ["4. 플레이어만 움직이는 시간 정지", "4.3 멈춘 세계에서도 움직이는 든 물체"],
+        "sectionPath": ["5. 플레이어만 움직이는 시간 정지", "5.3 멈춘 세계에서도 움직이는 든 물체"],
         "sig": [
-          "4.3 멈춘 세계에서도 움직이는 든 물체|image|images/freeze-hold.png|1",
+          "5.3 멈춘 세계에서도 움직이는 든 물체|image|images/freeze-hold.png|1",
           "염동 내려찍기 — 개별 정지·물리 이동·카메라 조율|image|images/psycho-slam.png|1"
         ]
       }
@@ -300,9 +324,9 @@
       "chapter": "time",
       "layout": "full",
       "tab": "선택",
-      "title": {"text": "4.4 고민과 선택", "verbatim": true},
+      "title": {"text": "5.4 고민과 선택", "verbatim": true},
       "lead": {"text": "게임 시간을 어떻게 멈출까 — 물체마다 따로 도는 시간", "verbatim": true},
-      "sectionPath": ["4. 플레이어만 움직이는 시간 정지", "4.4 고민과 선택"],
+      "sectionPath": ["5. 플레이어만 움직이는 시간 정지", "5.4 고민과 선택"],
       "points": [
         {
           "label": "이유",
@@ -341,59 +365,9 @@
       }
     },
     {
-      "key": "boss-env-attack",
-      "chapter": "boss",
-      "layout": "screens",
-      "tab": "결과",
-      "title": {"text": "5.3 주변 물체를 떨어뜨리고 던지는 보스 공격", "verbatim": true},
-      "lead": {"text": "보스가 만들어 낸 파편도 플레이어가 들어 던질 수 있어 공격 물체가 곧 전투 자원이 됩니다.", "verbatim": true},
-      "sectionPath": ["5. 보스 패턴과 전투 판정", "5.3 주변 물체를 떨어뜨리고 던지는 보스 공격"],
-      "points": [
-        {
-          "label": "",
-          "text": "낙하물은 보스와 따로 자기 시간 상태에 따라 떨어지고, 착지 판정은 충돌 콜백이 아니라 예상 낙하 시간 뒤의 범위 판정입니다.",
-          "verbatim": true
-        },
-        {"label": "", "text": "보스가 만들어 낸 파편도 플레이어가 들어 던질 수 있어 공격 물체가 곧 전투 자원이 됩니다.", "verbatim": true}
-      ],
-      "visuals": [
-        {
-          "kind": "image",
-          "src": "images/boss-drop-pattern.png",
-          "w": 1170,
-          "h": 878,
-          "caption": {"text": "페르데로스 보스의 투하 패턴 — 바닥의 원형 공격 범위 예고", "verbatim": true},
-          "sectionPath": ["5. 보스 패턴과 전투 판정", "5.2 보스 판단과 직접 확장한 패턴"]
-        },
-        {
-          "kind": "image",
-          "src": "images/charge-wall-hit.png",
-          "w": 1520,
-          "h": 1140,
-          "caption": {"text": "벽에 돌진하여 충돌한 페르데로스 보스와 벽에서 튀어나온 파편", "verbatim": true}
-        },
-        {
-          "kind": "image",
-          "src": "images/charge-wall-debris.png",
-          "w": 660,
-          "h": 495,
-          "caption": {"text": "벽에 돌진하여 충돌한 페르데로스 보스와 왼쪽 벽 쪽으로 튀는 파편", "verbatim": true}
-        }
-      ],
-      "from": {
-        "key": "boss-env-attack",
-        "sectionPath": ["5. 보스 패턴과 전투 판정", "5.3 주변 물체를 떨어뜨리고 던지는 보스 공격"],
-        "sig": [
-          "5.2 보스 판단과 직접 확장한 패턴|image|images/boss-drop-pattern.png|1",
-          "5.3 주변 물체를 떨어뜨리고 던지는 보스 공격|image|images/charge-wall-debris.png|1",
-          "5.3 주변 물체를 떨어뜨리고 던지는 보스 공격|image|images/charge-wall-hit.png|1"
-        ]
-      }
-    },
-    {
       "key": "reward-link",
       "chapter": "growth",
-      "layout": "visual",
+      "layout": "full",
       "tab": "구현",
       "title": {"text": "임무 표와 보상 표의 연결", "verbatim": true},
       "lead": {"text": "보상을 테이블 방식으로 바꾸면서 `BossRewardDTO`(TSV 한 줄)와 `BossRewardDef`(조회용 보상 줄)를 나눴습니다.", "verbatim": true},
@@ -401,7 +375,7 @@
       "points": [
         {
           "label": "",
-          "text": "`BossRewardTable.Load()`는 범위가 뒤집혔거나 지급 개수가 0 이하인 줄을 지급할 때가 아니라 표를 읽을 때 빼고, `MissionTable`은 임무의 `Reward`(RewardId)로 보상 줄을 찾아 `MissionDef.RewardRows`에 담습니다.",
+          "text": "`BossRewardTable.Load()`는 범위가 뒤집혔거나 지급 개수가 0 이하인 줄을 지급할 때가 아니라 표를 읽을 때 빼고,\n`MissionTable`은 임무의 `Reward`(RewardId)로 보상 줄을 찾아 `MissionDef.RewardRows`에 담습니다.",
           "verbatim": true
         }
       ],
@@ -902,6 +876,156 @@
         "sectionPath": ["3. 부서진 조각을 다시 사용하는 파편", "3.2 미리 만들어 다시 사용하는 파편"],
         "sig": ["3.2 미리 만들어 다시 사용하는 파편|code|1|// ObjectPool.Get() — 비어 있으면 확장 수량만큼 늘린 뒤 꺼냄"]
       }
+    },
+    {
+      "key": "boss-overview",
+      "after": "^",
+      "chapter": "boss",
+      "layout": "full",
+      "tab": "결과",
+      "title": {"text": "4.1 물체를 만들고 활용하는 보스 패턴", "verbatim": false},
+      "lead": {
+        "text": "염동력 시스템을 구현한 뒤, 보스가 공격 수단으로 만든 물체를 플레이어가 다시 공격 수단으로 사용하는\n게임의 핵심 구조를 완성하기 위해 보스 패턴 3종(투하·투척·충격파)을 구현했습니다.",
+        "verbatim": true
+      },
+      "sectionPath": ["4. 보스 패턴과 전투 판정", "4.1 개요 — 물체를 만들고 활용하는 보스 패턴"],
+      "points": [
+        {
+          "label": "",
+          "text": "투하와 투척은 보스가 물체를 생성하는 패턴이고, 충격파는 주변 물체를 띄우는 연출로 핵심 시스템을 보여 주는 패턴입니다.\n돌진 패턴에는 미리 만들어 둔 벽 파편 생성 API를 연결했습니다(§4.2). 보스가 벽에 부딪히면 벽이 부서져 파편이 생긴다는 기획 단계의 구상에 맞춘 것입니다.",
+          "verbatim": true
+        }
+      ],
+      "visuals": [
+        {
+          "kind": "image",
+          "src": "images/boss-drop.mp4",
+          "w": 1200,
+          "h": 900,
+          "caption": {"text": "차르카로사우루스 보스의 투하 패턴 — 원형 예고 자리에 떨어진 파편을 들어 보스에게 던지는 플레이어", "verbatim": true}
+        },
+        {
+          "kind": "image",
+          "src": "images/boss-throw.mp4",
+          "w": 1200,
+          "h": 900,
+          "caption": {"text": "페르데로스 보스의 투척 패턴 — 보스가 던진 물체를 붙잡아 되던지는 플레이어", "verbatim": true}
+        },
+        {
+          "kind": "image",
+          "src": "images/boss-shockwave.mp4",
+          "w": 1200,
+          "h": 900,
+          "caption": {"text": "페르데로스 보스의 충격파 패턴 — 원형으로 퍼지는 충격파에 떠오르는 주변 돌덩이", "verbatim": true}
+        }
+      ]
+    },
+    {
+      "key": "boss-intent",
+      "after": "boss-overview",
+      "chapter": "boss",
+      "layout": "visual",
+      "tab": "구조",
+      "title": {"text": "4.1 물체를 만들고 활용하는 보스 패턴", "verbatim": false},
+      "lead": {"text": "보스는 상태 머신으로 움직이고, 어떤 패턴으로 공격할지는 Intent 방식으로 고릅니다.", "verbatim": true},
+      "sectionPath": ["4. 보스 패턴과 전투 판정", "4.1 개요 — 물체를 만들고 활용하는 보스 패턴"],
+      "points": [
+        {"label": "", "text": "투하·투척·충격파 패턴은 처음에 패턴마다 쿨타임과 발동 조건을 따로 확인하도록 만들었습니다.", "verbatim": true},
+        {
+          "label": "",
+          "text": "Intent 방식을 도입하면서 이 패턴들을 그 구조(`BossMeleePattern`)로 옮겼고, 이후 두 보스가 같은 패턴을 함께 사용하도록 정리했습니다.",
+          "verbatim": true
+        },
+        {"label": "", "text": "모든 패턴이 함께 사용하는 흐름도 직접 보완했습니다.", "verbatim": true}
+      ],
+      "visuals": [{"kind": "table", "n": 1, "fp": "패턴|준비와 실행|판정과 정리"}]
+    },
+    {
+      "key": "boss-env-attack",
+      "after": "boss-intent",
+      "chapter": "boss",
+      "layout": "full",
+      "tab": "결과",
+      "title": {"text": "4.2 돌진 벽 충돌 파편 생성", "verbatim": true},
+      "lead": {
+        "text": "돌진 중 진행 방향과 벽 사이 각이 60° 이하로 정면에 부딪혔을 때만 기절과 함께 벽 파편을 만들고, 비스듬히 닿으면 벽을 따라 미끄러지며 돌진을 이어 갑니다.",
+        "verbatim": true
+      },
+      "sectionPath": ["4. 보스 패턴과 전투 판정", "4.2 돌진 벽 충돌 파편 생성"],
+      "points": [
+        {
+          "label": "",
+          "text": "파편은 크기별 풀(§3)에서 큰 것 1개·중간 5개·작은 것 9개를 꺼냅니다.\n돌진할 때는 보스가 벽 앞을 막고 있으므로, 기본 생성 메서드 대신 충돌 지점 좌우를 비우고 벽을 따라 옆·위로 튀게 했습니다(`SpawnAlongWall()`).",
+          "verbatim": true
+        }
+      ],
+      "visuals": [
+        {
+          "kind": "image",
+          "src": "images/charge-wall-hit.png",
+          "w": 1520,
+          "h": 1140,
+          "caption": {"text": "벽에 돌진하여 충돌한 페르데로스 보스와 벽에서 튀어나온 파편", "verbatim": true}
+        },
+        {
+          "kind": "image",
+          "src": "images/charge-wall-debris.png",
+          "w": 660,
+          "h": 495,
+          "caption": {"text": "벽에 돌진하여 충돌한 페르데로스 보스와 왼쪽 벽 쪽으로 튀는 파편", "verbatim": true}
+        }
+      ],
+      "from": {
+        "key": "boss-env-attack",
+        "sectionPath": ["4. 보스 패턴과 전투 판정", "4.2 돌진 벽 충돌 파편 생성"],
+        "sig": [
+          "4.2 돌진 벽 충돌 파편 생성|image|images/charge-wall-debris.png|1",
+          "4.2 돌진 벽 충돌 파편 생성|image|images/charge-wall-hit.png|1"
+        ]
+      }
+    },
+    {
+      "key": "crosshair",
+      "after": "^",
+      "chapter": "ui",
+      "layout": "visual",
+      "tab": "구현",
+      "title": {"text": "몰입을 깨지 않고 정보를 주는 조준점", "verbatim": true},
+      "lead": {"text": "`Crosshair`는 가운데 점에 상황별 표시를 겹쳐, 화면 중앙만 보고도 지금 할 수 있는 행동을 알 수 있게 합니다.", "verbatim": true},
+      "sectionPath": ["7. UI/UX ① 화면 UI·조작과 씬 전환", "7.2 조작 안내 — 조준점·키 안내·시스템 메시지", "몰입을 깨지 않고 정보를 주는 조준점"],
+      "points": [
+        {
+          "label": "+ 표시",
+          "text": "판정(`HasAttackTarget`)은 기본 공격과 같은 광선·사거리를 사용하고, 프레임마다 한 번만 Raycast하도록 결과를 보관합니다.",
+          "verbatim": false
+        },
+        {
+          "label": "× 표시",
+          "text": "`CombatManager`의 처리 결과에서 받은 피해가 0보다 크고 보낸 쪽이 플레이어인 이벤트로만 띄웁니다.\n그래서 방어·무적으로 막힌 공격에는 ×가 나타나지 않습니다.",
+          "verbatim": true
+        }
+      ],
+      "visuals": [
+        {
+          "kind": "image",
+          "src": "images/crosshair-hit.png",
+          "w": 400,
+          "h": 300,
+          "caption": {"text": "조준점 — 링과 +·× 표시가 동시에 표시됨", "verbatim": true}
+        },
+        {
+          "kind": "table",
+          "n": 1,
+          "fp": "표시|나타나는 조건|알려 주는 것",
+          "slideBreakParen": true,
+          "slideBreakAfter": ["짧은 선,", "화면 중앙에", "위에서도"]
+        }
+      ],
+      "from": {
+        "key": "crosshair",
+        "sectionPath": ["7. UI/UX ① 화면 UI·조작과 씬 전환", "7.2 조작 안내 — 조준점·키 안내·시스템 메시지", "몰입을 깨지 않고 정보를 주는 조준점"],
+        "sig": ["몰입을 깨지 않고 정보를 주는 조준점|code|1|// Crosshair.Update() — 조준점 링·사거리 표시 조건"]
+      }
     }
   ],
   "hide": [
@@ -928,8 +1052,8 @@
       "key": "boss-move-choice",
       "from": {
         "key": "boss-move-choice",
-        "sectionPath": ["5. 보스 패턴과 전투 판정", "5.6 고민과 선택"],
-        "sig": ["5.6 고민과 선택|table|2|방법|장점|비용"]
+        "sectionPath": ["4. 보스 패턴과 전투 판정", "4.5 고민과 선택"],
+        "sig": ["4.5 고민과 선택|table|2|방법|장점|비용"]
       }
     }
   ],
@@ -947,6 +1071,20 @@
       "n": 2,
       "value": "// TimeFreezable.LocalTime·LocalDeltaTime·LocalFixedDeltaTime — 정지·감속 동안의 시간 차이를 반영한 객체별 시간\npublic float LocalTime => Time.time - pausedDuration\n    - (Time.time - pauseStartTime) * (1f - appliedTimeScale);\npublic float LocalDeltaTime\n    => Time.deltaTime * appliedTimeScale;\npublic float LocalFixedDeltaTime\n    => Time.fixedDeltaTime * appliedTimeScale;",
       "from": "// TimeFreezable.LocalTime·LocalDeltaTime·LocalFixedDeltaTime — 정지·감속 동안의 시간 차이를 반영한 객체별 시간\npublic float LocalTime => Time.time - pausedDuration\n    - (Time.time - pauseStartTime) * (1f - appliedTimeScale);\npublic float LocalDeltaTime => Time.deltaTime * appliedTimeScale;\npublic float LocalFixedDeltaTime => Time.fixedDeltaTime * appliedTimeScale;"
+    },
+    {
+      "slide": "boss-intent",
+      "field": "point",
+      "n": 3,
+      "value": "모든 패턴이 함께 사용하는 공격 예고, 애니메이션에 맞춘 발동 시점, 피격·그로기, 이동·착지와 지면 대응, 패턴을 벗어날 때 남은 공격 예고와 애니메이션 연결 정리 흐름도 직접 보완했습니다.",
+      "from": "모든 패턴이 함께 사용하는 흐름도 직접 보완했습니다."
+    },
+    {
+      "slide": "crosshair",
+      "field": "point",
+      "n": 2,
+      "value": "`CombatManager`의 처리 결과에서 받은 피해가 0보다 크고 보낸 쪽이 플레이어인 이벤트로만 띄웁니다.",
+      "from": "`CombatManager`의 처리 결과에서 받은 피해가 0보다 크고 보낸 쪽이 플레이어인 이벤트로만 띄웁니다.\n그래서 방어·무적으로 막힌 공격에는 ×가 나타나지 않습니다."
     }
   ]
 }
