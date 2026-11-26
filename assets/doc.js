@@ -233,19 +233,18 @@ try { window.mermaid?.initialize({ startOnLoad: false }); } catch (_) { /* */ }
   // ── 뼈대 ──
   const metaRows = (p.meta || []).map((m) => `<div><dt>${esc(m.label)}</dt><dd>${inline(m.value)}</dd></div>`).join('') +
     (p.team?.role ? `<div class="role"><dt>${T('name.role')}</dt><dd>${inline(p.team.role)}</dd></div>` : '');
-  const ext = [
-    ...PF.repoLinks(p).map((r) => link({ href: r.url, label: esc(r.label), kind: 'external', cls: 'btn' })),   // 저장소가 둘 이상이면 'GitHub(역할)'
-    PF.isUrl(p.links?.video) && link({ href: p.links.video, label: PF.videoName(p), kind: 'external', cls: 'btn' }),
-    ...PF.otherLinks(p).map((l) => link({ href: l.url, label: esc(l.label), kind: 'external', cls: 'btn' })),
+  // 프로젝트 링크 순서(2026-11-27, 사용자 지정): 영상 → GitHub → 그 밖의 링크 → 슬라이드 → 원문 마크다운(오른쪽 칸 카드만)
+  const linkSet = (cls) => [
+    PF.isUrl(p.links?.video) && link({ href: p.links.video, label: PF.videoName(p), kind: 'external', cls }),
+    ...PF.repoLinks(p).map((r) => link({ href: r.url, label: esc(r.label), kind: 'external', cls })),   // 저장소가 둘 이상이면 'GitHub(역할)'
+    ...PF.otherLinks(p).map((l) => link({ href: l.url, label: esc(l.label), kind: 'external', cls })),
+    !noDeck && link({ href: deckUrl(), label: T('name.deck'), kind: 'page', cls }),
   ].filter(Boolean);
-  const deckBtn = noDeck ? '' : link({ href: deckUrl(), label: T('name.deck'), kind: 'page', cls: 'btn primary' });
-  if (noDeck && ext.length) ext[0] = ext[0].replace('class="btn"', 'class="btn primary"');   // 가 없으면 첫 링크를 강조
+  // 제목 아래 [한눈에 · 링크] 상자의 버튼: 첫 버튼만 파란 강조(포트폴리오 캡슐 바와 같게)
+  const actionBtns = linkSet('btn').map((h, i) => (i === 0 ? h.replace('class="btn"', 'class="btn primary"') : h));
   // 프로젝트 링크: 오른쪽 칸 '링크' 카드에 글자 링크로(doc.css '레일 링크'), 오른쪽 칸이 기본으로 없는 폭은 제목 아래 [한눈에] 상자에도
   const railLinks = [
-    !noDeck && link({ href: deckUrl(), label: T('name.deck'), kind: 'page' }),
-    ...PF.repoLinks(p).map((r) => link({ href: r.url, label: esc(r.label), kind: 'external' })),
-    PF.isUrl(p.links?.video) && link({ href: p.links.video, label: PF.videoName(p), kind: 'external' }),
-    ...PF.otherLinks(p).map((l) => link({ href: l.url, label: esc(l.label), kind: 'external' })),
+    ...linkSet(undefined),
     link({ href: srcPath(p.doc), label: T('doc.raw-md'), kind: 'file' }),   // 원문 마크다운은 맨 아래
   ].filter(Boolean);
   const tags = (p.tags || []).length ? `<ul class="tags">${p.tags.map((t) => `<li>${esc(t)}</li>`).join('')}</ul>` : '';
@@ -268,7 +267,7 @@ try { window.mermaid?.initialize({ startOnLoad: false }); } catch (_) { /* */ }
           <dl class="meta-line">${metaRows}</dl>
           ${tags}
           <details class="glance" id="glance"><summary>${T('doc.glance')}</summary>
-            <div class="glance-body"><div class="actions">${deckBtn}${ext.join('')}</div>
+            <div class="glance-body"><div class="actions">${actionBtns.join('')}</div>
             <p class="newtab-note">${T('doc.deck-note')}</p></div>
           </details>
         </div>

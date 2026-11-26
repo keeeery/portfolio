@@ -416,8 +416,8 @@
       .fe-dot { display: block; width: 8px; height: 100%; padding: 0; border: 0; border-radius: 999px; background: color-mix(in srgb, var(--ink) 30%, transparent); cursor: pointer; overflow: hidden; transition: background-color .3s ease; }
       .fe-dot:hover { background: color-mix(in srgb, var(--ink) 60%, transparent); }
       .fe-dot.on { cursor: default; background: color-mix(in srgb, var(--ink) 30%, transparent); }
-      .fe-dot i { display: block; width: 100%; height: 100%; border-radius: inherit; background: var(--ink); opacity: 0; transition: opacity .2s ease; }
-      .fe-dot.on i { opacity: 1; transition: none; transform: translateY(calc((var(--fill, 0) - 1) * 100%)); }   /* 늘이지 않고 위에서 밀어 내려 끝이 늘 둥글게 */
+      .fe-dot i { display: block; width: 100%; height: 100%; border-radius: inherit; background: var(--ink); opacity: 0; transform: translateY(calc((var(--fill, 0) - 1) * 100%)); transition: opacity .2s ease; }   /* 늘이지 않고 위에서 밀어 내려 끝이 늘 둥글게. 점으로 돌아갈 때도 채운 높이 그대로 사라짐 */
+      .fe-dot.on i { opacity: 1; transition: none; }
       .fe-shot { --d: 0; position: absolute; left: 0; right: 0; top: 50%; opacity: 0; pointer-events: none;
                  transform: translateY(calc(-50% + var(--d) * (100% + 56px))) scale(.94);   /* 56px = 예전 간격 28px + 캡션 자리(캡션이 이미지 영역에서 빠졌으므로) */
                  transition: transform .65s cubic-bezier(.2,.7,.2,1), opacity .5s ease; }
@@ -429,45 +429,53 @@
     @media (prefers-reduced-motion: reduce) { .fe-head, .fe-title, .fe-detail, .fe-shot, .fe-dots, .fe-dot, .fe-dot i { transition: none !important; } }
     .fe-measure, .fe-measure *, .fe-snap, .fe-snap * { transition: none !important; }   /* 목록 높이를 잴 때 · 여러 칸 건너뛸 때 중간 항목을 즉시 접을 때 애니메이션 끔 */
     /* 그림 칸 4:3. 그림 비율이 4:3과 15% 넘게 다르면(.fit) 잘라 내지 않고 전체를 보여 줌 — 포트폴리오 페이지와 같은 규칙 */
-    .shot { position: relative; aspect-ratio: 4 / 3; background: #000; overflow: hidden; }
-    /* 프로젝트 요약(한눈에 보기): 작은 대표 이미지 + 줄 목록. 넓은 화면 [이미지 | 번호·이름·구분·기술 | 한 줄 소개·구현 범위·링크], 줄 사이는 정보 표와 같은 구분선 */
-    .gl { margin: 0; padding: 0; list-style: none; }
-    .gl-row:first-child { border-top: 0; padding-top: 0; }                /* 맨 위·맨 아래는 구분선 없이, 줄 사이에만 */
-    .gl-row:last-child { padding-bottom: 0; }
-    .gl-row { display: grid; grid-template-columns: 112px minmax(0, 1fr); gap: 16px 20px; align-items: start; padding: 28px 0; }
+    .shot { position: relative; aspect-ratio: 4 / 3; background: transparent; overflow: hidden; }   /* 직접 수정(2026-11-27): 바탕을 검정에서 투명으로 — 검정이 둥근 모서리 가장자리로 새어 나와 흰 이미지(Nutrifit) 모서리에 가는 선이 보였음. 가로세로 비율이 달라 잘라 내지 않고 보여 주는 그림(.fit)만 검정 바탕 */
+    .shot.fit { background: #000; }
+    /* 프로젝트 요약(한눈에 보기) — 2026-11-27 사용자 선택: 메인 프로젝트 4 + 기타 프로젝트 3을 한 격자(7칸)에. 넓은 화면(960px~) 4열 · 중간 2열 · 휴대폰 한 열[그림 112px | 글] · 인쇄 4열
+       칸 = 대표 이미지(4:3) + 번호·이름 + 팀·장르 + (메인만) 한 줄 소개·링크 2개. 기타 프로젝트는 번호를 흐리게, 누르면 기타 프로젝트 절의 그 카드로 */
+    .gl { display: grid; grid-template-columns: minmax(0, 1fr); gap: 32px; margin: 0; padding: 0; list-style: none; }
+    .gl-item { display: grid; grid-template-columns: 112px minmax(0, 1fr); gap: 16px; align-items: start; min-width: 0; }
+    .gl-item:not(:has(.gl-thumb)) { grid-template-columns: minmax(0, 1fr); }
     .gl-thumb { display: block; border-radius: 12px; overflow: hidden; }
-    .lc-shot { margin: -1.75rem -1.75rem 1.5rem; border-bottom: 1px solid var(--line); }   /* 기타 프로젝트 카드 위의 대표 이미지(4:3): 카드 안쪽 여백(p-7)을 넘어 위쪽을 끝까지 채움, 모서리는 카드가 자름 */
-    .gl-row:not(:has(.gl-thumb)) .gl-info { grid-column: 1 / -1; }
-    .gl-body { grid-column: 1 / -1; }
-    /* 휴대폰: 그림(112×84, 4:3) 옆 번호·제목·종류·환경을 그림 높이에 맞춤 — 사이 간격·줄 높이를 줄이고 번호는 그림 위 끝, 환경은 그림 아래 끝에 */
+    .gl-text { min-width: 0; }
+    /* 휴대폰(2026-11-27, 사용자 선택 A안): 첫 줄 = 작은 그림 + 번호·이름·팀·장르(그림 세로 가운데에 맞춤), 한 줄 소개·링크는 그 아래 전체 폭 */
     @media (max-width: 759px) {
-      .gl-row:has(.gl-thumb) { align-items: stretch; }
-      .gl-row .gl-thumb { align-self: start; }
-      .gl-row:has(.gl-thumb) .gl-info { display: flex; flex-direction: column; justify-content: space-between; min-height: calc(112px * 3 / 4); }
-      .gl-info > .gl-no { line-height: 16px; }                         /* 16 + 3.5 + 26 + 5 + 16 + 1.5 + 16 = 84px(그림 높이) */
-      .gl-info > .gl-title { margin-top: 3.5px; line-height: 26px; }    /* 번호 → 제목 3.5px, 제목 → 종류 5px */
-      .gl-info > .gl-meta { margin-top: 5px; line-height: 16px; }
-      .gl-info > .gl-env { margin-top: 1.5px; line-height: 16px; }        /* 종류와 환경은 붙여서 한 묶음으로 */
+      .gl-item { gap: 12px 16px; }
+      .gl-text { display: contents; }
+      .gl-head { grid-column: 2; align-self: center; min-width: 0; }
+      .gl-item:not(:has(.gl-thumb)) .gl-head { grid-column: 1 / -1; }
+      .gl-thumb { grid-row: 1; grid-column: 1; }
+      .gl-item .gl-sum, .gl-item .gl-links { grid-column: 1 / -1; margin-top: 0; }
     }
+    .gl-no { font-size: 13px; font-weight: 700; line-height: 16px; font-variant-numeric: tabular-nums; }
+    .gl-item.is-other .gl-no { color: var(--sub); }
+    .gl-title { display: block; margin-top: 2px; font-size: 20px; font-weight: 600; letter-spacing: -.015em; line-height: 1.3; color: var(--ink); }
+    .gl-meta { margin: 4px 0 0; font-size: 12px; line-height: 1.5; color: var(--sub); }
+    .gl-sum { margin: 10px 0 0; font-size: 14px; line-height: 1.6; }
+    .gl-links { display: flex; flex-wrap: wrap; gap: 4px 14px; margin-top: 12px; font-size: 13px; }
     @media (min-width: 760px) {
-      .gl-row { grid-template-columns: 200px 220px minmax(0, 1fr); gap: 32px; padding: 32px 0; }
-      .gl-row:not(:has(.gl-thumb)) .gl-info { grid-column: 1 / 3; }
-      .gl-body { grid-column: auto; }
+      .gl { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 48px 24px; }
+      .gl-item { display: block; }
+      .gl-thumb { border-radius: 16px; }
+      .gl-text { margin-top: 14px; }
+    }
+    @media (min-width: 960px) { .gl { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 56px 20px; } }
+    @media print { .gl { grid-template-columns: repeat(4, minmax(0, 1fr)) !important; gap: 28px 14px !important; } }
+    .lc-shot { margin: -1.75rem -1.75rem 1.5rem; border-bottom: 1px solid var(--line); }   /* 기타 프로젝트 카드 위의 대표 이미지(4:3): 카드 안쪽 여백(p-7)을 넘어 위쪽을 끝까지 채움, 모서리는 카드가 자름 */
+    /* 기타 프로젝트 카드, Apple 스토어 카드 방식(직접 수정 2026-11-27, 화면에서만 — 인쇄 배치는 그대로): 테두리 없이 바탕색 차이만 · 모서리 28px · 카드 사이 12px · 제목 600 ·
+       기술 태그는 칩 대신 옅은 글자 한 줄 · 링크는 모두 같은 글자 링크 · 밝은 화면은 Apple 카드 그림자(rgba(0,0,0,.08) 2px 4px 12px) */
+    @media screen {
+      #others .grid { gap: 12px; }
+      #others .card-print { border-width: 0; border-radius: 28px; }
+      #others .card-print .lc-shot { border-bottom: 0; }
+      #others .card-print h3 { font-weight: 600; }
+      #others .card-print .chip { padding: 0; background: none; font-weight: 400; font-size: 13px; color: var(--sub); }
+      #others .card-print .chip:not(:last-child)::after { content: "·"; margin-left: .55em; }
+      #others .card-print .mt-5.flex { gap: 0 .55em; margin-top: 14px; }
+      #others .card-print .lc-links { align-content: flex-start; gap: 8px 16px; min-height: 48px; }   /* 링크는 모두 같은 글자 링크 — 두 줄 분량을 모든 카드가 똑같이 잡아 첫 줄이 같은 높이에 */
+      :root[data-pf-mode="light"] #others .card-print { box-shadow: rgba(0, 0, 0, .08) 2px 4px 12px; }
     }
     .shot img { display: block; width: 100%; height: 100%; object-fit: cover; }
-    /* 프로젝트 요약 아래 "기타 프로젝트": 프로젝트 줄 사이와 같은 구분선 뒤, 이름 없이 [작은 대표 이미지 | 이름 / 개인·팀 프로젝트 / 장르]. 넓은 화면 3열 · 휴대폰 한 열 */
-    .gl-more { margin: 28px 0 0; padding-top: 28px; border-top: 1px solid var(--divider); }   /* 프로젝트 줄 사이에는 선이 없고, 기타 프로젝트 위에만 구분선 */
-    .glo { display: grid; gap: 20px; margin: 0; padding: 0; list-style: none; }
-    .glo-item { display: grid; grid-template-columns: 96px minmax(0, 1fr); gap: 16px; align-items: center; }
-    .glo-thumb { display: block; border-radius: 10px; overflow: hidden; }
-    .glo-item:not(:has(.glo-thumb)) { grid-template-columns: minmax(0, 1fr); }
-    .glo-title { display: block; font-size: 16px; font-weight: 700; letter-spacing: -.01em; line-height: 1.35; color: var(--ink); }
-    .glo-meta { margin: 4px 0 0; font-size: 12px; line-height: 1.5; color: var(--sub); }
-    .glo-meta + .glo-meta { margin-top: 0; }                            /* 개인/팀 줄과 장르 줄은 붙여서 두 줄 한 묶음 */
-    .gl-more { margin-top: 56px; padding-top: 56px; }   /* 프로젝트 줄 사이 간격(28+28)을 구분선 위·아래에 한 번씩 그대로 — 간격 + 선 + 간격 (화면·PDF 공통) */
-    @media (min-width: 760px) { .gl-more { margin-top: 64px; padding-top: 64px; } }   /* 넓은 화면: 줄 사이 간격 32+32 = 64 */
-    @media (min-width: 760px) { .glo { grid-template-columns: repeat(3, minmax(0, 1fr)); column-gap: 32px; } }
-    @media print { .gl-more { break-inside: avoid; } }
     .shot.fit img { object-fit: contain; padding: 8px; }
     /* 떠오름은 전환(transition)이 아니라 키프레임 애니메이션으로 — iPhone Safari는 스크롤하는 동안 .in이 붙으면 전환을 화면에 그리지 않고
        한 번에 끝 상태로 보여 줌(페이지 안의 값은 0.7초 동안 바뀌는데 화면은 한 프레임 만에 나타남). 애니메이션은 스크롤 중에도 그려짐 */
@@ -693,7 +701,7 @@
       .cap-pill, .hero-pill { -webkit-backdrop-filter: none !important; backdrop-filter: none !important; }
       .proj-backdrop { display: none !important; }
       .cover-fade > .shot { box-shadow: none !important; }
-      .stk-item, .gl-row, .card-print, .fe-item { break-inside: avoid; }
+      .stk-item, .gl-item, .card-print, .fe-item { break-inside: avoid; }
       .card-print { border: 1px solid var(--line) !important; }
       /* 기능 소개: 화면처럼 [글 왼쪽 | 그림 오른쪽]을 기능마다 한 줄씩, 모두 펼친 채로(한 쪽에 4개). 고정·움직임은 화면 전용 */
       .fe { height: auto !important; }
@@ -714,7 +722,7 @@
       .fe-what { min-height: 0 !important; }
       .purls { display: none !important; }                              /* 예전 주소 목록(머리·프로젝트 소개·기타 프로젝트) — 버튼으로 대신함 */
       a { text-decoration: none; color: inherit; }
-      .shot { background: #f2f3f7; }
+      .shot, .shot.fit { background: #f2f3f7; }
     }
   </style>
   <link rel="stylesheet" href="theme/pdf.css" media="print"><!-- PDF 전용 배치 손질(/portfolio-make-pdf가 씀). 위 인쇄 규칙보다 뒤에 와서 덮어씀 -->
@@ -1743,10 +1751,10 @@
                       <div className="fe-detail"><div className="fe-detail-in">
                         <p className="fe-what mt-3 text-[15px] leading-relaxed text-[var(--muted)]">{h.what && <Inline text={h.what} />}</p>
                         <div className="fe-links mt-3 flex flex-wrap gap-2">
-                          <Ext className="btn btn-sm" href={deckHref(p, sid)} data-deck-scene={sid || 'start'}
-                            aria-label={`${normTitle(h.title)} — ${t('page.see-in-deck')}`}>{t('page.see-in-deck')}</Ext>
                           <Ext className="btn btn-sm" href={docSecHref(p, i, h)}
                             aria-label={`${normTitle(h.title)} — ${t('page.see-in-doc')}`}>{t('page.see-in-doc')}</Ext>
+                          <Ext className="btn btn-sm" href={deckHref(p, sid)} data-deck-scene={sid || 'start'}
+                            aria-label={`${normTitle(h.title)} — ${t('page.see-in-deck')}`}>{t('page.see-in-deck')}</Ext>
                         </div>
                       </div></div>
                     </li>
@@ -1857,12 +1865,14 @@
           s.classList.toggle('on', d === 0);
           s.classList.toggle('near', Math.abs(d) === 1);
         });
+        b.dots[k]?.style.setProperty('--fill', '0');                    // 새 막대는 빈 상태에서 시작(전에 채웠던 높이가 잠깐 보이지 않게)
         b.dots.forEach((d, i) => d.classList.toggle('on', i === k));
         b.dots[0]?.parentElement.style.setProperty('--fe-rows', b.dots.map((d, i) => (i === k ? '48px' : '8px')).join(' '));   // 줄 높이를 한꺼번에 — 전체 높이 고정
         const list = b.fe.querySelector('.fe-list'); if (list && window.__fePlace) window.__fePlace(list, k);
       };
       // 건너뛰는 중간 항목은 아예 열지 않음: 스크롤 위치가 가리키는 항목이 0.08초 그대로일 때만 바꿈(빠르게 지나간 항목은 열리지 않음).
-      //   점·흐린 항목을 눌러 이동할 때는 바로 목표 항목을 열고, 스크롤이 그 항목에 닿을 때까지 지나가는 항목은 무시
+      //   점·흐린 항목을 눌러 이동할 때는 바로 목표 항목을 열고 스크롤 위치는 한 번에 옮김(화면이 고정돼 있어 옮긴 것은 보이지 않고 항목·그림 전환만 보임, 게이지가 차거나 빠지지 않음).
+      //   화면이 아직 고정되기 전·풀린 뒤에 누르면 부드럽게 스크롤하고, 도착할 때까지 지나가는 항목은 무시하고 게이지는 비워 둠
       const WAIT = 80;
       const FILL = 0.8;                                                  // 한 기능 몫 중 게이지가 차는 부분 — 남은 0.2는 꽉 찬 채로 조금 더 스크롤해야 넘어가는 여유
       const update = () => {
@@ -1872,7 +1882,8 @@
           const { start, step } = geo(b);
           const n = b.items.length, pr = (scrollY - start) / step;           // 진척도(기능 단위) — 화면이 고정된 순간 0. 정수 부분 = 가리키는 기능, 나머지 = 그 기능 안에서 스크롤한 정도
           const k = Math.max(0, Math.min(n - 1, Math.floor(pr)));
-          if (b.lock && now < b.lock.until && k !== b.lock.k) { /* 눌러서 이동 중 — 지나가는 항목 무시 */ }
+          const moving = b.lock && now < b.lock.until && Math.abs(scrollY - b.lock.y) > 2;
+          if (moving) { /* 눌러서 부드럽게 이동 중 — 지나가는 항목 무시 */ }
           else {
             b.lock = null;
             if (k === b.cur) b.pending = null;
@@ -1880,7 +1891,7 @@
             else if (now - b.pendingAt >= WAIT) { set(b, k); b.pending = null; }
             else { clearTimeout(b.timer); b.timer = setTimeout(update, WAIT - (now - b.pendingAt) + 10); }
           }
-          b.dots[b.cur]?.style.setProperty('--fill', String(Math.max(0, Math.min(1, (pr - b.cur) / FILL))));   // 한 기능 몫의 앞 FILL만큼에서 게이지가 0 → 1로 차고, 나머지는 꽉 찬 채로 머문 뒤 다음 기능으로
+          b.dots[b.cur]?.style.setProperty('--fill', String(moving ? 0 : Math.max(0, Math.min(1, (pr - b.cur) / FILL))));   // 한 기능 몫의 앞 FILL만큼에서 게이지가 0 → 1로 차고, 나머지는 꽉 찬 채로 머문 뒤 다음 기능으로
         });
       };
       blocks.forEach((b) => b.fe.addEventListener('click', (e) => {
@@ -1888,9 +1899,11 @@
         if (!go || !wide()) return;
         const k = +go.dataset.feGo, { start, step } = geo(b);
         if (k === b.cur && !b.lock) return;                              // 지금 보고 있는 항목을 다시 누르면 그대로(진척도를 처음으로 되돌리지 않음)
-        b.lock = { k, until: performance.now() + 1500 }; b.pending = null;
+        const y = Math.ceil(start + step * k) + 1;                       // 그 항목 스크롤 구간의 맨 위(1px 안쪽, 게이지 빈 상태)
+        const pinned = scrollY >= start - 2 && scrollY <= start + step * b.items.length + 2;
+        b.lock = pinned ? null : { y, until: performance.now() + 1500 }; b.pending = null; clearTimeout(b.timer);
         set(b, k);
-        scrollTo({ top: Math.ceil(start + step * k) + 1, behavior: 'smooth' });   // 그 항목 스크롤 구간의 맨 위(1px 안쪽, 게이지 빈 상태)로
+        scrollTo({ top: y, behavior: pinned ? 'instant' : 'smooth' });
       }));
       update();
       addEventListener('scroll', update, { passive: true });
@@ -1948,7 +1961,7 @@
           {c.tech.length > 0 && <div className="mt-5 flex flex-wrap gap-2">{c.tech.map((g) => <span key={g} className="chip">{g}</span>)}</div>}
           {c.links.length > 0 && (
             <div className="mt-auto pt-6">
-              <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm">{c.links.map(([k, href]) =>   /* 프로젝트 요약과 같은 글자 링크(모두 본문색) */
+              <div className="lc-links flex flex-wrap gap-x-4 gap-y-1 text-sm">{c.links.map(([k, href]) =>   /* 프로젝트 요약과 같은 글자 링크(모두 본문색) · 화면·인쇄 모두 글자 링크 */
                 <Ext key={href} className="tlink text-[var(--muted)]" href={href}>{k}</Ext>)}</div>
               <PrintUrls rows={c.links} />
             </div>
@@ -1988,69 +2001,58 @@
       );
     }
 
-    // ⑧ 한눈에 보기(작은 대표 이미지 + 줄 목록 · tinted — layout.json의 grid 3열 대신 사용자 요청)
-    //   제목 아래: "개인/팀 프로젝트 · 장르", 그 아래 환경(정보 표의 '환경'과 같은 순서, 쉼표 → ·). 환경이 없으면 태그 앞 4개
+    // ⑧ 한눈에 보기 — 메인 프로젝트 4 + 기타 프로젝트 3을 한 격자(7칸)에(2026-11-27, 사용자 선택). 내용은 줄임(사용자 요청):
+    //   메인 = 이미지 · 번호 · 이름 · "개인/팀 프로젝트 · 장르" · 한 줄 소개 · 링크 2개(영상 · 상세 문서, 영상이 없으면 상세 문서 · 슬라이드)
+    //   기타 = 이미지 · 번호(흐림) · 이름 · "개인/팀 · 장르"만, 누르면 기타 프로젝트 절의 그 카드로. 개발 환경·구현 범위는 프로젝트 소개 표에 그대로
+    //   기타 프로젝트의 개인/팀: data/의 기타 프로젝트는 team, 링크만 있는 카드는 profile.md "- 정보:"에 '팀'·'개인'·'1인'이 있으면. 장르: data/는 정보 표의 장르, 링크 카드는 "- 장르:"
+    const otherTeam = (c) => c.team || (/팀/.test(c.info || '') ? t('name.team') : /개인|1인/.test(c.info || '') ? t('name.solo') : '');
     function Glance({ projects, others = [] }) {
       if (!projects.length) return null;
       const metaOf = (p, label) => (p.meta || []).find((m) => m.label === label)?.value || '';
-      const envItems = (p) => { const env = (metaOf(p, '개발 환경') || metaOf(p, '환경')); return env ? env.split(',').map((x) => x.trim()).filter(Boolean) : (p.tags || []).slice(0, 4); };
-      // 한눈에 보기에서만 Unity 6 계열 버전을 줄여 씀(6000.3.15f1 → 6.3) — 휴대폰에서 개발 환경이 한 줄에 들어가게. 정확한 버전은 프로젝트 소개 표에 그대로
-      const shortEnv = (x) => x.replace(/^Unity\s+6000\.(\d+)(?:\.\S+)?$/i, 'Unity 6.$1');
-      const EnvLine = ({ p }) => envItems(p).map(shortEnv).map((x, i) => <Fragment key={x}>{i > 0 && ' · '}<span className="whitespace-nowrap">{x}</span></Fragment>);   // 항목 하나(ASP.NET Core 등)는 줄바꿈으로 끊지 않음
+      const glanceLinks = (p) => [
+        isUrl(p.links?.video) && [projectVideoName(p), p.links.video],
+        [t('name.doc-short'), docHref(p)],
+        [t('name.deck'), deckHref(p)],
+      ].filter(Boolean).slice(0, 2);
       return (
         <section id="glance" className="sec tinted pb-24 md:pb-32 pt-[calc(6rem_-_5mm)] md:pt-[calc(8rem_-_5mm)]">
           <div className="wrap">
             <SecHead en={t('en.glance')} title={t('page.glance')} />
             <ul className="gl">
               {projects.map((p, j) => (
-                <li key={p.id} className="gl-row reveal">
+                <li key={p.id} className="gl-item reveal">
                   {p.cover && <a href={`#p-${p.id}`} className="gl-thumb img-link" tabIndex={-1} aria-hidden="true"><Shot src={img(p, p.cover)} alt="" /><ImgMore href={`#p-${p.id}`} /></a>}
-                  <div className="gl-info">
-                    <p className="gl-no accent text-sm font-bold tabular-nums">{pad2(j + 1)}</p>
-                    <a href={`#p-${p.id}`} className="gl-title mt-1 block text-2xl font-bold tracking-tight hover:underline">{p.title}</a>
-                    <p className="gl-meta mt-1 text-xs text-[var(--sub)]">{[teamLabel(p.team), metaOf(p, '장르')].filter(Boolean).join(' · ')}</p>
-                    {envItems(p).length > 0 && <p className="gl-env mt-3 text-xs leading-relaxed text-[var(--sub)]"><EnvLine p={p} /></p>}
-                  </div>
-                  <div className="gl-body">
-                    {p.tagline && <p className="text-[15px] leading-relaxed"><Inline text={p.tagline} /></p>}
-                    {p.team?.role && <p className="mt-3 text-sm leading-relaxed"><b className="font-semibold">{t('name.role-short')}</b> ― <Inline text={p.team.role} /></p>}
-                    <div className="mt-4 flex flex-wrap gap-x-4 gap-y-1 text-sm">
-                      <Ext className="tlink text-[var(--muted)]" href={deckHref(p)}>{t('name.deck')}</Ext>
-                      <Ext className="tlink text-[var(--muted)]" href={docHref(p)}>{t('name.doc-short')}</Ext>
-                      {repoLinks(p).map(([k, u]) => <Ext key={u} className="tlink text-[var(--muted)]" href={u}>{k}</Ext>)}
-                      {isUrl(p.links?.video) && <Ext className="tlink text-[var(--muted)]" href={p.links.video}>{projectVideoName(p)}</Ext>}
+                  <div className="gl-text">
+                    <div className="gl-head">
+                      <p className="gl-no accent">{pad2(j + 1)}</p>
+                      <a href={`#p-${p.id}`} className="gl-title hover:underline">{p.title}</a>
+                      <p className="gl-meta">{[teamLabel(p.team), metaOf(p, '장르')].filter(Boolean).join(' · ')}</p>
+                    </div>
+                    {p.tagline && <p className="gl-sum"><Inline text={p.tagline} /></p>}
+                    <div className="gl-links">
+                      {glanceLinks(p).map(([k, href]) => <Ext key={href} className="tlink text-[var(--muted)]" href={href}>{k}</Ext>)}
                     </div>
                   </div>
                 </li>
               ))}
+              {others.map((c, k) => {
+                const href = c.id ? `#p-${c.id}` : '#others';
+                return (
+                  <li key={c.id || c.title} className="gl-item is-other reveal">
+                    {c.image && <a href={href} className="gl-thumb img-link" tabIndex={-1} aria-hidden="true"><Shot src={c.image} alt="" /><ImgMore href={href} /></a>}
+                    <div className="gl-text">
+                      <div className="gl-head">
+                        <p className="gl-no">{pad2(projects.length + k + 1)}</p>
+                        <a href={href} className="gl-title hover:underline">{c.title}</a>
+                        <p className="gl-meta">{[otherTeam(c), c.genre].filter(Boolean).join(' · ')}</p>
+                      </div>
+                    </div>
+                  </li>
+                );
+              })}
             </ul>
-            {others.length > 0 && <OtherList cards={others} />}
           </div>
         </section>
-      );
-    }
-    // 프로젝트 요약 아래 기타 프로젝트: 대표 이미지 + 이름 + 그 아래 개인/팀 프로젝트 · 장르를 한 줄씩(두 줄)만. 누르면 기타 프로젝트 절의 그 카드로
-    //   개인/팀: data/의 기타 프로젝트는 team, 링크만 있는 카드는 profile.md "- 정보:"에 '팀'·'개인'·'1인'이 있으면. 장르: data/는 정보 표의 장르, 링크 카드는 "- 장르:"
-    const otherTeam = (c) => c.team || (/팀/.test(c.info || '') ? t('name.team') : /개인|1인/.test(c.info || '') ? t('name.solo') : '');
-    function OtherList({ cards }) {
-      return (
-        <div className="gl-more reveal">
-          <ul className="glo">
-            {cards.map((c) => {
-              const href = c.id ? `#p-${c.id}` : '#others';
-              return (
-                <li key={c.id || c.title} className="glo-item">
-                  {c.image && <a href={href} className="glo-thumb img-link" tabIndex={-1} aria-hidden="true"><Shot src={c.image} alt="" /></a>}
-                  <div>
-                    <a href={href} className="glo-title hover:underline">{c.title}</a>
-                    {otherTeam(c) && <p className="glo-meta">{otherTeam(c)}</p>}
-                    {c.genre && <p className="glo-meta">{c.genre}</p>}
-                  </div>
-                </li>
-              );
-            })}
-          </ul>
-        </div>
       );
     }
 
