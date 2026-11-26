@@ -40,12 +40,14 @@ flowchart TB
 
 이 다이어그램은 지하에서 채굴하고 지상에서 판매·구매한 뒤 다시 내려가는 게임 루프와, 붕괴 위험과 게임 종료 조건을 도식화한 것입니다.
 
+핵심 시스템은 다음과 같습니다.
+
 - **진행:** 로비에서 방에 들어가 호스트가 시작하고, 모든 플레이어가 지형 준비를 마치면 카운트다운 뒤 시작합니다. 제한 시간이 끝나거나 목표 골드에 이르면 끝나고, 실제 보유 골드로 승자를 정합니다.
-- **맵:** 같은 시드로 모든 플레이어에게 같은 맵이 생성됩니다. 깊이에 따라 Ground·Dirt·Stone·DeepStone 구간이 있고, 동굴·변칙 지형·광물 군집이 배치됩니다.
+- **절차적 맵 생성:** 같은 시드로 모든 플레이어에게 같은 맵이 생성됩니다. 깊이에 따라 Ground·Dirt·Stone·DeepStone 구간이 있고, 동굴·변칙 지형·광물 군집이 배치됩니다.
 - **채굴과 판매:** 장착한 곡괭이로 타일을 캐면 광물이 떨어집니다. 인벤토리에는 무게 제한이 있고, 지상 스폰 구역에 돌아오면 자동으로 판매됩니다.
 - **상점:** 골드로 장비와 다이너마이트 같은 사용 아이템을 삽니다.
 - **붕괴와 매몰:** 지지 구조가 사라진 지형은 덩어리째 떨어집니다. 깔리면 피해를 받거나 매몰되고, 사망하면 그 칸에 사망 보관함이 생기며 골드 절반과 아이템을 떨어뜨립니다.
-- **지도:** 미니맵과 Tab 전체 지도에서 이미 가 본 곳과 지금 보이는 곳을 나눠 보여 줍니다.
+- **지도:** 미니맵과 전체 지도에서 이미 가 본 곳과 지금 보이는 곳을 나눠 보여 줍니다.
 
 조작은 다음과 같습니다.
 
@@ -127,7 +129,7 @@ flowchart TB
 | 탐험·지도 | 누적 탐험과 현재 관측, 월드 안개·미니맵·전체 지도 | — |
 | 로비·UI | 로비·대기방·채팅·승자 표시와 HUD·메뉴·설정 코드 | 화면 그래픽과 레이아웃은 팀원 2(§7.3) |
 
-**AI를 활용한 곳:** 붕괴 동작을 먼저 확인한 첫 프로토타입(§2.6)과 매몰 판정의 코드 반영(§4.4)에 활용했습니다. 판정 기준과 최종 결정은 직접 정했습니다.
+**AI를 활용한 곳:** 붕괴 동작을 먼저 확인한 첫 프로토타입(§2.7)과 매몰 판정의 코드 반영(§4.4)에 활용했습니다. 판정 기준과 최종 결정은 직접 정했습니다.
 
 초기 맵을 시드로 공유하는 구조와 채굴 결과를 모두에게 같은 순서로 반영하는 방식은 강사님과 같은 개선안을 제안했고, 구현 방향은 강사님의 도움을 받았습니다(§8.1).
 서버는 강의에서 익힌 ASP.NET Core WebSocket 기본 구조 위에 게임 로직을 구현했습니다.
@@ -175,8 +177,11 @@ flowchart TB
 
 이 다이어그램은 클라이언트가 입력·물리·표시를, 서버가 공유 상태 확정을 맡고, 두 쪽이 같은 TSV·시드로 초기 맵을 만드는 전체 구조를 도식화한 것입니다.
 
-특히 지형 붕괴에서는 **낙하 물리 시뮬레이션과 최종 타일 배치 확정의 책임이 다릅니다.**
-소유 클라이언트가 낙하 결과를 제안하고 서버가 예약 및 배치 규칙을 검사하여 결과를 방송합니다(§3).
+**왜 이렇게 나눴나**
+
+- **지형 변경은 서버가 확정하고, 낙하 물리는 클라이언트가 제안합니다.** 서버가 지형의 변경만 알도록 해 멀티플레이 레이턴시를 줄이고, 낙하 궤적은 소유 클라이언트가 계산해 제안하면 서버가 예약·배치 규칙을 검사해 확정합니다(§3.7).
+- **초기 맵은 보내지 않고 양쪽에서 같은 시드로 다시 만듭니다.** 초기 전체 맵 전송 부담을 줄이는 대신 생성기·난수 순서·데이터를 양쪽에서 맞춰야 하므로, 정규화한 TSV 해시로 테이블 차이를 검사합니다(§2.2·§2.7).
+- **인벤토리는 서버 스냅샷으로 통째로 교체합니다.** 지형보다 크기가 작아, 획득·판매·사망 등 여러 경로의 결과를 하나의 기준으로 복원합니다(§5.4).
 
 ---
 
@@ -185,7 +190,7 @@ flowchart TB
 ### 2.1 개요 — 같은 시드와 규칙의 절차적 맵 데이터 생성
 
 같은 시드와 규칙으로 클라이언트와 서버가 같은 맵 데이터를 절차적으로 생성합니다.
-생성 규칙은 TSV 테이블 데이터로 관리하며, 시드 프로필, 깊이 구간, 동굴, 변칙 지형 군집, 광물 테이블로 나눕니다.
+생성 규칙은 TSV 데이터 테이블로 관리하며, 시드 프로필, 깊이 구간, 동굴, 변칙 지형 군집, 광물 테이블로 나눕니다.
 `TerrainTableSeedGenerator`는 이 규칙을 적용해 `TerrainMapFile`을 생성합니다.
 서버에는 대응하는 `ServerTerrainGenerator`가 있습니다.
 
@@ -208,106 +213,13 @@ flowchart TB
 동굴을 뚫은 후 광물을 붙이는 순서나 난수 호출 순서가 달라지면 같은 시드여도 맵이 달라질 수 있습니다.
 맵 형태와 게임 플레이 중 수정되는 셀 상태도 구분합니다.
 
-### 2.2 지형 칸 저장·표시와 이어진 공간 탐색
-
-| 클래스 | 책임 |
-|---|---|
-| `TerrainGridData` | 비어 있지 않은 셀을 `Dictionary<Vector2Int, TerrainCell>`로 보관하고 Revision 관리 |
-| `TerrainGridWorld` | 기본 지형의 Chunk Mesh와 경계 Collider 생성·갱신 |
-| `TerrainManager` | 지형 조회·변경 API와 기반 지지 여부 탐색 |
-| `TerrainCollapseCoordinator` | 지형 변경 뒤 부유 그룹의 낙하 시작 요청 조정 |
-
-기본 지형은 셀마다 GameObject를 만들지 않고 32×32 셀 단위 Mesh로 표현합니다(선택 이유는 §2.6).
-셀 변경은 `dirtyChunks`와 `colliderDirty`에 기록됩니다.
-`LateUpdate()`에서 변경 Chunk의 Mesh를 갱신하고, Collider가 dirty이면 외곽선 Collider를 재생성합니다.
-
-`FindFloatingGroups()`는 상하좌우로 연결된 일반 지형을 Queue 기반으로 탐색합니다.
-탐색 중 `Bedrock`이나 `SpawnPlatform`과 인접하면 지지된 그룹으로 판단하고,
-지지점이 없는 그룹만 반환합니다. 점유 셀과 결과 그룹을 정렬해 탐색·요청 순서를 맞춥니다.
-이 탐색은 변경 셀 주변만이 아니라 호출할 때마다 점유 셀 전체를 순회합니다.
-
-### 2.3 접속 시 같은 맵 재생성
-
-![에디터 씬 뷰로 본 생성된 맵 전체 — 위부터 Ground·Dirt·Stone·DeepStone 구간과 변칙 지형·동굴·광물 군집](images/terrain-seed-map.png)
-
-클라이언트는 `map_session`에서 받은 프로필·시드와 테이블 버전을 확인하고 초기 맵을 재생성합니다.
-`TerrainNetworkAdapter.FromGeneratedMap()`이 생성 결과를 Revision 0의 런타임 스냅샷으로 변환합니다.
-게임 중 채굴·재배치 변경은 이후 서버 Batch로 적용됩니다.
-
-```csharp
-// RoomClient.HandleMapSession() — 맵 세션의 프로필 ID·시드로 초기 맵 생성
-TerrainMapFile map = TerrainSeedGenerator.Generate(
-    MapSession.ProfileID,
-    MapSession.Seed);
-
-ApplyTerrainSnapshot(TerrainNetworkAdapter.FromGeneratedMap(map));
-```
-
-테이블 버전은 TSV 파일들을 정렬하여 읽고 SHA-256으로 계산한 값의 앞 12자입니다.
-`ReadNormalizedTsvBytes()`는 BOM을 제거하고 CRLF·CR을 LF로 바꾸며, 파일 끝 LF 한 개를 지웁니다.
-클라이언트와 서버가 같은 규칙으로 정규화하므로, Windows와 macOS에서 내용이 같은 TSV가 다른 버전으로 판단되지 않습니다(§8.5).
-
-### 2.4 동굴과 광물 — 끊긴 지형 복원과 뭉침 크기
-
-생성 단계 중 동굴을 이어 만들고 광물 군집을 배치하는 두 처리입니다.
-
-#### 동굴로 끊긴 지형의 복원
-
-`TerrainCaveGenerator`는 깊이 범위와 경계 여유를 만족하는 시작점을 찾고,
-수평 방향에 작은 수직 변화를 누적하며 원형 셀들을 이어 동굴 후보를 만듭니다.
-후보를 바로 확정하지 않고 기존 타일 종류를 백업한 뒤 비우고, 지형 연결성 검사에 실패하면 복원합니다.
-
-```csharp
-// TerrainCaveGenerator.TryApplyCandidate() — 기존 타일을 백업하고 비운 뒤, 연결성 검사에 실패하면 복원
-foreach (Vector2Int coord in candidateCells)
-{
-    TerrainTileType previousType = map.GetTile(coord);
-    backups.Add(new CaveTileBackup(coord, previousType));
-    map.SetTile(coord, TerrainTileType.Empty);
-}
-
-if (TerrainMapConnectivityValidator.HasFloatingGroup(map) == false) return true;
-RestoreTiles(map, backups);
-return false;
-```
-
-이 방식은 동굴 모양을 먼저 정한 후 생긴 고립 지형을 무조건 제거하는 대신,
-기존 지형을 유지할 수 있는 후보만 채택합니다. 시도 횟수와 시작점 조건 때문에
-요청한 동굴 수보다 적게 생성될 수 있습니다.
-
-생성용 `TerrainMapConnectivityValidator`는 그룹 셀의 **바로 아래 기반암**을 지지 조건으로 검사합니다.
-게임 중 `TerrainManager.FindFloatingGroups()`는 상하좌우 탐색에서 기반암이나 스폰 플랫폼과의 인접을 검사합니다.
-두 경로는 쓰이는 시점과 지지 조건이 다른 별개의 판정입니다.
-
-#### 광물의 양과 뭉침 크기
-
-`TerrainMineralClusterGenerator`는 깊이 섹션과 광물 규칙을 순서대로 읽고,
-적합한 바탕 셀에서 `ClusterDensity` 확률로 군집 생성을 시작합니다.
-시작하면 최소·최대 크기 안에서 목표 크기를 뽑고,
-기존 군집의 상하좌우 이웃 중 유효한 후보를 확장합니다.
-
-| 데이터·조건 | 역할 |
-|---|---|
-| 깊이 섹션·경계 오프셋 | 어느 영역에 광물 규칙을 적용할지 결정 |
-| `ClusterDensity` | 군집 생성 시작을 시도할 확률 |
-| `MinClusterSize`·`MaxClusterSize` | 시작한 군집의 목표 크기 |
-| 자원 ID | 바탕 타일에 부가되는 광물 종류 |
-| 확장 가능한 이웃 | 연결된 군집의 실제 성장 범위 |
-
-`ClusterDensity`는 최종 광물 점유율이 아니라 군집 생성을 시작할 확률입니다.
-주변 후보가 없으면 목표 크기에 도달하기 전에 확장을 멈춥니다.
-확률·성장 순서·난수 소비가 함께 결과를 결정하므로 서버와 클라이언트의 순회 순서를 맞춰야 합니다.
-
-소스: [TerrainCaveGenerator.cs](https://github.com/keeeery/Folk-Sack/blob/main/Assets/02.%20Scripts/TerrainCollapse/Generation/TerrainCaveGenerator.cs), [TerrainMapConnectivityValidator.cs](https://github.com/keeeery/Folk-Sack/blob/main/Assets/02.%20Scripts/TerrainCollapse/Generation/TerrainMapConnectivityValidator.cs), [TerrainMineralClusterGenerator.cs](https://github.com/keeeery/Folk-Sack/blob/main/Assets/02.%20Scripts/TerrainCollapse/Generation/TerrainMineralClusterGenerator.cs).
-
-### 2.5 같은 시드, 같은 맵의 보장
+### 2.2 같은 시드, 같은 맵의 보장
 
 지형 테이블은 값을 읽은 뒤 참조와 적용 순서를 확정합니다. 깊이 섹션은 `SectionOrder`로 정렬하고 첫 구간 0, 마지막 구간 1, 인접 구간의 연속성을 검사합니다. 광물은 섹션별 `ResourceOrder`, 변칙 군집은 섹션·`VariantOrder`, 동굴은 `CaveOrder` 순서로 적용합니다. 중복 ID·순서와 없는 타일·자원 참조는 로딩 오류로 처리합니다.
 
 맵 생성용 `System.Random`은 동굴·변칙 지형·광물 생성이 공유합니다. 같은 시드라도 앞 단계의 반복 순서나 난수 호출 횟수가 달라지면 뒤 단계 결과도 달라집니다. 스폰 후보 셔플은 같은 시드로 새 `System.Random`을 만들어 별도로 수행하며, 중앙 후보 열에서 최대 네 좌표를 선택합니다.
 
-
-#### 표(TSV)로 관리하는 지형 규칙
+### 2.3 표(TSV)로 관리하는 지형 규칙
 
 지형 테이블 7종(타일·자원·시드 프로필·깊이 구간·구간별 광물·변칙 군집·동굴)은 모두 같은 경로로 읽습니다.
 **DTO는 TSV에 저장된 값, Def는 게임이 실제로 조회해 사용하는 값**으로 구분했습니다.
@@ -315,12 +227,12 @@ return false;
 ```mermaid
 %%{init: {"flowchart": {"rankSpacing": 28, "nodeSpacing": 30, "padding": 8}}}%%
 flowchart TB
-    TSV["TSV 파일"] --> Reader["TerrainTsvReader<br/>헤더를 DTO 필드에 매핑"]
+    TSV["TSV 파일"] --> Reader["TerrainTsvReader 헤더를<br>DTO 필드에 매핑"]
     Reader --> DTO["DTO 목록"]
     DTO --> Check{"범위·중복·참조<br>검사를 통과했는가"}
     Check -->|실패| Error["InvalidDataException<br/>로딩 오류"]
     Check -->|통과| Def["Def 생성 / Dictionary 보관"]
-    Def --> Use["TryGet·IReadOnlyCollection으로 조회"]
+    Def --> Use["<div style=width:260px>TryGet·IReadOnlyCollection으로 조회"]
 %% 격자: TSV - | Reader - | DTO - | Check Error | Def - | Use -
 ```
 
@@ -394,31 +306,132 @@ erDiagram
 
 소스: [TerrainTsvReader.cs](https://github.com/keeeery/Folk-Sack/blob/main/Assets/02.%20Scripts/TerrainCollapse/Data/TerrainTsvReader.cs), [TerrainTileDef.cs](https://github.com/keeeery/Folk-Sack/blob/main/Assets/02.%20Scripts/TerrainCollapse/Data/TerrainTileDef.cs), [TerrainDataTables.cs](https://github.com/keeeery/Folk-Sack/blob/main/Assets/02.%20Scripts/TerrainCollapse/Data/TerrainDataTables.cs), [TerrainTableSeedGenerator.cs](https://github.com/keeeery/Folk-Sack/blob/main/Assets/02.%20Scripts/TerrainCollapse/Generation/TerrainTableSeedGenerator.cs), [RoomClient.Terrain.cs](https://github.com/keeeery/Folk-Sack/blob/main/Assets/02.%20Scripts/Networking/RoomClient.Terrain.cs).
 
-### 2.6 고민과 선택
+### 2.4 접속 시 같은 맵 재생성
+
+![에디터 씬 뷰로 본 생성된 맵 전체 — 위부터 Ground·Dirt·Stone·DeepStone 구간과 변칙 지형·동굴·광물 군집](images/terrain-seed-map.png)
+
+클라이언트는 `map_session`에서 받은 프로필·시드와 테이블 버전을 확인하고 초기 맵을 재생성합니다.
+`TerrainNetworkAdapter.FromGeneratedMap()`이 생성 결과를 Revision 0의 런타임 스냅샷으로 변환합니다.
+게임 중 채굴·재배치 변경은 이후 서버 Batch로 적용됩니다.
+
+```csharp
+// RoomClient.HandleMapSession() — 맵 세션의 프로필 ID·시드로 초기 맵 생성
+TerrainMapFile map = TerrainSeedGenerator.Generate(
+    MapSession.ProfileID,
+    MapSession.Seed);
+
+ApplyTerrainSnapshot(TerrainNetworkAdapter.FromGeneratedMap(map));
+```
+
+테이블 버전은 TSV 파일들을 정렬하여 읽고 SHA-256으로 계산한 값의 앞 12자입니다.
+`ReadNormalizedTsvBytes()`는 BOM을 제거하고 CRLF·CR을 LF로 바꾸며, 파일 끝 LF 한 개를 지웁니다.
+클라이언트와 서버가 같은 규칙으로 정규화하므로, Windows와 macOS에서 내용이 같은 TSV가 다른 버전으로 판단되지 않습니다(§8.5).
+
+### 2.5 동굴과 광물 — 끊긴 지형 복원과 뭉침 크기
+
+생성 단계 중 동굴을 이어 만들고 광물 군집을 배치하는 두 처리입니다.
+
+#### 동굴로 끊긴 지형의 복원
+
+`TerrainCaveGenerator`는 깊이 범위와 경계 여유를 만족하는 시작점을 찾고,
+수평 방향에 작은 수직 변화를 누적하며 원형 셀들을 이어 동굴 후보를 만듭니다.
+후보를 바로 확정하지 않고 기존 타일 종류를 백업한 뒤 비우고, 지형 연결성 검사에 실패하면 복원합니다.
+
+```csharp
+// TerrainCaveGenerator.TryApplyCandidate() — 기존 타일을 백업하고 비운 뒤, 연결성 검사에 실패하면 복원
+foreach (Vector2Int coord in candidateCells)
+{
+    TerrainTileType previousType = map.GetTile(coord);
+    backups.Add(new CaveTileBackup(coord, previousType));
+    map.SetTile(coord, TerrainTileType.Empty);
+}
+
+if (TerrainMapConnectivityValidator.HasFloatingGroup(map) == false) return true;
+RestoreTiles(map, backups);
+return false;
+```
+
+이 방식은 동굴 모양을 먼저 정한 후 생긴 고립 지형을 무조건 제거하는 대신,
+기존 지형을 유지할 수 있는 후보만 채택합니다. 시도 횟수와 시작점 조건 때문에
+요청한 동굴 수보다 적게 생성될 수 있습니다.
+
+생성용 `TerrainMapConnectivityValidator`는 그룹 셀의 **바로 아래 기반암**을 지지 조건으로 검사합니다.
+게임 중 `TerrainManager.FindFloatingGroups()`는 상하좌우 탐색에서 기반암이나 스폰 플랫폼과의 인접을 검사합니다.
+두 경로는 쓰이는 시점과 지지 조건이 다른 별개의 판정입니다.
+
+#### 광물의 양과 뭉침 크기
+
+`TerrainMineralClusterGenerator`는 깊이 섹션과 광물 규칙을 순서대로 읽고,
+적합한 바탕 셀에서 `ClusterDensity` 확률로 군집 생성을 시작합니다.
+시작하면 최소·최대 크기 안에서 목표 크기를 뽑고,
+기존 군집의 상하좌우 이웃 중 유효한 후보를 확장합니다.
+
+| 데이터·조건 | 역할 |
+|---|---|
+| 깊이 섹션·경계 오프셋 | 어느 영역에 광물 규칙을 적용할지 결정 |
+| `ClusterDensity` | 군집 생성 시작을 시도할 확률 |
+| `MinClusterSize`·`MaxClusterSize` | 시작한 군집의 목표 크기 |
+| 자원 ID | 바탕 타일에 부가되는 광물 종류 |
+| 확장 가능한 이웃 | 연결된 군집의 실제 성장 범위 |
+
+`ClusterDensity`는 최종 광물 점유율이 아니라 군집 생성을 시작할 확률입니다.
+주변 후보가 없으면 목표 크기에 도달하기 전에 확장을 멈춥니다.
+확률·성장 순서·난수 소비가 함께 결과를 결정하므로 서버와 클라이언트의 순회 순서를 맞춰야 합니다.
+
+소스: [TerrainCaveGenerator.cs](https://github.com/keeeery/Folk-Sack/blob/main/Assets/02.%20Scripts/TerrainCollapse/Generation/TerrainCaveGenerator.cs), [TerrainMapConnectivityValidator.cs](https://github.com/keeeery/Folk-Sack/blob/main/Assets/02.%20Scripts/TerrainCollapse/Generation/TerrainMapConnectivityValidator.cs), [TerrainMineralClusterGenerator.cs](https://github.com/keeeery/Folk-Sack/blob/main/Assets/02.%20Scripts/TerrainCollapse/Generation/TerrainMineralClusterGenerator.cs).
+
+### 2.6 지형 칸 저장·표시와 이어진 공간 탐색
+
+| 클래스 | 책임 |
+|---|---|
+| `TerrainGridData` | 비어 있지 않은 셀을 `Dictionary<Vector2Int, TerrainCell>`로 보관하고 Revision 관리 |
+| `TerrainGridWorld` | 기본 지형의 Chunk Mesh와 경계 Collider 생성·갱신 |
+| `TerrainManager` | 지형 조회·변경 API와 기반 지지 여부 탐색 |
+| `TerrainCollapseCoordinator` | 지형 변경 뒤 부유 그룹의 낙하 시작 요청 조정 |
+
+기본 지형은 셀마다 GameObject를 만들지 않고 32×32 셀 단위 Mesh로 표현합니다(선택 이유는 §2.7).
+셀 변경은 `dirtyChunks`와 `colliderDirty`에 기록됩니다.
+`LateUpdate()`에서 변경 Chunk의 Mesh를 갱신하고, Collider가 dirty이면 외곽선 Collider를 재생성합니다.
+
+`FindFloatingGroups()`는 상하좌우로 연결된 일반 지형을 Queue 기반으로 탐색합니다.
+탐색 중 `Bedrock`이나 `SpawnPlatform`과 인접하면 지지된 그룹으로 판단하고,
+지지점이 없는 그룹만 반환합니다. 점유 셀과 결과 그룹을 정렬해 탐색·요청 순서를 맞춥니다.
+이 탐색은 변경 셀 주변만이 아니라 호출할 때마다 점유 셀 전체를 순회합니다.
+
+### 2.7 고민과 선택
 
 **지형을 어떤 단위로 그릴까 — 셀마다 객체 대신 Chunk Mesh**
 
 약 1만 셀(프로토타입 시험 맵 100×105)의 지형을 어떤 단위로 그리고, 충돌을 어떻게 줄지 정해야 했습니다.
-
-![기술 검증용 프로토타입의 맵 페인터와 시험 맵](images/prototype-collapse.png)
-
-지형 붕괴는 팀 프로젝트에 넣기 전에 별도 프로젝트에서 기술 검증용 프로토타입으로 먼저 만들었습니다.
-지형 일부 파괴 → 공중에 뜬 덩어리 탐색 → Rigidbody2D로 실제 낙하 → 멈춘 위치를 Grid 셀로 다시 기록하는 흐름과 상하좌우 연결 기준은 제가 정해 AI에게 작업 지시서로 정리하게 했고, 지시서를 확인 및 보완하여 AI 코딩 에이전트에 넘겨 Unity Tilemap으로 만들었습니다.
-직접 플레이하며 확인해, 덩어리를 직사각형으로 묶는 바람에 옆 칸에 다시 기록되던 문제는 덩어리를 셀 모양 그대로 만들게 하고, 꼭짓점끼리만 맞닿은 타일은 떨어지도록 기준을 정해 고치게 했습니다.
-AI로 빠르게 만든 프로토타입으로 붕괴 동작을 먼저 확인하고, 실제 게임에 쓸 표현 방식은 비용을 따져 다시 골랐습니다.
-
-이후 강의에서 익힌 데이터 기반 Grid 구조로 Tilemap을 바꾸는 리팩터링을 맡겼는데, 첫 버전은 셀마다 GameObject와 Collider를 만들어 플레이를 누르면 로딩이 오래 걸렸고, 이를 최적화하게 해 아래 Chunk Mesh 방식이 되었습니다.
-리팩터링 결과는 강의에서 익힌 Grid 구조와 무엇이 같고 다른지 설명을 들으며 확인했고, 그 과정에서 빠져 있던 데이터 기반 맵 생성을 찾아 추가하게 했습니다.
-처음 만든 코드에서 저와 팀원이 순환 참조 문제를 발견한 뒤에는 고칠 곳을 짚게 해 직접 고쳤습니다.
+채굴과 붕괴로 셀이 계속 바뀌는 게임이라, 셀 하나가 바뀔 때 다시 만드는 범위와 지형 객체 수가 중요했습니다.
 
 | 방법 | 장점 | 비용 |
 |---|---|---|
 | Unity Tilemap (처음 방식) | AI를 활용해 첫 프로토타입을 빠르게 만듦 | 사용하기 다소 불편 |
-| 셀마다 GameObject·Collider (리팩터링 첫 버전) | — | 팀원 개발 환경에서 로드 시간이 길고 프레임이 떨어짐 |
-| 32×32 Chunk Mesh + 외곽선 EdgeCollider (채택) | 셀이 바뀌면 그 셀이 속한 Chunk의 Mesh만 다시 만들고, 그리는 지형 객체는 셀 수가 아니라 Chunk 수(프로토타입 맵에서 최대 16개)가 됨 | 셀의 정점·UV·외곽선 Collider를 직접 만들고 갱신해야 하고, 셀 하나를 흔드는 연출도 정점을 직접 옮겨야 함 |
+| 셀마다 GameObject·Collider (리팩터링 첫 버전) | 정점·Collider를 직접 만들 필요 없이 Unity 기본 컴포넌트로 처리<br>셀 하나를 흔드는 연출도 오브젝트만 움직이면 됨 | 팀원 개발 환경에서 로드 시간이 길고 프레임이 떨어짐 |
+| 32×32 Chunk Mesh + 외곽선 EdgeCollider (채택) | 셀이 바뀌면 그 셀이 속한 Chunk의 Mesh만 다시 만듦<br>그리는 지형 객체가 셀 수가 아니라 Chunk 수(프로토타입 맵에서 최대 16개) | 셀의 정점·UV·외곽선 Collider를 직접 만들고 갱신해야 함<br>셀 하나를 흔드는 연출도 정점을 직접 옮겨야 함 |
 
-채굴과 붕괴로 셀이 계속 바뀌는 게임이라 개발이 이어질수록 문제가 커질 것으로 판단해, 상대적으로 비용이 저렴한 Chunk Mesh와 EdgeCollider를 택했고, 프로토타입을 리팩터링하며 채택한 이 방식을 팀 프로젝트로 포팅했습니다.
-다만 문제는 팀원 환경에서 확인했지만, 두 방식을 수치로 측정해 비교하지는 않았습니다.
+개발이 이어질수록 셀 단위 객체의 비용이 커질 것으로 판단해, 상대적으로 비용이 낮은 Chunk Mesh와 EdgeCollider를 택했고, 프로토타입에서 채택한 이 방식을 팀 프로젝트로 포팅했습니다.
+다만 문제는 팀원 환경에서 확인했고, 두 방식을 수치로 측정해 비교하지는 않았습니다.
+
+**프로토타입에서 Chunk Mesh까지**
+
+![기술 검증용 프로토타입의 맵 페인터와 시험 맵](images/prototype-collapse.png)
+
+지형 붕괴는 팀 프로젝트에 넣기 전, 별도 프로젝트에서 기술 검증용 프로토타입으로 먼저 만들었습니다.
+AI로 빠르게 만든 프로토타입으로 붕괴 동작을 먼저 확인하고, 실제 게임에 사용할 표현 방식은 비용을 따져 다시 골랐습니다(아래 「AI와 함께 한 과정」).
+
+**AI와 함께 한 과정**
+
+붕괴 흐름과 연결 기준은 제가 정했고, 구현과 리팩터링은 AI 코딩 에이전트에 맡긴 뒤 직접 플레이하고 코드를 확인하며 고치게 했습니다.
+
+| 단계 | AI가 한 것 | 내가 판단하고 수정한 것 |
+|---|---|---|
+| 프로토타입 | 작업 지시서를 정리하고 Unity Tilemap으로 구현함 | 붕괴 흐름과 상하좌우 연결 기준을 정하고 지시서를 보완함 |
+| 플레이 확인 | 덩어리를 직사각형으로 묶어 옆 칸에 다시 기록함 | 덩어리를 셀 모양 그대로 만들고, 꼭짓점만 닿은 타일은 떨어지게 함 |
+| Grid 리팩터링 | 셀마다 GameObject·Collider를 만들어 로딩이 길어짐 | 최적화하게 해 Chunk Mesh 방식으로 바꿈 |
+| 결과 확인 | 기존 Grid 구조와의 차이를 설명함 | 빠져 있던 데이터 기반 맵 생성을 찾아 추가하게 함 |
+| 순환 참조 수정 | 고칠 곳을 짚음 | 팀원과 함께 발견하고 직접 고침 |
 
 **그 밖의 선택**
 
@@ -553,10 +566,12 @@ while (bufferedTerrainBatches.TryGetValue(
 
 ### 3.3 덩어리 하나가 떨어져 자리 잡기까지
 
+![다른 지형으로부터 고립되어 붕괴·낙하 중인 지형 덩어리](images/falling-chunk.png)
+
 떠 있는 지형이 생기면 덩어리 하나는 네 단계를 거쳐 새 자리에 놓입니다.
 
 1. **낙하 시작:** 클라이언트가 부유 그룹을 찾아 서버에 낙하 시작을 요청합니다. 서버는 그룹을 검증한 뒤 `CollapseID`와 소유자를 정하고 원래 칸을 예약합니다.
-2. **떨어지기:** 클라이언트는 그 칸들을 물리 청크로 바꿔 떨어뜨립니다.
+2. **물리 낙하:** 클라이언트는 그 칸들을 물리 청크로 바꿔 떨어뜨립니다.
 3. **배치 제안:** 청크가 멈추면 소유자만 최종 자리를 서버에 보냅니다.
 4. **확정 또는 취소:** 서버가 자리를 검사해 통과하면 원래 칸 삭제와 새 자리 배치를 Batch 하나로 방송합니다. 실패하면 예약을 풀고 원래 칸을 되돌립니다.
 
@@ -594,11 +609,6 @@ sequenceDiagram
 
 **연쇄 붕괴는 물리 정착이 아니라 서버가 확정한 배치가 반영된 뒤에 이어지고, 검증에 실패하면 원본 셀로 되돌립니다.**
 
-| 사용 목적 | API 또는 메시지 | 주의점 |
-|---|---|---|
-| 낙하 시작 요청 | `TerrainCollapseCoordinator.CollapseStartRequested` | 서버 승인 후 CollapseID·소유자 수신 |
-| 낙하 배치 제안 | `CollapseManager.PlacementProposed` | 소유 클라이언트만 최종 배치 요청 송신 |
-
 #### 낙하 시작 — 여러 그룹을 한 번에 검증하고 예약
 
 낙하 시작 요청 하나에 부유 그룹이 여러 개 들어갈 수 있습니다.
@@ -613,6 +623,8 @@ sequenceDiagram
 
 #### 배치 확정 — 원래 칸 삭제와 새 자리를 한 번에
 
+![원래 칸 삭제와 새 자리 배치를 세 칸으로 나눈 도식. ① 떠 있는 덩어리의 원래 칸을 서버가 예약, ② 소유자가 두 칸 아래 멈춘 새 자리를 제안(원래 칸 하나와 겹침), ③ 원래 칸은 빈 칸으로 바꾸고 새 자리로 덮어써 겹친 칸은 지형으로 남는 Batch 하나로 확정](images/collapse-placement.png)
+
 떨어지는 궤적과 놓일 자리는 소유 클라이언트가 계산하고, 서버 `TryPlaceCollapse()`는 그 자리가 규칙에 맞는지만 검사합니다.
 
 - 요청한 플레이어가 그 청크의 소유자인지
@@ -626,23 +638,6 @@ sequenceDiagram
 새 자리는 원래 자리와 겹칠 수 있습니다.
 그래서 서버는 좌표별 `Dictionary<GridCoord, TerrainCellChangeDto>`에 원래 칸 삭제를 먼저 넣고, 그 위에 새 자리 칸을 덮어써서 좌표마다 최종 상태가 하나만 남게 합니다.
 이렇게 만든 변경 전체를 Revision 하나를 올리는 Batch 하나로 방송합니다.
-
-```csharp
-// GameSession.TryPlaceCollapse() — 원본 삭제 상태 구성
-Dictionary<GridCoord, TerrainCellChangeDto> finalChanges = new();
-foreach (GridCoord sourceCell in sourceCells)
-{
-    State.Terrain.Cells.Remove(sourceCell);
-    finalChanges[sourceCell] = new TerrainCellChangeDto
-    {
-        Coord = sourceCell,
-        TileTypeID = (int)ServerTerrainTileType.Empty,
-        Durability = 0,
-        ResourceID = 0,
-        LootEntries = Array.Empty<TerrainLootEntryDto>(),
-    };
-}
-```
 
 #### 확정되지 않은 낙하의 취소·원본 복구
 
@@ -666,8 +661,6 @@ foreach (GridCoord sourceCell in sourceCells)
 소스: [GameSession.Terrain.cs](https://github.com/KooHoo-Dev/3rd-TeamProject-KH-Server/blob/main/HelloServer/Game/GameSession.Terrain.cs), [RoomClient.Terrain.cs](https://github.com/keeeery/Folk-Sack/blob/main/Assets/02.%20Scripts/Networking/RoomClient.Terrain.cs).
 
 ### 3.4 여러 덩어리의 동시 낙하
-
-![다른 지형으로부터 고립되어 붕괴·낙하 중인 지형 덩어리](images/falling-chunk.png)
 
 덩어리 여러 개가 동시에 멈추면 배치 요청도 여러 개를 보내야 합니다.
 처음에는 확정을 기다리는 상태를 하나만 두어서, 먼저 보낸 요청을 기다리는 동안 다음 청크의 배치 제안이 버려졌습니다(§8.3).
@@ -722,6 +715,27 @@ if (reason == TerrainChangeReason.CollapsePlacement)
 - 한 방송은 받는 사람 모두에게 보낼 때까지(`Task.WhenAll()`) 기다린 뒤 다음 방송으로 넘어갑니다.
 - 같은 연결로 동시에 보내야 할 때는 멤버마다 둔 `SendLock`으로 하나씩 차례로 보내고, 한 번 보내는 데 3초 제한을 둡니다.
 
+```mermaid
+%%{init: {"flowchart": {"padding": 8, "subGraphTitleMargin": {"top": 0, "bottom": 10}}}}%%
+flowchart TB
+    Join["플레이어 입장<br>JoinAsync()"]
+    subgraph Gate["<div style=width:256px>terrainPipelineGate — 한 번에 하나만</div>"]
+        Cmd["<div style=width:240px>지형 명령 실행<br>상태 변경"]
+        Enq["<div style=width:240px>방송 큐에 등록<br>EnqueueBroadcast()"]
+    end
+    Queue["<div style=width:240px>방송 큐<br>Unbounded Channel · 읽는 쪽 하나"]
+    Loop["<div style=width:240px>방송 루프<br>넣은 순서대로 하나씩 꺼냄"]
+    Send["<div style=width:240px>멤버마다 차례로 전송<br>SendLock · 한 번에 3초 제한"]
+    Wait["<div style=width:240px>모든 멤버 전송까지 대기<br>Task.WhenAll()"]
+    Join -.->|같은 Gate를 잡음| Cmd
+    Cmd --> Enq --> Queue --> Loop --> Send --> Wait
+    Wait -->|다음 방송| Loop
+%% 격자: Join Cmd | - Enq | - Queue | - Loop | - Send | - Wait
+%% 화살표 Wait -> Loop: 나감=오른쪽 들어감=오른쪽
+```
+
+이 다이어그램은 지형 상태 변경과 방송 큐 등록을 Gate 한 구간으로 묶고, 큐에서 넣은 순서대로 꺼내 멤버마다 차례로 보내는 흐름을 도식화한 것입니다.
+
 플레이어 입장도 같은 Gate를 씁니다.
 `JoinAsync()`가 새로 들어온 플레이어에게 welcome·맵 세션·아이템·체력 상태를 보내는 동안 Gate를 잡고 있어서, 그 사이 지형 명령은 기다립니다.
 
@@ -737,7 +751,7 @@ if (reason == TerrainChangeReason.CollapsePlacement)
 **지형 변경을 누가 확정할까 — 서버가 확정하고, 낙하 물리는 클라이언트가 제안**
 
 서버 권위 구조는 제가 제안했습니다. 클라이언트가 손댈 수 없는 곳에서 결정하고, 클라이언트는 그 결정을 받는 구조가 맞다고 판단했습니다.
-다만 낙하 물리까지 서버에서 재현하지는 않았습니다. 서버는 **"지형의 변경"만 알도록** 하는 것이 멀티플레이 레이턴시를 줄일 수 있다고 판단했기 때문입니다.
+다만 낙하 물리까지 서버에서 재현하지는 않았습니다. 서버는 **"지형의 변경"만 알도록** 하는 것이 서버와 클라이언트의 책임을 명확히 나눌 수 있고, 멀티플레이 레이턴시를 줄일 수 있을 것이라 판단했기 때문입니다.
 그래서 물리 궤적은 소유 클라이언트가 계산해 결과를 제안하고, 서버는 예약·배치 규칙만 검사해 확정합니다.
 
 | 방법 | 장점 | 비용 |
@@ -745,6 +759,8 @@ if (reason == TerrainChangeReason.CollapsePlacement)
 | 클라이언트가 지형 변경을 확정 | 서버를 거치지 않아 요청 왕복 지연과 실패 처리가 필요 없음 | 클라이언트가 손댈 수 있는 곳에서 결정됨 |
 | 낙하 물리까지 서버에서 재현 | 서버 한 곳에서 계산해 모든 클라이언트의 낙하 궤적이 같음 | 서버가 지형의 변경 외에 물리까지 다뤄 멀티플레이 레이턴시가 늘어남 |
 | 서버가 셀 상태를 확정하고 낙하 결과는 클라이언트가 제안 (채택) | 지형의 기준 상태를 통일하고, 낙하는 Unity 물리 표현을 활용 | 요청 왕복 지연과 실패 처리가 필요하고, 클라이언트마다 물리 궤적이 다를 수 있음 |
+
+채택하지 않은 두 방식은 구현해 보지 않았으므로, 클라이언트가 손댈 수 있는 곳에서 결정되는 문제와 서버가 물리까지 다뤄 멀티플레이 레이턴시가 늘어나는 문제가 실제로 생기는지는 확인하지 못했습니다.
 
 **그 밖의 선택**
 
@@ -1058,7 +1074,7 @@ ExploreVisionRadius(playerCell);
 ![전체 지도(Tab)에 탐험한 구역과 플레이어 위치 마커가 표시된 화면](images/full-map.png)
 
 누적 탐험은 시야 반경 안의 셀을 직선 시야(`HasLineOfSight()`)로 검사해 새로 본 셀만 기록하고, 현재 관측은 플레이어와 횃불에서 상하좌우로 뻗어 통로를 따라 넓힙니다.
-월드 안개는 탐험 이력과 현재 시야를 두 겹 Mesh로 그리고, Tab 전체 지도는 커서 아래 지점을 유지하며 확대합니다.
+월드 안개는 탐험 이력과 현재 시야를 두 겹 Mesh로 그리고, 전체 지도는 커서 아래 지점을 유지하며 확대합니다.
 
 소스: [PlayerExplorationController.cs](https://github.com/keeeery/Folk-Sack/blob/main/Assets/02.%20Scripts/Exploration/PlayerExplorationController.cs), [ExplorationMapData.cs](https://github.com/keeeery/Folk-Sack/blob/main/Assets/02.%20Scripts/Exploration/ExplorationMapData.cs), [ExplorationForWorldView.cs](https://github.com/keeeery/Folk-Sack/blob/main/Assets/02.%20Scripts/Exploration/ExplorationForWorldView.cs), [MinimapView.cs](https://github.com/keeeery/Folk-Sack/blob/main/Assets/03.%20UI/Scripts/MinimapView.cs).
 
@@ -1178,7 +1194,7 @@ flowchart TB
 
 핵심 효과는 **소켓 대기가 지형 상태 변경 구간을 붙잡던 결합을 끊은 것**입니다.
 방송 큐가 한 메시지를 모든 멤버에게 보낼 때까지 기다리는 비용은 남습니다.
-지형 전체 Snapshot 메시지는 이후 서버 리팩토링에서 시드만 보내고 클라이언트가 다시 만드는 구조(§2.3)로 바뀌며 없어졌습니다.
+지형 전체 Snapshot 메시지는 이후 서버 리팩토링에서 시드만 보내고 클라이언트가 다시 만드는 구조(§2.4)로 바뀌며 없어졌습니다.
 
 #### 원활해진 다인 플레이와 남은 비용
 
@@ -1234,7 +1250,7 @@ if (isBuried == false || IsGridSpaceEmpty(character.CollisionBounds) == false) r
 
 - **증상:** 같은 TSV인데 다른 OS에서 버전이 일치하지 않았습니다.
 - **원인:** BOM·CRLF/LF의 바이트 차이였습니다.
-- **해결:** 클라이언트와 서버 모두 해시에 넣기 전에 입력을 정규화했습니다(§2.3).
+- **해결:** 클라이언트와 서버 모두 해시에 넣기 전에 입력을 정규화했습니다(§2.4).
 - **결과:** 그 뒤로 Windows와 macOS에서 내용이 같은 TSV가 같은 버전으로 판단됩니다.
 - **배운 점:** OS가 다른 환경에서 함께 개발할 때는 데이터를 해시로 만들기 전에 BOM·줄바꿈을 맞춰야 한다는 것을 배웠습니다.
 
@@ -1276,7 +1292,7 @@ if (isBuried == false || IsGridSpaceEmpty(character.CollisionBounds) == false) r
 - **미니맵 갱신 비용:** 셀이 바뀔 때마다 미니맵 텍스처 전체를 GPU로 다시 올립니다. 바뀐 칸만 갱신하는 방식은 아직 적용하지 않았습니다.
 - **상점 되돌리기 순서:** 서버가 되돌리기 기록을 먼저 꺼낸 뒤 수량·환불을 검사해, 검사에 실패하면 같은 되돌리기를 다시 할 수 없습니다.
 - **다이너마이트 로컬 지형 변경:** 서버 폭발 확정 뒤에도 로컬 지형을 다시 바꿀 수 있는 경로가 남아 있습니다.
-- **지형 표현 방식의 근거:** 셀마다 객체를 두던 방식의 로드 시간·프레임 저하는 팀원 환경에서 확인했지만 수치로 남기지 않았습니다(§2.6).
+- **지형 표현 방식의 근거:** 셀마다 객체를 두던 방식의 로드 시간·프레임 저하는 팀원 환경에서 확인했지만 수치로 남기지 않았습니다(§2.7).
 - **추가 검증:** 소유자 퇴장, 늦은 확정·취소 메시지, 장시간 부하에서의 안정성 검증이 필요합니다.
 
 ### 9.3 배운 점과 회고

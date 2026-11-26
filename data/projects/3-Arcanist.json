@@ -217,6 +217,44 @@
         "edited": true
       },
       {
+        "key": "overview-systems",
+        "chapter": "overview",
+        "layout": "visual",
+        "tab": "흐름",
+        "title": {"text": "1.1 게임 소개", "verbatim": true},
+        "lead": null,
+        "sectionPath": ["1. 프로젝트 개요", "1.1 게임 소개"],
+        "points": [
+          {
+            "label": "카드 게이지",
+            "text": "시간이 지나면 한 칸씩 차고, 패링에 성공하면 칸이 더해집니다. 가득 차고 빈 슬롯이 있으면 덱에서 카드 1장을 뽑습니다.",
+            "verbatim": true
+          },
+          {
+            "label": "카드",
+            "text": "공격 효과 카드 9장·버프 효과 카드 13장을 구현했습니다. 등급은 Common·Rare·Epic·Legendary 4종이고 덱 비용은 1·2·4·6입니다.",
+            "verbatim": false
+          },
+          {"label": "덱 편성", "text": "보상으로 얻은 카드로 덱을 편성하며, 장수와 비용 합에 제한이 있습니다(§4.1).", "verbatim": true},
+          {
+            "label": "사망",
+            "text": "일반 방마다 체크포인트가 2곳 있습니다(보스 방에는 없음). 복귀하면 손패·게이지를 비우고 편성 덱으로 다시 시작합니다.",
+            "verbatim": true
+          }
+        ],
+        "visuals": [
+          {
+            "kind": "table",
+            "n": 1,
+            "fp": "동작|조작",
+            "sectionPath": ["1. 프로젝트 개요", "1.1 게임 소개"],
+            "caption": {"text": "조작", "verbatim": false}
+          }
+        ],
+        "pointsTitle": {"text": "핵심 시스템", "verbatim": false},
+        "edited": true
+      },
+      {
         "key": "arch",
         "chapter": "overview",
         "layout": "visual",
@@ -229,14 +267,19 @@
         "sectionPath": ["1. 프로젝트 개요", "1.4 전체 구조"],
         "points": [
           {
-            "label": "전투와 패링(§2)",
-            "text": "충돌 판정과 중복 타격 방지, 피해 전달, 패링에 성공하면 피해를 막고 카드 게이지를 주는 연결을 다룹니다.",
+            "label": "",
+            "text": "기본 공격과 카드 효과가 같은 `HitBox → HitResolver` 경로를 거치므로, 패링·중복 타격 방지 같은 공통 처리를 공격마다 따로 넣지 않습니다(§2.5).",
             "verbatim": true
           },
-          {"label": "카드 순환과 스킬(§3)", "text": "덱·손패·버림 더미의 순환과 사용 가능 조건, 모션에 맞춘 효과 발동을 다룹니다.", "verbatim": true},
-          {"label": "방 전환과 체크포인트 복원(§6·§7)", "text": "방 로드와 사망 복구, 클리어 여부에 따른 적 재생성을 다룹니다.", "verbatim": true}
+          {"label": "", "text": "공격이 닿았을 때 `HitResolver`가 플레이어의 패링 판정 창이 열려 있는지 확인합니다(§2.3).", "verbatim": true},
+          {
+            "label": "",
+            "text": "카드마다 클래스를 두지 않아 여러 종의 카드를 관리하기 편하고, 투사체 카드는 코드 수정 없이 추가합니다(§3.4·§3.8).",
+            "verbatim": true
+          }
         ],
         "visuals": [{"kind": "mermaid", "n": 1, "fp": "flowchart TB"}],
+        "pointsTitle": {"text": "왜 이렇게 나눴나", "verbatim": true},
         "edited": true
       },
       {
@@ -1335,6 +1378,6 @@
         "visuals": [{"kind": "code", "n": 1, "fp": "// Checkpoint.OnTriggerStay2D() — 보상 획득 전까지 방이 클리어되면 갱신 저장"}]
       }
     ],
-    "applied": "5c786381ccfc5277"
+    "applied": "56a5ccb37b384db0"
   }
 }
