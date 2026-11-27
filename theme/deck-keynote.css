@@ -303,7 +303,7 @@
 
 /* ── Folk Sack 장면별(2026-11-26, theme/deck-rules.md 규칙) — 장면 id가 프로젝트마다 겹칠 수 있어 [data-pf-project="2-Folk-Sack"]로 그 프로젝트에만 ── */
 [data-pf-project="2-Folk-Sack"] :is(#d-what, #d-gen-pipeline, #d-multi-chunk, #d-burial-states) { --pf-cards: plain; }   /* R8 번호 없음 — 1.1 개요·2.1 생성 순서·3.4 동시 낙하·4.1 매몰 상태(구현과 이유, 차례가 아닌 카드) */
-[data-pf-project="2-Folk-Sack"] #d-burial-states { --pf-layout: quad; }   /* R10 4.1 매몰 상태 — 다이어그램·이미지 위 두 칸, 카드 2장 아래 */
+[data-pf-project="2-Folk-Sack"] #d-burial-states { --pf-layout: trio; }   /* 4.1 매몰 상태 — 이미지 | 다이어그램 | 카드 3장 세로(세 칸 배치) */
 [data-pf-project="2-Folk-Sack"] #d-fog-map { --pf-layout: side; --pf-vis-scale: .855; }   /* R9 6.3 안개와 지도 — 왼쪽 이미지 539×404·오른쪽 카드 462px(캡션 한 줄) */
 [data-pf-project="2-Folk-Sack"] #d-tsv-rules { --pf-layout: side-split; --pf-split: none; }   /* 2.3 표(TSV)로 관리하는 지형 규칙 — 왼쪽 DTO→Def 다이어그램(나누지 않고 한 덩어리), 오른쪽 카드 2장 위·코드 아래(2026-11-27) */
 [data-pf-project="2-Folk-Sack"] #d-tsv-rules .dk-split { grid-template-columns: 383px 624px !important; justify-content: center !important; }   /* 2.3 — 오른쪽 칸을 624px로 넓혀 코드의 가장 긴 줄(「채굴 가능한 타일의 MaxDurability는 1 이상이어야 합니다」, 586px + 양옆 18px)을 한 줄로, 왼쪽은 예전 다이어그램 폭 383px(합 1035px ≤ 본문 1136px)(2026-11-27) */
@@ -312,7 +312,14 @@
 [data-pf-project="2-Folk-Sack"] #d-render-ai .dk-side.flip > .vis { order: 0; }
 [data-pf-project="2-Folk-Sack"] #d-collapse-steps { --pf-layout: side-split; }   /* 3.3 덩어리 하나가 떨어져 자리 잡기까지 — 10장처럼 왼쪽 낙하 덩어리 이미지, 오른쪽 단계 카드 4장 위·취소 표 아래(2026-11-27) */
 [data-pf-project="2-Folk-Sack"] #d-collapse-steps .dk-split { grid-template-columns: minmax(0, 1fr) 610px !important; justify-content: center !important; }   /* 오른쪽 칸 610px — 표의 두 줄 칸을 줄여 본문 넘침(3.6px)을 없앰, 이미지는 남는 폭 */
-[data-pf-project="2-Folk-Sack"] #d-collapse-placement .vbox[data-kind="image"] .cap { display: none; }   /* 3.3 배치 확정 — 도식 안에 칸 제목·설명·범례가 있어 긴 그림 설명(alt)은 숨기고 도식을 크게(2026-11-27) */
+[data-pf-project="2-Folk-Sack"] :is(#d-collapse-placement, #d-chunk-placement) .vbox[data-kind="image"] .cap { display: none; }   /* 3.3 배치 확정 — 도식 안에 칸 제목·설명·범례가 있어 긴 그림 설명(alt)은 숨기고 도식을 크게(2026-11-27) */
+[data-pf-project="2-Folk-Sack"] :is(#d-chunk-placement, #d-player-move) .ncard .lb, [data-pf-project="2-Folk-Sack"] #d-player-move .cards.titled .num.tl { white-space: normal !important; word-break: keep-all; width: min-content !important; box-sizing: content-box; text-align: center; line-height: 1.3; }   /* 4.3 멈출 칸 선택 — 라벨 두 글자 + 두 글자를 두 줄로(띄어쓰기에서만 나눔), 글 칸을 넓혀 카드 2줄(2026-11-27) */
+[data-pf-project="2-Folk-Sack"] #d-escape-choice table { table-layout: fixed; }   /* 4.4 고민과 선택 — 방법 열은 채택 행이 한 줄에 들도록, 장점 열은 채택 행 첫 항목이 한 줄에 들도록, 비용 열은 줄여 채택 행을 2줄로(2026-11-27) */
+[data-pf-project="2-Folk-Sack"] #d-escape-choice table th:nth-child(1) { width: 32.1%; }
+[data-pf-project="2-Folk-Sack"] #d-escape-choice table th:nth-child(2) { width: 33.9%; }
+[data-pf-project="2-Folk-Sack"] #d-escape-choice table th:nth-child(3) { width: 34%; }
+[data-pf-project="2-Folk-Sack"] #d-escape-choice .cards.row .ncard[data-lb="해결"] { background: var(--accent-soft); border-color: transparent; }   /* 4.4 고민과 선택 — 문제·해결 카드 중 해결만 파란 라벨 카드(문제는 기본 카드) */
+[data-pf-project="2-Folk-Sack"] #d-escape-choice .cards.row .ncard[data-lb="해결"] > div > .lb { background: var(--accent-fill); color: #fff; }
 [data-pf-project="2-Folk-Sack"] #d-lobby-screens { --pf-vis-scale: .93; }   /* 7.3 대기방 프리뷰·채팅·승자 표시 — 이미지 두 장 + 카드 두 장이 본문 칸을 25px 넘쳐 이미지를 조금 작게(2026-11-27) */
 [data-pf-project="2-Folk-Sack"] #d-map-contract { --pf-layout: side-split; }   /* 2.4 접속 시 같은 맵 재생성 — 10장(d-tsv-rules)처럼 왼쪽 이미지, 오른쪽 카드 2장 위·코드 아래(deck-edits에서 이미지를 첫 자료로, 2026-11-27) */
 [data-pf-project="2-Folk-Sack"] #d-map-contract .dk-split { grid-template-columns: 568px 534px !important; justify-content: center !important; }   /* 2.4 — 오른쪽 칸 534px(코드 첫 줄 주석 497px + 양옆 18px)로 코드가 꺾이지 않게, 왼쪽은 이미지 폭 568px(합 1130px ≤ 본문 1136px)(2026-11-27) */
@@ -349,8 +356,21 @@
 .pf-scene .cards .ncard[data-lb="한계"] { background: color-mix(in srgb, #6E6E73 16%, var(--bg)); border-color: transparent; }   /* 한계 = 짙은 회색 칸 + 16% 바탕(중립 단서, 다크 모드에서도 흰 글씨가 읽히게 고정 색, 2026-11-27) */
 .pf-scene .cards .ncard[data-lb="한계"] > div > .lb, .pf-scene .cards .ncard[data-lb="한계"] > .num.tl { background: #6E6E73; color: #fff; }   /* 가로 왼쪽 칸(.lb)·제목형 라벨 칸(.num.tl) 모두 */
 /* R4 「AI 활용」 칸 = Claude 주황, 카드 바탕 주황 16%(결과 카드 초록 16%와 같은 계산) — 세로 제목 칸(.num.tl)·가로 왼쪽 칸(.lb) 모두 */
-.pf-scene .ncard[data-lb="AI 활용"] { background: color-mix(in srgb, #D97757 16%, var(--bg)); border-color: transparent; }
+.pf-scene .ncard[data-lb="AI 활용"] { background: color-mix(in srgb, #D97757 16%, var(--bg)); border-color: transparent; border-width: 0; }   /* 테두리 0 — 투명 테두리 1px 만큼 라벨 칸이 안으로 들어가 카드 바탕색 틈이 보이던 것을 없앰(2026-11-27) */
 .pf-scene .cards .ncard[data-lb="AI 활용"] > .num.tl, .pf-scene .cards .ncard[data-lb="AI 활용"] > div > .lb { background: #D97757; color: #fff; }
+/* 「AI 활용」 glow(화면에서만 — 인쇄·PDF·PPTX는 그대로, 카드 전체가 아니라 두 곳만, 효과는 칸 안에만 — 바깥 번짐 없이 inset): ① 카드 왼쪽 라벨 칸 = 주황 그러데이션 + 안쪽 가장자리 빛(윗변 흰 하이라이트 줄은 뺌 — 밝은 배경에서 칸 위에 틈처럼 보임) ② 「AI」 머리말 칸 = 그러데이션 + 안쪽 테두리·빛. 다크가 기본, 라이트는 빛만 약하게 (2026-11-27) */
+@media screen {
+  .pf-scene .cards .ncard[data-lb="AI 활용"] > .num.tl, .pf-scene .cards .ncard[data-lb="AI 활용"] > div > .lb {
+    background: radial-gradient(120% 90% at 50% 0%, #F2A98A 0%, rgba(242, 169, 138, 0) 70%), linear-gradient(160deg, #E88F66 0%, #D97757 52%, #C4613E 100%);
+    box-shadow: inset 0 0 22px 2px rgba(255, 190, 150, .45); }
+  #d-ui-tools-table .fstep > p > strong:first-of-type, [data-pf-project="2-Folk-Sack"] #d-render-ai .fstep > p > strong:first-of-type {
+    background: linear-gradient(135deg, color-mix(in srgb, #D97757 38%, var(--bg)), color-mix(in srgb, #D97757 18%, var(--bg)));
+    box-shadow: inset 0 0 0 1px rgba(217, 119, 87, .6), inset 0 0 12px 1px rgba(217, 119, 87, .5); }
+  html[data-pf-mode="light"] .pf-scene .cards .ncard[data-lb="AI 활용"] > .num.tl, html[data-pf-mode="light"] .pf-scene .cards .ncard[data-lb="AI 활용"] > div > .lb {
+    box-shadow: inset 0 0 18px 1px rgba(255, 200, 165, .4); }
+  html[data-pf-mode="light"] #d-ui-tools-table .fstep > p > strong:first-of-type, html[data-pf-mode="light"] [data-pf-project="2-Folk-Sack"] #d-render-ai .fstep > p > strong:first-of-type {
+    box-shadow: inset 0 0 0 1px rgba(217, 119, 87, .5), inset 0 0 10px 1px rgba(217, 119, 87, .35); }
+}
 /* R18 화면 장면(layout screens) — 그림 나란히 위, 카드 줄 아래. 카드 줄 폭 = 그림 줄 폭(ODDITY d-psy-hold-aim과 같은 방식), 카드 사이 = 그림 사이 16px.
    배치 맞추기 중(.pf-sizing은 장면 자신에 붙음)에는 원래 폭으로 남은 높이를 잼 */
 .pf-scene .dk-stack.scr-cards { grid-template-columns: max-content; justify-content: center; }

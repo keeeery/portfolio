@@ -289,6 +289,8 @@
     // 직접 고침(2026-11-25): 2×2 배치 — 시각 자료마다 자기 칸(.vis)에서 크기를 맞추고 카드는 네 번째 칸
     // 직접 고침(2026-11-26): 위 줄 세 칸 배치(--pf-layout: row3) — 시각 자료 3개가 위 줄에 나란히, 카드는 아래 줄에 나란히
     if (variant.row3 && vs.length === 3) return `<div class="dk dk-quad q3${tight}">${vs.map((x) => vis([x])).join('')}${ncards(points, { num: points.length > 1, row: true, rowTitled: true, head: txt(sl.pointsTitle) })}</div>`;   // 카드가 하나면 번호 없이
+    // 직접 고침(2026-11-27): 세 칸 배치(--pf-layout: trio) — 시각 자료 2개가 왼쪽 두 칸(같은 높이), 카드는 오른쪽 칸에 세로로(같은 높이)
+    if (variant.trio && vs.length === 2) return `<div class="dk dk-trio${tight}">${vs.map((x) => vis([x])).join('')}${ncards(points, { num: points.length > 1, head: txt(sl.pointsTitle) })}</div>`;
     if (variant.quad && (vs.length === 3 || vs.length === 2)) return `<div class="dk dk-quad${vs.length === 2 ? ' q2' : ''}${tight}">${vs.map((x) => vis([x])).join('')}${ncards(points, { num: points.length > 1, row: vs.length === 2, rowTitled: true, head: txt(sl.pointsTitle) })}</div>`;   // 요점이 하나면 번호 칸 없는 카드. 시각 자료 2개면 위 줄 두 칸, 카드는 아래 줄에 나란히
     // 요점이 없으면(나눈 장면 등) 옆 칸이 비지 않게 시각 자료를 가로 전체로
     if (sl.layout === 'full' || variant.stack || !points.length) return `<div class="dk dk-stack${tight}">${vis(vs)}${ncards(points, { row: true, num: sl.layout !== 'full', head: txt(sl.pointsTitle) })}</div>`;
@@ -484,6 +486,46 @@
       const Hmax = Math.round(colW / Math.max(...ars.filter(Boolean), 0.01));
       for (let H = Hmax; H > 120; H -= 4) { set(H); if (fill.offsetHeight <= body.clientHeight) return; }
     });
+    // 직접 고침(2026-11-27): 세 칸 배치(.dk-trio) — 이미지·다이어그램 판·카드 줄 전체를 같은 높이 H로(다이어그램은 원래 크기 이하, 캡션은 아래 따로),
+    //   오른쪽 카드 칸은 본문 폭의 30% 이상. 그 안에서 장면에 들어가는 가장 큰 H, 남는 폭은 카드 칸에
+    s.querySelectorAll('.dk-trio').forEach((dk) => {
+      const body = s.querySelector('.pf-body'), fill = s.querySelector('.pf-fill');
+      const items = [...dk.querySelectorAll(':scope > .vis > .vbox')].map((b) => ({ b, m: b.querySelector(':scope > .vmedia'), svg: b.querySelector(':scope > .vmedia svg') }))
+        .filter((x) => x.m && (x.b.dataset.kind === 'image' || x.svg));
+      if (items.length !== 2) return;
+      const cards = dk.querySelector(':scope > .cards');
+      dk.style.gridTemplateColumns = ''; if (cards) cards.style.height = '';
+      items.forEach(({ b, m, svg }) => { b.style.width = ''; ['width', 'height', 'display', 'alignItems', 'justifyContent'].forEach((k) => { m.style[k] = ''; }); if (svg) ['width', 'height', 'maxWidth'].forEach((k) => { svg.style[k] = ''; }); });
+      const gap = parseFloat(getComputedStyle(dk).columnGap) || 0, W = dk.clientWidth, cMin = Math.round(W * 0.3), pad = 16;
+      const ars = items.map(({ b, m }) => {
+        if (b.dataset.kind !== 'image') return 0;
+        const im = m.querySelector('img, video'); const w = +im?.getAttribute('width') || im?.naturalWidth || im?.videoWidth, h = +im?.getAttribute('height') || im?.naturalHeight || im?.videoHeight;
+        return w && h ? w / h : 4 / 3;
+      });
+      const widths = (H) => items.map(({ svg }, k) => {
+        if (!svg) return Math.round(H * ars[k]);
+        const vb = svg.viewBox?.baseVal; const sc = Math.min((H - 2 * pad) / (vb?.height || 1), 1);
+        return Math.ceil((vb?.width || 0) * sc + 2 * pad);
+      });
+      const set = (H) => {
+        const ws = widths(H), cw = W - ws[0] - ws[1] - 2 * gap;
+        dk.style.gridTemplateColumns = `${ws[0]}px ${ws[1]}px ${cw}px`;
+        items.forEach(({ b, m, svg }, k) => {
+          b.style.width = `${ws[k]}px`;
+          if (svg) {
+            const vb = svg.viewBox.baseVal, sc = Math.min((H - 2 * pad) / vb.height, 1);
+            Object.assign(m.style, { width: `${ws[k]}px`, height: `${H}px`, display: 'flex', alignItems: 'center', justifyContent: 'center' });
+            Object.assign(svg.style, { width: `${vb.width * sc}px`, height: `${vb.height * sc}px`, maxWidth: 'none' });
+          } else Object.assign(m.style, { width: `${ws[k]}px`, height: `${H}px` });
+        });
+        if (cards) cards.style.height = `${H}px`;                       // 카드 줄 전체 높이 = 이미지·다이어그램 높이(남는 높이는 카드마다 고르게 더해짐)
+      };
+      const cardsFit = () => !cards || [...cards.children].every((c) => c.scrollHeight <= c.clientHeight + 1) && cards.scrollHeight <= cards.clientHeight + 1;
+      for (let H = 600; H > 120; H -= 2) {
+        const ws = widths(H); if (W - ws[0] - ws[1] - 2 * gap < cMin) continue;
+        set(H); if (fill.offsetHeight <= body.clientHeight - 6 && cardsFit()) return;
+      }
+    });
     return s;
   }
   // 장면 id에 걸린 CSS 변수(theme CSS의 `#d-<key> { … }`)를 그리기 전에 읽음 — 빈 장면 껍데기를 잠깐 붙여 계산값을 봄
@@ -502,6 +544,7 @@
     else if (fl === 'side-split' && vis.length > 1) V = [{ vw: 1, split: true }, { vw: 1.2, split: true }, { vw: 0.85, split: true }, { vw: 1, split: true, tight: true }];
     // 직접 고침(2026-11-25): 2×2 배치(--pf-layout: quad) — 시각 자료 3개가 왼쪽 위·오른쪽 위·왼쪽 아래, 카드가 오른쪽 아래
     else if (fl === 'quad' && (vis.length === 3 || vis.length === 2)) V = [{ quad: true }, { quad: true, tight: true }];
+    else if (fl === 'trio' && vis.length === 2) V = [{ trio: true }, { trio: true, tight: true }];   // 직접 고침(2026-11-27): 이미지 | 다이어그램 | 카드 세로
     else if (fl === 'row3' && vis.length === 3) V = [{ row3: true }, { row3: true, tight: true }];   // 직접 고침(2026-11-26): 위 줄 세 칸
     const build = (v) => {
       const s = PF.scene({ id: sid, tpl: 'D', eyebrow: meta.eyebrow || meta.chapter, rlabel: meta.rlabel, rhtml: meta.rhtml, title: secTitle(txt(sl.title)) || meta.chapter, sub: part, lead: part && part !== `1/${part.split('/')[1]}` ? '' : txt(sl.lead), foot: meta.foot, sec: meta.chapter, group: meta.chapter, stitle: txt(sl.title) });
@@ -519,7 +562,7 @@
     for (const v of V) { const s = build(v); if (!PF.fitsM(s)) continue; const sc = PF.visScore(s); if (!best || sc > best.sc + 0.05) best = { s, sc }; }
     if (best) return [best.s];
     // 직접 고침(2026-11-26): 2×2 배치는 표를 나누지 않음 — 그리는 순간 글꼴·이미지가 덜 들어와 잠깐 안 맞아도, whenReady 뒤 matchQuad가 다시 맞춤
-    if (V[0]?.quad) return [build(V[V.length - 1])];
+    if (V[0]?.quad || V[0]?.trio) return [build(V[V.length - 1])];
     // 표가 하한에서도 안 들어가면 행을 반으로 나눠 "계속" 장면으로
     //   표가 여럿이면 행이 가장 많은 표 하나만 나눕니다(같으면 앞의 것). 나머지 표는 앞 장면에 온전히 남음
     const nrows = (v) => v.el.querySelectorAll('tbody tr').length;

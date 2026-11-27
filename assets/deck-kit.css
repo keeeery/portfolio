@@ -101,10 +101,15 @@
   .pf-ov-head { display: flex; align-items: center; gap: 14px; padding: 14px 18px 14px 24px; background: var(--card, #131318); border-bottom: 1px solid var(--line, #24242C); flex: none; }
   .pf-ov-head h2 { margin: 0; font-size: 18px; font-weight: 800; letter-spacing: -.01em; }
   .pf-ov-head h2 small { font-size: 14px; font-weight: 600; color: var(--muted, #9A9AA6); margin-left: 6px; }
-  .pf-ov-hint { margin: 0 0 0 auto; font-size: 13px; color: var(--muted, #9A9AA6); }
-  .pf-ov-close { all: unset; cursor: pointer; width: 34px; height: 34px; display: grid; place-items: center; border-radius: var(--pill, 999px); border: 1px solid var(--line-2, #2E2E38); background: var(--card, #15151B); font-size: 16px; }
-  .pf-ov-close:hover { border-color: var(--accent-ink, #6D9AF1); color: var(--accent-ink, #6D9AF1); }
+  .pf-ov-hint { margin: 0 0 0 auto; display: flex; gap: 22px; font-size: 13px; color: var(--ink, #fff); }
+  .pf-ov-hint .k { margin-left: 4px; font-weight: 500; color: color-mix(in srgb, var(--ink, #fff) 45%, transparent); }   /* 단축키 — 도움말의 단축키 줄과 같은 회색 */
+  .pf-ov-hint .kr { display: inline-block; font-size: .88em; transform: scaleX(.866); margin: 0 -.065em; }   /* ↩만 글꼴에서 ← →보다 크게 그려져(Pretendard 글자 폭 .925em ↔ .705em, 높이 .73em ↔ .645em) 크기 .88 × 가로 .866으로 가로·세로 둘 다 화살표에 맞춤. transform은 칸 폭을 안 바꿔서 margin으로 보정 */
+  /* 닫기 단추 = 아래 띠 단추와 같은 모양 — 32px 동그라미, 평소 바탕 없음, 올리면 글자색 10% 바탕, 아이콘은 선 2 둥근 ✕(18px) */
+  .pf-ov-close { all: unset; cursor: pointer; box-sizing: border-box; width: 32px; height: 32px; display: grid; place-items: center; border-radius: var(--pill, 999px); color: var(--ink, #E8E8EE); }
+  .pf-ov-close svg { width: 18px; height: 18px; }
+  .pf-ov-close:hover { background: color-mix(in srgb, var(--ink, #fff) 10%, transparent); }
   .pf-ov-close:focus-visible { outline: 2px solid var(--accent-ink, #6D9AF1); outline-offset: 2px; }
+  @media (max-width: 640px) { .pf-ov-hint { display: none; } .pf-ov-close { margin-left: auto; } }   /* 좁은 화면(휴대폰)은 자판 단축키 안내를 감춤 — 제목 옆에 끼어 줄이 꺾임 */
   .pf-ov-grid { flex: 1; overflow: auto; padding: 8px 24px 28px; display: grid; grid-template-columns: repeat(auto-fill, minmax(208px, 1fr)); gap: 10px 16px; align-content: start; }
   .pf-ov-sec { grid-column: 1 / -1; margin: 14px 0 0; padding-bottom: 6px; border-bottom: 1px solid var(--line, #24242C); font-size: 13px; font-weight: 800; color: var(--accent-ink, #6D9AF1); letter-spacing: .02em; }
   .pf-ov-item { all: unset; box-sizing: border-box; cursor: pointer; display: flex; flex-direction: column; gap: 6px; padding: 6px; border-radius: calc(var(--radius, 20px) * .5); min-width: 0; }

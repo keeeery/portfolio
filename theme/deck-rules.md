@@ -33,6 +33,7 @@ ODDITY 슬라이드를 장면마다 손보며 정한 판단을 다른 프로젝�
 |---|---|---|---|---|
 | R9 | 4:3 이미지 1개 + 카드 n장 | 왼쪽 이미지 539×404px, 오른쪽 카드 칸 462px. **`side`만 넣고 끝내지 않음** — 재서 확인 | `--pf-layout: side; --pf-vis-scale:` 캡션 한 줄 ≈ .912, 두 줄 ≈ .95 | psy-aim·psy-hold-lag·ui-tools·telegraph |
 | R10 | 시각 자료 2개 + 카드 3장 이하 | 위 두 칸(같은 높이), 카드는 아래 줄. 세로로 긴 다이어그램 + 이미지면 카드가 좁아져 넘칠 수 있으니 재서 확인(Arcanist golem-fsm은 기본 배치) | `--pf-layout: quad` | crosshair·boss-finish |
+| R10b | 이미지 + 세로로 긴 다이어그램 + 짧은 카드 3장 | 세 칸 — 이미지 | 다이어그램(같은 높이) | 카드 세로(같은 높이, 본문 폭 30% 이상). 칸 폭은 렌더러가 재서 정함 | `--pf-layout: trio` | (Folk Sack burial-states) |
 | R11 | 이미지 + 코드 + 카드 | 코드가 길면 왼쪽 이미지·오른쪽 카드 위/코드 아래, 코드가 짧고 넓으면 2×2 — 둘 다 그려 비교, 둘 다 나쁘면(이미지가 작아지거나 넘침) 기본 배치. **quad에 코드가 들어가면 코드 칸이 넘치는 일이 잦음**(Folk map-contract·Arcanist reward-draw — 둘 다 기본 배치) | `side-split` / `quad` | psy-follow·psy-throw·local-time / camera-shake |
 | R12 | 시각 자료 3개 + 카드 | 위 줄 세 칸 같은 높이, 카드 아래 줄 | `--pf-layout: row3` | boss-occlusion |
 | R13 | 이미지 2개 + 카드 1장 | 이미지 나란히 위, 카드 아래(카드 폭 = 이미지 줄 폭) | `--pf-layout: stack; --pf-arr: row` + ㉕의 psy-hold-aim 선택자 목록에 id 추가 | psy-hold-aim·freeze-except |

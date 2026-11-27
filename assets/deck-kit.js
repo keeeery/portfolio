@@ -696,10 +696,22 @@
     const t = ov.querySelector('.pf-ov-thumb'); if (!t) return;
     ov.style.setProperty('--ov-k', String(t.clientWidth / W));
   }
+  // 개요 창 안내 = 「기능 단축키」 묶음(사이 2칸 띄움) — 기능 글자 + 단축키 회색(도움말의 단축키 줄과 같은 표기). 문구 표의 한 칸을 그대로 쓰되 두 칸 이상 띄운 곳에서 묶음을 나누고, 묶음 첫 낱말이 기능 이름, 나머지가 단축키.
+  //   mac은 Enter를 ↩(Return), Esc를 ⎋(Escape) 기호로 — 메뉴의 표기와 같게(직접 고침 2026-11-27)
+  function ovHintHTML() {
+    const MACK = /Mac|iPhone|iPad/.test(navigator.platform);
+    const raw = L('ui.ov-hint'), esc = (t) => t.replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+    return raw.split(/\s{2,}/).map((g) => {
+      const m = g.trim().match(/^(\S+)\s+([\s\S]+)$/);
+      if (!m) return `<span class="pf-ov-grp">${esc(g.trim())}</span>`;
+      const keys = MACK ? m[2].replace(/\bEnter\b/g, '↩').replace(/\bEsc\b/g, '⎋') : m[2];
+      return `<span class="pf-ov-grp">${esc(m[1])} <span class="k">${esc(keys).replace(/↩/g, '<span class="kr">↩</span>')}</span></span>`;
+    }).join('');
+  }
   function buildOverview() {
     ov = document.createElement('dialog');
     ov.className = 'pf-ov'; ov.setAttribute('aria-labelledby', 'pf-ov-h'); ov.dataset.pfUi = 'overview';
-    ov.innerHTML = `<div class="pf-ov-head"><h2 id="pf-ov-h">${LH('ui.ov-title')} <small></small></h2><p class="pf-ov-hint">${LH('ui.ov-hint')}</p><button type="button" class="pf-ov-close" aria-label="개요 닫기">✕</button></div><div class="pf-ov-grid"></div>`;
+    ov.innerHTML = `<div class="pf-ov-head"><h2 id="pf-ov-h">${LH('ui.ov-title')} <small></small></h2><p class="pf-ov-hint">${ovHintHTML()}</p><button type="button" class="pf-ov-close" aria-label="개요 닫기"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button></div><div class="pf-ov-grid"></div>`;
     ov.querySelector('.pf-ov-close').addEventListener('click', () => ov.close());
     ov.addEventListener('click', (e) => {
       if (e.target === ov) { ov.close(); return; }
