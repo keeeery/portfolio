@@ -292,7 +292,7 @@
             "text": "초기 전체 맵 전송 부담을 줄이는 대신 생성기·난수 순서·데이터를 양쪽에서 맞춰야 하므로, 정규화한 TSV 해시로 테이블 차이를 검사합니다(§2.2·§2.7).",
             "verbatim": true
           },
-          {"label": "", "text": "지형보다 크기가 작아, 획득·판매·사망 등 여러 경로의 결과를 하나의 기준으로 복원합니다(§5.4).", "verbatim": true}
+          {"label": "", "text": "지형보다 크기가 작아, 획득·판매·사망 등 여러 경로의 결과를 하나의 기준으로 복원합니다(§5.3).", "verbatim": true}
         ],
         "visuals": [{"kind": "mermaid", "n": 1, "fp": "flowchart TB"}],
         "pointsTitle": {"text": "왜 이렇게 나눴나", "verbatim": true},
@@ -731,38 +731,45 @@
         "key": "inventory-flow",
         "chapter": "inventory",
         "layout": "visual",
-        "tab": "흐름",
-        "title": {"text": "5.2 아이템 요청과 서버 전체 상태로 교체", "verbatim": true},
-        "lead": {"text": "`PlayerInventory`는 ItemID별 수량과 무게를 관리합니다.", "verbatim": true},
-        "sectionPath": ["5. 인벤토리·아이템·상점", "5.2 아이템 요청과 서버 전체 상태로 교체"],
+        "tab": "개요",
+        "title": {"text": "5.1 개요 — 아이템 구성과 역할", "verbatim": true},
+        "lead": {"text": "아이템의 종류·효과와 사용 구조는 팀원이 구현했고, 저는 그 위에 수량·무게·장착 상태를 서버가 확정하고 화면에 반영하도록 연결했습니다.", "verbatim": true},
+        "sectionPath": ["5. 인벤토리·아이템·상점", "5.1 개요 — 아이템 구성과 역할"],
         "points": [
           {
-            "label": "구현",
-            "text": "`ReplaceWithSnapshot()`은 서버 전체 상태를 수신해 교체하고, 실제 수량이 바뀐 아이템의 이벤트를 발생시킵니다.",
-            "verbatim": true
+            "label": "장비(곡괭이)",
+            "text": "장착한 곡괭이로 타일 채굴, 등급이 오를수록 채굴력·수용량 증가, 사거리는 은 등급부터 늘어남\n하나만 장착",
+            "verbatim": false
           },
-          {"label": "구현", "text": "서버가 확정한 상태를 클라이언트의 로컬 무게 제한으로 거절하지 않도록 처리합니다.", "verbatim": true},
-          {"label": "", "text": "장착 곡괭이도 `EquippedPickaxeItemID`로 별도 적용합니다.", "verbatim": true}
+          {"label": "사용 아이템", "text": "던지기·설치·사용\n수량만큼 사용, 아이템별 쿨타임", "verbatim": false},
+          {"label": "광물·원석", "text": "캐면 드롭, 지상에 돌아오면 자동 판매\n종류별 무게, 무게 제한까지만 보유", "verbatim": false}
         ],
-        "visuals": [{"kind": "mermaid", "n": 1, "fp": "sequenceDiagram"}]
+        "visuals": [{"kind": "image", "src": "images/shop-items.png", "w": 1567, "h": 1212}],
+        "edited": true
       },
       {
-        "key": "cooldown-cancel",
+        "key": "inventory-sync",
         "chapter": "inventory",
-        "layout": "code",
-        "tab": "구현",
-        "title": {"text": "5.3 아이템 사용 거절과 쿨타임", "verbatim": true},
-        "lead": {"text": "아이템을 쓰면 서버의 응답을 기다리지 않고 화면의 쿨타임을 먼저 시작합니다.", "verbatim": true},
-        "sectionPath": ["5. 인벤토리·아이템·상점", "5.3 아이템 사용 거절과 쿨타임"],
+        "layout": "visual",
+        "tab": "흐름",
+        "title": {"text": "5.2 서버가 확정하는 아이템 요청", "verbatim": true},
+        "lead": {"text": "아이템을 줍고, 버리고, 팔고, 사고, 쓰는 모든 행동은 클라이언트(`RoomClient`)가 서버에 요청하고 서버가 검사해 확정합니다.", "verbatim": true},
+        "sectionPath": ["5. 인벤토리·아이템·상점", "5.2 서버가 확정하는 아이템 요청"],
         "points": [
-          {"label": "구현", "text": "`pendingCooldowns`는 요청 ID마다 어느 아이템을 언제 다시 쓸 수 있는지 기억합니다.", "verbatim": true},
+          {"label": "전체 상태로 교체", "text": "클라이언트는 바뀐 부분을 계산하지 않고 이 전체 상태로 교체합니다.", "verbatim": true},
+          {"label": "거절 시 쿨타임 취소", "text": "서버가 사용을 거절하면 이미 시작한 쿨타임을 취소합니다.", "verbatim": false}
+        ],
+        "visuals": [
+          {"kind": "mermaid", "n": 1, "fp": "sequenceDiagram"},
           {
-            "label": "구현",
-            "text": "성공 응답이 오면 대기를 지우고 효과를 재생하고, `RequestFailed`가 오면 그 아이템의 예상 쿨타임을 지웁니다.",
-            "verbatim": true
+            "kind": "image",
+            "src": "images/item-cooldown-bar.png",
+            "w": 1449,
+            "h": 244,
+            "sectionPath": ["5. 인벤토리·아이템·상점", "5.2 서버가 확정하는 아이템 요청", "거절된 사용의 쿨타임 취소"]
           }
         ],
-        "visuals": [{"kind": "code", "n": 1, "fp": "// ItemController.HandleRequestFailed() — 실패한 요청의 예상 쿨타임 제거"}]
+        "edited": true
       },
       {
         "key": "vision-layers",
@@ -1287,6 +1294,6 @@
         "visuals": []
       }
     ],
-    "applied": "69d463cbd9b4748a"
+    "applied": "3dd0d61c7bb8de00"
   }
 }
