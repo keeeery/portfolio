@@ -734,8 +734,10 @@
       b.type = 'button'; b.className = 'pf-ov-item'; b.dataset.i = String(i);
       const t = titleOf(s);
       b.setAttribute('aria-label', `${i + 1}. ${sec}${t && t !== sec ? ' — ' + t : ''}`);
-      const c = s.cloneNode(true);                            // 축소 미리보기(같은 DOM 복제). id는 지움
-      c.removeAttribute('id'); c.removeAttribute('tabindex'); c.removeAttribute('role'); c.removeAttribute('aria-label'); c.removeAttribute('aria-roledescription');
+      const c = s.cloneNode(true);                            // 축소 미리보기(같은 DOM 복제). 안쪽 id는 지움
+      // 직접 고침(2026-11-27): 장면 자신의 id(#d-<key>)는 남김 — theme CSS의 장면별 규칙(#d-<key> …: 캡션 숨김·표 열 폭 등)이 썸네일에도 걸리게.
+      // 개요 창은 body 끝에 붙고 inert라 getElementById·#s= 주소는 앞에 있는 실제 장면을 찾음
+      c.removeAttribute('tabindex'); c.removeAttribute('role'); c.removeAttribute('aria-label'); c.removeAttribute('aria-roledescription');
       c.inert = true; c.setAttribute('aria-hidden', 'true');
       c.classList.remove('pf-cur', 'pf-enter', 'pf-skip'); c.classList.add('pf-thumb-scene');
       c.querySelectorAll('[id]').forEach((e) => { if (!e.closest('svg')) e.removeAttribute('id'); });
