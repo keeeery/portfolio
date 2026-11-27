@@ -317,7 +317,10 @@
 [data-pf-project="2-Folk-Sack"] #d-vision-layers { --pf-layout: side; }   /* 6.1 개요 — 왼쪽 이미지 최대 크기·오른쪽 카드 462px 세로(2026-11-27, 사용자 요청: 캡션 빼고 이미지 최대한 크게) */
 [data-pf-project="2-Folk-Sack"] #d-vision-layers .vbox[data-kind=image] .cap { display: none; }   /* 6.1 개요 — 캡션 숨김(이미지 설명 alt는 그대로) */
 [data-pf-project="2-Folk-Sack"] #d-vision-refresh .vbox[data-kind="code"], [data-pf-project="2-Folk-Sack"] #d-vision-refresh .vbox[data-kind="code"] .fit-in { width: 100% !important; }   /* 6.2 — 첫 줄 주석을 줄여(slideText) 한 줄로 만든 뒤 좁아진 코드 칸을 아래 표 폭에 맞춤(2026-11-27) */
-[data-pf-project="2-Folk-Sack"] #d-fog-map { --pf-layout: side; --pf-vis-scale: .855; }   /* R9 6.3 안개와 지도 — 왼쪽 이미지 539×404·오른쪽 카드 462px(캡션 한 줄) */
+[data-pf-project="2-Folk-Sack"] #d-fog-map { --pf-layout: side-split; --pf-split-vw: .85; }   /* R9 6.3 안개와 지도 — 왼쪽 전체 지도 이미지, 오른쪽 카드 2장 + 비교표(오른쪽 칸을 넓혀 표 칸 이름이 꺾이지 않게)(2026-11-27 두 장면을 하나로 합침) */
+[data-pf-project="2-Folk-Sack"] #d-fog-map .vbox[data-kind="table"] table { table-layout: fixed; }   /* 6.3 비교표 — 1열 「지형 칸」·2열 「…따라가며 검사」가 한 줄에 들어가게 1·2열을 넓히고 3열을 줄임(2026-11-27) */
+[data-pf-project="2-Folk-Sack"] #d-fog-map .vbox[data-kind="table"] tr > :nth-child(1) { width: 70px; }
+[data-pf-project="2-Folk-Sack"] #d-fog-map .vbox[data-kind="table"] tr > :nth-child(2) { width: 266px; }
 [data-pf-project="2-Folk-Sack"] #d-tsv-rules { --pf-layout: side-split; --pf-split: none; }   /* 2.3 표(TSV)로 관리하는 지형 규칙 — 왼쪽 DTO→Def 다이어그램(나누지 않고 한 덩어리), 오른쪽 카드 2장 위·코드 아래(2026-11-27) */
 [data-pf-project="2-Folk-Sack"] #d-tsv-rules .dk-split { grid-template-columns: 383px 624px !important; justify-content: center !important; }   /* 2.3 — 오른쪽 칸을 624px로 넓혀 코드의 가장 긴 줄(「채굴 가능한 타일의 MaxDurability는 1 이상이어야 합니다」, 586px + 양옆 18px)을 한 줄로, 왼쪽은 예전 다이어그램 폭 383px(합 1035px ≤ 본문 1136px)(2026-11-27) */
 [data-pf-project="2-Folk-Sack"] #d-tsv-rules .vbox[data-kind="code"] pre { padding-block: 35px !important; }   /* 2.3 — 2번 카드가 한 줄이 되고(약 24px) 코드가 꺾이지 않아(약 18px) 낮아진 만큼 코드 위아래 여백을 14px → 35px로, 왼쪽 다이어그램 크기 유지 */

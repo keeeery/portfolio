@@ -1089,7 +1089,21 @@ ExploreVisionRadius(playerCell);
 ![전체 지도(Tab)에 탐험한 구역과 플레이어 위치 마커가 표시된 화면](images/full-map.png)
 
 누적 탐험은 시야 반경 안의 셀을 직선 시야(`HasLineOfSight()`)로 검사해 새로 본 셀만 기록하고, 현재 관측은 플레이어와 횃불에서 상하좌우로 뻗어 통로를 따라 넓힙니다.
-월드 안개는 탐험 이력과 현재 시야를 두 겹 Mesh로 그리고, 전체 지도는 커서 아래 지점을 유지하며 확대합니다.
+
+| 구분 | 누적 탐험 | 현재 관측 |
+|---|---|---|
+| 방법 | 중심에서 대상 셀까지 직선을 따라가며 검사 | 상하좌우로 뻗고, 갈림길에서 직각으로 최대 두 번 꺾임 |
+| 범위 | 반경 4칸 원 | 플레이어 14칸, 횃불 4칸 |
+| 지형 칸 | 시야를 막는 칸은 기록하고 그 뒤만 제외<br>양옆이 막힌 대각선 틈은 통과하지 않음 | 지형에 닿으면 그 칸까지 보이고 멈춤 |
+
+월드 안개는 탐험 이력과 현재 시야를 두 겹 Mesh로 그립니다.
+아래 겹은 가 보지 않은 곳을, 위 겹은 지금 보이지 않는 곳을 덮고, 게임에서는 위 겹을 불투명하게 두어 지금 보이는 곳만 드러나게 했습니다.
+Mesh는 32×32 청크로 나누어, 시야가 바뀐 청크만 `LateUpdate()`에서 한 번 다시 만듭니다.
+지상과 기반암, 스폰 발판은 안개로 덮지 않습니다.
+
+지도는 셀 하나를 텍스처의 픽셀 하나로 칠하고, 미니맵과 Tab 전체 지도가 같은 텍스처를 사용합니다.
+탐험한 셀만 칠하고, 지금 보이는 셀만 다시 칠하므로 가 본 곳은 마지막으로 본 모습으로 남습니다.
+전체 지도는 커서 아래 지점을 유지하며 확대합니다.
 
 소스: [PlayerExplorationController.cs](https://github.com/keeeery/Folk-Sack/blob/main/Assets/02.%20Scripts/Exploration/PlayerExplorationController.cs), [ExplorationMapData.cs](https://github.com/keeeery/Folk-Sack/blob/main/Assets/02.%20Scripts/Exploration/ExplorationMapData.cs), [ExplorationForWorldView.cs](https://github.com/keeeery/Folk-Sack/blob/main/Assets/02.%20Scripts/Exploration/ExplorationForWorldView.cs), [MinimapView.cs](https://github.com/keeeery/Folk-Sack/blob/main/Assets/03.%20UI/Scripts/MinimapView.cs).
 
@@ -1147,7 +1161,7 @@ ExploreVisionRadius(playerCell);
 
 - **증상:** 처음 멀티플레이 테스트에서 한 명이 땅을 조금만 파도 게임이 멈췄고, 한참 지나서야 복구됐습니다.
 - **처음 생각:** lock 안에서 너무 많은 처리를 하는 것이 주원인이라고 의심했습니다.
-- **확인한 원인:** lock 안의 과도한 처리도 문제였지만, 주원인은 **지형 전체 스냅샷**이 자주 오가며 데이터 용량이 너무 커진 것이었습니다. 채굴 요청의 Revision이 서버와 조금만 어긋나도 요청을 거절하고 전체 스냅샷을 다시 보냈습니다.
+- **원인:** lock 안의 과도한 처리도 문제였지만, 주원인은 **지형 전체 스냅샷**이 자주 오가며 데이터 용량이 너무 커진 것이었습니다. 채굴 요청의 Revision이 서버와 조금만 어긋나도 요청을 거절하고 전체 스냅샷을 다시 보냈습니다.
 - **해결:** 전체 스냅샷을 주고받지 않고, 서버가 보내는 변경 Batch의 Revision(`BaseRevision → ResultRevision`)만 비교해 순서대로 적용하도록 바꿔 테스트한 뒤 해결했습니다. 이 방향은 강사님과 같은 개선안을 제안했고, 구현은 강사님의 도움을 받았습니다.
 - **함께 고친 것:** 처음 의심한 lock 구간은 직접 상태 변경과 송신을 분리해 줄였습니다(아래 「상태 변경·방송 등록과 실제 송신을 분리」).
 - **걸린 시간:** 하루가 걸렸습니다.

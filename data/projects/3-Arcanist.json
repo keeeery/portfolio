@@ -859,7 +859,7 @@
         "points": [
           {"label": "증상", "text": "보스 씬으로 넘어가면 플레이어와 보스 사이의 전투가 작동하지 않았습니다.", "verbatim": true},
           {
-            "label": "확인한 원인",
+            "label": "원인",
             "text": "보스 씬의 `CombatSystem`은 중복 인스턴스로 파괴되고, 이전 씬의 `CombatSystem`만 남아 있었습니다.",
             "verbatim": true
           },
@@ -1378,6 +1378,6 @@
         "visuals": [{"kind": "code", "n": 1, "fp": "// Checkpoint.OnTriggerStay2D() — 보상 획득 전까지 방이 클리어되면 갱신 저장"}]
       }
     ],
-    "applied": "56a5ccb37b384db0"
+    "applied": "06c4a53db22e6cd2"
   }
 }

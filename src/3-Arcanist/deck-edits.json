@@ -989,7 +989,7 @@
           "verbatim": true
         },
         {
-          "label": "확인한 원인",
+          "label": "원인",
           "text": "보스 씬의 `CombatSystem`은 중복 인스턴스로 파괴되고, 이전 씬의 `CombatSystem`만 남아 있었습니다.",
           "verbatim": true
         },
