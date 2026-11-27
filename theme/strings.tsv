@@ -134,4 +134,4 @@ ui.ov-count	슬라이드 · 개요 창 제목 옆 · 5자	{n}장
 ui.ov-hint	슬라이드 · 개요 창 안내 · 40자	선택 ↑ / ↓ / ← / → / Enter  닫기 O / Esc	
 ui.rotate	슬라이드 · 휴대폰 세로 화면 안내 · 24자	가로로 돌리면 더 크게 보입니다.	
 ui.close	상세 문서 · 목차 창 버튼 · 4자	닫기	
-ui.close-esc	상세 문서 · 크게 보기 창 버튼 · 8자	닫기 (Esc)	
+ui.close-esc	상세 문서 · 크게 보기 창 버튼 · 8자	닫기 Esc	

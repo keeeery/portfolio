@@ -648,11 +648,19 @@ try { window.mermaid?.initialize({ startOnLoad: false }); } catch (_) { /* */ }
     update();
   }
 
+  // 직접 수정(2026-11-27): 확대 창 닫기 버튼 글자 = 슬라이드 개요 창 안내(deck-kit.js ovHintHTML)와 같은 표기 — 기능 글자 + 단축키 회색, mac은 Esc를 ⎋로
+  function closeHTML() {
+    const raw = PF.t('ui.close-esc').trim(), m = raw.match(/^(\S+)\s+([\s\S]+)$/);
+    if (!m) return PF.esc(raw);
+    const keys = /Mac|iPhone|iPad/.test(navigator.platform) ? m[2].replace(/\bEsc\b/g, '⎋') : m[2];
+    return `${PF.esc(m[1])} <span class="k">${PF.esc(keys)}</span>`;
+  }
+
   function lightbox() {
     const dlg = document.createElement('dialog');
     dlg.className = 'lightbox';
     dlg.setAttribute('aria-label', '크게 보기');
-    dlg.innerHTML = `<div class="lb-stage"></div><p class="lb-cap"></p><button type="button" class="btn lb-close">${T('ui.close-esc')}</button>`;
+    dlg.innerHTML = `<div class="lb-stage"></div><p class="lb-cap"></p><button type="button" class="btn lb-close">${closeHTML()}</button>`;
     dlg.addEventListener('click', (e) => {
       const pb = e.target.closest('.pf-vid-btn');   // 확대 창의 영상: 일시정지·재생 버튼만 영상을 멈춤·재생(영상을 누르면 닫힘)
       if (pb) { const v = dlg.querySelector('video'); if (v) { const stop = !v.paused; if (stop) v.pause(); else v.play().catch(() => {}); pb.innerHTML = PF.videoIcon(stop); pb.setAttribute('aria-label', PF.t(stop ? 'ui.video-play' : 'ui.video-pause')); } return; }
