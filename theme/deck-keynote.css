@@ -314,6 +314,9 @@
 /* ── Folk Sack 장면별(2026-11-26, theme/deck-rules.md 규칙) — 장면 id가 프로젝트마다 겹칠 수 있어 [data-pf-project="2-Folk-Sack"]로 그 프로젝트에만 ── */
 [data-pf-project="2-Folk-Sack"] :is(#d-what, #d-gen-pipeline, #d-multi-chunk, #d-burial-states) { --pf-cards: plain; }   /* R8 번호 없음 — 1.1 개요·2.1 생성 순서·3.4 동시 낙하·4.1 매몰 상태(구현과 이유, 차례가 아닌 카드) */
 [data-pf-project="2-Folk-Sack"] #d-burial-states { --pf-layout: trio; }   /* 4.1 매몰 상태 — 이미지 | 다이어그램 | 카드 3장 세로(세 칸 배치) */
+[data-pf-project="2-Folk-Sack"] #d-vision-layers { --pf-layout: side; }   /* 6.1 개요 — 왼쪽 이미지 최대 크기·오른쪽 카드 462px 세로(2026-11-27, 사용자 요청: 캡션 빼고 이미지 최대한 크게) */
+[data-pf-project="2-Folk-Sack"] #d-vision-layers .vbox[data-kind=image] .cap { display: none; }   /* 6.1 개요 — 캡션 숨김(이미지 설명 alt는 그대로) */
+[data-pf-project="2-Folk-Sack"] #d-vision-refresh .vbox[data-kind="code"], [data-pf-project="2-Folk-Sack"] #d-vision-refresh .vbox[data-kind="code"] .fit-in { width: 100% !important; }   /* 6.2 — 첫 줄 주석을 줄여(slideText) 한 줄로 만든 뒤 좁아진 코드 칸을 아래 표 폭에 맞춤(2026-11-27) */
 [data-pf-project="2-Folk-Sack"] #d-fog-map { --pf-layout: side; --pf-vis-scale: .855; }   /* R9 6.3 안개와 지도 — 왼쪽 이미지 539×404·오른쪽 카드 462px(캡션 한 줄) */
 [data-pf-project="2-Folk-Sack"] #d-tsv-rules { --pf-layout: side-split; --pf-split: none; }   /* 2.3 표(TSV)로 관리하는 지형 규칙 — 왼쪽 DTO→Def 다이어그램(나누지 않고 한 덩어리), 오른쪽 카드 2장 위·코드 아래(2026-11-27) */
 [data-pf-project="2-Folk-Sack"] #d-tsv-rules .dk-split { grid-template-columns: 383px 624px !important; justify-content: center !important; }   /* 2.3 — 오른쪽 칸을 624px로 넓혀 코드의 가장 긴 줄(「채굴 가능한 타일의 MaxDurability는 1 이상이어야 합니다」, 586px + 양옆 18px)을 한 줄로, 왼쪽은 예전 다이어그램 폭 383px(합 1035px ≤ 본문 1136px)(2026-11-27) */

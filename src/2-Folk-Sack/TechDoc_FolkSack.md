@@ -1059,6 +1059,9 @@ itemReadyTime.Remove(pending.ItemID);
 
 ### 6.2 이동·지형 변경 때만 하는 재계산
 
+시야 계산은 `Update()`에서 매 프레임 불리지만, 한 번 계산할 때마다 반경 안의 셀마다 직선 시야를 검사합니다.
+그래서 플레이어가 같은 셀에 있고 다시 계산할 이유가 없으면 바로 돌아갑니다.
+
 ```csharp
 // PlayerExplorationController.RefreshPlayerVision() — 같은 셀이고 갱신 요청이 없으면 계산 생략
 if (hasLastExplorationCell &&
@@ -1071,10 +1074,15 @@ needsVisionRefresh = false;
 ExploreVisionRadius(playerCell);
 ```
 
-캐릭터가 같은 셀에 있고 지형/횃불 상태도 바뀌지 않았다면 계산을 생략합니다.
-타일을 채굴한 뒤에는 플레이어가 정지해 있어도 `needsVisionRefresh`가 설정되어 다시 관측합니다.
-누적 탐험은 반경과 지형 차폐를 검사하며, 현재 시야는 플레이어 및 배치 횃불의 영역을 합칩니다.
-현재 시야의 통로 확산과 탐험 기록의 직선 시야 검사는 서로 다른 알고리즘입니다.
+플레이어가 멈춰 있어도 보이는 범위가 바뀌는 경우에는 `needsVisionRefresh`를 세워 다시 관측합니다.
+
+| 계기 | 받는 이벤트 | 예 |
+|---|---|---|
+| 지형 변경 | `TerrainManager.TerrainChanged` | 채굴, 서버 확정 Batch, 붕괴 덩어리 배치 |
+| 횃불 변경 | `TorchLight.TorchesChanged` | 횃불 설치, 지형에 묻혀 파괴됨 |
+| 지형 재동기화 | `RoomClient.TerrainSnapshotLoaded` | 같은 크기 맵이면 탐험 기록은 두고 다시 관측만 |
+
+다시 계산한 뒤에는 새로 탐험한 셀만 `CellsExplored`로 알려, 월드 안개는 그 셀이 속한 청크만 다시 그립니다.
 
 ### 6.3 안개와 지도 — 직선 시야 검사와 두 겹 표시
 

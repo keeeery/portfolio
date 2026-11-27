@@ -777,12 +777,23 @@
         "layout": "visual",
         "tab": "구조",
         "title": {"text": "6.1 개요 — 누적 탐험 정보와 지금 관측되는 셀", "verbatim": true},
-        "lead": {"text": "지하에서는 플레이어와 설치한 횃불이 지금 비추는 통로만 보이고, 시야를 벗어난 곳은 이미 지나온 곳이라도 다시 어둠에 덮입니다.", "verbatim": true},
+        "lead": {
+          "text": "지하에서는 플레이어와 설치한 횃불이 지금 비추는 통로만 보이고, 시야를 벗어난 곳은 이미 지나온 곳이라도 다시 어둠에 덮입니다.\n대신 한 번 본 곳은 지도에 계속 남아, 지금 보이는 곳은 화면으로, 가 본 곳은 지도로 확인합니다.",
+          "verbatim": true
+        },
         "sectionPath": ["6. 가 본 곳과 지금 보이는 곳을 보여 주는 지도", "6.1 개요 — 누적 탐험 정보와 지금 관측되는 셀"],
         "points": [
-          {"label": "누적 탐험", "text": "이전에 방문·관측한 곳", "verbatim": true},
-          {"label": "현재 관측", "text": "현재 플레이어·조명으로 볼 수 있는 곳", "verbatim": true},
-          {"label": "", "text": "미니맵과 월드 안개는 같은 지형·탐험 상태를 참조하되 서로 다른 표시 역할을 맡습니다.", "verbatim": true}
+          {
+            "label": "누적 탐험",
+            "text": "`ExplorationMapData`가 보관합니다. 이미 확인한 셀을 유지해 미니맵·전체 지도 이력에 사용합니다.",
+            "verbatim": false
+          },
+          {
+            "label": "현재 관측",
+            "text": "`PlayerExplorationController`의 `CurrentObservedCells`가 보관합니다. 갱신할 때 재구성해 월드 암흑과 현재 관측 강조에 사용합니다.",
+            "verbatim": false
+          },
+          {"label": "갱신 원인", "text": "둘 다 이동·지형 변화로 갱신하고, 현재 관측은 횃불 변화에도 갱신합니다.", "verbatim": false}
         ],
         "visuals": [
           {
@@ -792,7 +803,8 @@
             "h": 1000,
             "caption": {"text": "같은 지하 격자를 네 칸으로 나눈 도식", "verbatim": false}
           }
-        ]
+        ],
+        "edited": true
       },
       {
         "key": "vision-refresh",
@@ -800,14 +812,29 @@
         "layout": "code",
         "tab": "구현",
         "title": {"text": "6.2 이동·지형 변경 때만 하는 재계산", "verbatim": true},
-        "lead": {"text": "캐릭터가 같은 셀에 있고 지형/횃불 상태도 바뀌지 않았다면 계산을 생략합니다.", "verbatim": true},
+        "lead": {
+          "text": "시야 계산은 `Update()`에서 매 프레임 불리지만, 한 번 계산할 때마다 반경 안의 셀마다 직선 시야를 검사합니다.\n그래서 플레이어가 같은 셀에 있고 다시 계산할 이유가 없으면 바로 돌아갑니다.",
+          "verbatim": true
+        },
         "sectionPath": ["6. 가 본 곳과 지금 보이는 곳을 보여 주는 지도", "6.2 이동·지형 변경 때만 하는 재계산"],
         "points": [
-          {"label": "구현", "text": "타일을 채굴한 뒤에는 플레이어가 정지해 있어도 `needsVisionRefresh`가 설정되어 다시 관측합니다.", "verbatim": true},
-          {"label": "구현", "text": "누적 탐험은 반경과 지형 차폐를 검사하며, 현재 시야는 플레이어 및 배치 횃불의 영역을 합칩니다.", "verbatim": true},
-          {"label": "", "text": "현재 시야의 통로 확산과 탐험 기록의 직선 시야 검사는 서로 다른 알고리즘입니다.", "verbatim": true}
+          {"label": "", "text": "플레이어가 멈춰 있어도 보이는 범위가 바뀌는 경우에는 `needsVisionRefresh`를 세워 다시 관측합니다.", "verbatim": true},
+          {
+            "label": "",
+            "text": "다시 계산한 뒤에는 새로 탐험한 셀만 `CellsExplored`로 알려, 월드 안개는 그 셀이 속한 청크만 다시 그립니다.",
+            "verbatim": true
+          }
         ],
-        "visuals": [{"kind": "code", "n": 1, "fp": "// PlayerExplorationController.RefreshPlayerVision() — 같은 셀이"}]
+        "visuals": [
+          {
+            "kind": "code",
+            "n": 1,
+            "fp": "// PlayerExplorationController.RefreshPlayerVision() — 같은 셀이",
+            "slideText": "// RefreshPlayerVision() — 같은 셀이고 갱신 요청이 없으면 계산 생략\nif (hasLastExplorationCell &&\n    playerCell == lastExplorationCell &&\n    needsVisionRefresh == false) return;\n\nlastExplorationCell = playerCell;\nhasLastExplorationCell = true;\nneedsVisionRefresh = false;\nExploreVisionRadius(playerCell);"
+          },
+          {"kind": "table", "n": 1, "fp": "계기|받는 이벤트|예"}
+        ],
+        "edited": true
       },
       {
         "key": "fog-map",
@@ -832,40 +859,6 @@
             "w": 988,
             "h": 741,
             "caption": {"text": "전체 지도(Tab)에 탐험한 구역과 플레이어 위치 마커가 표시된 화면", "verbatim": true}
-          }
-        ],
-        "edited": true
-      },
-      {
-        "key": "lobby-screens",
-        "chapter": "lobby",
-        "layout": "screens",
-        "tab": "결과",
-        "title": {"text": "대기방 프리뷰·채팅·승자 표시", "verbatim": true},
-        "lead": null,
-        "sectionPath": ["7. 로비부터 결과 화면까지의 흐름", "7.3 로비부터 결과까지의 화면 — 다른 플레이어·대기방·결과", "대기방 프리뷰·채팅·승자 표시"],
-        "points": [
-          {
-            "label": "",
-            "text": "대기방 아바타는 게임용 Prefab을 Animator만 켠 채 재사용해 보여 주고, 채팅은 최근 100개만 보관하며 꺾쇠를 이스케이프해 마크업으로 해석되지 않게 합니다.",
-            "verbatim": true
-          },
-          {"label": "", "text": "시간 종료 승자는 팔지 않은 광물을 빼고 실제 골드로 정하며, 골드가 같으면 모두 승자로 표시합니다.", "verbatim": true}
-        ],
-        "visuals": [
-          {
-            "kind": "image",
-            "src": "images/lobby-room-chat.png",
-            "w": 2328,
-            "h": 1746,
-            "caption": {"text": "대기실 화면 — 네 플레이어 슬롯의 아바타와 오른쪽 채팅창", "verbatim": false}
-          },
-          {
-            "kind": "image",
-            "src": "images/game-result.png",
-            "w": 1067,
-            "h": 800,
-            "caption": {"text": "게임 종료 결과 창", "verbatim": true}
           }
         ],
         "edited": true
@@ -1294,6 +1287,6 @@
         "visuals": []
       }
     ],
-    "applied": "3dd0d61c7bb8de00"
+    "applied": "7b4ab2e5231174c8"
   }
 }
