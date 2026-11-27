@@ -564,6 +564,8 @@ while (bufferedTerrainBatches.TryGetValue(
 | 채굴 확정 | `GameSession.TryExcavate(...)` | 성공 시 셀 변경 Batch와 드롭 메시지 반환 |
 | 결과 적용 | `TerrainGridData.TryApplyAuthoritativeBatch(batch, out error)` | BaseRevision 일치·증가 Revision·좌표 중복 검사 |
 
+소스: [RoomClient.cs](https://github.com/keeeery/Folk-Sack/blob/main/Assets/02.%20Scripts/Networking/RoomClient.cs).
+
 ### 3.3 덩어리 하나가 떨어져 자리 잡기까지
 
 ![다른 지형으로부터 고립되어 붕괴·낙하 중인 지형 덩어리](images/falling-chunk.png)
@@ -684,6 +686,8 @@ if (pendingCollapsePlacementIds.ContainsValue(proposal.CollapseId))
 낙하 배치 요청은 시간이 지났다고 지우지 않습니다.
 늦게 도착한 확정 Batch가 누구의 낙하인지 알아야 하므로, 성공·오류·취소 응답이 왔을 때 정리합니다.
 
+소스: [RoomClient.cs](https://github.com/keeeery/Folk-Sack/blob/main/Assets/02.%20Scripts/Networking/RoomClient.cs).
+
 ### 3.5 떨어진 지형이 다시 일으키는 연쇄 붕괴
 
 덩어리가 떨어지면 다른 지형이 새로 공중에 뜰 수 있어, 낙하가 끝날 때마다 부유 그룹을 다시 검사합니다.
@@ -704,6 +708,8 @@ if (reason == TerrainChangeReason.CollapsePlacement)
     return;
 }
 ```
+
+소스: [TerrainCollapseCoordinator.cs](https://github.com/keeeery/Folk-Sack/blob/main/Assets/02.%20Scripts/TerrainCollapse/TerrainCollapseCoordinator.cs).
 
 ### 3.6 변경 알림을 보내는 순서
 
@@ -1251,6 +1257,8 @@ if (IsGridSpaceEmpty(character.CollisionBounds) || TryFindNearbyBurialExit())
 // FallingTerrainInteraction.ExitBuriedState() — 매몰 해제도 같은 그리드 기준으로 판정
 if (isBuried == false || IsGridSpaceEmpty(character.CollisionBounds) == false) return;
 ```
+
+소스: [FallingTerrainInteraction.cs](https://github.com/keeeery/Folk-Sack/blob/main/Assets/02.%20Scripts/Player/FallingTerrainInteraction.cs).
 
 ### 8.3 여러 청크가 동시에 떨어지면 뒤 청크가 확정되지 않던 문제
 

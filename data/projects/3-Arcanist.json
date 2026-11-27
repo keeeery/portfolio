@@ -144,9 +144,9 @@
       "caption": "화염구 카드를 사용해 적을 공격하는 장면"
     },
     {
-      "src": "images/deck-inventory.png",
-      "w": 1904,
-      "h": 1066,
+      "src": "images/deck-inventory-crop.png",
+      "w": 1140,
+      "h": 855,
       "caption": "전체 카드와 플레이어 카드 덱 편성 화면(최소 카드 수·마력 조건 표시)"
     },
     {
@@ -261,7 +261,7 @@
         "tab": "구조",
         "title": {"text": "1.4 전체 구조", "verbatim": true},
         "lead": {
-          "text": "기본 공격과 카드 효과가 모두 같은 `HitBox → HitResolver` 경로로 피해를 주고, 패링에 성공하면 그 결과가 `CardGaugeController`의 카드 게이지로 이어지고, 게이지가 차면 `CardSystem`이 카드를 뽑습니다.",
+          "text": "기본 공격과 카드 효과가 모두 같은 `HitBox → HitResolver` 경로로 피해를 주고,\n패링에 성공하면 그 결과가 `CardGaugeController`의 카드 게이지로 이어지고, 게이지가 차면 `CardSystem`이 카드를 뽑습니다.",
           "verbatim": true
         },
         "sectionPath": ["1. 프로젝트 개요", "1.4 전체 구조"],
@@ -293,8 +293,13 @@
         "points": [
           {
             "label": "",
-            "text": "패링에 성공하면 화면 가장자리가 보라색으로 번쩍이고 히트스톱·카메라 흔들림이 들어가며, 카드 게이지를 획득해 카드를 더 빨리 뽑습니다.\n즉 패링은 방어이면서 카드를 얻는 수단이라, 카드 사용(§3)으로 이어집니다.",
-            "verbatim": false
+            "text": "`HitBox`가 맞은 대상을 `HitTargetTracker`에 먼저 기록해 중복 타격을 거르고, 통과한 공격만 `HitResolver`가 패링 또는 피해로 해결합니다.",
+            "verbatim": true
+          },
+          {
+            "label": "",
+            "text": "패링에 성공하면 화면 가장자리가 보라색으로 번쩍이고 히트스톱·카메라 흔들림이 들어가며, 카드 게이지를 획득해 카드를 더 빨리 뽑습니다.",
+            "verbatim": true
           }
         ],
         "visuals": [{"kind": "mermaid", "n": 1, "fp": "flowchart TB"}],
@@ -306,7 +311,7 @@
         "layout": "code",
         "tab": "구현",
         "title": {"text": "2.2 한 공격의 중복 타격 제어", "verbatim": true},
-        "lead": {"text": "여러 충돌체가 닿으면 같은 공격이 한 대상에게 여러 번 들어갈 수 있습니다(§1.2).", "verbatim": true},
+        "lead": {"text": "여러 충돌체가 닿으면 같은 공격이 한 대상에게 여러 번 들어갈 수 있습니다.", "verbatim": true},
         "sectionPath": ["2. 충돌 기반 전투와 패링", "2.2 한 공격의 중복 타격 제어"],
         "points": [
           {"label": "", "text": "`HitTargetTracker.TryRegister()`는 허용 여부 판단과 기록을 한 번에 수행합니다.", "verbatim": true},
@@ -334,14 +339,14 @@
           {"label": "", "text": "Applied가 아니면 일반 피격 FX·히트스톱·카메라 흔들림·적중 폭발 경로로 진행하지 않습니다.", "verbatim": true}
         ],
         "visuals": [
-          {"kind": "code", "n": 1, "fp": "// HitResolver.Resolve() — 패링 창이 열려 있으면 피해 전달 전에 패링으로 처리"},
           {
             "kind": "image",
             "src": "images/parry-combat-zoom.png",
             "w": 620,
             "h": 465,
             "caption": {"text": "패링 성공 순간의 이펙트", "verbatim": true}
-          }
+          },
+          {"kind": "code", "n": 1, "fp": "// HitResolver.Resolve() — 패링 창이 열려 있으면 피해 전달 전에 패링으로 처리", "slideText": "// HitResolver.Resolve() — 패링 창이 열려 있으면 피해 전달 전에 패링으로 처리\nPlayerController playerController =\n    receiver.GetComponent<PlayerController>();\nif (playerController != null && playerController.IsParryWindowOpen)\n{\n    playerController.SuccessParry();\n    return new HitResolution(HitResolutionStatus.Parried);\n}"}
         ],
         "edited": true
       },
@@ -358,14 +363,14 @@
         "sectionPath": ["2. 충돌 기반 전투와 패링", "2.4 체력바와 화면 연출", "패링 성공 연출 — 번쩍임·히트스톱·화면 흔들림"],
         "points": [{"label": "", "text": "히트스톱 중에도 조명 트윈과 카메라 흔들림 예약은 시간 배율을 무시하고 이어집니다.", "verbatim": true}],
         "visuals": [
-          {"kind": "table", "n": 1, "fp": "구성|동작"},
           {
             "kind": "image",
-            "src": "images/parry-effect-crop.png",
-            "w": 1440,
+            "src": "images/parry-effect.mp4",
+            "w": 1920,
             "h": 1080,
             "caption": {"text": "패링 성공 순간 — 화면 가장자리 보라색 비네트와 파티클·조명 이펙트", "verbatim": true}
-          }
+          },
+          {"kind": "table", "n": 1, "fp": "구성|동작"}
         ],
         "edited": true
       },
@@ -374,28 +379,33 @@
         "chapter": "combat",
         "layout": "visual",
         "tab": "구현",
-        "title": {"text": "죽음 선고 — 화면 흑백 반전과 느려지는 시간", "verbatim": true},
+        "title": {"text": "죽음 선고 연출 — 화면 흑백 반전과 느려지는 시간", "verbatim": true},
         "lead": null,
-        "sectionPath": ["2. 충돌 기반 전투와 패링", "2.4 체력바와 화면 연출", "죽음 선고 — 화면 흑백 반전과 느려지는 시간"],
+        "sectionPath": ["2. 충돌 기반 전투와 패링", "2.4 체력바와 화면 연출", "죽음 선고 연출 — 화면 흑백 반전과 느려지는 시간"],
         "points": [
           {
             "label": "",
-            "text": "전설 등급 카드 ‘죽음 선고’의 이펙트 프리팹에는 `DeathSentenceEffectController`가 있고, 활성화될 때 `ScreenEffectController.PlayDeathSentenceFlash()`를 호출합니다.\n이 함수는 Shader Graph로 만든 화면 흑백 반전 머티리얼(`SG_ScreenInvert`)의 `_Blend`를 켜는 동안 `Time.timeScale`을 낮춥니다.",
-            "verbatim": false
+            "text": "전설 등급 카드 ‘죽음 선고’를 사용하면 화면이 흑백으로 반전되고 잠시 시간이 느려집니다. 가장 높은 등급의 카드를 쓴 순간을 시각적으로 강조하기 위한 연출입니다.",
+            "verbatim": true
           },
           {
             "label": "",
-            "text": "`HitStopController`가 복구 값을 1로 고정하는 것과 달리, 이 연출은 직전 `timeScale`·`fixedDeltaTime`을 저장했다가 되돌립니다.",
+            "text": "흑백 반전은 Shader Graph로 만든 화면 머티리얼(`SG_ScreenInvert`)로 표현하고, 반전이 켜져 있는 동안 `Time.timeScale`을 낮춥니다.",
+            "verbatim": true
+          },
+          {
+            "label": "",
+            "text": "히트스톱이 끝나면 시간 배율을 1로 되돌리는 것과 달리, 이 연출은 사용 직전의 시간 배율을 저장했다가 그대로 되돌립니다.",
             "verbatim": true
           }
         ],
         "visuals": [
           {
             "kind": "image",
-            "src": "images/strong-attack-grayscale.png",
+            "src": "images/strong-attack-grayscale.mp4",
             "w": 1920,
             "h": 1080,
-            "caption": {"text": "죽음 선고를 사용한 순간의 화면 흑백 반전", "verbatim": true}
+            "caption": {"text": "죽음 선고 카드 연출", "verbatim": true}
           }
         ],
         "edited": true
@@ -405,8 +415,8 @@
         "chapter": "combat",
         "layout": "full",
         "tab": "선택",
-        "title": {"text": "패링을 어떻게 판정할까 — 애니메이션 진행도에 맞춘 판정 창", "verbatim": true},
-        "lead": null,
+        "title": {"text": "2.5 고민과 선택", "verbatim": true},
+        "lead": {"text": "패링을 어떻게 판정할까 — 애니메이션 진행도에 맞춘 판정 창", "verbatim": true},
         "sectionPath": ["2. 충돌 기반 전투와 패링", "2.5 고민과 선택"],
         "points": [
           {
@@ -478,8 +488,8 @@
           {
             "kind": "image",
             "src": "images/buff-icons-crop.png",
-            "w": 640,
-            "h": 480,
+            "w": 720,
+            "h": 540,
             "caption": {"text": "활성 버프 아이콘(좌상단)과 최근 사용 카드 목록(좌측)", "verbatim": true}
           }
         ],
@@ -509,10 +519,10 @@
         "visuals": [
           {
             "kind": "image",
-            "src": "images/card-draw-crop.png",
-            "w": 560,
-            "h": 420,
-            "caption": {"text": "카드를 뽑은 뒤의 손패 — Q 슬롯에 카드가 들어 있고, W 슬롯에 카드가 드로우 중", "verbatim": true}
+            "src": "images/card-draw.mp4",
+            "w": 1040,
+            "h": 780,
+            "caption": {"text": "패링 성공으로 카드 게이지가 차 Q 슬롯에 카드를 뽑는 장면", "verbatim": true}
           }
         ],
         "edited": true
@@ -539,7 +549,7 @@
       {
         "key": "deck-rules",
         "chapter": "inventory",
-        "layout": "visual",
+        "layout": "code",
         "tab": "구현",
         "title": {"text": "4.2 편성 규칙", "verbatim": true},
         "lead": null,
@@ -547,17 +557,22 @@
         "points": [
           {
             "label": "구현",
-            "text": "`CanCompleteDeckEdit()`가 최소 장수와 비용 범위를 함께 검사하고, 추가에 실패하면 이유를 `DeckEditFailure`로 돌려줍니다.",
+            "text": "넣을 때는 `CanAddToDeck()`이 보유 여부, 최대 장수, 중복, 비용 상한 순서로 확인하고, 걸린 조건을 `DeckEditFailure`로 돌려줍니다.",
             "verbatim": true
           },
-          {"label": "", "text": "씬의 실제 값은 Inspector에 저장된 설정을 따릅니다.", "verbatim": true}
+          {
+            "label": "",
+            "text": "최소 장수와 비용 하한은 편성하는 도중에는 막지 않고, 화면을 닫을 때 `CanCompleteDeckEdit()`이 비용 범위와 함께 확인합니다.",
+            "verbatim": true
+          }
         ],
         "visuals": [
+          {"kind": "code", "n": 1, "fp": "// PlayerInventory.CanAddToDeck() — 카드를 넣을 때 확인하는 조건과 실패 이유"},
           {
             "kind": "image",
-            "src": "images/deck-inventory.png",
-            "w": 1904,
-            "h": 1066,
+            "src": "images/deck-inventory-crop.png",
+            "w": 1140,
+            "h": 855,
             "caption": {"text": "전체 카드와 플레이어 카드 덱 편성 화면(최소 카드 수·마력 조건 표시)", "verbatim": true}
           }
         ]
@@ -574,7 +589,7 @@
           {"label": "구현", "text": "추첨은 `RewardCardSelector`가 담당하고, 남은 카드 각각에 등급 가중치를 부여합니다.", "verbatim": true},
           {
             "label": "",
-            "text": "소스 기본값은 Common 70, Rare 22, Epic 7, Legendary 1이지만, 게임에서 사용하는 프리팹 값은 Common 42, Rare 25, Epic 19, Legendary 14입니다(조정한 이유는 §8.4). 보스 방 보상은 Rare 이상에서만 뽑습니다.",
+            "text": "소스 기본값은 Common 70, Rare 22, Epic 7, Legendary 1이지만, 게임에서 사용하는 프리팹 값은 Common 42, Rare 25, Epic 19, Legendary 14입니다(조정한 이유는 §4.5).",
             "verbatim": true
           },
           {
@@ -618,9 +633,9 @@
         "visuals": [
           {
             "kind": "image",
-            "src": "images/card-tooltip-locked.png",
-            "w": 1920,
-            "h": 1080,
+            "src": "images/card-tooltip-locked-crop.png",
+            "w": 1140,
+            "h": 855,
             "caption": {"text": "미획득 카드의 툴팁 — 카드 정보와 ‘미획득’ 표시", "verbatim": true}
           }
         ],
@@ -787,24 +802,6 @@
         "edited": true
       },
       {
-        "key": "skip-spawn",
-        "chapter": "checkpoint",
-        "layout": "code",
-        "tab": "구현",
-        "title": {"text": "6.2 클리어한 방의 적 재생성 생략", "verbatim": true},
-        "lead": null,
-        "sectionPath": ["6. 방 전환과 체크포인트 복원", "6.2 클리어한 방의 적 재생성 생략"],
-        "points": [
-          {
-            "label": "",
-            "text": "복귀 시작 시 저장 객체를 새 `CheckpointSaveData`로 복사하므로 코루틴 도중 공유 데이터가 변경되어도 복원 대상 값은 유지됩니다.",
-            "verbatim": true
-          },
-          {"label": "", "text": "씬 로드·리스폰 직후에는 일정 시간 체크포인트 저장을 차단합니다.", "verbatim": true}
-        ],
-        "visuals": [{"kind": "code", "n": 1, "fp": "// CheckPointManager.ReturnToCheckpointRoutine() — 방 클리어·플레이"}]
-      },
-      {
         "key": "room-state",
         "chapter": "checkpoint",
         "layout": "visual",
@@ -961,26 +958,68 @@
         "visuals": [{"kind": "mermaid", "n": 1, "fp": "flowchart TB"}]
       },
       {
+        "key": "overview-systems",
+        "chapter": "overview",
+        "layout": "visual",
+        "tab": "흐름",
+        "title": {"text": "1.1 게임 소개", "verbatim": true},
+        "lead": null,
+        "sectionPath": ["1. 프로젝트 개요", "1.1 게임 소개"],
+        "points": [
+          {
+            "label": "카드 게이지",
+            "text": "시간이 지나면 한 칸씩 차고, 패링에 성공하면 칸이 더해집니다. 가득 차고 빈 슬롯이 있으면 덱에서 카드 1장을 뽑습니다.",
+            "verbatim": true
+          },
+          {
+            "label": "카드",
+            "text": "공격 효과 카드 9장·버프 효과 카드 13장을 구현했습니다. 등급은 Common·Rare·Epic·Legendary 4종이고 덱 비용은 1·2·4·6입니다.",
+            "verbatim": false
+          },
+          {"label": "덱 편성", "text": "보상으로 얻은 카드로 덱을 편성하며, 장수와 비용 합에 제한이 있습니다(§4.1).", "verbatim": true},
+          {
+            "label": "사망",
+            "text": "일반 방마다 체크포인트가 2곳 있습니다(보스 방에는 없음). 복귀하면 손패·게이지를 비우고 편성 덱으로 다시 시작합니다.",
+            "verbatim": true
+          }
+        ],
+        "visuals": [
+          {
+            "kind": "table",
+            "n": 1,
+            "fp": "동작|조작",
+            "sectionPath": ["1. 프로젝트 개요", "1.1 게임 소개"],
+            "caption": {"text": "조작", "verbatim": false}
+          }
+        ],
+        "pointsTitle": {"text": "핵심 시스템", "verbatim": false}
+      },
+      {
         "key": "arch",
         "chapter": "overview",
         "layout": "visual",
         "tab": "구조",
         "title": {"text": "1.4 전체 구조", "verbatim": true},
         "lead": {
-          "text": "기본 공격과 카드 효과가 모두 같은 `HitBox → HitResolver` 경로로 피해를 주고, 패링에 성공하면 그 결과가 `CardGaugeController`의 카드 게이지로 이어지고, 게이지가 차면 `CardSystem`이 카드를 뽑습니다.",
+          "text": "기본 공격과 카드 효과가 모두 같은 `HitBox → HitResolver` 경로로 피해를 주고,\n패링에 성공하면 그 결과가 `CardGaugeController`의 카드 게이지로 이어지고, 게이지가 차면 `CardSystem`이 카드를 뽑습니다.",
           "verbatim": true
         },
         "sectionPath": ["1. 프로젝트 개요", "1.4 전체 구조"],
         "points": [
           {
-            "label": "전투와 패링(§2)",
-            "text": "충돌 판정과 중복 타격 방지, 피해 전달, 패링에 성공하면 피해를 막고 카드 게이지를 주는 연결을 다룹니다.",
+            "label": "",
+            "text": "기본 공격과 카드 효과가 같은 `HitBox → HitResolver` 경로를 거치므로, 패링·중복 타격 방지 같은 공통 처리를 공격마다 따로 넣지 않습니다(§2.5).",
             "verbatim": true
           },
-          {"label": "카드 순환과 스킬(§3)", "text": "덱·손패·버림 더미의 순환과 사용 가능 조건, 모션에 맞춘 효과 발동을 다룹니다.", "verbatim": true},
-          {"label": "방 전환과 체크포인트 복원(§6·§7)", "text": "방 로드와 사망 복구, 클리어 여부에 따른 적 재생성을 다룹니다.", "verbatim": true}
+          {"label": "", "text": "공격이 닿았을 때 `HitResolver`가 플레이어의 패링 판정 창이 열려 있는지 확인합니다(§2.3).", "verbatim": true},
+          {
+            "label": "",
+            "text": "카드마다 클래스를 두지 않아 여러 종의 카드를 관리하기 편하고, 투사체 카드는 코드 수정 없이 추가합니다(§3.4·§3.8).",
+            "verbatim": true
+          }
         ],
-        "visuals": [{"kind": "mermaid", "n": 1, "fp": "flowchart TB"}]
+        "visuals": [{"kind": "mermaid", "n": 1, "fp": "flowchart TB"}],
+        "pointsTitle": {"text": "왜 이렇게 나눴나", "verbatim": true}
       },
       {
         "key": "combat-overview",
@@ -992,13 +1031,32 @@
         "sectionPath": ["2. 충돌 기반 전투와 패링", "2.1 개요 — 기본 공격과 패링 판정"],
         "points": [
           {
-            "label": "기능",
-            "text": "패링에 성공하면 화면 가장자리가 보라색으로 번쩍이고 히트스톱·카메라 흔들림이 들어가며, 카드 게이지를 획득해 카드를 더 빨리 뽑습니다.",
+            "label": "",
+            "text": "`HitBox`가 맞은 대상을 `HitTargetTracker`에 먼저 기록해 중복 타격을 거르고, 통과한 공격만 `HitResolver`가 패링 또는 피해로 해결합니다.",
             "verbatim": true
           },
-          {"label": "", "text": "즉 패링은 방어이면서 카드를 얻는 수단이라, 카드 사용(§3)으로 이어집니다.", "verbatim": true}
+          {
+            "label": "",
+            "text": "패링에 성공하면 화면 가장자리가 보라색으로 번쩍이고 히트스톱·카메라 흔들림이 들어가며, 카드 게이지를 획득해 카드를 더 빨리 뽑습니다.",
+            "verbatim": true
+          }
         ],
         "visuals": [{"kind": "mermaid", "n": 1, "fp": "flowchart TB"}]
+      },
+      {
+        "key": "multi-hit",
+        "chapter": "combat",
+        "layout": "code",
+        "tab": "구현",
+        "title": {"text": "2.2 한 공격의 중복 타격 제어", "verbatim": true},
+        "lead": {"text": "여러 충돌체가 닿으면 같은 공격이 한 대상에게 여러 번 들어갈 수 있습니다.", "verbatim": true},
+        "sectionPath": ["2. 충돌 기반 전투와 패링", "2.2 한 공격의 중복 타격 제어"],
+        "points": [
+          {"label": "", "text": "`HitTargetTracker.TryRegister()`는 허용 여부 판단과 기록을 한 번에 수행합니다.", "verbatim": true},
+          {"label": "", "text": "단발 공격은 HashSet 추가 성공 여부를, 다단 공격은 마지막 타격 이후 시간을 사용합니다.", "verbatim": true},
+          {"label": "", "text": "`HitBox.OnEnable/Initialize`에서 기록을 비워 풀 재사용 시 이전 공격의 기록이 남지 않게 합니다.", "verbatim": true}
+        ],
+        "visuals": [{"kind": "code", "n": 1, "fp": "// HitTargetTracker.TryRegister() — 다단 히트 여부에 따라 허용 판단과 기록을 "}]
       },
       {
         "key": "parry",
@@ -1010,18 +1068,26 @@
         "sectionPath": ["2. 충돌 기반 전투와 패링", "2.3 패링 성공 시 피해 무효화"],
         "points": [
           {"label": "구현", "text": "패링은 피해 전달 전에 반환하지만 중복 기록 뒤에 발생합니다.", "verbatim": true},
-          {"label": "구현", "text": "`SuccessParry()`가 패링을 카드 게이지로 이어 줍니다(성공 연출은 §2.4).", "verbatim": true},
-          {"label": "이유", "text": "패링을 카드 수급과 연결한 핵심 플레이 흐름입니다.", "verbatim": true},
+          {
+            "label": "",
+            "text": "`SuccessParry()`가 패링을 카드 게이지로 이어 줍니다(성공 연출은 §2.4).\n패링을 카드 수급과 연결한 핵심 플레이 흐름입니다.",
+            "verbatim": false
+          },
           {"label": "", "text": "Applied가 아니면 일반 피격 FX·히트스톱·카메라 흔들림·적중 폭발 경로로 진행하지 않습니다.", "verbatim": true}
         ],
         "visuals": [
-          {"kind": "code", "n": 1, "fp": "// HitResolver.Resolve() — 패링 창이 열려 있으면 피해 전달 전에 패링으로 처리"},
           {
             "kind": "image",
             "src": "images/parry-combat-zoom.png",
             "w": 620,
             "h": 465,
             "caption": {"text": "패링 성공 순간의 이펙트", "verbatim": true}
+          },
+          {
+            "kind": "code",
+            "n": 1,
+            "fp": "// HitResolver.Resolve() — 패링 창이 열려 있으면 피해 전달 전에 패링으로 처리",
+            "slideText": "// HitResolver.Resolve() — 패링 창이 열려 있으면 피해 전달 전에 패링으로 처리\nPlayerController playerController =\n    receiver.GetComponent<PlayerController>();\nif (playerController != null && playerController.IsParryWindowOpen)\n{\n    playerController.SuccessParry();\n    return new HitResolution(HitResolutionStatus.Parried);\n}"
           }
         ]
       },
@@ -1038,15 +1104,72 @@
         "sectionPath": ["2. 충돌 기반 전투와 패링", "2.4 체력바와 화면 연출", "패링 성공 연출 — 번쩍임·히트스톱·화면 흔들림"],
         "points": [{"label": "", "text": "히트스톱 중에도 조명 트윈과 카메라 흔들림 예약은 시간 배율을 무시하고 이어집니다.", "verbatim": true}],
         "visuals": [
-          {"kind": "table", "n": 1, "fp": "구성|동작"},
           {
             "kind": "image",
-            "src": "images/parry-effect-crop.png",
-            "w": 1440,
+            "src": "images/parry-effect.mp4",
+            "w": 1920,
             "h": 1080,
             "caption": {"text": "패링 성공 순간 — 화면 가장자리 보라색 비네트와 파티클·조명 이펙트", "verbatim": true}
+          },
+          {"kind": "table", "n": 1, "fp": "구성|동작"}
+        ]
+      },
+      {
+        "key": "death-sentence",
+        "chapter": "combat",
+        "layout": "visual",
+        "tab": "구현",
+        "title": {"text": "죽음 선고 연출 — 화면 흑백 반전과 느려지는 시간", "verbatim": true},
+        "lead": null,
+        "sectionPath": ["2. 충돌 기반 전투와 패링", "2.4 체력바와 화면 연출", "죽음 선고 연출 — 화면 흑백 반전과 느려지는 시간"],
+        "points": [
+          {
+            "label": "",
+            "text": "전설 등급 카드 ‘죽음 선고’를 사용하면 화면이 흑백으로 반전되고 잠시 시간이 느려집니다. 가장 높은 등급의 카드를 쓴 순간을 시각적으로 강조하기 위한 연출입니다.",
+            "verbatim": true
+          },
+          {
+            "label": "",
+            "text": "흑백 반전은 Shader Graph로 만든 화면 머티리얼(`SG_ScreenInvert`)로 표현하고, 반전이 켜져 있는 동안 `Time.timeScale`을 낮춥니다.",
+            "verbatim": true
+          },
+          {
+            "label": "",
+            "text": "히트스톱이 끝나면 시간 배율을 1로 되돌리는 것과 달리, 이 연출은 사용 직전의 시간 배율을 저장했다가 그대로 되돌립니다.",
+            "verbatim": true
+          }
+        ],
+        "visuals": [
+          {
+            "kind": "image",
+            "src": "images/strong-attack-grayscale.mp4",
+            "w": 1920,
+            "h": 1080,
+            "caption": {"text": "죽음 선고 카드 연출", "verbatim": true}
           }
         ]
+      },
+      {
+        "key": "parry-choice",
+        "chapter": "combat",
+        "layout": "full",
+        "tab": "선택",
+        "title": {"text": "2.5 고민과 선택", "verbatim": true},
+        "lead": {"text": "패링을 어떻게 판정할까 — 애니메이션 진행도에 맞춘 판정 창", "verbatim": true},
+        "sectionPath": ["2. 충돌 기반 전투와 패링", "2.5 고민과 선택"],
+        "points": [
+          {
+            "label": "이유",
+            "text": "패링 타이밍은 애니메이션 진행도와 맞추는 것이 맞다고 판단해, 공격이 닿았을 때 `HitResolver`가 플레이어의 패링 판정 창이 열려 있는지 확인하게 했습니다(§2.3).",
+            "verbatim": true
+          },
+          {
+            "label": "배경",
+            "text": "패링용 Collider 방식은 컨셉 기획서에서 개발 전에 \"이런 식으로 하면 되지 않을까\" 하고 든 예시였고, 실제 구현은 처음부터 판정 창 방식으로 했습니다.",
+            "verbatim": true
+          }
+        ],
+        "visuals": [{"kind": "table", "n": 2, "fp": "방법|장점|비용"}]
       },
       {
         "key": "card-cycle",
@@ -1086,6 +1209,60 @@
         ]
       },
       {
+        "key": "buff-stack",
+        "chapter": "card",
+        "layout": "visual",
+        "tab": "구현",
+        "title": {"text": "3.6 버프 중첩과 지속시간 갱신", "verbatim": true},
+        "lead": {"text": "단일 배율 필드 대신 `List<ActiveBuff>`로 활성 효과를 관리하도록 변경했습니다.", "verbatim": true},
+        "sectionPath": ["3. 카드 순환과 모션 연계 스킬", "3.6 버프 중첩과 지속시간 갱신"],
+        "points": [
+          {"label": "", "text": "`BuffId + ActiveBuffType`이 같으면 새 항목을 쌓지 않고 값과 종료 시각을 Refresh합니다.", "verbatim": true},
+          {"label": "", "text": "동일 버프 갱신은 남은 시간에 더하는 방식이 아니라 `현재 시각 + 새 지속시간`으로 종료 시점을 대체합니다.", "verbatim": true},
+          {"label": "", "text": "만료 항목은 피해·충전 계산 또는 버프 추가 시 역순으로 제거합니다.", "verbatim": true}
+        ],
+        "visuals": [
+          {
+            "kind": "image",
+            "src": "images/buff-icons-crop.png",
+            "w": 720,
+            "h": 540,
+            "caption": {"text": "활성 버프 아이콘(좌상단)과 최근 사용 카드 목록(좌측)", "verbatim": true}
+          }
+        ]
+      },
+      {
+        "key": "gauge-overflow",
+        "chapter": "card",
+        "layout": "visual",
+        "tab": "구현",
+        "title": {"text": "3.7 넘친 게이지와 투사체의 생성·반납", "verbatim": true},
+        "lead": {"text": "패링 보상 `AddCells()`는 현재 게이지에 더한 칸이 최대치를 넘으면 `overflowCells`로 남깁니다.", "verbatim": true},
+        "sectionPath": ["3. 카드 순환과 모션 연계 스킬", "3.7 넘친 게이지와 투사체의 생성·반납"],
+        "points": [
+          {"label": "", "text": "다음 드로우 주기의 `BeginNextGaugeCycle()`은 이 초과분을 가져와 게이지를 채운 상태로 재충전합니다.", "verbatim": true},
+          {
+            "label": "",
+            "text": "손패 상태 `CardHandState`(`CardHandOperation`의 Idle/Drawing/Using)는 드로우뿐 아니라 사용 연출 중에도 바쁨(`IsBusy`)으로 잡혀, 그동안 새로 뽑지 않습니다.",
+            "verbatim": true
+          },
+          {
+            "label": "",
+            "text": "다시 켤 때 `OnEnable()`에서 상태를 초기화하고, 여유 객체가 없으면 새로 만듭니다(GC 개선량은 측정하지 않음).",
+            "verbatim": true
+          }
+        ],
+        "visuals": [
+          {
+            "kind": "image",
+            "src": "images/card-draw.mp4",
+            "w": 1040,
+            "h": 780,
+            "caption": {"text": "패링 성공으로 카드 게이지가 차 Q 슬롯에 카드를 뽑는 장면", "verbatim": true}
+          }
+        ]
+      },
+      {
         "key": "card-data-choice",
         "chapter": "card",
         "layout": "full",
@@ -1093,13 +1270,20 @@
         "title": {"text": "3.8 고민과 선택", "verbatim": true},
         "lead": null,
         "sectionPath": ["3. 카드 순환과 모션 연계 스킬", "3.8 고민과 선택"],
-        "points": [],
+        "points": [
+          {"label": "이유", "text": "처음에는 카드마다 클래스를 하나씩 두는 방식을 생각했고, 데이터 형식은 1인 개발에 맞는 쪽을 골랐습니다.", "verbatim": true},
+          {
+            "label": "이후",
+            "text": "이후 Folk Sack·ODDITY에서는 TSV → DTO → Def 파이프라인을 익혀, 데이터를 표로 관리하고 불러올 때 검증하는 방식으로 넓혔습니다.",
+            "verbatim": true
+          }
+        ],
         "visuals": [{"kind": "table", "n": 1, "fp": "고민|고른 방법 (대신 쓰지 않은 방법)|이유|비용"}]
       },
       {
         "key": "deck-rules",
         "chapter": "inventory",
-        "layout": "visual",
+        "layout": "code",
         "tab": "구현",
         "title": {"text": "4.2 편성 규칙", "verbatim": true},
         "lead": null,
@@ -1107,17 +1291,22 @@
         "points": [
           {
             "label": "구현",
-            "text": "`CanCompleteDeckEdit()`가 최소 장수와 비용 범위를 함께 검사하고, 추가에 실패하면 이유를 `DeckEditFailure`로 돌려줍니다.",
+            "text": "넣을 때는 `CanAddToDeck()`이 보유 여부, 최대 장수, 중복, 비용 상한 순서로 확인하고, 걸린 조건을 `DeckEditFailure`로 돌려줍니다.",
             "verbatim": true
           },
-          {"label": "", "text": "씬의 실제 값은 Inspector에 저장된 설정을 따릅니다.", "verbatim": true}
+          {
+            "label": "",
+            "text": "최소 장수와 비용 하한은 편성하는 도중에는 막지 않고, 화면을 닫을 때 `CanCompleteDeckEdit()`이 비용 범위와 함께 확인합니다.",
+            "verbatim": true
+          }
         ],
         "visuals": [
+          {"kind": "code", "n": 1, "fp": "// PlayerInventory.CanAddToDeck() — 카드를 넣을 때 확인하는 조건과 실패 이유"},
           {
             "kind": "image",
-            "src": "images/deck-inventory.png",
-            "w": 1904,
-            "h": 1066,
+            "src": "images/deck-inventory-crop.png",
+            "w": 1140,
+            "h": 855,
             "caption": {"text": "전체 카드와 플레이어 카드 덱 편성 화면(최소 카드 수·마력 조건 표시)", "verbatim": true}
           }
         ]
@@ -1134,11 +1323,14 @@
           {"label": "구현", "text": "추첨은 `RewardCardSelector`가 담당하고, 남은 카드 각각에 등급 가중치를 부여합니다.", "verbatim": true},
           {
             "label": "",
-            "text": "소스 기본값은 Common 70, Rare 22, Epic 7, Legendary 1이지만, 게임에서 사용하는 프리팹 값은 Common 42, Rare 25, Epic 19, Legendary 14입니다(조정한 이유는 §8.4). 보스 방 보상은 Rare 이상에서만 뽑습니다.",
+            "text": "소스 기본값은 Common 70, Rare 22, Epic 7, Legendary 1이지만, 게임에서 사용하는 프리팹 값은 Common 42, Rare 25, Epic 19, Legendary 14입니다(조정한 이유는 §4.5).",
             "verbatim": true
           },
-          {"label": "", "text": "이 값은 등급 자체의 고정 확률이 아니라 카드 한 장당 가중치입니다.", "verbatim": true},
-          {"label": "", "text": "예를 들어 일반 2장과 희귀 1장만 남으면 희귀 확률은 `25 / (42 + 42 + 25)`입니다.", "verbatim": true}
+          {
+            "label": "",
+            "text": "이 값은 등급 자체의 고정 확률이 아니라 카드 한 장당 가중치입니다.\n예를 들어 일반 2장과 희귀 1장만 남으면 희귀 확률은 `25 / (42 + 42 + 25)`입니다.",
+            "verbatim": false
+          }
         ],
         "visuals": [
           {"kind": "code", "n": 1, "fp": "// RewardCardSelector.Draw() — 카드 한 장당 등급 가중치로 누적 추첨"},
@@ -1165,14 +1357,18 @@
         "points": [
           {"label": "구현", "text": "슬롯과 드래그 아이콘은 재사용해 목록을 갱신할 때마다 전부 만들고 지우지 않습니다.", "verbatim": true},
           {"label": "", "text": "오벨리스크 밖에서 연 인벤토리는 열람 전용이라 편성 검사 없이 닫힙니다.", "verbatim": true},
-          {"label": "", "text": "나눌 파일과 최대 덱 장수 기준은 직접 정했고, 코드를 새 파일로 옮기는 일은 AI 코딩 에이전트에 맡겼습니다.", "verbatim": false}
+          {
+            "label": "AI 활용",
+            "text": "나눌 파일과 최대 덱 장수 기준은 직접 정했고, 코드를 새 파일로 옮기는 일은 AI 코딩 에이전트에 맡겼습니다.",
+            "verbatim": false
+          }
         ],
         "visuals": [
           {
             "kind": "image",
-            "src": "images/card-tooltip-locked.png",
-            "w": 1920,
-            "h": 1080,
+            "src": "images/card-tooltip-locked-crop.png",
+            "w": 1140,
+            "h": 855,
             "caption": {"text": "미획득 카드의 툴팁 — 카드 정보와 ‘미획득’ 표시", "verbatim": true}
           }
         ]
@@ -1191,8 +1387,11 @@
             "text": "`BossController.Awake()`에서 자식 `BossBaseState`들을 수집하고 `Type`을 키로 등록합니다.",
             "verbatim": true
           },
-          {"label": "구현", "text": "상태를 바꿀 때 이전 GameObject를 비활성화하고 다음 상태 GameObject를 활성화합니다.", "verbatim": true},
-          {"label": "", "text": "각 상태는 `OnEnable/OnDisable`을 진입·종료 생명주기로 사용합니다.", "verbatim": true},
+          {
+            "label": "",
+            "text": "상태를 바꿀 때 이전 GameObject를 비활성화하고 다음 상태 GameObject를 활성화합니다.\n각 상태는 `OnEnable/OnDisable`을 진입·종료 생명주기로 사용합니다.",
+            "verbatim": false
+          },
           {"label": "", "text": "근접 범위 밖에서는 레이저와 팔 발사를 `Random.Range(0, 2)`로 선택합니다.", "verbatim": true}
         ],
         "visuals": [
@@ -1203,6 +1402,38 @@
             "w": 900,
             "h": 675,
             "caption": {"text": "고대 수호 골렘의 레이저 패턴", "verbatim": true}
+          }
+        ]
+      },
+      {
+        "key": "golem-hit-timing",
+        "chapter": "behavior",
+        "layout": "screens",
+        "tab": "구현",
+        "title": {"text": "5.3 모션에 맞춘 공격 판정", "verbatim": true},
+        "lead": {"text": "`BossAnimationEventReceiver`는 근접 HitBox 활성/비활성과 팔 발사를 애니메이션 이벤트로 호출하는 진입점입니다.", "verbatim": true},
+        "sectionPath": ["5. 플레이어 이동과 적·보스의 행동", "5.3 모션에 맞춘 공격 판정"],
+        "points": [
+          {
+            "label": "",
+            "text": "근접 상태는 진입 때 판정을 끄고 애니메이션을 시작하며, 종료 때 코루틴 정지와 판정 비활성화를 수행합니다.\n정상 애니메이션 종료 외의 상태 이탈에서도 판정이 남는 문제를 줄이는 구조입니다.",
+            "verbatim": false
+          }
+        ],
+        "visuals": [
+          {
+            "kind": "image",
+            "src": "images/golem-arm-shoot-crop.png",
+            "w": 920,
+            "h": 690,
+            "caption": {"text": "고대 수호 골렘의 팔 발사 패턴", "verbatim": true}
+          },
+          {
+            "kind": "image",
+            "src": "images/golem-melee-crop.png",
+            "w": 920,
+            "h": 690,
+            "caption": {"text": "고대 수호 골렘의 근접 공격 패턴", "verbatim": true}
           }
         ]
       },
@@ -1239,6 +1470,20 @@
         ]
       },
       {
+        "key": "enemy-fsm",
+        "chapter": "behavior",
+        "layout": "visual",
+        "tab": "흐름",
+        "title": {"text": "일반 적의 순찰·추적·공격", "verbatim": true},
+        "lead": null,
+        "sectionPath": ["5. 플레이어 이동과 적·보스의 행동", "5.4 벽·바닥 충돌·콤보 입력 창·적 순찰", "일반 적의 순찰·추적·공격"],
+        "points": [
+          {"label": "", "text": "Patrol은 출발 지점 A와 순찰 지점 B를 번갈아 목표로 사용하며, 목적지에 도착하면 잠시 Idle로 돌아갑니다.", "verbatim": true},
+          {"label": "", "text": "추적과 공격이 한 상태(Attack) 안에 있어, 감지가 풀리기 전까지는 거리에 따라 쫓거나 공격하기를 반복합니다.", "verbatim": true}
+        ],
+        "visuals": [{"kind": "mermaid", "n": 1, "fp": "stateDiagram-v2"}]
+      },
+      {
         "key": "move-choice",
         "chapter": "behavior",
         "layout": "full",
@@ -1251,6 +1496,16 @@
             "label": "이유",
             "text": "더블 점프·대시 같은 동작을 더할 때 개발자에게는 원하는 움직임을, 플레이어에게는 불편하지 않은 조작감을 주기에 적합하다고 판단했습니다.",
             "verbatim": false
+          },
+          {
+            "label": "이유",
+            "text": "일반 적은 거리만으로 Idle/Patrol/Attack을 오가고 공격은 두 동작 중 하나를 무작위로 고르는 정도라 상태마다 오브젝트가 필요 없는 순수 C# 상태 머신(`EnemyStateMachine`)으로 만들었습니다.",
+            "verbatim": true
+          },
+          {
+            "label": "이유",
+            "text": "보스는 근접·레이저·팔 발사처럼 패턴이 여럿이라, 패턴마다 상태 컴포넌트를 두고 Collider·프리팹·지속시간을 Inspector에서 연결하는 쪽이 관리에 유리하다고 판단했습니다.",
+            "verbatim": true
           }
         ],
         "visuals": [{"kind": "table", "n": 1, "fp": "방법|장점|비용"}]
@@ -1274,24 +1529,6 @@
         "visuals": [{"kind": "mermaid", "n": 1, "fp": "sequenceDiagram"}]
       },
       {
-        "key": "skip-spawn",
-        "chapter": "checkpoint",
-        "layout": "code",
-        "tab": "구현",
-        "title": {"text": "6.2 클리어한 방의 적 재생성 생략", "verbatim": true},
-        "lead": null,
-        "sectionPath": ["6. 방 전환과 체크포인트 복원", "6.2 클리어한 방의 적 재생성 생략"],
-        "points": [
-          {
-            "label": "",
-            "text": "복귀 시작 시 저장 객체를 새 `CheckpointSaveData`로 복사하므로 코루틴 도중 공유 데이터가 변경되어도 복원 대상 값은 유지됩니다.",
-            "verbatim": true
-          },
-          {"label": "", "text": "씬 로드·리스폰 직후에는 일정 시간 체크포인트 저장을 차단합니다.", "verbatim": true}
-        ],
-        "visuals": [{"kind": "code", "n": 1, "fp": "// CheckPointManager.ReturnToCheckpointRoutine() — 방 클리어·플레이"}]
-      },
-      {
         "key": "room-state",
         "chapter": "checkpoint",
         "layout": "visual",
@@ -1312,6 +1549,29 @@
         "visuals": [{"kind": "mermaid", "n": 1, "fp": "stateDiagram-v2"}]
       },
       {
+        "key": "respawn-reset",
+        "chapter": "checkpoint",
+        "layout": "visual",
+        "tab": "구현",
+        "title": {"text": "6.3 부활 시 체력·카드 초기화", "verbatim": true},
+        "lead": {"text": "따라서 위치만 옮기는 복귀가 아니라 플레이어의 전투 상태도 함께 정리합니다.", "verbatim": true},
+        "sectionPath": ["6. 방 전환과 체크포인트 복원", "6.3 부활 시 체력·카드 초기화"],
+        "points": [
+          {"label": "", "text": "사망·피격·스킬·패링 플래그를 초기화하고 이동 런타임의 복귀 초기화를 호출합니다.", "verbatim": true},
+          {"label": "", "text": "Animator를 재바인딩하고 체력을 복원합니다.", "verbatim": true},
+          {"label": "", "text": "카드 시스템은 대기 스킬과 손패·드로우·버림 목록을 지우고 편성 덱으로 재구성합니다.", "verbatim": true}
+        ],
+        "visuals": [
+          {
+            "kind": "image",
+            "src": "images/death-panel.png",
+            "w": 1920,
+            "h": 1080,
+            "caption": {"text": "사망 화면 — 화면이 어두워지고, 위 방향키로 체크포인트에서 부활", "verbatim": true}
+          }
+        ]
+      },
+      {
         "key": "singleton-fix",
         "chapter": "lifecycle",
         "layout": "problem",
@@ -1322,16 +1582,12 @@
         "points": [
           {"label": "증상", "text": "보스 씬으로 넘어가면 플레이어와 보스 사이의 전투가 작동하지 않았습니다.", "verbatim": true},
           {
-            "label": "처음 생각",
-            "text": "`CombatSystem`에 `DontDestroyOnLoad()`를 적용했으니 그대로 다음 씬으로 넘어가 동작할 것이라고 예상했습니다.",
-            "verbatim": true
-          },
-          {
-            "label": "확인한 원인",
+            "label": "원인",
             "text": "보스 씬의 `CombatSystem`은 중복 인스턴스로 파괴되고, 이전 씬의 `CombatSystem`만 남아 있었습니다.",
             "verbatim": true
           },
-          {"label": "해결", "text": "일반 인스턴스 파괴와 애플리케이션 종료 상태를 분리했습니다.", "verbatim": false}
+          {"label": "해결", "text": "일반 인스턴스 파괴와 애플리케이션 종료 상태를 분리했습니다.", "verbatim": false},
+          {"label": "결과", "text": "그 뒤로 보스 씬에서 플레이어와 보스의 전투가 정상 동작합니다.", "verbatim": true}
         ],
         "visuals": []
       },
@@ -1354,7 +1610,12 @@
             "text": "1차 시연 시점에는 씬에 속한 `OverlayController`가 복귀 코루틴을 실행했고, 방을 ID로 불러오는 경로도 없었습니다.",
             "verbatim": true
           },
-          {"label": "해결", "text": "즉 씬을 넘어서 완료해야 하는 코루틴은 유지 객체가 맡고, 씬에 속한 플레이어와 방은 로드 뒤 다시 찾는 구조입니다.", "verbatim": true}
+          {
+            "label": "해결",
+            "text": "복귀를 씬이 바뀌어도 유지되는 `CheckPointManager`로 옮기고, 방을 ID로 불러온 뒤 플레이어·카메라를 다시 찾게 했습니다.",
+            "verbatim": false
+          },
+          {"label": "결과", "text": "고친 뒤에는 보스 씬에서 죽어도 이전 씬의 체크포인트 위치·체력으로 이어지는 것을 확인했습니다.", "verbatim": true}
         ],
         "visuals": [{"kind": "table", "n": 1, "fp": "변경 전|변경 후|의미"}]
       },
@@ -1367,17 +1628,41 @@
         "lead": null,
         "sectionPath": ["7. 트러블슈팅", "7.3 클리어한 방의 적이 다시 나오던 문제"],
         "points": [
-          {"label": "증상", "text": "적을 모두 처치한 방의 체크포인트로 다른 씬에서 복귀할 때 적이 다시 생성되는 문제를 보완했습니다.", "verbatim": true},
-          {"label": "원인", "text": "처음 접촉한 시점의 상태와 전투가 끝난 뒤 상태가 다를 수 있다", "verbatim": false},
+          {
+            "label": "문제",
+            "text": "적을 모두 처치한 방의 체크포인트로 다른 씬에서 복귀할 때 적이 다시 생성되었습니다.\n이어서, 클리어한 방으로 복귀할 때 오벨리스크가 켜지지 않았습니다.",
+            "verbatim": false
+          },
           {
             "label": "해결",
-            "text": "`OnTriggerStay2D()`에서 플레이어가 체크포인트 안에 있는 동안 방이 클리어되면, 보상 획득 전까지 갱신 저장합니다.",
-            "verbatim": true
-          }
+            "text": "적 전멸 여부를 저장하고 복귀 시 적 생성 조건에 반영했습니다.\n오벨리스크는 `RoomFactory`가 적 컨트롤러 GameObject 대신 컴포넌트만 끄도록 고쳤습니다.",
+            "verbatim": false
+          },
+          {"label": "결과", "text": "클리어한 방으로 돌아오면 오벨리스크가 켜지고 보상·출구 흐름이 이어지는 것을 확인했습니다.", "verbatim": true}
         ],
         "visuals": [{"kind": "code", "n": 1, "fp": "// Checkpoint.OnTriggerStay2D() — 보상 획득 전까지 방이 클리어되면 갱신 저장"}]
+      },
+      {
+        "key": "dead-target",
+        "chapter": "lifecycle",
+        "layout": "problem",
+        "tab": "문제 해결",
+        "title": {"text": "죽은 적이 카드 타겟으로 지정되던 문제", "verbatim": true},
+        "lead": null,
+        "sectionPath": ["7. 트러블슈팅", "7.4 그 밖에 해결한 문제", "죽은 적이 카드 타겟으로 지정되던 문제"],
+        "points": [
+          {"label": "증상", "text": "카드 효과의 타겟을 고르는 `EnemyManager`가 이미 사망한 적을 후보로 지정했습니다.", "verbatim": true},
+          {"label": "원인", "text": "후보 조건이 객체가 없는지와 활성 여부만 확인해, 사망했어도 오브젝트가 활성이면 후보에 남았습니다.", "verbatim": true},
+          {
+            "label": "해결",
+            "text": "후보 조건에 `IsDead`를 추가하고, 사망 처리에서 `EnemyManager.Unregister()`를 호출해 목록에서 직접 제거했습니다.",
+            "verbatim": true
+          },
+          {"label": "결과", "text": "사망한 적은 타겟 후보에서 빠집니다.", "verbatim": true}
+        ],
+        "visuals": []
       }
     ],
-    "applied": "06c4a53db22e6cd2"
+    "applied": "e5c4ab62fa47347e"
   }
 }

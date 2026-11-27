@@ -574,6 +574,8 @@ body.ResetInertiaTensor();
 형태마다 별도 풀을 만드는 대신 크기별 객체를 여러 외형으로 재사용하는 구조입니다. 
 외형을 바꾼 뒤에는 무게중심과 회전 관성을 다시 계산해, 이전 형태의 물리 값이 남지 않게 합니다.
 
+소스: [ObjectPoolManager.cs](https://github.com/keeeery/ODDITY/blob/main/Assets/Scripts/98.%20Utils/ObjectPool/ObjectPoolManager.cs), [WallFragment.cs](https://github.com/keeeery/ODDITY/blob/main/Assets/Scripts/8.%20Environmental%20Mechanics/WallFragment.cs).
+
 
 ### 3.3 작은 파편의 수명과 반환
 
@@ -1735,7 +1737,7 @@ else
 }
 ```
 
-소스: [SceneLoadManager.cs](https://github.com/keeeery/ODDITY/blob/main/Assets/Scripts/7.%20Arena/SceneLoadManager.cs).
+소스: [DeathScreen.cs](https://github.com/keeeery/ODDITY/blob/main/Assets/Scripts/10.%20UI/DeathScreen.cs), [SceneLoadManager.cs](https://github.com/keeeery/ODDITY/blob/main/Assets/Scripts/7.%20Arena/SceneLoadManager.cs).
 
 ### 9.4 그 밖에 해결한 문제
 

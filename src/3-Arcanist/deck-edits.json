@@ -12,7 +12,7 @@
         "verbatim": true
       },
       "lead": {
-        "text": "기본 공격과 카드 효과가 모두 같은 `HitBox → HitResolver` 경로로 피해를 주고, 패링에 성공하면 그 결과가 `CardGaugeController`의 카드 게이지로 이어지고, 게이지가 차면 `CardSystem`이 카드를 뽑습니다.",
+        "text": "기본 공격과 카드 효과가 모두 같은 `HitBox → HitResolver` 경로로 피해를 주고,\n패링에 성공하면 그 결과가 `CardGaugeController`의 카드 게이지로 이어지고, 게이지가 차면 `CardSystem`이 카드를 뽑습니다.",
         "verbatim": true
       },
       "sectionPath": [
@@ -155,7 +155,7 @@
         "verbatim": true
       },
       "lead": {
-        "text": "여러 충돌체가 닿으면 같은 공격이 한 대상에게 여러 번 들어갈 수 있습니다(§1.2).",
+        "text": "여러 충돌체가 닿으면 같은 공격이 한 대상에게 여러 번 들어갈 수 있습니다.",
         "verbatim": true
       },
       "sectionPath": [
@@ -194,35 +194,40 @@
       "layout": "visual",
       "tab": "구현",
       "title": {
-        "text": "죽음 선고 — 화면 흑백 반전과 느려지는 시간",
+        "text": "죽음 선고 연출 — 화면 흑백 반전과 느려지는 시간",
         "verbatim": true
       },
       "lead": null,
       "sectionPath": [
         "2. 충돌 기반 전투와 패링",
         "2.4 체력바와 화면 연출",
-        "죽음 선고 — 화면 흑백 반전과 느려지는 시간"
+        "죽음 선고 연출 — 화면 흑백 반전과 느려지는 시간"
       ],
       "points": [
         {
           "label": "",
-          "text": "전설 등급 카드 ‘죽음 선고’의 이펙트 프리팹에는 `DeathSentenceEffectController`가 있고, 활성화될 때 `ScreenEffectController.PlayDeathSentenceFlash()`를 호출합니다.\n이 함수는 Shader Graph로 만든 화면 흑백 반전 머티리얼(`SG_ScreenInvert`)의 `_Blend`를 켜는 동안 `Time.timeScale`을 낮춥니다.",
-          "verbatim": false
+          "text": "전설 등급 카드 ‘죽음 선고’를 사용하면 화면이 흑백으로 반전되고 잠시 시간이 느려집니다. 가장 높은 등급의 카드를 쓴 순간을 시각적으로 강조하기 위한 연출입니다.",
+          "verbatim": true
         },
         {
           "label": "",
-          "text": "`HitStopController`가 복구 값을 1로 고정하는 것과 달리, 이 연출은 직전 `timeScale`·`fixedDeltaTime`을 저장했다가 되돌립니다.",
+          "text": "흑백 반전은 Shader Graph로 만든 화면 머티리얼(`SG_ScreenInvert`)로 표현하고, 반전이 켜져 있는 동안 `Time.timeScale`을 낮춥니다.",
+          "verbatim": true
+        },
+        {
+          "label": "",
+          "text": "히트스톱이 끝나면 시간 배율을 1로 되돌리는 것과 달리, 이 연출은 사용 직전의 시간 배율을 저장했다가 그대로 되돌립니다.",
           "verbatim": true
         }
       ],
       "visuals": [
         {
           "kind": "image",
-          "src": "images/strong-attack-grayscale.png",
+          "src": "images/strong-attack-grayscale.mp4",
           "w": 1920,
           "h": 1080,
           "caption": {
-            "text": "죽음 선고를 사용한 순간의 화면 흑백 반전",
+            "text": "죽음 선고 카드 연출",
             "verbatim": true
           }
         }
@@ -235,10 +240,13 @@
       "layout": "full",
       "tab": "선택",
       "title": {
+        "text": "2.5 고민과 선택",
+        "verbatim": true
+      },
+      "lead": {
         "text": "패링을 어떻게 판정할까 — 애니메이션 진행도에 맞춘 판정 창",
         "verbatim": true
       },
-      "lead": null,
       "sectionPath": [
         "2. 충돌 기반 전투와 패링",
         "2.5 고민과 선택"
@@ -302,8 +310,8 @@
         {
           "kind": "image",
           "src": "images/buff-icons-crop.png",
-          "w": 640,
-          "h": 480,
+          "w": 720,
+          "h": 540,
           "caption": {
             "text": "활성 버프 아이콘(좌상단)과 최근 사용 카드 목록(좌측)",
             "verbatim": true
@@ -349,11 +357,11 @@
       "visuals": [
         {
           "kind": "image",
-          "src": "images/card-draw-crop.png",
-          "w": 560,
-          "h": 420,
+          "src": "images/card-draw.mp4",
+          "w": 1040,
+          "h": 780,
           "caption": {
-            "text": "카드를 뽑은 뒤의 손패 — Q 슬롯에 카드가 들어 있고, W 슬롯에 카드가 드로우 중",
+            "text": "패링 성공으로 카드 게이지가 차 Q 슬롯에 카드를 뽑는 장면",
             "verbatim": true
           }
         }
@@ -603,8 +611,13 @@
       "points": [
         {
           "label": "",
-          "text": "패링에 성공하면 화면 가장자리가 보라색으로 번쩍이고 히트스톱·카메라 흔들림이 들어가며, 카드 게이지를 획득해 카드를 더 빨리 뽑습니다.\n즉 패링은 방어이면서 카드를 얻는 수단이라, 카드 사용(§3)으로 이어집니다.",
-          "verbatim": false
+          "text": "`HitBox`가 맞은 대상을 `HitTargetTracker`에 먼저 기록해 중복 타격을 거르고, 통과한 공격만 `HitResolver`가 패링 또는 피해로 해결합니다.",
+          "verbatim": true
+        },
+        {
+          "label": "",
+          "text": "패링에 성공하면 화면 가장자리가 보라색으로 번쩍이고 히트스톱·카메라 흔들림이 들어가며, 카드 게이지를 획득해 카드를 더 빨리 뽑습니다.",
+          "verbatim": true
         }
       ],
       "visuals": [
@@ -661,11 +674,6 @@
       ],
       "visuals": [
         {
-          "kind": "code",
-          "n": 1,
-          "fp": "// HitResolver.Resolve() — 패링 창이 열려 있으면 피해 전달 전에 패링으로 처리"
-        },
-        {
           "kind": "image",
           "src": "images/parry-combat-zoom.png",
           "w": 620,
@@ -674,6 +682,11 @@
             "text": "패링 성공 순간의 이펙트",
             "verbatim": true
           }
+        },
+        {
+          "kind": "code",
+          "n": 1,
+          "fp": "// HitResolver.Resolve() — 패링 창이 열려 있으면 피해 전달 전에 패링으로 처리"
         }
       ],
       "from": {
@@ -715,19 +728,19 @@
       ],
       "visuals": [
         {
-          "kind": "table",
-          "n": 1,
-          "fp": "구성|동작"
-        },
-        {
           "kind": "image",
-          "src": "images/parry-effect-crop.png",
-          "w": 1440,
+          "src": "images/parry-effect.mp4",
+          "w": 1920,
           "h": 1080,
           "caption": {
             "text": "패링 성공 순간 — 화면 가장자리 보라색 비네트와 파티클·조명 이펙트",
             "verbatim": true
           }
+        },
+        {
+          "kind": "table",
+          "n": 1,
+          "fp": "구성|동작"
         }
       ],
       "from": {
@@ -738,7 +751,7 @@
           "패링 성공 연출 — 번쩍임·히트스톱·화면 흔들림"
         ],
         "sig": [
-          "패링 성공 연출 — 번쩍임·히트스톱·화면 흔들림|image|images/parry-effect-crop.png|1",
+          "패링 성공 연출 — 번쩍임·히트스톱·화면 흔들림|image|images/parry-effect.mp4|1",
           "패링 성공 연출 — 번쩍임·히트스톱·화면 흔들림|table|1|구성|동작"
         ]
       }
@@ -820,7 +833,7 @@
         },
         {
           "label": "",
-          "text": "소스 기본값은 Common 70, Rare 22, Epic 7, Legendary 1이지만, 게임에서 사용하는 프리팹 값은 Common 42, Rare 25, Epic 19, Legendary 14입니다(조정한 이유는 §8.4). 보스 방 보상은 Rare 이상에서만 뽑습니다.",
+          "text": "소스 기본값은 Common 70, Rare 22, Epic 7, Legendary 1이지만, 게임에서 사용하는 프리팹 값은 Common 42, Rare 25, Epic 19, Legendary 14입니다(조정한 이유는 §4.5).",
           "verbatim": true
         },
         {
@@ -1154,9 +1167,9 @@
       "visuals": [
         {
           "kind": "image",
-          "src": "images/card-tooltip-locked.png",
-          "w": 1920,
-          "h": 1080,
+          "src": "images/card-tooltip-locked-crop.png",
+          "w": 1140,
+          "h": 855,
           "caption": {
             "text": "미획득 카드의 툴팁 — 카드 정보와 ‘미획득’ 표시",
             "verbatim": true
@@ -1170,7 +1183,7 @@
           "4.4 전체 카드 목록과 더블 클릭·드래그 드롭 편성"
         ],
         "sig": [
-          "4.4 전체 카드 목록과 더블 클릭·드래그 드롭 편성|image|images/card-tooltip-locked.png|1"
+          "4.4 전체 카드 목록과 더블 클릭·드래그 드롭 편성|image|images/card-tooltip-locked-crop.png|1"
         ]
       }
     },
@@ -1232,5 +1245,14 @@
       ]
     }
   ],
-  "hide": []
+  "hide": [],
+  "deckText": [
+    {
+      "slide": "parry",
+      "field": "code",
+      "n": 2,
+      "value": "// HitResolver.Resolve() — 패링 창이 열려 있으면 피해 전달 전에 패링으로 처리\nPlayerController playerController =\n    receiver.GetComponent<PlayerController>();\nif (playerController != null && playerController.IsParryWindowOpen)\n{\n    playerController.SuccessParry();\n    return new HitResolution(HitResolutionStatus.Parried);\n}",
+      "from": "// HitResolver.Resolve() — 패링 창이 열려 있으면 피해 전달 전에 패링으로 처리\nPlayerController playerController = receiver.GetComponent<PlayerController>();\nif (playerController != null && playerController.IsParryWindowOpen)\n{\n    playerController.SuccessParry();\n    return new HitResolution(HitResolutionStatus.Parried);\n}"
+    }
+  ]
 }
