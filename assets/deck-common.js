@@ -525,6 +525,59 @@
       const contentH = kids.reduce((a, c) => a + c.offsetHeight, 0) + gap * Math.max(0, kids.length - 1);
       const boxes = [...lv.children].filter((e) => e.classList.contains('vbox') && e.dataset.kind);
       if (boxes.length !== 1 || !contentH) return;
+      // 직접 고침(2026-11-27): 장면별 `--pf-split-fit: fill` — 왼쪽 그림은 칸 높이를 다 쓰고, 오른쪽 칸을 그림 높이로 늘려 첫 항목은 그림 위 선·마지막 항목은 아래 선에 맞춤(사이 간격은 CSS justify-content)
+      if (getComputedStyle(dk).getPropertyValue('--pf-split-fit').trim() === 'fill') {
+        rc.style.height = '';
+        // 다이어그램 안의 Mermaid 여백(시퀀스 다이어그램 좌우 50·위아래 10 등)을 걷어 내용 상자에 맞춤 — 판 안쪽 여백(.vmedia padding 12px)만 남김
+        boxes[0].querySelectorAll(':scope > .vmedia svg').forEach((g) => {
+          if (g.dataset.pfTrim || g.classList.contains('pf-split-link')) return;
+          try { const bb = g.getBBox(); if (bb.width > 0 && bb.height > 0) { const e = 3; g.setAttribute('viewBox', `${bb.x - e} ${bb.y - e} ${bb.width + 2 * e} ${bb.height + 2 * e}`); /* getBBox는 선 두께를 빼므로 가장자리 선(참여자 상자 위아래 테두리)이 반쯤 잘리지 않게 3 단위 여유 */ g.style.maxWidth = ''; g.dataset.pfTrim = '1'; } } catch (e) { /* 그리지 않은 SVG */ }
+        });
+        sizeArea(lv, boxes, lv.clientWidth, Math.max(contentH, dk.clientHeight), false);
+        const m = boxes[0].querySelector(':scope > .vmedia') || boxes[0];
+        rc.style.height = `${m.offsetHeight}px`;
+        // 직접 고침(2026-11-27): `--pf-split-align: alt` — 시퀀스 다이어그램의 alt 구간(가로 경계선)에 맞춰 1번 카드는 첫 구간 위 선, 2번 카드는 둘째 구간 위 선에(사이 칸은 CSS가 나머지 항목을 가운데로)
+        if (getComputedStyle(dk).getPropertyValue('--pf-split-align').trim() === 'alt') {
+          const svg = m.querySelector('svg'), mr = m.getBoundingClientRect(), k = mr.height / (m.offsetHeight || 1) || 1;
+          const hs = svg ? [...svg.querySelectorAll('.loopLine')].filter((l) => l.getAttribute('y1') === l.getAttribute('y2')).map((l) => (l.getBoundingClientRect().top - mr.top) / k).sort((a, b) => a - b) : [];
+          const cs = [...rc.querySelectorAll('.ncard')];
+          if (hs.length >= 2 && cs.length >= 2) {
+            const H = m.offsetHeight, h2 = cs[cs.length - 1].offsetHeight;
+            const sec2 = (hs[2] ?? H) - hs[1], top2 = hs[1] + Math.max(0, (sec2 - h2) / 2);   // 2번 카드는 둘째 구간 높이 가운데
+            rc.style.gridTemplateRows = `${hs[0].toFixed(1)}px auto minmax(0, 1fr) auto ${Math.max(0, H - top2 - h2).toFixed(1)}px`;
+            // 직접 고침(2026-11-27): `--pf-split-link: solid|dash` — alt 구간마다 꺾쇠와 선으로 카드와 이어 줌(다이어그램 선과 같은 색·점선)
+            dk.querySelector(':scope > svg.pf-split-link')?.remove();
+            if (['dash', 'solid'].includes(getComputedStyle(dk).getPropertyValue('--pf-split-link').trim())) {
+              const dr = dk.getBoundingClientRect(), kd = dr.width / (dk.offsetWidth || 1) || 1;
+              const lines = [...svg.querySelectorAll('.loopLine')].filter((l) => l.getAttribute('y1') === l.getAttribute('y2')).sort((a, b) => a.getBoundingClientRect().top - b.getBoundingClientRect().top);
+              const ls = getComputedStyle(lines[0]);
+              const NS = 'http://www.w3.org/2000/svg', ov = document.createElementNS(NS, 'svg');
+              ov.setAttribute('class', 'pf-split-link'); ov.setAttribute('aria-hidden', 'true');
+              Object.assign(ov.style, { position: 'absolute', left: '0', top: '0', width: `${dk.offsetWidth}px`, height: `${dk.offsetHeight}px`, overflow: 'visible', pointerEvents: 'none' });
+              if (getComputedStyle(dk).position === 'static') dk.style.position = 'relative';
+              // 구간마다 오른쪽에 「]」 꺾쇠를 대고, 카드 가운데 높이에서 카드 왼쪽까지 곧게 이음(구간 ↔ 카드 짝이 보이게). solid = 실선, dash = 점선
+              const X = (v) => ((v - dr.left) / kd).toFixed(1), Y = (v) => ((v - dr.top) / kd).toFixed(1);
+              const mr2 = m.getBoundingClientRect(), altR = lines[0].getBoundingClientRect().right;
+              const dash = ls.strokeDasharray && ls.strokeDasharray !== 'none' ? ls.strokeDasharray : '4 3';
+              [cs[0], cs[cs.length - 1]].forEach((card, i) => {
+                if (!lines[i + 1]) return;
+                const t = lines[i].getBoundingClientRect().top, b = lines[i + 1].getBoundingClientRect().top, mid = (t + b) / 2;
+                const cr = card.getBoundingClientRect(), cy = cr.top + cr.height / 2;
+                const bx = altR + 10 * kd, in0 = altR + 3 * kd, ly = Math.min(Math.max(cy, t + 8 * kd), b - 8 * kd);   // 카드 가운데 높이에서 곧게(꺾쇠 범위 안으로만)
+                const rr = 4 * kd, t0 = t + 4 * kd, b0 = b - 4 * kd;   // 꺾쇠 모서리 둥글게(반경 4px)
+                const d = `M${X(in0)} ${Y(t0)} H${X(bx - rr)} Q${X(bx)} ${Y(t0)} ${X(bx)} ${Y(t0 + rr)} V${Y(b0 - rr)} Q${X(bx)} ${Y(b0)} ${X(bx - rr)} ${Y(b0)} H${X(in0)} M${X(bx)} ${Y(ly)} H${X(cr.left + 6 * kd)}`;   // 선 끝을 라벨 칸 안으로 6px(같은 색이라 안 보임) — 화면 배율 반올림으로 틈이 생기지 않게
+                const pth = document.createElementNS(NS, 'path');
+                pth.setAttribute('d', d); pth.setAttribute('fill', 'none');
+                const lb = card.querySelector(':scope > .num'), lc = lb && getComputedStyle(lb).backgroundColor;   // 선 색 = 그 카드 라벨 칸 칠 색(없으면 다이어그램 선 색)
+                pth.setAttribute('stroke', lc && !/rgba\(0, 0, 0, 0\)|transparent/.test(lc) ? lc : ls.stroke); pth.setAttribute('stroke-width', ls.strokeWidth || '1'); if (getComputedStyle(dk).getPropertyValue('--pf-split-link').trim() === 'dash') pth.setAttribute('stroke-dasharray', dash);
+                ov.appendChild(pth);
+              });
+              dk.appendChild(ov);
+            }
+          }
+        }
+        return;
+      }
       sizeArea(lv, boxes, lv.clientWidth, contentH + capOf(boxes[0]), false);
       // 폭에 막혀 그림이 조금 낮으면(8% 이내) 그림 칸을 내용 높이로 채우고 가장자리를 조금 잘라(object-fit: cover) 위아래 끝을 맞춤
       const media = boxes[0].querySelector(':scope > .vmedia'), img = media?.querySelector('img, video');

@@ -361,7 +361,14 @@ try { window.mermaid?.initialize({ startOnLoad: false }); } catch (_) { /* */ }
       const img = only && (only.tagName === 'IMG' ? only : (only.tagName === 'A' && only.children.length >= 1 && [...only.childNodes].every((n) => n.nodeType === 1 ? n.tagName === 'IMG' || n.classList.contains('pf-newtab-icon') || n.classList.contains('pf-newtab-sr') : !n.textContent.trim()) ? only.querySelector('img') : null));
       if (img) para.classList.add('pf-figure');
       // 한 줄에 그림만 여러 장(`![a](x) ![b](y)`) → 테두리·머리 칸 없이 나란히 — 직접 고친 부분
-      else if (kids.length >= 2 && kids.every((n) => n.nodeType === 1 && n.tagName === 'IMG')) para.classList.add('pf-figure', 'pf-figure-row');
+      else if (kids.length >= 2 && kids.every((n) => n.nodeType === 1 && n.tagName === 'IMG')) {
+        para.classList.add('pf-figure', 'pf-figure-row');
+        // 비율이 다른 그림도 높이가 같게 — 칸 폭을 그림 비율(폭/높이)에 비례해 나눔(원본 이미지는 그대로) — 직접 고친 부분(2026-11-27)
+        kids.forEach((im) => {
+          const fit = () => { if (im.naturalWidth > 0 && im.naturalHeight > 0) im.style.flexGrow = String(im.naturalWidth / im.naturalHeight); };
+          if (im.complete) fit(); else im.addEventListener('load', fit, { once: true });
+        });
+      }
     });
     // 세로 그림(앱 화면 등) → .pf-tall(폭을 한 줄 두 장의 한 칸만큼 줄여 가운데) — 직접 고친 부분.
     //   그림 크기를 알아야 하므로 불러온 뒤 정함

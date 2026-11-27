@@ -541,7 +541,12 @@
     const fl = sceneVar(sid, '--pf-layout');
     const plain = sceneVar(sid, '--pf-cards') === 'plain';
     if (fl === 'side' || fl === 'stack') { const f = V.filter((v) => (fl === 'stack') === !!v.stack); if (f.length) V = f; }
-    else if (fl === 'side-split' && vis.length > 1) V = [{ vw: 1, split: true }, { vw: 1.2, split: true }, { vw: 0.85, split: true }, { vw: 1, split: true, tight: true }];
+    else if (fl === 'side-split' && vis.length > 1) {
+      V = [{ vw: 1, split: true }, { vw: 1.2, split: true }, { vw: 0.85, split: true }, { vw: 1, split: true, tight: true }];
+      // 직접 고침(2026-11-27): 장면별 왼쪽 칸 비율 고정 — theme CSS `#d-<key> { --pf-split-vw: 1.4 }`(왼쪽 : 오른쪽 = 1.4 : 1)
+      const sv = parseFloat(sceneVar(sid, '--pf-split-vw'));
+      if (sv > 0) V = [{ vw: sv, split: true }, { vw: sv, split: true, tight: true }];
+    }
     // 직접 고침(2026-11-25): 2×2 배치(--pf-layout: quad) — 시각 자료 3개가 왼쪽 위·오른쪽 위·왼쪽 아래, 카드가 오른쪽 아래
     else if (fl === 'quad' && (vis.length === 3 || vis.length === 2)) V = [{ quad: true }, { quad: true, tight: true }];
     else if (fl === 'trio' && vis.length === 2) V = [{ trio: true }, { trio: true, tight: true }];   // 직접 고침(2026-11-27): 이미지 | 다이어그램 | 카드 세로
