@@ -18,7 +18,9 @@
   //        글자 = 세로/가로 — 선 글자를 그 방향 토막 중 가장 긴 곳의 가운데에(기본은 모든 토막 중 가장 긴 곳)
   //        간격 = 같은 두 칸을 잇는 나란한 두 선 사이(기본 24px, 숫자 = px, 40% = 겹치는 폭의 30%·70% 자리). 이것만 적으면 길은 자동 그대로
   //     %% 격자 열 간격: 120                    격자의 열 사이 최소 간격(기본 40px, 선 글자가 넓으면 그만큼 더)
+  //     %% 격자 줄 간격: 100 · 40 100 40       격자의 줄 사이 최소 간격(기본 40px, 선 글자가 높으면 그만큼 더). 여러 개면 위 줄 사이부터 차례로
   //     %% 격자 맞춤: 아래 · 위                 격자의 같은 줄 칸들을 가운데 대신 아랫변(윗변)으로 맞춤
+  //     %% 좌우 맞춤: 칸                        그림 영역의 좌우 여백을 칸 묶음 가운데 기준으로 같게(한쪽으로 튀어나온 선 글자만큼 반대쪽도 비움)
   //     %% 격자 밖: A B                         적은 칸을 열·줄 너비 계산에서 빼고, 이어진 격자 칸 옆(%% 화살표의 나감 변, 기본 오른쪽)에 선 글자만큼 띄워 붙임
   //     %% 선 메모: A -> B: 글<br>글          선 옆에 메모 칸 모양 상자를 띄우고 점선으로 이음(그림에 메모 칸이 있으면 그 열에 맞춤)
   //     %% 선 글자: 한 줄                       Mermaid가 200px에서 접은 선 글자를 한 줄로 폄(<br>은 그대로)
@@ -280,7 +282,8 @@
       });
       // 줄 사이마다 따로: 기본 40px, 바로 위아래 칸을 잇는 선의 글자가 있으면 그만큼(+묶음 경계면 테두리 여백까지).
       //   격자 칸끼리가 아닌 선의 글자(묶음·칸 밖)는 예전처럼 모든 줄 사이에 반영
-      const rowGaps = Array(Math.max(0, rows.length - 1)).fill(40);
+      const rowGapSet = (/^\s*%%\s*(?:격자\s*줄\s*간격|grid-row-gap)\s*:\s*([\d\s]+?)\s*$/im.exec(src)?.[1] || '40').split(/\s+/).map(Number);   // %% 격자 줄 간격: N 또는 N N … — 줄 사이 최소 간격(px), 여러 개면 위 줄 사이부터 차례로
+      const rowGaps = Array(Math.max(0, rows.length - 1)).fill(0).map((_, j) => rowGapSet.length > 1 ? (rowGapSet[j] ?? 40) : rowGapSet[0]);
       const memoFs = parseFloat(((typeof PF.mermaidConfig === 'function' ? PF.mermaidConfig({}) : {}).themeVariables || {}).fontSize) || 16;
       const memoRules = [...src.matchAll(MEMO_RE)].map((m) => ({ from: m[2], to: m[3], h: m[4].split(/<br\s*\/?>/i).filter((t) => t.trim()).length * memoFs * 1.5 + 30 }));
       labs.forEach((l) => {
@@ -1144,6 +1147,22 @@
         svg.setAttribute('viewBox', `${l} ${t} ${r - l} ${b - t}`);
         svg.dataset.pfGrown = '1';
         if (svg.style.maxWidth && !svg.style.maxWidth.endsWith('%')) svg.style.maxWidth = `${r - l}px`;
+      }
+    }
+    // %% 좌우 맞춤: 칸 — 그림 영역의 좌우 여백을 칸 묶음 가운데 기준으로 같게(한쪽으로 튀어나온 선 글자만큼 반대쪽도 비움)
+    if (/^\s*%%\s*(?:좌우\s*맞춤|center-x)\s*:\s*(?:칸|nodes)\s*$/im.test(src)) {
+      const vb2 = svg.viewBox?.baseVal;
+      let nl = Infinity, nr = -Infinity;
+      svg.querySelectorAll('g.node').forEach((g) => {
+        const b = shapeBox(g);
+        if (!b) return;
+        const m = toRoot(g), p1 = tp(m, { x: b.x, y: b.y }), p2 = tp(m, { x: b.x + b.width, y: b.y + b.height });
+        nl = Math.min(nl, p1.x, p2.x); nr = Math.max(nr, p1.x, p2.x);
+      });
+      if (vb2 && vb2.width && isFinite(nl)) {
+        const cx = (nl + nr) / 2, half = Math.max(cx - vb2.x, vb2.x + vb2.width - cx);
+        svg.setAttribute('viewBox', `${cx - half} ${vb2.y} ${2 * half} ${vb2.height}`);
+        if (svg.style.maxWidth && !svg.style.maxWidth.endsWith('%')) svg.style.maxWidth = `${2 * half}px`;
       }
     }
     return true;

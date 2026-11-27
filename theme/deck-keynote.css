@@ -344,7 +344,6 @@
 /* ── Arcanist 장면별(2026-11-26, theme/deck-rules.md 규칙) ── */
 [data-pf-project="3-Arcanist"] :is(#d-what, #d-card-exec, #d-restore-seq, #d-skip-spawn) { --pf-cards: plain; }   /* R8 번호 없음 — 1.1 소개·3.3 이유와 구현·6.1 기능과 기록 항목·6.2 서로 다른 두 이야기 */
 [data-pf-project="3-Arcanist"] :is(#d-card-exec, #d-buff-stack, #d-gauge-overflow) { --pf-layout: side; --pf-vis-scale: .912; }   /* R9 4:3 이미지 하나 + 카드 — 왼쪽 이미지 539×404·오른쪽 카드 462px */
-[data-pf-project="3-Arcanist"] #d-parry-effect { --pf-layout: quad; }   /* R10 2.4 패링 연출 — 표·이미지 위 두 칸, 카드 아래 (5.2 golem-fsm은 quad면 카드가 96px로 좁아져 넘쳐 기본 배치) */
 /* (Arcanist 4.3 reward-draw — R11 side-split은 이미지 181px, quad는 코드 칸 넘침이라 기본 배치: 이미지·코드 위, 카드 아래) */
 
 /* ── 사천성 장면별(2026-11-26) ── */
@@ -388,6 +387,14 @@
   html[data-pf-mode="light"] #d-ui-tools-table .fstep > p > strong:first-of-type, html[data-pf-mode="light"] [data-pf-project="2-Folk-Sack"] #d-render-ai .fstep > p > strong:first-of-type {
     box-shadow: inset 0 0 0 1px rgba(217, 119, 87, .5), inset 0 0 10px 1px rgba(217, 119, 87, .35); }
 }
+/* R4 보충 — 세로로 쌓인 카드(.cards가 row·titled가 아님)의 「AI 활용」도 가로 카드(R5)·제목형 카드처럼 카드 왼쪽 라벨 칸으로(번호 칸 대신).
+   예전에는 글 위 머리말(.lb, block)이라 주황이 줄 폭 전체에 띠처럼 칠해졌음 (2026-11-28, Arcanist 4.4 d-inventory-list) */
+.pf-scene .cards:not(.row):not(.titled) .ncard[data-lb="AI 활용"] { padding: 0; gap: 0; overflow: hidden; grid-template-columns: minmax(0, 1fr); }
+.pf-scene .cards:not(.row):not(.titled) .ncard[data-lb="AI 활용"] > .num { display: none; }
+.pf-scene .cards:not(.row):not(.titled) .ncard[data-lb="AI 활용"] > div { display: grid; grid-template-columns: max-content minmax(0, 1fr); padding: 0; align-self: stretch; }
+.pf-scene .cards:not(.row):not(.titled) .ncard[data-lb="AI 활용"] > div > .lb { display: block; align-self: stretch; align-content: center; text-align: center; margin: 0; padding: 0 10px; white-space: nowrap;
+  font-size: 13px; font-weight: 700; line-height: 1; text-box: trim-both cap alphabetic; }
+.pf-scene .cards:not(.row):not(.titled) .ncard[data-lb="AI 활용"] > div > p { margin: 0; padding: 14px 18px; align-self: center; }
 /* R18 화면 장면(layout screens) — 그림 나란히 위, 카드 줄 아래. 카드 줄 폭 = 그림 줄 폭(ODDITY d-psy-hold-aim과 같은 방식), 카드 사이 = 그림 사이 16px.
    배치 맞추기 중(.pf-sizing은 장면 자신에 붙음)에는 원래 폭으로 남은 높이를 잼 */
 .pf-scene .dk-stack.scr-cards { grid-template-columns: max-content; justify-content: center; }
@@ -397,3 +404,17 @@
 
 /* 다이어그램 판 안쪽 여백 — 슬라이드만 16px → 12px(상세 문서는 doc.css 16px 그대로, 2026-11-27) */
 .pf-scene .vbox[data-kind="mermaid"] .vmedia { padding: 12px; }
+/* Arcanist 슬라이드(장면 id가 다른 프로젝트와 겹칠 수 있어 [data-pf-project="3-Arcanist"]로 이 프로젝트에만, deck-rules.md) */
+/* 2.1 기본 공격과 패링 판정 — 다이어그램 위, 카드 2장을 그 아래 한 장씩 세로로(다이어그램·카드 같은 폭) (2026-11-28) */
+[data-pf-project="3-Arcanist"] #d-combat-overview { --pf-layout: stack; }
+[data-pf-project="3-Arcanist"] #d-combat-overview .dk-stack { grid-template-columns: max-content; justify-content: center; }
+[data-pf-project="3-Arcanist"] #d-combat-overview .dk-stack > .cards { width: 0; min-width: 100%; grid-template-columns: minmax(0, 1fr); gap: 12px; }
+[data-pf-project="3-Arcanist"] #d-combat-overview.pf-sizing .dk-stack { grid-template-columns: none; justify-content: normal; }
+[data-pf-project="3-Arcanist"] #d-combat-overview.pf-sizing .dk-stack > .cards { width: auto; min-width: 0; }
+/* 2.3 패링 성공 시 피해 무효화 — ODDITY 2.4 d-psy-follow처럼 왼쪽 이미지, 오른쪽 카드 위·코드 아래(R11. 2×2는 코드 칸이 잘려서 뺌) */
+[data-pf-project="3-Arcanist"] #d-parry { --pf-layout: side-split; }
+/* 4.4 전체 카드 목록과 편성 — 1·2번은 번호 없는 카드(R8), 3번은 「AI 활용」 라벨 칸 카드(R4) */
+[data-pf-project="3-Arcanist"] #d-inventory-list { --pf-cards: plain; }
+/* 2.4 패링 성공 연출 — 영상(16:9)이 가장 크게 보이는 배치(2026-11-28 후보 비교, 1600×900: 2×2 711×397 · 위아래 690×387 · 옆 574×321 · 나눈 옆 1:1 596×334 · 나눈 옆 2.2 853×480 ← 채택, 2.8은 오히려 705×396). 왼쪽 영상, 오른쪽 표 위·카드 아래 */
+[data-pf-project="3-Arcanist"] #d-parry-effect { --pf-layout: side-split; --pf-split-vw: 2.2; }
+[data-pf-project="3-Arcanist"] #d-parry-effect .dk-split > .rcol > .cards { order: 2; }

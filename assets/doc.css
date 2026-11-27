@@ -396,8 +396,7 @@ dialog.lightbox::backdrop { background: rgba(10, 11, 14, .82); }
 .lb-stage.lb-svg svg { display: block; height: auto; cursor: zoom-out; }
 .lb-cap { color: #fff; text-align: center; font-size: 14px; margin-top: 10px; }
 .lb-close { display: block; margin: 10px auto 0; background: var(--surface); }   /* 직접 수정: 확대 창 닫기 버튼 배경 불투명 */
-.lb-close .k { margin-left: 4px; font-weight: 500; color: color-mix(in srgb, currentColor 45%, transparent); }   /* 직접 수정: 단축키 회색 — 슬라이드 개요 창 안내와 같게 */
-.lb-close:hover { background: color-mix(in srgb, var(--accent) 16%, var(--surface)); }   /* 호버도 불투명(반투명 soft 색 대신 표면색 위에 섞음) */
+.lb-close .k { margin-left: 4px; font-weight: 500; opacity: .45; }   /* 직접 수정: 단축키 회색 — 슬라이드 개요 창 안내와 같게. 흐리기는 opacity로(currentColor 섞기는 올림에서 글자색 반전을 따라오지 않아 안 보임) */
 
 .doc-foot { margin-top: 120px; display: grid; gap: 4px; color: var(--faint); font-size: 12px; line-height: 1.6; }   /* 본문 맨 아래 세 줄(© 이름 · 브라우저 안내 · 마지막 업데이트) — 바·선 없이, 포트폴리오 페이지 맨 아래와 같은 글 */
 .doc-foot p { margin: 0; }
