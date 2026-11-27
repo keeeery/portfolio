@@ -841,9 +841,10 @@ stateDiagram-v2
 플레이어와 옆면이 닿거나 청크 위에 선 일반 접촉까지 매몰·탈출로 처리하지 않도록,
 접촉 후보를 `IsBurialCandidate()`로 걸러 정상 물리 접촉과 구분합니다.
 
-`TerrainSampler`는 청크의 각 셀을 독립적으로 반올림하지 않습니다.
-물리 Bounds 주변에서 **모든 로컬 셀에 동일한 offset을 더하는 후보**를 평가합니다.
-연결된 청크의 셀 배치를 통째로 옮기는 방식입니다.
+![멈출 칸 선택을 네 칸으로 나눈 도식. ① 셀 콜라이더 가로를 양쪽 1%씩 줄여 꼭짓점만 닿은 계단에 걸리지 않고 한 칸 더 내려가 멈춤, ② 칸 경계와 미세하게 어긋난 Bounds에 사방 1칸을 더한 탐색 범위, ③ 모든 셀에 같은 offset을 더해 모양 그대로 옮긴 후보(기존 지형과 겹치는 후보는 뒤로 밀림), ④ 셀 중심이 덩어리 Collider 안에 많이 들고 원래 셀과 오차가 작은 후보로 Grid에 맞춤](images/chunk-placement-search.png)
+
+물리로 멈춘 청크는 칸 경계와 미세하게 어긋나 있을 수 있어, 정적 Grid의 어느 칸에 기록할지 다시 정해야 합니다.
+`TerrainSampler`는 셀마다 가장 가까운 칸을 따로 고르지 않고, **모든 셀에 같은 offset을 더해 덩어리를 통째로 옮긴 후보** 중에서 가장 잘 맞는 자리를 고릅니다.
 
 ```csharp
 // TerrainSampler.IsBetterPlacement() — 배치 종류 → 닿는 수 → 정렬 오차 순으로 후보 비교
@@ -911,7 +912,7 @@ return collisionCount < bestCollisionCount;
 
 **떨어지는 청크와 부딪힌 플레이어를 어떻게 처리할까 — 이동할 공간을 찾아 밀어내거나 매몰**
 
-매몰은 이 게임의 위험 요소이자 다른 플레이어를 노리는 간접 PvP 수단입니다(§1.2).
+매몰은 게임의 위험 요소이자 다른 플레이어를 노리는 간접 PvP 수단입니다(§1.2).
 충돌할 때마다 플레이어를 밀어내면 매몰 자체가 생기지 않습니다.
 반대로 닿자마자 매몰시키는 것도 맞지 않다고 판단했습니다.
 지형은 칸 단위의 그리드지만 플레이어는 칸에 묶이지 않고 자유롭게 움직이기 때문에 플레이어가 칸의 경계에 걸쳐 있을 때 바로 매몰시키면 판정이 직관적이지 않을 것이라고 생각했습니다.
@@ -1002,7 +1003,8 @@ sequenceDiagram
 ```csharp
 // ItemController.HandleRequestFailed() — 실패한 요청의 예상 쿨타임 제거
 if (message == null || string.IsNullOrEmpty(message.RequestId) ||
-    pendingCooldowns.Remove(message.RequestId, out PendingCooldown pending) == false)
+    pendingCooldowns.Remove(
+        message.RequestId, out PendingCooldown pending) == false)
     return;
 
 itemReadyTime.Remove(pending.ItemID);
