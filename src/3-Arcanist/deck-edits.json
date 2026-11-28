@@ -31,7 +31,7 @@
         },
         {
           "label": "",
-          "text": "공격이 닿았을 때 `HitResolver`가 플레이어의 패링 판정 창이 열려 있는지 확인합니다(§2.3).",
+          "text": "공격이 닿았을 때 `HitResolver`가 플레이어의 패링 판정 창이 열려 있는지 확인합니다(§2.2).",
           "verbatim": true
         },
         {
@@ -59,7 +59,7 @@
       },
       "lead": null,
       "sectionPath": [
-        "3. 덱에서 뽑아 모션에 맞춰 나가는 카드",
+        "3. 카드 뽑기와 사용",
         "3.8 고민과 선택"
       ],
       "points": [
@@ -84,7 +84,7 @@
       "from": {
         "key": "card-data-choice",
         "sectionPath": [
-          "3. 덱에서 뽑아 모션에 맞춰 나가는 카드",
+          "3. 카드 뽑기와 사용",
           "3.8 고민과 선택"
         ],
         "sig": [
@@ -146,12 +146,12 @@
     },
     {
       "key": "multi-hit",
-      "after": "combat-overview",
+      "after": "parry",
       "chapter": "combat",
       "layout": "code",
       "tab": "구현",
       "title": {
-        "text": "2.2 한 공격이 겹쳐 들어가지 않는 타격 기록",
+        "text": "2.3 단발·다단 공격의 중복 타격 방지",
         "verbatim": true
       },
       "lead": {
@@ -159,8 +159,8 @@
         "verbatim": true
       },
       "sectionPath": [
-        "2. 패링이 카드로 이어지는 전투",
-        "2.2 한 공격이 겹쳐 들어가지 않는 타격 기록"
+        "2. 충돌 기반 전투와 패링",
+        "2.3 단발·다단 공격의 중복 타격 방지"
       ],
       "points": [
         {
@@ -199,7 +199,7 @@
       },
       "lead": null,
       "sectionPath": [
-        "2. 패링이 카드로 이어지는 전투",
+        "2. 충돌 기반 전투와 패링",
         "2.4 체력과 타격감을 보여 주는 화면 연출",
         "죽음 선고 연출 — 화면 흑백 반전과 느려지는 시간"
       ],
@@ -248,13 +248,13 @@
         "verbatim": true
       },
       "sectionPath": [
-        "2. 패링이 카드로 이어지는 전투",
+        "2. 충돌 기반 전투와 패링",
         "2.5 고민과 선택"
       ],
       "points": [
         {
           "label": "이유",
-          "text": "패링 타이밍은 애니메이션 진행도와 맞추는 것이 맞다고 판단해, 공격이 닿았을 때 `HitResolver`가 플레이어의 패링 판정 창이 열려 있는지 확인하게 했습니다(§2.3).",
+          "text": "패링 타이밍은 애니메이션 진행도와 맞추는 것이 맞다고 판단해, 공격이 닿았을 때 `HitResolver`가 플레이어의 패링 판정 창이 열려 있는지 확인하게 했습니다(§2.2).",
           "verbatim": true
         },
         {
@@ -286,7 +286,7 @@
         "verbatim": true
       },
       "sectionPath": [
-        "3. 덱에서 뽑아 모션에 맞춰 나가는 카드",
+        "3. 카드 뽑기와 사용",
         "3.6 같으면 갱신하고 다르면 겹치는 버프"
       ],
       "points": [
@@ -334,7 +334,7 @@
         "verbatim": true
       },
       "sectionPath": [
-        "3. 덱에서 뽑아 모션에 맞춰 나가는 카드",
+        "3. 카드 뽑기와 사용",
         "3.2 덱·손패·버림 더미를 도는 카드 순환"
       ],
       "points": [
@@ -592,7 +592,7 @@
       "layout": "visual",
       "tab": "흐름",
       "title": {
-        "text": "2.1 개요 — 기본 공격과 패링으로 이어 가는 전투",
+        "text": "2.1 개요 — 공격이 닿아 패링과 피해로 갈리기까지",
         "verbatim": true
       },
       "lead": {
@@ -600,8 +600,8 @@
         "verbatim": true
       },
       "sectionPath": [
-        "2. 패링이 카드로 이어지는 전투",
-        "2.1 개요 — 기본 공격과 패링으로 이어 가는 전투"
+        "2. 충돌 기반 전투와 패링",
+        "2.1 개요 — 공격이 닿아 패링과 피해로 갈리기까지"
       ],
       "points": [
         {
@@ -625,11 +625,11 @@
       "from": {
         "key": "combat-overview",
         "sectionPath": [
-          "2. 패링이 카드로 이어지는 전투",
-          "2.1 개요 — 기본 공격과 패링으로 이어 가는 전투"
+          "2. 충돌 기반 전투와 패링",
+          "2.1 개요 — 공격이 닿아 패링과 피해로 갈리기까지"
         ],
         "sig": [
-          "2.1 개요 — 기본 공격과 패링으로 이어 가는 전투|mermaid|1|flowchart TB"
+          "2.1 개요 — 공격이 닿아 패링과 피해로 갈리기까지|mermaid|1|flowchart TB"
         ]
       }
     },
@@ -639,7 +639,7 @@
       "layout": "code",
       "tab": "구현",
       "title": {
-        "text": "2.3 피해를 막고 카드 게이지를 주는 패링",
+        "text": "2.2 피해를 막고 카드 게이지를 주는 패링",
         "verbatim": true
       },
       "lead": {
@@ -647,8 +647,8 @@
         "verbatim": false
       },
       "sectionPath": [
-        "2. 패링이 카드로 이어지는 전투",
-        "2.3 피해를 막고 카드 게이지를 주는 패링"
+        "2. 충돌 기반 전투와 패링",
+        "2.2 피해를 막고 카드 게이지를 주는 패링"
       ],
       "points": [
         {
@@ -687,12 +687,12 @@
       "from": {
         "key": "parry",
         "sectionPath": [
-          "2. 패링이 카드로 이어지는 전투",
-          "2.3 피해를 막고 카드 게이지를 주는 패링"
+          "2. 충돌 기반 전투와 패링",
+          "2.2 피해를 막고 카드 게이지를 주는 패링"
         ],
         "sig": [
-          "2.3 피해를 막고 카드 게이지를 주는 패링|code|1|// HitResolver.Resolve() — 패링 창이 열려 있으면 피해 전달 전에 패링으로 처리",
-          "2.3 피해를 막고 카드 게이지를 주는 패링|image|images/parry-combat-zoom.png|1"
+          "2.2 피해를 막고 카드 게이지를 주는 패링|code|1|// HitResolver.Resolve() — 패링 창이 열려 있으면 피해 전달 전에 패링으로 처리",
+          "2.2 피해를 막고 카드 게이지를 주는 패링|image|images/parry-combat-zoom.png|1"
         ]
       }
     },
@@ -710,7 +710,7 @@
         "verbatim": true
       },
       "sectionPath": [
-        "2. 패링이 카드로 이어지는 전투",
+        "2. 충돌 기반 전투와 패링",
         "2.4 체력과 타격감을 보여 주는 화면 연출",
         "패링 성공 연출 — 번쩍임·히트스톱·화면 흔들림"
       ],
@@ -741,7 +741,7 @@
       "from": {
         "key": "parry-effect",
         "sectionPath": [
-          "2. 패링이 카드로 이어지는 전투",
+          "2. 충돌 기반 전투와 패링",
           "2.4 체력과 타격감을 보여 주는 화면 연출",
           "패링 성공 연출 — 번쩍임·히트스톱·화면 흔들림"
         ],
@@ -765,7 +765,7 @@
         "verbatim": true
       },
       "sectionPath": [
-        "3. 덱에서 뽑아 모션에 맞춰 나가는 카드",
+        "3. 카드 뽑기와 사용",
         "3.3 조건을 확인하고 모션에 맞춰 발동하는 카드"
       ],
       "points": [
@@ -795,7 +795,7 @@
       "from": {
         "key": "card-exec",
         "sectionPath": [
-          "3. 덱에서 뽑아 모션에 맞춰 나가는 카드",
+          "3. 카드 뽑기와 사용",
           "3.3 조건을 확인하고 모션에 맞춰 발동하는 카드"
         ],
         "sig": [
@@ -817,7 +817,7 @@
         "verbatim": true
       },
       "sectionPath": [
-        "4. 보상으로 모아 직접 짜는 카드 덱",
+        "4. 카드 보상과 덱 편성",
         "4.3 카드마다 등급 가중치를 두는 보상 추첨"
       ],
       "points": [
@@ -857,7 +857,7 @@
       "from": {
         "key": "reward-draw",
         "sectionPath": [
-          "4. 보상으로 모아 직접 짜는 카드 덱",
+          "4. 카드 보상과 덱 편성",
           "4.3 카드마다 등급 가중치를 두는 보상 추첨"
         ],
         "sig": [
@@ -1139,7 +1139,7 @@
         "verbatim": true
       },
       "sectionPath": [
-        "4. 보상으로 모아 직접 짜는 카드 덱",
+        "4. 카드 보상과 덱 편성",
         "4.4 더블 클릭과 끌어 놓기 편성"
       ],
       "points": [
@@ -1174,7 +1174,7 @@
       "from": {
         "key": "inventory-list",
         "sectionPath": [
-          "4. 보상으로 모아 직접 짜는 카드 덱",
+          "4. 카드 보상과 덱 편성",
           "4.4 더블 클릭과 끌어 놓기 편성"
         ],
         "sig": [
@@ -1235,6 +1235,74 @@
           "caption": {
             "text": "조작",
             "verbatim": false
+          }
+        }
+      ]
+    },
+    {
+      "key": "projectile-effect",
+      "after": "card-exec",
+      "chapter": "card",
+      "layout": "visual",
+      "tab": "구현",
+      "title": {
+        "text": "3.4 코드 수정 없는 새 투사체 카드 추가",
+        "verbatim": true
+      },
+      "lead": {
+        "text": "투사체 카드 9장은 모두 같은 `ProjectileCardEffect`를 사용하고, 카드마다 효과 에셋에서 생성 위치와 조준 방식만 다르게 골랐습니다.",
+        "verbatim": true
+      },
+      "sectionPath": [
+        "3. 카드 뽑기와 사용",
+        "3.4 코드 수정 없는 새 투사체 카드 추가"
+      ],
+      "points": [
+        {
+          "label": "",
+          "text": "인스펙터에서 생성 위치(`Spawn Mode`), 생성 위치 오프셋(`Spawn Offset`), 조준 방식(`Aim Mode`)을 효과 에셋마다 지정합니다.",
+          "verbatim": true
+        },
+        {
+          "label": "",
+          "text": "새 투사체 카드는 이펙트 프리팹과 이 값들을 고른 효과 에셋을 하나 더 만들면 되므로, 코드를 고치지 않습니다.",
+          "verbatim": true
+        },
+        {
+          "label": "",
+          "text": "이 값이 `RequiresTarget`이 되어, 낙뢰·블랙홀·인페르노는 대상이 없으면 `CardUseValidator`가 사용을 막습니다(§3.3).",
+          "verbatim": true
+        }
+      ],
+      "visuals": [
+        {
+          "kind": "image",
+          "src": "images/projectile-fireball.mp4",
+          "w": 840,
+          "h": 630,
+          "caption": {
+            "text": "화염구 — 시전 위치에서 바라보는 방향으로 발사",
+            "verbatim": true
+          }
+        },
+        {
+          "kind": "image",
+          "src": "images/projectile-thunder.mp4",
+          "w": 840,
+          "h": 630,
+          "caption": {
+            "text": "낙뢰 — 대상 위치에 생성",
+            "verbatim": true
+          }
+        },
+        {
+          "kind": "image",
+          "src": "images/fireball-effect-inspector.png",
+          "w": 458,
+          "h": 290,
+          "caption": {
+            "text": "화염구 효과 에셋의 인스펙터 — 생성 위치 Cast Point, 조준 방식 Forward",
+            "verbatim": true
           }
         }
       ]

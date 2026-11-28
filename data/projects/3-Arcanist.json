@@ -53,7 +53,7 @@
       "what": "Hitbox Collider가 감지한 대상을 검증하고 단발·다단 공격의 중복 적용을 제어한 뒤, 패링 또는 피해로 처리합니다.",
       "how": "대상 검증 → `TryRegister` → `Resolve` 순서로 처리하고, 패링은 피해 전달 전에 반환하며 `SuccessParry`가 패링 창을 닫고 카드 게이지를 추가합니다.",
       "why": "패링을 카드 수급과 연결한 핵심 플레이 흐름이기 때문에, 피해 전달 전에 패링을 해결하고 성공 보상으로 게이지를 줍니다.",
-      "section": "2.3 피해를 막고 카드 게이지를 주는 패링",
+      "section": "2.2 피해를 막고 카드 게이지를 주는 패링",
       "image": {
         "src": "images/parry-combat-zoom.png",
         "w": 620,
@@ -192,9 +192,9 @@
   "deck": {
     "chapters": [
       {"key": "overview", "title": "프로젝트 개요", "sectionPath": ["1. 프로젝트 개요"]},
-      {"key": "combat", "title": "패링이 카드로 이어지는 전투", "sectionPath": ["2. 패링이 카드로 이어지는 전투"]},
-      {"key": "card", "title": "덱에서 뽑아 모션에 맞춰 나가는 카드", "sectionPath": ["3. 덱에서 뽑아 모션에 맞춰 나가는 카드"]},
-      {"key": "inventory", "title": "보상으로 모아 직접 짜는 카드 덱", "sectionPath": ["4. 보상으로 모아 직접 짜는 카드 덱"]},
+      {"key": "combat", "title": "충돌 기반 전투와 패링", "sectionPath": ["2. 충돌 기반 전투와 패링"]},
+      {"key": "card", "title": "카드 뽑기와 사용", "sectionPath": ["3. 카드 뽑기와 사용"]},
+      {"key": "inventory", "title": "카드 보상과 덱 편성", "sectionPath": ["4. 카드 보상과 덱 편성"]},
       {"key": "behavior", "title": "플레이어의 움직임과 적·보스의 패턴", "sectionPath": ["5. 플레이어의 움직임과 적·보스의 패턴"]},
       {"key": "checkpoint", "title": "죽어도 이어지는 방과 체크포인트", "sectionPath": ["6. 죽어도 이어지는 방과 체크포인트"]},
       {"key": "lifecycle", "title": "트러블슈팅", "sectionPath": ["7. 트러블슈팅"]}
@@ -271,7 +271,7 @@
             "text": "기본 공격과 카드 효과가 같은 `HitBox → HitResolver` 경로를 거치므로, 패링·중복 타격 방지 같은 공통 처리를 공격마다 따로 넣지 않습니다(§2.5).",
             "verbatim": true
           },
-          {"label": "", "text": "공격이 닿았을 때 `HitResolver`가 플레이어의 패링 판정 창이 열려 있는지 확인합니다(§2.3).", "verbatim": true},
+          {"label": "", "text": "공격이 닿았을 때 `HitResolver`가 플레이어의 패링 판정 창이 열려 있는지 확인합니다(§2.2).", "verbatim": true},
           {
             "label": "",
             "text": "카드마다 클래스를 두지 않아 여러 종의 카드를 관리하기 편하고, 투사체 카드는 코드 수정 없이 추가합니다(§3.4·§3.8).",
@@ -287,9 +287,9 @@
         "chapter": "combat",
         "layout": "visual",
         "tab": "흐름",
-        "title": {"text": "2.1 개요 — 기본 공격과 패링으로 이어 가는 전투", "verbatim": true},
+        "title": {"text": "2.1 개요 — 공격이 닿아 패링과 피해로 갈리기까지", "verbatim": true},
         "lead": {"text": "적의 공격이 닿기 직전에 패링 자세를 취하면, 판정 창이 열려 있는 동안 닿은 공격은 피해를 주지 않고 패링으로 처리됩니다.", "verbatim": true},
-        "sectionPath": ["2. 패링이 카드로 이어지는 전투", "2.1 개요 — 기본 공격과 패링으로 이어 가는 전투"],
+        "sectionPath": ["2. 충돌 기반 전투와 패링", "2.1 개요 — 공격이 닿아 패링과 피해로 갈리기까지"],
         "points": [
           {
             "label": "",
@@ -306,29 +306,13 @@
         "edited": true
       },
       {
-        "key": "multi-hit",
-        "chapter": "combat",
-        "layout": "code",
-        "tab": "구현",
-        "title": {"text": "2.2 한 공격이 겹쳐 들어가지 않는 타격 기록", "verbatim": true},
-        "lead": {"text": "여러 충돌체가 닿으면 같은 공격이 한 대상에게 여러 번 들어갈 수 있습니다.", "verbatim": true},
-        "sectionPath": ["2. 패링이 카드로 이어지는 전투", "2.2 한 공격이 겹쳐 들어가지 않는 타격 기록"],
-        "points": [
-          {"label": "", "text": "`HitTargetTracker.TryRegister()`는 허용 여부 판단과 기록을 한 번에 수행합니다.", "verbatim": true},
-          {"label": "", "text": "단발 공격은 HashSet 추가 성공 여부를, 다단 공격은 마지막 타격 이후 시간을 사용합니다.", "verbatim": true},
-          {"label": "", "text": "`HitBox.OnEnable/Initialize`에서 기록을 비워 풀 재사용 시 이전 공격의 기록이 남지 않게 합니다.", "verbatim": true}
-        ],
-        "visuals": [{"kind": "code", "n": 1, "fp": "// HitTargetTracker.TryRegister() — 다단 히트 여부에 따라 허용 판단과 기록을 "}],
-        "edited": true
-      },
-      {
         "key": "parry",
         "chapter": "combat",
         "layout": "code",
         "tab": "구현",
-        "title": {"text": "2.3 피해를 막고 카드 게이지를 주는 패링", "verbatim": true},
+        "title": {"text": "2.2 피해를 막고 카드 게이지를 주는 패링", "verbatim": true},
         "lead": {"text": "처리 순서는 대상 검증 → TryRegister → Resolve → Applied일 때 타격 연출입니다.", "verbatim": false},
-        "sectionPath": ["2. 패링이 카드로 이어지는 전투", "2.3 피해를 막고 카드 게이지를 주는 패링"],
+        "sectionPath": ["2. 충돌 기반 전투와 패링", "2.2 피해를 막고 카드 게이지를 주는 패링"],
         "points": [
           {"label": "구현", "text": "패링은 피해 전달 전에 반환하지만 중복 기록 뒤에 발생합니다.", "verbatim": true},
           {
@@ -351,6 +335,22 @@
         "edited": true
       },
       {
+        "key": "multi-hit",
+        "chapter": "combat",
+        "layout": "code",
+        "tab": "구현",
+        "title": {"text": "2.3 단발·다단 공격의 중복 타격 방지", "verbatim": true},
+        "lead": {"text": "여러 충돌체가 닿으면 같은 공격이 한 대상에게 여러 번 들어갈 수 있습니다.", "verbatim": true},
+        "sectionPath": ["2. 충돌 기반 전투와 패링", "2.3 단발·다단 공격의 중복 타격 방지"],
+        "points": [
+          {"label": "", "text": "`HitTargetTracker.TryRegister()`는 허용 여부 판단과 기록을 한 번에 수행합니다.", "verbatim": true},
+          {"label": "", "text": "단발 공격은 HashSet 추가 성공 여부를, 다단 공격은 마지막 타격 이후 시간을 사용합니다.", "verbatim": true},
+          {"label": "", "text": "`HitBox.OnEnable/Initialize`에서 기록을 비워 풀 재사용 시 이전 공격의 기록이 남지 않게 합니다.", "verbatim": true}
+        ],
+        "visuals": [{"kind": "code", "n": 1, "fp": "// HitTargetTracker.TryRegister() — 다단 히트 여부에 따라 허용 판단과 기록을 "}],
+        "edited": true
+      },
+      {
         "key": "parry-effect",
         "chapter": "combat",
         "layout": "visual",
@@ -360,7 +360,7 @@
           "text": "패링이 성공하면 `PlayerController.SuccessParry()`가 패링 창을 닫고 카드 게이지 칸을 더한 뒤 `PlayParrySuccessEffects()`를 호출합니다.",
           "verbatim": true
         },
-        "sectionPath": ["2. 패링이 카드로 이어지는 전투", "2.4 체력과 타격감을 보여 주는 화면 연출", "패링 성공 연출 — 번쩍임·히트스톱·화면 흔들림"],
+        "sectionPath": ["2. 충돌 기반 전투와 패링", "2.4 체력과 타격감을 보여 주는 화면 연출", "패링 성공 연출 — 번쩍임·히트스톱·화면 흔들림"],
         "points": [{"label": "", "text": "히트스톱 중에도 조명 트윈과 카메라 흔들림 예약은 시간 배율을 무시하고 이어집니다.", "verbatim": true}],
         "visuals": [
           {
@@ -381,7 +381,7 @@
         "tab": "구현",
         "title": {"text": "죽음 선고 연출 — 화면 흑백 반전과 느려지는 시간", "verbatim": true},
         "lead": null,
-        "sectionPath": ["2. 패링이 카드로 이어지는 전투", "2.4 체력과 타격감을 보여 주는 화면 연출", "죽음 선고 연출 — 화면 흑백 반전과 느려지는 시간"],
+        "sectionPath": ["2. 충돌 기반 전투와 패링", "2.4 체력과 타격감을 보여 주는 화면 연출", "죽음 선고 연출 — 화면 흑백 반전과 느려지는 시간"],
         "points": [
           {
             "label": "",
@@ -417,11 +417,11 @@
         "tab": "선택",
         "title": {"text": "2.5 고민과 선택", "verbatim": true},
         "lead": {"text": "패링을 어떻게 판정할까 — 애니메이션 진행도에 맞춘 판정 창", "verbatim": true},
-        "sectionPath": ["2. 패링이 카드로 이어지는 전투", "2.5 고민과 선택"],
+        "sectionPath": ["2. 충돌 기반 전투와 패링", "2.5 고민과 선택"],
         "points": [
           {
             "label": "이유",
-            "text": "패링 타이밍은 애니메이션 진행도와 맞추는 것이 맞다고 판단해, 공격이 닿았을 때 `HitResolver`가 플레이어의 패링 판정 창이 열려 있는지 확인하게 했습니다(§2.3).",
+            "text": "패링 타이밍은 애니메이션 진행도와 맞추는 것이 맞다고 판단해, 공격이 닿았을 때 `HitResolver`가 플레이어의 패링 판정 창이 열려 있는지 확인하게 했습니다(§2.2).",
             "verbatim": true
           },
           {
@@ -440,7 +440,7 @@
         "tab": "흐름",
         "title": {"text": "3.2 덱·손패·버림 더미를 도는 카드 순환", "verbatim": true},
         "lead": null,
-        "sectionPath": ["3. 덱에서 뽑아 모션에 맞춰 나가는 카드", "3.2 덱·손패·버림 더미를 도는 카드 순환"],
+        "sectionPath": ["3. 카드 뽑기와 사용", "3.2 덱·손패·버림 더미를 도는 카드 순환"],
         "points": [
           {"label": "", "text": "게이지 충전 외에도 덱 초기화 여부, `CardHandUI.IsBusy`, 빈 슬롯 유무를 확인합니다.", "verbatim": true},
           {"label": "", "text": "드로우 시도 직전에 `BeginNextGaugeCycle()`을 호출해 다음 게이지 주기를 시작합니다.", "verbatim": true},
@@ -455,7 +455,7 @@
         "tab": "구현",
         "title": {"text": "3.2 덱·손패·버림 더미를 도는 카드 순환", "verbatim": true},
         "lead": {"text": "패링 보상 `AddCells()`는 현재 게이지에 더한 칸이 최대치를 넘으면 `overflowCells`로 남깁니다.", "verbatim": true},
-        "sectionPath": ["3. 덱에서 뽑아 모션에 맞춰 나가는 카드", "3.2 덱·손패·버림 더미를 도는 카드 순환"],
+        "sectionPath": ["3. 카드 뽑기와 사용", "3.2 덱·손패·버림 더미를 도는 카드 순환"],
         "points": [
           {"label": "", "text": "다음 드로우 주기의 `BeginNextGaugeCycle()`은 이 초과분을 가져와 게이지를 채운 상태로 재충전합니다.", "verbatim": true},
           {
@@ -482,7 +482,7 @@
         "tab": "구현",
         "title": {"text": "3.3 조건을 확인하고 모션에 맞춰 발동하는 카드", "verbatim": true},
         "lead": {"text": "효과를 입력 시점이 아니라 애니메이션 이벤트 시점에 실행하도록 나눈 이유는 연출입니다.", "verbatim": true},
-        "sectionPath": ["3. 덱에서 뽑아 모션에 맞춰 나가는 카드", "3.3 조건을 확인하고 모션에 맞춰 발동하는 카드"],
+        "sectionPath": ["3. 카드 뽑기와 사용", "3.3 조건을 확인하고 모션에 맞춰 발동하는 카드"],
         "points": [
           {"label": "이유", "text": "시전 모션이 지나고 실제로 주문을 내뻗는 순간에 효과가 나가야 어색하지 않고 자연스럽다고 판단했습니다.", "verbatim": true},
           {"label": "구현", "text": "실행 시점에 타겟을 다시 찾기 때문에, 입력 시점과 애니메이션 발동 시점 사이에 적이 죽은 경우를 구분합니다.", "verbatim": true}
@@ -499,13 +499,62 @@
         "edited": true
       },
       {
+        "key": "projectile-effect",
+        "chapter": "card",
+        "layout": "visual",
+        "tab": "구현",
+        "title": {"text": "3.4 코드 수정 없는 새 투사체 카드 추가", "verbatim": true},
+        "lead": {
+          "text": "투사체 카드 9장은 모두 같은 `ProjectileCardEffect`를 사용하고, 카드마다 효과 에셋에서 생성 위치와 조준 방식만 다르게 골랐습니다.",
+          "verbatim": true
+        },
+        "sectionPath": ["3. 카드 뽑기와 사용", "3.4 코드 수정 없는 새 투사체 카드 추가"],
+        "points": [
+          {
+            "label": "",
+            "text": "인스펙터에서 생성 위치(`Spawn Mode`), 생성 위치 오프셋(`Spawn Offset`), 조준 방식(`Aim Mode`)을 효과 에셋마다 지정합니다.",
+            "verbatim": true
+          },
+          {"label": "", "text": "새 투사체 카드는 이펙트 프리팹과 이 값들을 고른 효과 에셋을 하나 더 만들면 되므로, 코드를 고치지 않습니다.", "verbatim": true},
+          {
+            "label": "",
+            "text": "이 값이 `RequiresTarget`이 되어, 낙뢰·블랙홀·인페르노는 대상이 없으면 `CardUseValidator`가 사용을 막습니다(§3.3).",
+            "verbatim": true
+          }
+        ],
+        "visuals": [
+          {
+            "kind": "image",
+            "src": "images/projectile-fireball.mp4",
+            "w": 840,
+            "h": 630,
+            "caption": {"text": "화염구 — 시전 위치에서 바라보는 방향으로 발사", "verbatim": true}
+          },
+          {
+            "kind": "image",
+            "src": "images/projectile-thunder.mp4",
+            "w": 840,
+            "h": 630,
+            "caption": {"text": "낙뢰 — 대상 위치에 생성", "verbatim": true}
+          },
+          {
+            "kind": "image",
+            "src": "images/fireball-effect-inspector.png",
+            "w": 458,
+            "h": 290,
+            "caption": {"text": "화염구 효과 에셋의 인스펙터 — 생성 위치 Cast Point, 조준 방식 Forward", "verbatim": true}
+          }
+        ],
+        "edited": true
+      },
+      {
         "key": "buff-stack",
         "chapter": "card",
         "layout": "visual",
         "tab": "구현",
         "title": {"text": "3.6 같으면 갱신하고 다르면 겹치는 버프", "verbatim": true},
         "lead": {"text": "단일 배율 필드 대신 `List<ActiveBuff>`로 활성 효과를 관리하도록 변경했습니다.", "verbatim": true},
-        "sectionPath": ["3. 덱에서 뽑아 모션에 맞춰 나가는 카드", "3.6 같으면 갱신하고 다르면 겹치는 버프"],
+        "sectionPath": ["3. 카드 뽑기와 사용", "3.6 같으면 갱신하고 다르면 겹치는 버프"],
         "points": [
           {"label": "", "text": "`BuffId + ActiveBuffType`이 같으면 새 항목을 쌓지 않고 값과 종료 시각을 Refresh합니다.", "verbatim": true},
           {"label": "", "text": "동일 버프 갱신은 남은 시간에 더하는 방식이 아니라 `현재 시각 + 새 지속시간`으로 종료 시점을 대체합니다.", "verbatim": true},
@@ -529,7 +578,7 @@
         "tab": "구현",
         "title": {"text": "3.7 다시 사용하는 투사체와 이펙트", "verbatim": true},
         "lead": {"text": "투사체(보스 팔 투사체 제외)·효과·인벤토리 슬롯·버프 아이콘은 같은 `ComponentPool<T>`으로 비활성 객체를 다시 씁니다.", "verbatim": true},
-        "sectionPath": ["3. 덱에서 뽑아 모션에 맞춰 나가는 카드", "3.7 다시 사용하는 투사체와 이펙트"],
+        "sectionPath": ["3. 카드 뽑기와 사용", "3.7 다시 사용하는 투사체와 이펙트"],
         "points": [
           {
             "label": "",
@@ -554,7 +603,7 @@
         "tab": "선택",
         "title": {"text": "3.8 고민과 선택", "verbatim": true},
         "lead": null,
-        "sectionPath": ["3. 덱에서 뽑아 모션에 맞춰 나가는 카드", "3.8 고민과 선택"],
+        "sectionPath": ["3. 카드 뽑기와 사용", "3.8 고민과 선택"],
         "points": [
           {"label": "이유", "text": "처음에는 카드마다 클래스를 하나씩 두는 방식을 생각했고, 데이터 형식은 1인 개발에 맞는 쪽을 골랐습니다.", "verbatim": true},
           {
@@ -573,7 +622,7 @@
         "tab": "구현",
         "title": {"text": "4.2 넣을 때와 닫을 때 확인하는 편성 규칙", "verbatim": true},
         "lead": null,
-        "sectionPath": ["4. 보상으로 모아 직접 짜는 카드 덱", "4.2 넣을 때와 닫을 때 확인하는 편성 규칙"],
+        "sectionPath": ["4. 카드 보상과 덱 편성", "4.2 넣을 때와 닫을 때 확인하는 편성 규칙"],
         "points": [
           {
             "label": "구현",
@@ -604,7 +653,7 @@
         "tab": "구현",
         "title": {"text": "4.3 카드마다 등급 가중치를 두는 보상 추첨", "verbatim": true},
         "lead": {"text": "보유 카드와 같은 보상 화면에서 이미 뽑힌 카드는 제외합니다.", "verbatim": true},
-        "sectionPath": ["4. 보상으로 모아 직접 짜는 카드 덱", "4.3 카드마다 등급 가중치를 두는 보상 추첨"],
+        "sectionPath": ["4. 카드 보상과 덱 편성", "4.3 카드마다 등급 가중치를 두는 보상 추첨"],
         "points": [
           {"label": "구현", "text": "추첨은 `RewardCardSelector`가 담당하고, 남은 카드 각각에 등급 가중치를 부여합니다.", "verbatim": true},
           {
@@ -640,7 +689,7 @@
           "text": "전체 카드 목록은 보유하되 덱에 없는 카드 → 덱에 있는 카드 → 미보유 카드 순으로 보여 주고, 더블 클릭과 끌어 놓기 모두 같은 추가·제거 함수로 편성합니다.",
           "verbatim": true
         },
-        "sectionPath": ["4. 보상으로 모아 직접 짜는 카드 덱", "4.4 더블 클릭과 끌어 놓기 편성"],
+        "sectionPath": ["4. 카드 보상과 덱 편성", "4.4 더블 클릭과 끌어 놓기 편성"],
         "points": [
           {"label": "구현", "text": "슬롯과 드래그 아이콘은 재사용해 목록을 갱신할 때마다 전부 만들고 지우지 않습니다.", "verbatim": true},
           {"label": "", "text": "오벨리스크 밖에서 연 인벤토리는 열람 전용이라 편성 검사 없이 닫힙니다.", "verbatim": true},
@@ -1031,7 +1080,7 @@
             "text": "기본 공격과 카드 효과가 같은 `HitBox → HitResolver` 경로를 거치므로, 패링·중복 타격 방지 같은 공통 처리를 공격마다 따로 넣지 않습니다(§2.5).",
             "verbatim": true
           },
-          {"label": "", "text": "공격이 닿았을 때 `HitResolver`가 플레이어의 패링 판정 창이 열려 있는지 확인합니다(§2.3).", "verbatim": true},
+          {"label": "", "text": "공격이 닿았을 때 `HitResolver`가 플레이어의 패링 판정 창이 열려 있는지 확인합니다(§2.2).", "verbatim": true},
           {
             "label": "",
             "text": "카드마다 클래스를 두지 않아 여러 종의 카드를 관리하기 편하고, 투사체 카드는 코드 수정 없이 추가합니다(§3.4·§3.8).",
@@ -1046,9 +1095,9 @@
         "chapter": "combat",
         "layout": "visual",
         "tab": "흐름",
-        "title": {"text": "2.1 개요 — 기본 공격과 패링으로 이어 가는 전투", "verbatim": true},
+        "title": {"text": "2.1 개요 — 공격이 닿아 패링과 피해로 갈리기까지", "verbatim": true},
         "lead": {"text": "적의 공격이 닿기 직전에 패링 자세를 취하면, 판정 창이 열려 있는 동안 닿은 공격은 피해를 주지 않고 패링으로 처리됩니다.", "verbatim": true},
-        "sectionPath": ["2. 패링이 카드로 이어지는 전투", "2.1 개요 — 기본 공격과 패링으로 이어 가는 전투"],
+        "sectionPath": ["2. 충돌 기반 전투와 패링", "2.1 개요 — 공격이 닿아 패링과 피해로 갈리기까지"],
         "points": [
           {
             "label": "",
@@ -1064,28 +1113,13 @@
         "visuals": [{"kind": "mermaid", "n": 1, "fp": "flowchart TB"}]
       },
       {
-        "key": "multi-hit",
-        "chapter": "combat",
-        "layout": "code",
-        "tab": "구현",
-        "title": {"text": "2.2 한 공격이 겹쳐 들어가지 않는 타격 기록", "verbatim": true},
-        "lead": {"text": "여러 충돌체가 닿으면 같은 공격이 한 대상에게 여러 번 들어갈 수 있습니다.", "verbatim": true},
-        "sectionPath": ["2. 패링이 카드로 이어지는 전투", "2.2 한 공격이 겹쳐 들어가지 않는 타격 기록"],
-        "points": [
-          {"label": "", "text": "`HitTargetTracker.TryRegister()`는 허용 여부 판단과 기록을 한 번에 수행합니다.", "verbatim": true},
-          {"label": "", "text": "단발 공격은 HashSet 추가 성공 여부를, 다단 공격은 마지막 타격 이후 시간을 사용합니다.", "verbatim": true},
-          {"label": "", "text": "`HitBox.OnEnable/Initialize`에서 기록을 비워 풀 재사용 시 이전 공격의 기록이 남지 않게 합니다.", "verbatim": true}
-        ],
-        "visuals": [{"kind": "code", "n": 1, "fp": "// HitTargetTracker.TryRegister() — 다단 히트 여부에 따라 허용 판단과 기록을 "}]
-      },
-      {
         "key": "parry",
         "chapter": "combat",
         "layout": "code",
         "tab": "구현",
-        "title": {"text": "2.3 피해를 막고 카드 게이지를 주는 패링", "verbatim": true},
+        "title": {"text": "2.2 피해를 막고 카드 게이지를 주는 패링", "verbatim": true},
         "lead": {"text": "처리 순서는 대상 검증 → TryRegister → Resolve → Applied일 때 타격 연출입니다.", "verbatim": false},
-        "sectionPath": ["2. 패링이 카드로 이어지는 전투", "2.3 피해를 막고 카드 게이지를 주는 패링"],
+        "sectionPath": ["2. 충돌 기반 전투와 패링", "2.2 피해를 막고 카드 게이지를 주는 패링"],
         "points": [
           {"label": "구현", "text": "패링은 피해 전달 전에 반환하지만 중복 기록 뒤에 발생합니다.", "verbatim": true},
           {
@@ -1112,6 +1146,21 @@
         ]
       },
       {
+        "key": "multi-hit",
+        "chapter": "combat",
+        "layout": "code",
+        "tab": "구현",
+        "title": {"text": "2.3 단발·다단 공격의 중복 타격 방지", "verbatim": true},
+        "lead": {"text": "여러 충돌체가 닿으면 같은 공격이 한 대상에게 여러 번 들어갈 수 있습니다.", "verbatim": true},
+        "sectionPath": ["2. 충돌 기반 전투와 패링", "2.3 단발·다단 공격의 중복 타격 방지"],
+        "points": [
+          {"label": "", "text": "`HitTargetTracker.TryRegister()`는 허용 여부 판단과 기록을 한 번에 수행합니다.", "verbatim": true},
+          {"label": "", "text": "단발 공격은 HashSet 추가 성공 여부를, 다단 공격은 마지막 타격 이후 시간을 사용합니다.", "verbatim": true},
+          {"label": "", "text": "`HitBox.OnEnable/Initialize`에서 기록을 비워 풀 재사용 시 이전 공격의 기록이 남지 않게 합니다.", "verbatim": true}
+        ],
+        "visuals": [{"kind": "code", "n": 1, "fp": "// HitTargetTracker.TryRegister() — 다단 히트 여부에 따라 허용 판단과 기록을 "}]
+      },
+      {
         "key": "parry-effect",
         "chapter": "combat",
         "layout": "visual",
@@ -1121,7 +1170,7 @@
           "text": "패링이 성공하면 `PlayerController.SuccessParry()`가 패링 창을 닫고 카드 게이지 칸을 더한 뒤 `PlayParrySuccessEffects()`를 호출합니다.",
           "verbatim": true
         },
-        "sectionPath": ["2. 패링이 카드로 이어지는 전투", "2.4 체력과 타격감을 보여 주는 화면 연출", "패링 성공 연출 — 번쩍임·히트스톱·화면 흔들림"],
+        "sectionPath": ["2. 충돌 기반 전투와 패링", "2.4 체력과 타격감을 보여 주는 화면 연출", "패링 성공 연출 — 번쩍임·히트스톱·화면 흔들림"],
         "points": [{"label": "", "text": "히트스톱 중에도 조명 트윈과 카메라 흔들림 예약은 시간 배율을 무시하고 이어집니다.", "verbatim": true}],
         "visuals": [
           {
@@ -1141,7 +1190,7 @@
         "tab": "구현",
         "title": {"text": "죽음 선고 연출 — 화면 흑백 반전과 느려지는 시간", "verbatim": true},
         "lead": null,
-        "sectionPath": ["2. 패링이 카드로 이어지는 전투", "2.4 체력과 타격감을 보여 주는 화면 연출", "죽음 선고 연출 — 화면 흑백 반전과 느려지는 시간"],
+        "sectionPath": ["2. 충돌 기반 전투와 패링", "2.4 체력과 타격감을 보여 주는 화면 연출", "죽음 선고 연출 — 화면 흑백 반전과 느려지는 시간"],
         "points": [
           {
             "label": "",
@@ -1176,11 +1225,11 @@
         "tab": "선택",
         "title": {"text": "2.5 고민과 선택", "verbatim": true},
         "lead": {"text": "패링을 어떻게 판정할까 — 애니메이션 진행도에 맞춘 판정 창", "verbatim": true},
-        "sectionPath": ["2. 패링이 카드로 이어지는 전투", "2.5 고민과 선택"],
+        "sectionPath": ["2. 충돌 기반 전투와 패링", "2.5 고민과 선택"],
         "points": [
           {
             "label": "이유",
-            "text": "패링 타이밍은 애니메이션 진행도와 맞추는 것이 맞다고 판단해, 공격이 닿았을 때 `HitResolver`가 플레이어의 패링 판정 창이 열려 있는지 확인하게 했습니다(§2.3).",
+            "text": "패링 타이밍은 애니메이션 진행도와 맞추는 것이 맞다고 판단해, 공격이 닿았을 때 `HitResolver`가 플레이어의 패링 판정 창이 열려 있는지 확인하게 했습니다(§2.2).",
             "verbatim": true
           },
           {
@@ -1198,7 +1247,7 @@
         "tab": "흐름",
         "title": {"text": "3.2 덱·손패·버림 더미를 도는 카드 순환", "verbatim": true},
         "lead": null,
-        "sectionPath": ["3. 덱에서 뽑아 모션에 맞춰 나가는 카드", "3.2 덱·손패·버림 더미를 도는 카드 순환"],
+        "sectionPath": ["3. 카드 뽑기와 사용", "3.2 덱·손패·버림 더미를 도는 카드 순환"],
         "points": [
           {"label": "", "text": "게이지 충전 외에도 덱 초기화 여부, `CardHandUI.IsBusy`, 빈 슬롯 유무를 확인합니다.", "verbatim": true},
           {"label": "", "text": "드로우 시도 직전에 `BeginNextGaugeCycle()`을 호출해 다음 게이지 주기를 시작합니다.", "verbatim": true},
@@ -1213,7 +1262,7 @@
         "tab": "구현",
         "title": {"text": "3.2 덱·손패·버림 더미를 도는 카드 순환", "verbatim": true},
         "lead": {"text": "패링 보상 `AddCells()`는 현재 게이지에 더한 칸이 최대치를 넘으면 `overflowCells`로 남깁니다.", "verbatim": true},
-        "sectionPath": ["3. 덱에서 뽑아 모션에 맞춰 나가는 카드", "3.2 덱·손패·버림 더미를 도는 카드 순환"],
+        "sectionPath": ["3. 카드 뽑기와 사용", "3.2 덱·손패·버림 더미를 도는 카드 순환"],
         "points": [
           {"label": "", "text": "다음 드로우 주기의 `BeginNextGaugeCycle()`은 이 초과분을 가져와 게이지를 채운 상태로 재충전합니다.", "verbatim": true},
           {
@@ -1239,7 +1288,7 @@
         "tab": "구현",
         "title": {"text": "3.3 조건을 확인하고 모션에 맞춰 발동하는 카드", "verbatim": true},
         "lead": {"text": "효과를 입력 시점이 아니라 애니메이션 이벤트 시점에 실행하도록 나눈 이유는 연출입니다.", "verbatim": true},
-        "sectionPath": ["3. 덱에서 뽑아 모션에 맞춰 나가는 카드", "3.3 조건을 확인하고 모션에 맞춰 발동하는 카드"],
+        "sectionPath": ["3. 카드 뽑기와 사용", "3.3 조건을 확인하고 모션에 맞춰 발동하는 카드"],
         "points": [
           {"label": "이유", "text": "시전 모션이 지나고 실제로 주문을 내뻗는 순간에 효과가 나가야 어색하지 않고 자연스럽다고 판단했습니다.", "verbatim": true},
           {"label": "구현", "text": "실행 시점에 타겟을 다시 찾기 때문에, 입력 시점과 애니메이션 발동 시점 사이에 적이 죽은 경우를 구분합니다.", "verbatim": true}
@@ -1261,7 +1310,7 @@
         "tab": "구현",
         "title": {"text": "3.6 같으면 갱신하고 다르면 겹치는 버프", "verbatim": true},
         "lead": {"text": "단일 배율 필드 대신 `List<ActiveBuff>`로 활성 효과를 관리하도록 변경했습니다.", "verbatim": true},
-        "sectionPath": ["3. 덱에서 뽑아 모션에 맞춰 나가는 카드", "3.6 같으면 갱신하고 다르면 겹치는 버프"],
+        "sectionPath": ["3. 카드 뽑기와 사용", "3.6 같으면 갱신하고 다르면 겹치는 버프"],
         "points": [
           {"label": "", "text": "`BuffId + ActiveBuffType`이 같으면 새 항목을 쌓지 않고 값과 종료 시각을 Refresh합니다.", "verbatim": true},
           {"label": "", "text": "동일 버프 갱신은 남은 시간에 더하는 방식이 아니라 `현재 시각 + 새 지속시간`으로 종료 시점을 대체합니다.", "verbatim": true},
@@ -1284,7 +1333,7 @@
         "tab": "구현",
         "title": {"text": "3.7 다시 사용하는 투사체와 이펙트", "verbatim": true},
         "lead": {"text": "투사체(보스 팔 투사체 제외)·효과·인벤토리 슬롯·버프 아이콘은 같은 `ComponentPool<T>`으로 비활성 객체를 다시 씁니다.", "verbatim": true},
-        "sectionPath": ["3. 덱에서 뽑아 모션에 맞춰 나가는 카드", "3.7 다시 사용하는 투사체와 이펙트"],
+        "sectionPath": ["3. 카드 뽑기와 사용", "3.7 다시 사용하는 투사체와 이펙트"],
         "points": [
           {
             "label": "",
@@ -1309,7 +1358,7 @@
         "tab": "선택",
         "title": {"text": "3.8 고민과 선택", "verbatim": true},
         "lead": null,
-        "sectionPath": ["3. 덱에서 뽑아 모션에 맞춰 나가는 카드", "3.8 고민과 선택"],
+        "sectionPath": ["3. 카드 뽑기와 사용", "3.8 고민과 선택"],
         "points": [
           {"label": "이유", "text": "처음에는 카드마다 클래스를 하나씩 두는 방식을 생각했고, 데이터 형식은 1인 개발에 맞는 쪽을 골랐습니다.", "verbatim": true},
           {
@@ -1327,7 +1376,7 @@
         "tab": "구현",
         "title": {"text": "4.2 넣을 때와 닫을 때 확인하는 편성 규칙", "verbatim": true},
         "lead": null,
-        "sectionPath": ["4. 보상으로 모아 직접 짜는 카드 덱", "4.2 넣을 때와 닫을 때 확인하는 편성 규칙"],
+        "sectionPath": ["4. 카드 보상과 덱 편성", "4.2 넣을 때와 닫을 때 확인하는 편성 규칙"],
         "points": [
           {
             "label": "구현",
@@ -1358,7 +1407,7 @@
         "tab": "구현",
         "title": {"text": "4.3 카드마다 등급 가중치를 두는 보상 추첨", "verbatim": true},
         "lead": {"text": "보유 카드와 같은 보상 화면에서 이미 뽑힌 카드는 제외합니다.", "verbatim": true},
-        "sectionPath": ["4. 보상으로 모아 직접 짜는 카드 덱", "4.3 카드마다 등급 가중치를 두는 보상 추첨"],
+        "sectionPath": ["4. 카드 보상과 덱 편성", "4.3 카드마다 등급 가중치를 두는 보상 추첨"],
         "points": [
           {"label": "구현", "text": "추첨은 `RewardCardSelector`가 담당하고, 남은 카드 각각에 등급 가중치를 부여합니다.", "verbatim": true},
           {
@@ -1393,7 +1442,7 @@
           "text": "전체 카드 목록은 보유하되 덱에 없는 카드 → 덱에 있는 카드 → 미보유 카드 순으로 보여 주고, 더블 클릭과 끌어 놓기 모두 같은 추가·제거 함수로 편성합니다.",
           "verbatim": true
         },
-        "sectionPath": ["4. 보상으로 모아 직접 짜는 카드 덱", "4.4 더블 클릭과 끌어 놓기 편성"],
+        "sectionPath": ["4. 카드 보상과 덱 편성", "4.4 더블 클릭과 끌어 놓기 편성"],
         "points": [
           {"label": "구현", "text": "슬롯과 드래그 아이콘은 재사용해 목록을 갱신할 때마다 전부 만들고 지우지 않습니다.", "verbatim": true},
           {"label": "", "text": "오벨리스크 밖에서 연 인벤토리는 열람 전용이라 편성 검사 없이 닫힙니다.", "verbatim": true},
@@ -1703,6 +1752,6 @@
         "visuals": []
       }
     ],
-    "applied": "451f377a8abc943e"
+    "applied": "f66e6dbff304682b"
   }
 }

@@ -6,9 +6,9 @@
 
 | 구분 | 시스템 | 핵심 내용 | 절 |
 |---|---|---|---|
-| 핵심 A | 패링이 카드로 이어지는 전투 | 충돌 판정, 중복 타격 방지, 피해 전달, 패링 보상 — HitBox/HurtBox, 중재자 | §2 · §7.1 |
-| 핵심 B | 덱에서 뽑아 모션에 맞춰 나가는 카드 | 덱 순환, 사용 가능 조건, 모션 후 효과 실행 — ScriptableObject, 실행 컨텍스트 | §3 |
-| 핵심 C | 보상으로 모아 직접 짜는 카드 덱 | 보유 목록·편성 덱 구분, 편성 제약, 보상 추첨 — 변경 이벤트, 카드별 가중치 | §4 |
+| 핵심 A | 충돌 기반 전투와 패링 | 충돌 판정, 중복 타격 방지, 피해 전달, 패링 보상 — HitBox/HurtBox, 중재자 | §2 · §7.1 |
+| 핵심 B | 카드 뽑기와 사용 | 덱 순환, 사용 가능 조건, 모션 후 효과 실행 — ScriptableObject, 실행 컨텍스트 | §3 |
+| 핵심 C | 카드 보상과 덱 편성 | 보유 목록·편성 덱 구분, 편성 제약, 보상 추첨 — 변경 이벤트, 카드별 가중치 | §4 |
 | 보조 D | 플레이어의 움직임과 적·보스의 패턴 | 이동 자원·연출, 일반 적 감지·상태·반응, 골렘 보스 패턴 — 런타임 책임 분리, 상태 머신 | §5 |
 | 보조 E | 죽어도 이어지는 방과 체크포인트 | 방 로드, 사망 복구, 클리어 여부에 따른 적 재생성 — ID 기반 복원, 코루틴 | §6 · §7.2 · §7.3 |
 
@@ -120,25 +120,25 @@ flowchart TB
 **왜 이렇게 나눴나**
 
 - **피해는 `CombatSystem` 한곳에서 적용합니다.** 기본 공격과 카드 효과가 같은 `HitBox → HitResolver` 경로를 거치므로, 패링·중복 타격 방지 같은 공통 처리를 공격마다 따로 넣지 않습니다(§2.5).
-- **패링은 애니메이션 진행도에 맞춘 판정 창으로 확인합니다.** 공격이 닿았을 때 `HitResolver`가 플레이어의 패링 판정 창이 열려 있는지 확인합니다(§2.3).
+- **패링은 애니메이션 진행도에 맞춘 판정 창으로 확인합니다.** 공격이 닿았을 때 `HitResolver`가 플레이어의 패링 판정 창이 열려 있는지 확인합니다(§2.2).
 - **카드의 차이는 효과 클래스와 ScriptableObject 에셋에 담습니다.** 카드마다 클래스를 두지 않아 여러 종의 카드를 관리하기 편하고, 투사체 카드는 코드 수정 없이 추가합니다(§3.4·§3.8).
 
 **AI를 활용한 곳:** 인벤토리 코드 정리(§4.4)에 활용했습니다. 나눌 파일과 기준값은 직접 정하고, 코드를 옮기는 일만 맡겼습니다.
 
 이 문서에서 깊게 다루는 것은 세 가지입니다.
 
-1. **패링이 카드로 이어지는 전투(§2):** 충돌 판정과 중복 타격 방지, 피해 전달, 패링에 성공하면 피해를 막고 카드 게이지를 주는 연결을 다룹니다.
-2. **덱에서 뽑아 모션에 맞춰 나가는 카드(§3):** 덱·손패·버림 더미의 순환과 사용 가능 조건, 모션에 맞춘 효과 발동을 다룹니다.
-3. **보상으로 모아 직접 짜는 카드 덱(§4):** 보유 목록과 편성 덱의 분리, 편성 규칙 검사, 카드별 등급 가중치로 뽑는 보상 추첨을 다룹니다.
+1. **충돌 기반 전투와 패링(§2):** 충돌 판정과 중복 타격 방지, 피해 전달, 패링에 성공하면 피해를 막고 카드 게이지를 주는 연결을 다룹니다.
+2. **카드 뽑기와 사용(§3):** 덱·손패·버림 더미의 순환과 사용 가능 조건, 모션에 맞춘 효과 발동을 다룹니다.
+3. **카드 보상과 덱 편성(§4):** 보유 목록과 편성 덱의 분리, 편성 규칙 검사, 카드별 등급 가중치로 뽑는 보상 추첨을 다룹니다.
 
 이동·적 행동(§5)과 방 전환·체크포인트 복원(§6)은 짧게 다룹니다.
 트러블슈팅(§7)에는 전투와 방 복원에서 겪은 문제를 모았습니다.
 
 ---
 
-## 2. 패링이 카드로 이어지는 전투
+## 2. 충돌 기반 전투와 패링
 
-### 2.1 개요 — 기본 공격과 패링으로 이어 가는 전투
+### 2.1 개요 — 공격이 닿아 패링과 피해로 갈리기까지
 
 플레이어는 D로 기본 공격을 하고, 공격 모션 중간에 D를 다시 누르면 다음 공격으로 이어집니다.
 적의 공격이 닿기 직전에 패링 자세를 취하면, 판정 창이 열려 있는 동안 닿은 공격은 피해를 주지 않고 패링으로 처리됩니다.
@@ -178,7 +178,37 @@ HitResolver는 넉백·스턴을, HitBox는 피격 FX와 타격 연출을 담당
 
 소스: [HitBox.cs](https://github.com/keeeery/Arcanist/blob/main/Assets/02.%20Scripts/03.%20CombatSystem/HitBox.cs), [HitResolver.cs](https://github.com/keeeery/Arcanist/blob/main/Assets/02.%20Scripts/03.%20CombatSystem/HitResolver.cs), [HitTargetTracker.cs](https://github.com/keeeery/Arcanist/blob/main/Assets/02.%20Scripts/03.%20CombatSystem/HitTargetTracker.cs).
 
-### 2.2 한 공격이 겹쳐 들어가지 않는 타격 기록
+### 2.2 피해를 막고 카드 게이지를 주는 패링
+
+![패링 성공 순간의 이펙트](images/parry-combat-zoom.png)
+
+공격이 닿은 순간 플레이어의 패링 판정 창이 열려 있으면, 피해를 전달하기 전에 패링으로 처리하고 끝냅니다. 아래 코드가 그 갈림길입니다.
+
+```csharp
+// HitResolver.Resolve() — 패링 창이 열려 있으면 피해 전달 전에 패링으로 처리
+PlayerController playerController = receiver.GetComponent<PlayerController>();
+if (playerController != null && playerController.IsParryWindowOpen)
+{
+    playerController.SuccessParry();
+    return new HitResolution(HitResolutionStatus.Parried);
+}
+```
+
+처리 순서는 다음과 같습니다.
+
+1. 대상을 검증합니다.
+2. `TryRegister()`로 중복 타격을 기록합니다(§2.3).
+3. `Resolve()`로 패링 또는 피해를 처리합니다.
+4. 결과가 Applied일 때만 타격 연출을 재생합니다.
+
+- **패링은 피해 전달 전에 반환하지만 중복 기록 뒤에 발생합니다.** 따라서 단발 공격은 패링된 HurtBox도 기록되어 같은 활성 구간에서 다시 피해를 주지 않습니다.
+- **`SuccessParry()`가 패링을 카드 게이지로 이어 줍니다(성공 연출은 §2.4).** 패링을 카드 수급과 연결한 핵심 플레이 흐름입니다.
+
+`HitResolutionStatus`는 Ignored/Parried/Applied를 구분합니다.
+Applied가 아니면 일반 피격 FX·히트스톱·카메라 흔들림·적중 폭발 경로로 진행하지 않습니다.
+넉백·스턴은 수신자의 `CanReceiveKnockback/CanReceiveStun`을 확인하며, 스턴은 `IStunnable.ApplyStun()`으로 호출합니다.
+
+### 2.3 단발·다단 공격의 중복 타격 방지
 
 여러 충돌체가 닿으면 같은 공격이 한 대상에게 여러 번 들어갈 수 있습니다. 아래 코드는 단발 공격은 대상마다 한 번만, 다단 공격은 정해진 간격마다 다시 맞도록 거르는 부분입니다.
 
@@ -199,35 +229,7 @@ return true;
 단발 공격은 HashSet 추가 성공 여부를, 다단 공격은 마지막 타격 이후 시간을 사용합니다.
 `HitBox.OnEnable/Initialize`에서 기록을 비워 풀 재사용 시 이전 공격의 기록이 남지 않게 합니다.
 
-### 2.3 피해를 막고 카드 게이지를 주는 패링
-
-![패링 성공 순간의 이펙트](images/parry-combat-zoom.png)
-
-공격이 닿은 순간 플레이어의 패링 판정 창이 열려 있으면, 피해를 전달하기 전에 패링으로 처리하고 끝냅니다. 아래 코드가 그 갈림길입니다.
-
-```csharp
-// HitResolver.Resolve() — 패링 창이 열려 있으면 피해 전달 전에 패링으로 처리
-PlayerController playerController = receiver.GetComponent<PlayerController>();
-if (playerController != null && playerController.IsParryWindowOpen)
-{
-    playerController.SuccessParry();
-    return new HitResolution(HitResolutionStatus.Parried);
-}
-```
-
-처리 순서는 다음과 같습니다.
-
-1. 대상을 검증합니다.
-2. `TryRegister()`로 중복 타격을 기록합니다(§2.2).
-3. `Resolve()`로 패링 또는 피해를 처리합니다.
-4. 결과가 Applied일 때만 타격 연출을 재생합니다.
-
-- **패링은 피해 전달 전에 반환하지만 중복 기록 뒤에 발생합니다.** 따라서 단발 공격은 패링된 HurtBox도 기록되어 같은 활성 구간에서 다시 피해를 주지 않습니다.
-- **`SuccessParry()`가 패링을 카드 게이지로 이어 줍니다(성공 연출은 §2.4).** 패링을 카드 수급과 연결한 핵심 플레이 흐름입니다.
-
-`HitResolutionStatus`는 Ignored/Parried/Applied를 구분합니다.
-Applied가 아니면 일반 피격 FX·히트스톱·카메라 흔들림·적중 폭발 경로로 진행하지 않습니다.
-넉백·스턴은 수신자의 `CanReceiveKnockback/CanReceiveStun`을 확인하며, 스턴은 `IStunnable.ApplyStun()`으로 호출합니다.
+소스: [HitTargetTracker.cs](https://github.com/keeeery/Arcanist/blob/main/Assets/02.%20Scripts/03.%20CombatSystem/HitTargetTracker.cs).
 
 ### 2.4 체력과 타격감을 보여 주는 화면 연출
 
@@ -292,7 +294,7 @@ DOTween으로 코드 반복은 줄었지만, 트윈 대상의 상태 초기화�
 | 공격이 닿았을 때 패링 판정 창이 열려 있는지(`IsParryWindowOpen`) 확인 (채택) | 패링 타이밍을 애니메이션 진행도와 맞출 수 있음 | 판정 창을 닫는 진행률을 플레이 테스트로 직접 맞춰야 함(§5.4) |
 
 패링용 Collider 방식은 컨셉 기획서에서 개발 전에 "이런 식으로 하면 되지 않을까" 하고 든 예시였고, 실제 구현은 처음부터 판정 창 방식으로 했습니다.
-패링 타이밍은 애니메이션 진행도와 맞추는 것이 맞다고 판단해, 공격이 닿았을 때 `HitResolver`가 플레이어의 패링 판정 창이 열려 있는지 확인하게 했습니다(§2.3).
+패링 타이밍은 애니메이션 진행도와 맞추는 것이 맞다고 판단해, 공격이 닿았을 때 `HitResolver`가 플레이어의 패링 판정 창이 열려 있는지 확인하게 했습니다(§2.2).
 
 **그 밖의 선택**
 
@@ -303,7 +305,7 @@ DOTween으로 코드 반복은 줄었지만, 트윈 대상의 상태 초기화�
 
 ---
 
-## 3. 덱에서 뽑아 모션에 맞춰 나가는 카드
+## 3. 카드 뽑기와 사용
 
 ### 3.1 개요 — 게이지로 뽑아 Q/W/E로 사용하는 카드
 
@@ -463,21 +465,53 @@ return new CardSkillExecutionResult(CardSkillExecutionStatus.Executed, card);
 
 ### 3.4 코드 수정 없는 새 투사체 카드 추가
 
-`ProjectileCardEffect`는 생성 위치(`CastPoint`, `TargetPosition`)와 조준 방식(`Forward`, `Target`, `None`)을 조합합니다.
-목표 위치 생성이나 목표 조준을 선택하면 `RequiresTarget`이 true가 됩니다.
+![화염구 — 시전 위치에서 바라보는 방향으로 발사](images/projectile-fireball.mp4) ![낙뢰 — 대상 위치에 생성](images/projectile-thunder.mp4)
+
+![화염구 효과 에셋의 인스펙터 — 생성 위치 Cast Point, 조준 방식 Forward](images/fireball-effect-inspector.png)
+
+투사체 카드 9장은 모두 같은 `ProjectileCardEffect`를 사용하고, 카드마다 효과 에셋에서 생성 위치와 조준 방식만 다르게 골랐습니다.
+인스펙터에서 생성 위치(`Spawn Mode`), 생성 위치 오프셋(`Spawn Offset`), 조준 방식(`Aim Mode`)을 효과 에셋마다 지정합니다.
+새 투사체 카드는 이펙트 프리팹과 이 값들을 고른 효과 에셋을 하나 더 만들면 되므로, 코드를 고치지 않습니다.
+
+| 생성 위치 | 조준 방식 | 카드 |
+|---|---|---|
+| 시전 위치(`CastPoint`) | 바라보는 방향(`Forward`) | 화염구, 라이트닝 볼트 |
+| 시전 위치(`CastPoint`) | 없음(`None`) | 폭발, 구속, 죽음 선고, 얼음 기둥 |
+| 대상 위치(`TargetPosition`) | 없음(`None`) | 낙뢰, 블랙홀, 인페르노 |
+
+
+```csharp
+// ProjectileCardEffect.NeedsTarget() — 대상 위치에 만들거나 대상을 조준할 때만 타겟이 필요
+return spawnMode == SpawnMode.TargetPosition || aimMode == AimMode.Target;
+```
+
+이 값이 `RequiresTarget`이 되어, 낙뢰·블랙홀·인페르노는 대상이 없으면 `CardUseValidator`가 사용을 막습니다(§3.3).
 풀에서 얻은 객체에 방향·소유자를 주입하고 자식 HitBox도 초기화합니다.
-이 구조로 전방 발사체와 적 위치에 생성되는 공격을 같은 효과 클래스에서 구성합니다.
 
 소스: [ProjectileCardEffect.cs](https://github.com/keeeery/Arcanist/blob/main/Assets/02.%20Scripts/04.%20CardSystem/ProjectileCardEffect.cs).
 
-### 3.5 카드가 노릴 적 고르기 — 등급 먼저, 그다음 거리
+### 3.5 타겟팅 카드의 대상 선택 — 등급을 먼저, 같으면 거리로
 
 `EnemyManager`는 일반 적과 보스를 하나의 `List<ICombatTarget>`으로 관리합니다.
 조회 중 파괴된 Unity 객체를 제거하고 `IsTargetable`과 `IsDead`를 확인합니다.
 
-- **사망·비활성 대상을 제외하고 등급 우선, 같은 등급에서는 거리 우선으로 선택합니다.** 따라서 보스와 일반 적이 함께 있다면 가장 가까운 일반 적보다 멀리 있는 보스가 우선될 수 있습니다. 지금 레벨에는 둘이 함께 나오지 않습니다.
+```csharp
+// EnemyManager.TryFindBestTarget() — 등급이 낮거나, 같은 등급에서 더 멀면 건너뜀
+int grade = (int)candidate.Grade;
+float sqrDistance = (targetPoint.position - origin).sqrMagnitude;
+
+if (grade < bestGrade || grade == bestGrade && sqrDistance >= bestSqrDistance)
+    continue;
+
+target = candidate;
+bestGrade = grade;
+bestSqrDistance = sqrDistance;
+```
+
+- **사망·비활성 대상을 제외하고 등급 우선, 같은 등급에서는 거리 우선으로 선택합니다.** 등급은 `Normal`·`Elite`·`Boss` 순으로 높습니다. 따라서 보스와 일반 적이 함께 있다면 가장 가까운 일반 적보다 멀리 있는 보스가 우선될 수 있습니다. 다만 지금 레벨에는 등급이 다른 적이 한 방에 함께 나오지 않아, 이 규칙이 드러나는 장면은 없습니다(§8.3).
 - **일반 적과 보스를 나누는 분기가 필요 없습니다.** `CardTargetResolver`는 `TryFindBestTarget()` 결과의 TargetPoint만 사용하기 때문입니다.
-- **거리 비교에는 `sqrMagnitude`를 사용합니다.** 시야·벽·화면 범위 검사는 이 함수에 없습니다.
+
+소스: [EnemyManager.cs](https://github.com/keeeery/Arcanist/blob/main/Assets/02.%20Scripts/02.%20Enemy/EnemyManager.cs), [CardTargetResolver.cs](https://github.com/keeeery/Arcanist/blob/main/Assets/02.%20Scripts/04.%20CardSystem/CardTargetResolver.cs).
 
 ### 3.6 같으면 갱신하고 다르면 겹치는 버프
 
@@ -495,7 +529,7 @@ return new CardSkillExecutionResult(CardSkillExecutionStatus.Executed, card);
 <tr><td>주는 피해 증가</td><td>각 <code>Value - 1</code>의 양수 증가분 합산</td><td rowspan="2">1.2배와 1.3배 → 1.5배</td></tr>
 <tr><td>받는 피해 증가</td><td>증가분 합산</td></tr>
 <tr><td>받는 피해 감소</td><td><code>(1 - Clamp01(Value))</code> 누적 곱</td><td>20%, 30% 감소 → 0.56배</td></tr>
-<tr><td>카드 충전 속도</td><td>증가분 합산으로 시간을 나눔</td><td>합산 1.5배 → 기준시간 / 1.5</td></tr>
+<tr><td>카드 게이지 충전 속도</td><td>증가분 합산으로 시간을 나눔</td><td>합산 1.5배 → 기준시간 / 1.5</td></tr>
 <tr><td>무적</td><td>유효한 무적 항목이 있으면 피해 0</td><td>일회 부활 소모 뒤 일정 시간 적용</td></tr>
 </tbody>
 </table>
@@ -528,7 +562,7 @@ return new CardSkillExecutionResult(CardSkillExecutionStatus.Executed, card);
 
 ---
 
-## 4. 보상으로 모아 직접 짜는 카드 덱
+## 4. 카드 보상과 덱 편성
 
 ### 4.1 개요 — 보상 선택에서 덱 편성까지
 
@@ -692,9 +726,7 @@ Idle 기본 대기시간은 1.2초, 근접 X축 거리 기준은 1입니다.
 
 ### 5.3 골렘 보스의 공격 판정이 켜지고 꺼지는 시점
 
-![고대 수호 골렘의 팔 발사 패턴](images/golem-arm-shoot-crop.png)
-
-![고대 수호 골렘의 근접 공격 패턴](images/golem-melee-crop.png)
+![고대 수호 골렘의 팔 발사 패턴](images/golem-arm-shoot-crop.png) ![고대 수호 골렘의 근접 공격 패턴](images/golem-melee-crop.png)
 
 `BossAnimationEventReceiver`는 근접 HitBox 활성/비활성과 팔 발사를 애니메이션 이벤트로 호출하는 진입점입니다.
 레이저는 애니메이션 이벤트 없이 `GolemLaserState`의 코루틴이 준비 시간(`readyTime`)이 지나면 플레이어 쪽으로 돌려 켭니다.
@@ -707,9 +739,7 @@ Idle 기본 대기시간은 1.2초, 근접 X축 거리 기준은 1입니다.
 
 #### 플레이어 이동과 벽·바닥 충돌
 
-![플레이어 대시 이펙트](images/dash-fx-crop.png)
-
-![플레이어 달리기 이펙트](images/sprint-fx-crop.png)
+![플레이어 대시 이펙트](images/dash-fx-crop.png) ![플레이어 달리기 이펙트](images/sprint-fx-crop.png)
 
 일반 방 2개와 보스 방의 지형은 LDtk에서 그린 뒤 LDtkUnity로 불러와 방 프리팹(`Room01`·`Room02`·`BossRoom`)으로 만들었습니다. 지형은 바닥·벽을 나눈 IntGrid 레이어와 장식 타일 레이어로 구성했습니다.
 
@@ -1055,7 +1085,9 @@ Save(player);
 - **인벤토리 저장:** `SaveInventory()` API는 있지만 아직 호출·복원 경로에 연결하지 않았습니다.
 - **저장 파일:** 손상 파일 복구와 저장 형식 변경 대응이 없습니다.
 - **체크포인트 저장 빈도:** 클리어된 방의 체크포인트 영역 안에 있는 동안 `OnTriggerStay2D()`가 보상 획득 전까지 저장을 반복하고, 저장은 매번 파일에 씁니다. 호출 빈도를 줄이는 방안은 아직 적용하지 않았습니다.
-- **카드 데이터:** 카드 에셋 30개 중 8개는 효과 참조가 비어 있습니다. 필수 시스템을 먼저 완성하기 위해 구현을 미룬 카드로, 다음 콘텐츠 확장 과제입니다(§3.1).
+- **콘텐츠 부족:** 시스템을 먼저 완성하느라 콘텐츠를 기획만큼 채우지 못했습니다.
+  - 카드: 카드 에셋 30개 중 8개는 효과 참조가 비어 있습니다(§3.1).
+  - 적: 한 방에 일반 적과 네임드 적이 함께 나오도록 기획해 적 등급에 `Elite`를 두고 대상 선택도 등급 우선으로 만들었지만(§3.5), 네임드 적을 추가하지 못해 `Elite`를 사용하는 적이 없습니다.
 - **입력 차단 범위:** 메뉴가 쓰는 `SimpleInput.IsKeyBoardInputBlocked`는 수평·수직 축 입력에만 걸려, 카드·대시·패링 같은 키 입력은 timeScale과 각 상태 조건으로 막히는지 따로 확인해야 합니다.
 - **히트스톱과 일시정지:** `HitStopController`가 직전 시간 배율을 저장하지 않고 1로 복구하므로, 메뉴 일시정지와 겹칠 때 어느 쪽이 배율을 되돌릴지 정해 두어야 합니다(§2.4).
 - **카드 환불:** 애니메이션 발동 시점에 타겟이 사라져 실행이 취소되면 카드를 돌려받지 못합니다. 테스트·시연에서 재현되지 않아 우선순위를 낮췄고, 진입점이 확인되면 처리할 과제입니다(§3.3).
