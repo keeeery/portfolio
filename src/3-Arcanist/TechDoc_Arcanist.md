@@ -8,7 +8,7 @@
 |---|---|---|---|
 | 핵심 A | 충돌 기반 전투와 패링 | 충돌 판정, 중복 타격 방지, 피해 전달, 패링 보상 — HitBox/HurtBox, 중재자 | §2 · §7.1 |
 | 핵심 B | 카드 뽑기와 사용 | 덱 순환, 사용 가능 조건, 모션 후 효과 실행 — ScriptableObject, 실행 컨텍스트 | §3 |
-| 핵심 C | 카드 보상과 덱 편성 | 보유 목록·편성 덱 구분, 편성 제약, 보상 추첨 — 변경 이벤트, 카드별 가중치 | §4 |
+| 핵심 C | 카드 보상과 덱 편성 | 보상 추첨, 보유 목록·편성 덱 구분, 편성 제약 — 카드별 가중치, 변경 이벤트 | §4 |
 | 보조 D | 플레이어의 움직임과 적·보스의 패턴 | 이동 자원·연출, 일반 적 감지·상태·반응, 골렘 보스 패턴 — 런타임 책임 분리, 상태 머신 | §5 |
 | 보조 E | 죽어도 이어지는 방과 체크포인트 | 방 로드, 사망 복구, 클리어 여부에 따른 적 재생성 — ID 기반 복원, 코루틴 | §6 · §7.2 · §7.3 |
 
@@ -123,13 +123,13 @@ flowchart TB
 - **패링은 애니메이션 진행도에 맞춘 판정 창으로 확인합니다.** 공격이 닿았을 때 `HitResolver`가 플레이어의 패링 판정 창이 열려 있는지 확인합니다(§2.2).
 - **카드의 차이는 효과 클래스와 ScriptableObject 에셋에 담습니다.** 카드마다 클래스를 두지 않아 여러 종의 카드를 관리하기 편하고, 투사체 카드는 코드 수정 없이 추가합니다(§3.4·§3.8).
 
-**AI를 활용한 곳:** 인벤토리 코드 정리(§4.2)에 활용했습니다. 나눌 파일과 기준값은 직접 정하고, 코드를 옮기는 일만 맡겼습니다.
+**AI를 활용한 곳:** 인벤토리 코드 정리(§4.3)에 활용했습니다. 나눌 파일과 기준값은 직접 정하고, 코드를 옮기는 일만 맡겼습니다.
 
 이 문서에서 깊게 다루는 것은 세 가지입니다.
 
 1. **충돌 기반 전투와 패링(§2):** 충돌 판정과 중복 타격 방지, 피해 전달, 패링에 성공하면 피해를 막고 카드 게이지를 주는 연결을 다룹니다.
 2. **카드 뽑기와 사용(§3):** 덱·손패·버림 더미의 순환과 사용 가능 조건, 모션에 맞춘 효과 발동을 다룹니다.
-3. **카드 보상과 덱 편성(§4):** 보유 목록과 편성 덱의 분리, 편성 규칙 검사, 카드별 등급 가중치로 뽑는 보상 추첨을 다룹니다.
+3. **카드 보상과 덱 편성(§4):** 카드별 등급 가중치로 뽑는 보상 추첨, 보유 목록과 편성 덱의 분리, 편성 규칙 검사를 다룹니다.
 
 이동·적 행동(§5)과 방 전환·체크포인트 복원(§6)은 짧게 다룹니다.
 트러블슈팅(§7)에는 전투와 방 복원에서 겪은 문제를 모았습니다.
@@ -138,7 +138,7 @@ flowchart TB
 
 ## 2. 충돌 기반 전투와 패링
 
-### 2.1 개요 — 공격이 닿아 패링과 피해로 갈리기까지
+### 2.1 개요 — 패링과 피해로 갈리는 공격 판정 과정
 
 플레이어는 D로 기본 공격을 하고, 공격 모션 중간에 D를 다시 누르면 다음 공격으로 이어집니다.
 적의 공격이 닿기 직전에 패링 자세를 취하면, 판정 창이 열려 있는 동안 닿은 공격은 피해를 주지 않고 패링으로 처리됩니다.
@@ -494,7 +494,7 @@ return spawnMode == SpawnMode.TargetPosition || aimMode == AimMode.Target;
 
 소스: [ProjectileCardEffect.cs](https://github.com/keeeery/Arcanist/blob/main/Assets/02.%20Scripts/04.%20CardSystem/ProjectileCardEffect.cs).
 
-### 3.5 타겟팅 카드의 대상 선택 — 등급을 먼저, 같으면 거리로
+### 3.5 타겟팅 카드의 대상 선택 — 등급 우선, 거리 순
 
 `EnemyManager`는 일반 적과 보스를 하나의 `List<ICombatTarget>`으로 관리합니다.
 조회 중 파괴된 Unity 객체를 제거하고 `IsTargetable`과 `IsDead`를 확인합니다.
@@ -603,7 +603,7 @@ return pool.Get();
 
 ## 4. 카드 보상과 덱 편성
 
-### 4.1 개요 — 보상 선택에서 덱 편성까지
+### 4.1 개요 — 보상 선택부터 덱 편성까지의 흐름
 
 방의 적을 모두 쓰러뜨리면 출구의 오벨리스크가 열리고, 무작위로 뽑힌 보상 카드 3장 중 1장을 고릅니다.
 고른 카드는 보유 목록에만 들어가고, 덱에는 자동으로 들어가지 않습니다.
@@ -621,7 +621,37 @@ return pool.Get();
 
 소스: [PlayerInventory.cs](https://github.com/keeeery/Arcanist/blob/main/Assets/02.%20Scripts/06.%20Inventory/PlayerInventory.cs), [CardSystem.cs](https://github.com/keeeery/Arcanist/blob/main/Assets/02.%20Scripts/04.%20CardSystem/CardSystem.cs), [InventoryWindow.cs](https://github.com/keeeery/Arcanist/blob/main/Assets/02.%20Scripts/06.%20Inventory/InventoryWindow.cs), [RewardController.cs](https://github.com/keeeery/Arcanist/blob/main/Assets/02.%20Scripts/08.%20Reward/RewardController.cs).
 
-### 4.2 카드 덱의 편성 조작과 규칙
+### 4.2 카드마다 등급 가중치를 두는 보상 추첨
+
+![방 클리어 후 가중치에 의해 무작위로 추첨된 3장 중 하나를 고르는 보상 선택 화면](images/reward-selection-zoom.png)
+
+보유 카드와 같은 보상 화면에서 이미 뽑힌 카드는 제외합니다.
+추첨은 `RewardCardSelector`가 담당하고, 남은 카드 각각에 등급 가중치를 부여합니다.
+제외할 카드는 `HashSet`에 모아 두고 한 장을 뽑을 때마다 그 카드를 더해, 한 화면에 같은 카드가 두 번 나오지 않습니다.
+보스 방은 씬에서 최소 등급(`minimumGrade`)을 Rare로 덮어써, 후보를 만들 때 Common 카드를 뺍니다.
+보상 표시를 `RewardCardListView`, 선택 연출을 `RewardSelectionMotion`으로 추가 분리했습니다.
+소스 기본값은 Common 70, Rare 22, Epic 7, Legendary 1이지만, 게임에서 사용하는 프리팹 값은 Common 42, Rare 25, Epic 19, Legendary 14입니다(조정한 이유는 §4.4).
+
+```csharp
+// RewardCardSelector.Draw() — 카드 한 장당 등급 가중치로 누적 추첨
+int randomWeight = Random.Range(0, totalWeight);
+int accumulatedWeight = 0;
+
+foreach (CardData card in candidates)
+{
+    accumulatedWeight += gradeWeights.Get(card.Grade);
+    if (randomWeight < accumulatedWeight)
+        return card;
+}
+```
+
+이 값은 **등급 자체의 고정 확률**이 아니라 **카드 한 장당 가중치**입니다.
+예를 들어 일반 2장과 희귀 1장만 남으면 희귀 확률은 `25 / (42 + 42 + 25)`입니다.
+이미 획득한 카드 수와 각 등급의 남은 카드 수에 따라 실제 등급 분포가 달라집니다.
+
+소스: [RewardCardSelector.cs](https://github.com/keeeery/Arcanist/blob/main/Assets/02.%20Scripts/08.%20Reward/RewardCardSelector.cs).
+
+### 4.3 카드 덱의 편성 조작과 규칙
 
 #### 더블 클릭과 끌어 놓기 편성
 
@@ -667,37 +697,16 @@ return DeckEditFailure.None;
 
 소스: [InventorySlotList.cs](https://github.com/keeeery/Arcanist/blob/main/Assets/02.%20Scripts/06.%20Inventory/InventorySlotList.cs), [CardDragHandler.cs](https://github.com/keeeery/Arcanist/blob/main/Assets/02.%20Scripts/06.%20Inventory/CardDragHandler.cs), [TooltipController.cs](https://github.com/keeeery/Arcanist/blob/main/Assets/02.%20Scripts/07.%20Tooltip/TooltipController.cs), [OverlayInputHandler.cs](https://github.com/keeeery/Arcanist/blob/main/Assets/02.%20Scripts/05.%20Overlay/OverlayInputHandler.cs).
 
-### 4.3 카드마다 등급 가중치를 두는 보상 추첨
-
-![방 클리어 후 가중치에 의해 무작위로 추첨된 3장 중 하나를 고르는 보상 선택 화면](images/reward-selection-zoom.png)
-
-보유 카드와 같은 보상 화면에서 이미 뽑힌 카드는 제외합니다.
-추첨은 `RewardCardSelector`가 담당하고, 남은 카드 각각에 등급 가중치를 부여합니다.
-제외할 카드는 `HashSet`에 모아 두고 한 장을 뽑을 때마다 그 카드를 더해, 한 화면에 같은 카드가 두 번 나오지 않습니다.
-보스 방은 씬에서 최소 등급(`minimumGrade`)을 Rare로 덮어써, 후보를 만들 때 Common 카드를 뺍니다.
-보상 표시를 `RewardCardListView`, 선택 연출을 `RewardSelectionMotion`으로 추가 분리했습니다.
-소스 기본값은 Common 70, Rare 22, Epic 7, Legendary 1이지만, 게임에서 사용하는 프리팹 값은 Common 42, Rare 25, Epic 19, Legendary 14입니다(조정한 이유는 §4.4).
-
-```csharp
-// RewardCardSelector.Draw() — 카드 한 장당 등급 가중치로 누적 추첨
-int randomWeight = Random.Range(0, totalWeight);
-int accumulatedWeight = 0;
-
-foreach (CardData card in candidates)
-{
-    accumulatedWeight += gradeWeights.Get(card.Grade);
-    if (randomWeight < accumulatedWeight)
-        return card;
-}
-```
-
-이 값은 **등급 자체의 고정 확률**이 아니라 **카드 한 장당 가중치**입니다.
-예를 들어 일반 2장과 희귀 1장만 남으면 희귀 확률은 `25 / (42 + 42 + 25)`입니다.
-이미 획득한 카드 수와 각 등급의 남은 카드 수에 따라 실제 등급 분포가 달라집니다.
-
-소스: [RewardCardSelector.cs](https://github.com/keeeery/Arcanist/blob/main/Assets/02.%20Scripts/08.%20Reward/RewardCardSelector.cs).
-
 ### 4.4 고민과 선택
+
+**보상 등급 가중치를 얼마로 둘까 — 프리팹 값으로 높은 등급을 올림**
+
+카드는 기획한 30장 중 22장, 방은 일반 방 2개와 보스 방 1개라 한 번의 플레이에서 보상을 고르는 기회가 적습니다.
+소스 기본값(Common 70, Rare 22, Epic 7, Legendary 1)으로는 한 번의 플레이 안에서 Epic·Legendary 카드를 거의 만나지 못했습니다.
+그래서 코드의 기본값은 두고, 게임에서 사용하는 프리팹의 Inspector 값을 Common 42, Rare 25, Epic 19, Legendary 14로 올렸습니다.
+
+- 가중치를 Inspector 값으로 두었기 때문에 코드를 고치지 않고 프리팹 값만 바꿔 조정할 수 있었습니다.
+- 가중치는 카드 한 장당 값이라(§4.2), 이미 얻은 카드가 늘수록 남은 등급의 분포도 함께 달라집니다.
 
 **보유 카드와 덱 목록을 어디에 둘까 — `PlayerInventory`에 두고 `CardSystem`이 구독**
 
@@ -710,15 +719,6 @@ foreach (CardData card in candidates)
 - 보상·편성 코드는 `PlayerInventory`만 바꾸고, 덱과 화면은 각자 알림을 받아 따라오므로 새 구독자를 더해도 변경하는 쪽 코드는 그대로입니다.
 
 다만 런타임 덱 동기화는 `Contains()`로 카드가 있는지만 보므로, 중복 편성(`allowDuplicateCards`)을 허용하도록 바꾸면 같은 카드의 장수는 따로 세지 않습니다. 지금은 중복 편성이 막혀 있어 이런 경우가 생기지 않습니다.
-
-**보상 등급 가중치를 얼마로 둘까 — 프리팹 값으로 높은 등급을 올림**
-
-카드는 기획한 30장 중 22장, 방은 일반 방 2개와 보스 방 1개라 한 번의 플레이에서 보상을 고르는 기회가 적습니다.
-소스 기본값(Common 70, Rare 22, Epic 7, Legendary 1)으로는 한 번의 플레이 안에서 Epic·Legendary 카드를 거의 만나지 못했습니다.
-그래서 코드의 기본값은 두고, 게임에서 사용하는 프리팹의 Inspector 값을 Common 42, Rare 25, Epic 19, Legendary 14로 올렸습니다.
-
-- 가중치를 Inspector 값으로 두었기 때문에 코드를 고치지 않고 프리팹 값만 바꿔 조정할 수 있었습니다.
-- 가중치는 카드 한 장당 값이라(§4.3), 이미 얻은 카드가 늘수록 남은 등급의 분포도 함께 달라집니다.
 
 ---
 
@@ -1016,7 +1016,7 @@ protected virtual void OnDestroy()
 
 소스: [SingletonBase.cs](https://github.com/keeeery/Arcanist/blob/main/Assets/02.%20Scripts/99.%20Utilities/SingletonBase.cs).
 
-### 7.2 이전 씬의 체크포인트로 돌아가면 첫 방부터 다시 시작되던 문제
+### 7.2 씬을 넘어 복귀하면 첫 방부터 다시 시작되던 문제
 
 - **증상:** 같은 씬 안의 복귀는 동작했지만, 보스 씬에서 죽어 이전 씬의 체크포인트로 돌아가면 그 씬이 첫 방부터 다시 시작되어 체크포인트 위치·체력이 이어지지 않았습니다.
 - **원인:** 1차 시연 시점에는 씬에 속한 `OverlayController`가 복귀 코루틴을 실행했고, 방을 ID로 불러오는 경로도 없었습니다.

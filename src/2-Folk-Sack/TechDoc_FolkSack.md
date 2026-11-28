@@ -566,7 +566,7 @@ while (bufferedTerrainBatches.TryGetValue(
 
 소스: [RoomClient.cs](https://github.com/keeeery/Folk-Sack/blob/main/Assets/02.%20Scripts/Networking/RoomClient.cs).
 
-### 3.3 덩어리 하나가 떨어져 자리 잡기까지
+### 3.3 덩어리 하나의 낙하부터 배치 확정까지의 과정
 
 ![다른 지형으로부터 고립되어 붕괴·낙하 중인 지형 덩어리](images/falling-chunk.png)
 
@@ -824,7 +824,7 @@ stateDiagram-v2
 
 논리 셀 삭제와 Collider 재생성 시점이 달라 생긴 매몰 판정 문제와 해결은 §8.2에서 설명합니다.
 
-### 4.3 낙하 지형과 맞물리는 움직임 — 멈출 칸·이동 충돌·낙하 피해
+### 4.3 낙하 지형의 움직임 — 멈출 칸·이동 충돌·낙하 피해
 
 떨어진 덩어리가 멈출 칸을 고르는 처리와, 플레이어·필드 아이템이 지형과 부딪히고 빠져나오는 처리입니다.
 
@@ -1260,7 +1260,7 @@ if (isBuried == false || IsGridSpaceEmpty(character.CollisionBounds) == false) r
 
 소스: [FallingTerrainInteraction.cs](https://github.com/keeeery/Folk-Sack/blob/main/Assets/02.%20Scripts/Player/FallingTerrainInteraction.cs).
 
-### 8.3 여러 청크가 동시에 떨어지면 뒤 청크가 확정되지 않던 문제
+### 8.3 동시에 떨어지면 뒤 청크가 확정되지 않던 문제
 
 - **발견:** 플레이 테스트 중에 발견했습니다.
 - **증상:** 여러 청크 중 뒤 청크가 확정되지 않았습니다.
@@ -1270,7 +1270,7 @@ if (isBuried == false || IsGridSpaceEmpty(character.CollisionBounds) == false) r
 - **시점:** 서버 권위 지형 동기화를 도입(9월 1일)한 뒤 생겼고, 1차 시연 전인 9월 9일에 수정했습니다.
 - **배운 점:** 물리 정착과 서버 배치 확정은 서로 다른 시점입니다(§9.3).
 
-### 8.4 연쇄 붕괴 제한이 소진되지 않고 다른 플레이어가 내 연쇄를 덮어쓰던 문제
+### 8.4 연쇄 제한 미소진과 다른 플레이어의 덮어쓰기 문제
 
 - **발견:** 플레이 테스트와 1차 시연 중에 발견했습니다.
 - **증상:** 연쇄 제한 횟수가 소진되지 않았습니다. 다른 플레이어 변경 이후 내 연쇄가 중단되거나 잘못 이어졌습니다.

@@ -79,7 +79,7 @@
       "what": "보유 중인 카드와 같은 보상 화면에서 이미 뽑힌 카드는 제외하고, 나머지 카드 중 보상 선택지로 제공할 카드를 등급별 가중치로 추첨합니다.",
       "how": "`RewardCardSelector`가 남은 카드 각각에 등급 가중치(게임 값 Common 42, Rare 25, Epic 19, Legendary 14)를 부여하고, 누적 가중치가 난수보다 커지는 카드를 고릅니다.",
       "why": "이 값은 등급 자체의 고정 확률이 아니라 카드 한 장당 가중치이므로, 이미 획득한 카드 수와 각 등급의 남은 카드 수에 따라 실제 등급 분포가 달라집니다.",
-      "section": "4.3 카드마다 등급 가중치를 두는 보상 추첨",
+      "section": "4.2 카드마다 등급 가중치를 두는 보상 추첨",
       "image": {
         "src": "images/reward-selection-zoom.png",
         "w": 1032,
@@ -118,7 +118,7 @@
       "solution": "복귀 처리를 `DontDestroyOnLoad`를 적용한 `CheckPointManager`로 옮기고 Overlay는 호출만 하게 했으며, 씬 로드 후 플레이어·카메라를 다시 검색하고 체크포인트 값은 새 객체로 복사해 전달합니다.",
       "result": "씬을 넘어서 완료해야 하는 코루틴은 유지 객체가 맡고, 씬에 속한 플레이어와 방은 로드 뒤 다시 찾는 구조가 되었습니다.",
       "lesson": "",
-      "section": "7.2 이전 씬의 체크포인트로 돌아가면 첫 방부터 다시 시작되던 문제"
+      "section": "7.2 씬을 넘어 복귀하면 첫 방부터 다시 시작되던 문제"
     },
     {
       "title": "클리어한 방으로 복귀할 때 적이 다시 생성되는 문제",
@@ -287,9 +287,9 @@
         "chapter": "combat",
         "layout": "visual",
         "tab": "흐름",
-        "title": {"text": "2.1 개요 — 공격이 닿아 패링과 피해로 갈리기까지", "verbatim": true},
+        "title": {"text": "2.1 개요 — 패링과 피해로 갈리는 공격 판정 과정", "verbatim": true},
         "lead": {"text": "적의 공격이 닿기 직전에 패링 자세를 취하면, 판정 창이 열려 있는 동안 닿은 공격은 피해를 주지 않고 패링으로 처리됩니다.", "verbatim": true},
-        "sectionPath": ["2. 충돌 기반 전투와 패링", "2.1 개요 — 공격이 닿아 패링과 피해로 갈리기까지"],
+        "sectionPath": ["2. 충돌 기반 전투와 패링", "2.1 개요 — 패링과 피해로 갈리는 공격 판정 과정"],
         "points": [
           {
             "label": "",
@@ -619,6 +619,39 @@
         "edited": true
       },
       {
+        "key": "reward-draw",
+        "chapter": "inventory",
+        "layout": "code",
+        "tab": "구현",
+        "title": {"text": "4.2 카드마다 등급 가중치를 두는 보상 추첨", "verbatim": true},
+        "lead": {"text": "보유 카드와 같은 보상 화면에서 이미 뽑힌 카드는 제외합니다.", "verbatim": true},
+        "sectionPath": ["4. 카드 보상과 덱 편성", "4.2 카드마다 등급 가중치를 두는 보상 추첨"],
+        "points": [
+          {"label": "구현", "text": "추첨은 `RewardCardSelector`가 담당하고, 남은 카드 각각에 등급 가중치를 부여합니다.", "verbatim": true},
+          {
+            "label": "",
+            "text": "소스 기본값은 Common 70, Rare 22, Epic 7, Legendary 1이지만, 게임에서 사용하는 프리팹 값은 Common 42, Rare 25, Epic 19, Legendary 14입니다(조정한 이유는 §4.4).",
+            "verbatim": true
+          },
+          {
+            "label": "",
+            "text": "이 값은 등급 자체의 고정 확률이 아니라 카드 한 장당 가중치입니다.\n예를 들어 일반 2장과 희귀 1장만 남으면 희귀 확률은 `25 / (42 + 42 + 25)`입니다.",
+            "verbatim": false
+          }
+        ],
+        "visuals": [
+          {"kind": "code", "n": 1, "fp": "// RewardCardSelector.Draw() — 카드 한 장당 등급 가중치로 누적 추첨"},
+          {
+            "kind": "image",
+            "src": "images/reward-selection-zoom.png",
+            "w": 1032,
+            "h": 774,
+            "caption": {"text": "방 클리어 후 가중치에 의해 무작위로 추첨된 3장 중 하나를 고르는 보상 선택 화면", "verbatim": true}
+          }
+        ],
+        "edited": true
+      },
+      {
         "key": "inventory-list",
         "chapter": "inventory",
         "layout": "visual",
@@ -628,7 +661,7 @@
           "text": "전체 카드 목록은 보유하되 덱에 없는 카드 → 덱에 있는 카드 → 미보유 카드 순으로 보여 주고, 더블 클릭과 끌어 놓기 모두 같은 추가·제거 함수로 편성합니다.",
           "verbatim": true
         },
-        "sectionPath": ["4. 카드 보상과 덱 편성", "4.2 카드 덱의 편성 조작과 규칙", "더블 클릭과 끌어 놓기 편성"],
+        "sectionPath": ["4. 카드 보상과 덱 편성", "4.3 카드 덱의 편성 조작과 규칙", "더블 클릭과 끌어 놓기 편성"],
         "points": [
           {"label": "구현", "text": "슬롯과 드래그 아이콘은 재사용해 목록을 갱신할 때마다 전부 만들고 지우지 않습니다.", "verbatim": true},
           {"label": "", "text": "오벨리스크 밖에서 연 인벤토리는 열람 전용이라 편성 검사 없이 닫힙니다.", "verbatim": true},
@@ -656,7 +689,7 @@
         "tab": "구현",
         "title": {"text": "넣을 때와 닫을 때 확인하는 규칙", "verbatim": true},
         "lead": null,
-        "sectionPath": ["4. 카드 보상과 덱 편성", "4.2 카드 덱의 편성 조작과 규칙", "넣을 때와 닫을 때 확인하는 규칙"],
+        "sectionPath": ["4. 카드 보상과 덱 편성", "4.3 카드 덱의 편성 조작과 규칙", "넣을 때와 닫을 때 확인하는 규칙"],
         "points": [
           {
             "label": "구현",
@@ -679,39 +712,6 @@
             "caption": {"text": "전체 카드와 플레이어 카드 덱 편성 화면(최소 카드 수·마력 조건 표시)", "verbatim": true}
           }
         ]
-      },
-      {
-        "key": "reward-draw",
-        "chapter": "inventory",
-        "layout": "code",
-        "tab": "구현",
-        "title": {"text": "4.3 카드마다 등급 가중치를 두는 보상 추첨", "verbatim": true},
-        "lead": {"text": "보유 카드와 같은 보상 화면에서 이미 뽑힌 카드는 제외합니다.", "verbatim": true},
-        "sectionPath": ["4. 카드 보상과 덱 편성", "4.3 카드마다 등급 가중치를 두는 보상 추첨"],
-        "points": [
-          {"label": "구현", "text": "추첨은 `RewardCardSelector`가 담당하고, 남은 카드 각각에 등급 가중치를 부여합니다.", "verbatim": true},
-          {
-            "label": "",
-            "text": "소스 기본값은 Common 70, Rare 22, Epic 7, Legendary 1이지만, 게임에서 사용하는 프리팹 값은 Common 42, Rare 25, Epic 19, Legendary 14입니다(조정한 이유는 §4.4).",
-            "verbatim": true
-          },
-          {
-            "label": "",
-            "text": "이 값은 등급 자체의 고정 확률이 아니라 카드 한 장당 가중치입니다.\n예를 들어 일반 2장과 희귀 1장만 남으면 희귀 확률은 `25 / (42 + 42 + 25)`입니다.",
-            "verbatim": false
-          }
-        ],
-        "visuals": [
-          {"kind": "code", "n": 1, "fp": "// RewardCardSelector.Draw() — 카드 한 장당 등급 가중치로 누적 추첨"},
-          {
-            "kind": "image",
-            "src": "images/reward-selection-zoom.png",
-            "w": 1032,
-            "h": 774,
-            "caption": {"text": "방 클리어 후 가중치에 의해 무작위로 추첨된 3장 중 하나를 고르는 보상 선택 화면", "verbatim": true}
-          }
-        ],
-        "edited": true
       },
       {
         "key": "golem-fsm",
@@ -943,9 +943,9 @@
         "chapter": "lifecycle",
         "layout": "problem",
         "tab": "문제 해결",
-        "title": {"text": "7.2 이전 씬의 체크포인트로 돌아가면 첫 방부터 다시 시작되던 문제", "verbatim": true},
+        "title": {"text": "7.2 씬을 넘어 복귀하면 첫 방부터 다시 시작되던 문제", "verbatim": true},
         "lead": null,
-        "sectionPath": ["7. 트러블슈팅", "7.2 이전 씬의 체크포인트로 돌아가면 첫 방부터 다시 시작되던 문제"],
+        "sectionPath": ["7. 트러블슈팅", "7.2 씬을 넘어 복귀하면 첫 방부터 다시 시작되던 문제"],
         "points": [
           {
             "label": "증상",
@@ -1098,9 +1098,9 @@
         "chapter": "combat",
         "layout": "visual",
         "tab": "흐름",
-        "title": {"text": "2.1 개요 — 공격이 닿아 패링과 피해로 갈리기까지", "verbatim": true},
+        "title": {"text": "2.1 개요 — 패링과 피해로 갈리는 공격 판정 과정", "verbatim": true},
         "lead": {"text": "적의 공격이 닿기 직전에 패링 자세를 취하면, 판정 창이 열려 있는 동안 닿은 공격은 피해를 주지 않고 패링으로 처리됩니다.", "verbatim": true},
-        "sectionPath": ["2. 충돌 기반 전투와 패링", "2.1 개요 — 공격이 닿아 패링과 피해로 갈리기까지"],
+        "sectionPath": ["2. 충돌 기반 전투와 패링", "2.1 개요 — 패링과 피해로 갈리는 공격 판정 과정"],
         "points": [
           {
             "label": "",
@@ -1422,6 +1422,38 @@
         "visuals": [{"kind": "table", "n": 1, "fp": "고민|고른 방법 (대신 사용하지 않은 방법)|이유|비용"}]
       },
       {
+        "key": "reward-draw",
+        "chapter": "inventory",
+        "layout": "code",
+        "tab": "구현",
+        "title": {"text": "4.2 카드마다 등급 가중치를 두는 보상 추첨", "verbatim": true},
+        "lead": {"text": "보유 카드와 같은 보상 화면에서 이미 뽑힌 카드는 제외합니다.", "verbatim": true},
+        "sectionPath": ["4. 카드 보상과 덱 편성", "4.2 카드마다 등급 가중치를 두는 보상 추첨"],
+        "points": [
+          {"label": "구현", "text": "추첨은 `RewardCardSelector`가 담당하고, 남은 카드 각각에 등급 가중치를 부여합니다.", "verbatim": true},
+          {
+            "label": "",
+            "text": "소스 기본값은 Common 70, Rare 22, Epic 7, Legendary 1이지만, 게임에서 사용하는 프리팹 값은 Common 42, Rare 25, Epic 19, Legendary 14입니다(조정한 이유는 §4.4).",
+            "verbatim": true
+          },
+          {
+            "label": "",
+            "text": "이 값은 등급 자체의 고정 확률이 아니라 카드 한 장당 가중치입니다.\n예를 들어 일반 2장과 희귀 1장만 남으면 희귀 확률은 `25 / (42 + 42 + 25)`입니다.",
+            "verbatim": false
+          }
+        ],
+        "visuals": [
+          {"kind": "code", "n": 1, "fp": "// RewardCardSelector.Draw() — 카드 한 장당 등급 가중치로 누적 추첨"},
+          {
+            "kind": "image",
+            "src": "images/reward-selection-zoom.png",
+            "w": 1032,
+            "h": 774,
+            "caption": {"text": "방 클리어 후 가중치에 의해 무작위로 추첨된 3장 중 하나를 고르는 보상 선택 화면", "verbatim": true}
+          }
+        ]
+      },
+      {
         "key": "inventory-list",
         "chapter": "inventory",
         "layout": "visual",
@@ -1431,7 +1463,7 @@
           "text": "전체 카드 목록은 보유하되 덱에 없는 카드 → 덱에 있는 카드 → 미보유 카드 순으로 보여 주고, 더블 클릭과 끌어 놓기 모두 같은 추가·제거 함수로 편성합니다.",
           "verbatim": true
         },
-        "sectionPath": ["4. 카드 보상과 덱 편성", "4.2 카드 덱의 편성 조작과 규칙", "더블 클릭과 끌어 놓기 편성"],
+        "sectionPath": ["4. 카드 보상과 덱 편성", "4.3 카드 덱의 편성 조작과 규칙", "더블 클릭과 끌어 놓기 편성"],
         "points": [
           {"label": "구현", "text": "슬롯과 드래그 아이콘은 재사용해 목록을 갱신할 때마다 전부 만들고 지우지 않습니다.", "verbatim": true},
           {"label": "", "text": "오벨리스크 밖에서 연 인벤토리는 열람 전용이라 편성 검사 없이 닫힙니다.", "verbatim": true},
@@ -1458,7 +1490,7 @@
         "tab": "구현",
         "title": {"text": "넣을 때와 닫을 때 확인하는 규칙", "verbatim": true},
         "lead": null,
-        "sectionPath": ["4. 카드 보상과 덱 편성", "4.2 카드 덱의 편성 조작과 규칙", "넣을 때와 닫을 때 확인하는 규칙"],
+        "sectionPath": ["4. 카드 보상과 덱 편성", "4.3 카드 덱의 편성 조작과 규칙", "넣을 때와 닫을 때 확인하는 규칙"],
         "points": [
           {
             "label": "구현",
@@ -1479,38 +1511,6 @@
             "w": 1140,
             "h": 855,
             "caption": {"text": "전체 카드와 플레이어 카드 덱 편성 화면(최소 카드 수·마력 조건 표시)", "verbatim": true}
-          }
-        ]
-      },
-      {
-        "key": "reward-draw",
-        "chapter": "inventory",
-        "layout": "code",
-        "tab": "구현",
-        "title": {"text": "4.3 카드마다 등급 가중치를 두는 보상 추첨", "verbatim": true},
-        "lead": {"text": "보유 카드와 같은 보상 화면에서 이미 뽑힌 카드는 제외합니다.", "verbatim": true},
-        "sectionPath": ["4. 카드 보상과 덱 편성", "4.3 카드마다 등급 가중치를 두는 보상 추첨"],
-        "points": [
-          {"label": "구현", "text": "추첨은 `RewardCardSelector`가 담당하고, 남은 카드 각각에 등급 가중치를 부여합니다.", "verbatim": true},
-          {
-            "label": "",
-            "text": "소스 기본값은 Common 70, Rare 22, Epic 7, Legendary 1이지만, 게임에서 사용하는 프리팹 값은 Common 42, Rare 25, Epic 19, Legendary 14입니다(조정한 이유는 §4.4).",
-            "verbatim": true
-          },
-          {
-            "label": "",
-            "text": "이 값은 등급 자체의 고정 확률이 아니라 카드 한 장당 가중치입니다.\n예를 들어 일반 2장과 희귀 1장만 남으면 희귀 확률은 `25 / (42 + 42 + 25)`입니다.",
-            "verbatim": false
-          }
-        ],
-        "visuals": [
-          {"kind": "code", "n": 1, "fp": "// RewardCardSelector.Draw() — 카드 한 장당 등급 가중치로 누적 추첨"},
-          {
-            "kind": "image",
-            "src": "images/reward-selection-zoom.png",
-            "w": 1032,
-            "h": 774,
-            "caption": {"text": "방 클리어 후 가중치에 의해 무작위로 추첨된 3장 중 하나를 고르는 보상 선택 화면", "verbatim": true}
           }
         ]
       },
@@ -1737,9 +1737,9 @@
         "chapter": "lifecycle",
         "layout": "problem",
         "tab": "문제 해결",
-        "title": {"text": "7.2 이전 씬의 체크포인트로 돌아가면 첫 방부터 다시 시작되던 문제", "verbatim": true},
+        "title": {"text": "7.2 씬을 넘어 복귀하면 첫 방부터 다시 시작되던 문제", "verbatim": true},
         "lead": null,
-        "sectionPath": ["7. 트러블슈팅", "7.2 이전 씬의 체크포인트로 돌아가면 첫 방부터 다시 시작되던 문제"],
+        "sectionPath": ["7. 트러블슈팅", "7.2 씬을 넘어 복귀하면 첫 방부터 다시 시작되던 문제"],
         "points": [
           {
             "label": "증상",
@@ -1804,6 +1804,6 @@
         "visuals": []
       }
     ],
-    "applied": "3399b1d18c6f05fc"
+    "applied": "f69e6181d5f908d6"
   }
 }

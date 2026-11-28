@@ -1429,7 +1429,7 @@ noiseTime += Time.unscaledDeltaTime * shakeFrequency;
 
 소스: [DamageVignette.cs](https://github.com/keeeery/ODDITY/blob/main/Assets/Scripts/10.%20UI/DamageVignette.cs), [PlayerHUD.cs](https://github.com/keeeery/ODDITY/blob/main/Assets/Scripts/10.%20UI/PlayerHUD.cs), [CameraController.cs](https://github.com/keeeery/ODDITY/blob/main/Assets/Scripts/2.%20Camera/CameraController.cs), [HitPush.cs](https://github.com/keeeery/ODDITY/blob/main/Assets/Scripts/5.%20Combat/HitPush.cs), [PlayerController.cs](https://github.com/keeeery/ODDITY/blob/main/Assets/Scripts/1.%20Player/PlayerController.cs).
 
-### 8.5 보스 전투 피드백 — 피해 구간과 몸으로 보여 주는 상태
+### 8.5 보스 전투 피드백 — 피해 구간과 몸으로 보이는 상태
 
 보스가 맞을 때 피해 크기에 따라 연출의 겹을 늘리고, 무력화·기절 같은 상태를 보스의 자세와 주변 효과로도 보여 줍니다.
 
