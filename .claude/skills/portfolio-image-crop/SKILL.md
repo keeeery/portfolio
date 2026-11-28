@@ -25,7 +25,7 @@ src/<폴더>/
 └── <기술 문서>.md
 ```
 
-도구(이 폴더): `measure.py`(픽셀 위치 재기), `crop.py`(4:3 자르기, macOS `sips`), `thicken.py`(UI 스크린샷의 1px 긴 선만 2px로 — 작게 줄여도 테두리·칸 선이 사라지지 않게, `python3 -I thicken.py <in> <out> [RUN=20] [DIFF=60]`, 사용자가 원할 때만·전후 비교를 보여 주고, crops.json에 `post`로 기록). 모두 `python3 -I`로 실행합니다.
+도구(이 폴더): `measure.py`(픽셀 위치 재기), `crop.py`(4:3 자르기, macOS `sips`), `thicken.py`(UI 스크린샷의 1px 긴 선만 2px로 — 지금은 렌더러 `assets/img-linekeep.js`가 화면에서 선을 지켜 줄이므로 보통 필요 없음, `python3 -I thicken.py <in> <out> [RUN=20] [DIFF=60]`, 사용자가 원할 때만·전후 비교를 보여 주고, crops.json에 `post`로 기록). 모두 `python3 -I`로 실행합니다.
 
 ## 크롭 기준
 

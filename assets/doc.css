@@ -311,6 +311,12 @@ code { font-family: var(--mono); font-size: .88em; background: var(--accent-soft
 .md > p.pf-tall img { width: calc((var(--measure) - 12px) / 2); max-width: 100%; }
 @media screen and (max-width: 719.98px) { .md > p.pf-tall img { width: min(220px, 60vw); } }   /* 휴대폰 */
 
+/* 「<!-- 나란히 -->」 뒤 두 블록을 가로로(doc.js의 .pf-side) — 직접 고친 부분(2026-11-28). 표는 남는 폭을 채우고, 다이어그램·그림은 제 폭 */
+.md > .pf-side { display: flex; gap: 24px; align-items: flex-start; width: min(var(--measure), 100%); margin: 22px auto; }
+.md > .pf-side > * { margin: 0 !important; min-width: 0; }   /* .md .mmd·.table-wrap의 위아래 여백을 지워 윗선을 맞춤 */
+.md > .pf-side > .table-wrap { flex: 1 1 0; }
+.md > .pf-side > :is(.mmd, .pf-figure) { flex: 0 1 auto; }
+@media screen and (max-width: 719.98px) { .md > .pf-side { flex-direction: column; align-items: stretch; } .md > .pf-side > :is(.mmd, .pf-figure) { align-self: center; } }
 .md .mmd { margin: 22px 0; }
 .mmd .mermaid { display: flex; justify-content: center; padding: 16px; border: 0; border-radius: calc(var(--r) * .7); overflow-x: auto; background: var(--diagram-bg); }   /* 직접 고침(2026-11-25): 다이어그램은 외곽선 없음 */
 .mmd .mermaid svg { display: block; max-width: 100%; height: auto; }

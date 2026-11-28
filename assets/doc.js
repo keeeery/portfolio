@@ -405,6 +405,16 @@ try { window.mermaid?.initialize({ startOnLoad: false }); } catch (_) { /* */ }
       (code.closest('pre') || code).replaceWith(fig);
       figs.push(fig);
     });
+    // 「<!-- 나란히 -->」 표시 바로 뒤 두 블록(표·다이어그램·그림 등)을 가로로 나란히(.pf-side) — 직접 고친 부분(2026-11-28).
+    //   다이어그램을 그리기 전에 옮겨서 칸 폭에 맞춰 그려지게 함. 좁은 화면에서는 doc.css가 위아래로 되돌림
+    [...doc.childNodes].filter((n) => n.nodeType === 8 && n.data.trim() === '나란히').forEach((c) => {
+      const pair = [];
+      for (let n = c.nextSibling; n && pair.length < 2; n = n.nextSibling) if (n.nodeType === 1) pair.push(n);
+      if (pair.length < 2) return;
+      const row = document.createElement('div');
+      row.className = 'pf-side';
+      c.after(row); row.append(...pair);
+    });
     try { await Promise.race([Promise.all([document.fonts.load('16px Pretendard'), document.fonts.load('700 16px Pretendard')]), sleep(4000)]); } catch { /* 글꼴 없이 진행 */ }
 
     // ⑥-2 인쇄(A4 글줄 680px)에서 낱말 단위 줄바꿈으로는 들어가지 않는 표에만 .print-wide → 인쇄 CSS가 그 표에서만 낱말 중간 줄바꿈을 허용
