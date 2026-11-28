@@ -343,7 +343,7 @@
 
 /* ── Arcanist 장면별(2026-11-26, theme/deck-rules.md 규칙) ── */
 [data-pf-project="3-Arcanist"] :is(#d-what, #d-card-exec, #d-restore-seq, #d-skip-spawn) { --pf-cards: plain; }   /* R8 번호 없음 — 1.1 소개·3.3 이유와 구현·6.1 기능과 기록 항목·6.2 서로 다른 두 이야기 */
-[data-pf-project="3-Arcanist"] :is(#d-card-exec, #d-buff-stack, #d-gauge-overflow) { --pf-layout: side; --pf-vis-scale: .912; }   /* R9 4:3 이미지 하나 + 카드 — 왼쪽 이미지 539×404·오른쪽 카드 462px */
+[data-pf-project="3-Arcanist"] :is(#d-card-exec, #d-buff-stack, #d-gauge-overflow, #d-pool-reuse) { --pf-layout: side; --pf-vis-scale: .912; }   /* R9 4:3 이미지 하나 + 카드 — 왼쪽 이미지 539×404·오른쪽 카드 462px */
 /* (Arcanist 4.3 reward-draw — R11 side-split은 이미지 181px, quad는 코드 칸 넘침이라 기본 배치: 이미지·코드 위, 카드 아래) */
 
 /* ── 사천성 장면별(2026-11-26) ── */
@@ -411,7 +411,7 @@
 [data-pf-project="3-Arcanist"] #d-combat-overview .dk-stack > .cards { width: 0; min-width: 100%; grid-template-columns: minmax(0, 1fr); gap: 12px; }
 [data-pf-project="3-Arcanist"] #d-combat-overview.pf-sizing .dk-stack { grid-template-columns: none; justify-content: normal; }
 [data-pf-project="3-Arcanist"] #d-combat-overview.pf-sizing .dk-stack > .cards { width: auto; min-width: 0; }
-/* 2.3 패링 성공 시 피해 무효화 — ODDITY 2.4 d-psy-follow처럼 왼쪽 이미지, 오른쪽 카드 위·코드 아래(R11. 2×2는 코드 칸이 잘려서 뺌) */
+/* 2.3 피해를 막고 카드 게이지를 주는 패링 — ODDITY 2.4 d-psy-follow처럼 왼쪽 이미지, 오른쪽 카드 위·코드 아래(R11. 2×2는 코드 칸이 잘려서 뺌) */
 [data-pf-project="3-Arcanist"] #d-parry { --pf-layout: side-split; }
 /* 4.4 전체 카드 목록과 편성 — 1·2번은 번호 없는 카드(R8), 3번은 「AI 활용」 라벨 칸 카드(R4) */
 [data-pf-project="3-Arcanist"] #d-inventory-list { --pf-cards: plain; }

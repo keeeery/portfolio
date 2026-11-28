@@ -53,7 +53,7 @@
       "what": "Hitbox Collider가 감지한 대상을 검증하고 단발·다단 공격의 중복 적용을 제어한 뒤, 패링 또는 피해로 처리합니다.",
       "how": "대상 검증 → `TryRegister` → `Resolve` 순서로 처리하고, 패링은 피해 전달 전에 반환하며 `SuccessParry`가 패링 창을 닫고 카드 게이지를 추가합니다.",
       "why": "패링을 카드 수급과 연결한 핵심 플레이 흐름이기 때문에, 피해 전달 전에 패링을 해결하고 성공 보상으로 게이지를 줍니다.",
-      "section": "2.3 패링 성공 시 피해 무효화",
+      "section": "2.3 피해를 막고 카드 게이지를 주는 패링",
       "image": {
         "src": "images/parry-combat-zoom.png",
         "w": 620,
@@ -66,7 +66,7 @@
       "what": "카드 사용 조건 검증과 실제 효과 발동을 분리해, 애니메이션 이벤트 시점에 효과를 실행합니다.",
       "how": "`CardUseValidator`가 회복 가능 여부·필수 타겟을 검증하면 `CardSkillExecutor`가 대기 카드를 저장하고 애니메이션을 시작하며, 이벤트에서 `ExecutePending()`이 `CardEffectContext`로 효과를 실행합니다.",
       "why": "실행 시점에 타겟을 다시 찾아 입력 시점과 애니메이션 발동 시점 사이에 적이 죽은 경우를 구분하고, 카드 사용자는 효과 종류를 분기하지 않고 같은 실행 진입점을 호출할 수 있습니다.",
-      "section": "3.3 사용 가능 확인과 모션에 맞춘 발동",
+      "section": "3.3 조건을 확인하고 모션에 맞춰 발동하는 카드",
       "image": {
         "src": "images/card-combat-zoom.png",
         "w": 640,
@@ -79,7 +79,7 @@
       "what": "보유 중인 카드와 같은 보상 화면에서 이미 뽑힌 카드는 제외하고, 나머지 카드 중 보상 선택지로 제공할 카드를 등급별 가중치로 추첨합니다.",
       "how": "`RewardCardSelector`가 남은 카드 각각에 등급 가중치(게임 값 Common 42, Rare 25, Epic 19, Legendary 14)를 부여하고, 누적 가중치가 난수보다 커지는 카드를 고릅니다.",
       "why": "이 값은 등급 자체의 고정 확률이 아니라 카드 한 장당 가중치이므로, 이미 획득한 카드 수와 각 등급의 남은 카드 수에 따라 실제 등급 분포가 달라집니다.",
-      "section": "4.3 보상 추첨",
+      "section": "4.3 카드마다 등급 가중치를 두는 보상 추첨",
       "image": {
         "src": "images/reward-selection-zoom.png",
         "w": 1032,
@@ -92,7 +92,7 @@
       "what": "보스가 MonoBehaviour 기반 상태 머신을 통해 대기·근접·레이저·팔 발사 상태를 오가며 패턴을 시전합니다.",
       "how": "`BossController.Awake()`에서 자식 `BossBaseState`를 `Type` 키로 등록하고, 상태를 바꿀 때 이전 상태 GameObject를 끄고 다음 상태를 켜 `OnEnable/OnDisable`을 진입·종료로 사용합니다.",
       "why": "상태가 컴포넌트이므로 Collider·프리팹·지속시간을 Inspector에서 직접 연결하기 쉽습니다. 대신 상태별 GameObject가 필요합니다.",
-      "section": "5.2 골렘 상태 전이",
+      "section": "5.2 거리에 따라 패턴을 고르는 골렘 보스",
       "image": {
         "src": "images/boss-combat-zoom.png",
         "w": 900,
@@ -118,7 +118,7 @@
       "solution": "복귀 처리를 `DontDestroyOnLoad`를 적용한 `CheckPointManager`로 옮기고 Overlay는 호출만 하게 했으며, 씬 로드 후 플레이어·카메라를 다시 검색하고 체크포인트 값은 새 객체로 복사해 전달합니다.",
       "result": "씬을 넘어서 완료해야 하는 코루틴은 유지 객체가 맡고, 씬에 속한 플레이어와 방은 로드 뒤 다시 찾는 구조가 되었습니다.",
       "lesson": "",
-      "section": "7.2 이전 씬의 체크포인트로 돌아가면 첫 방부터 다시 시작"
+      "section": "7.2 이전 씬의 체크포인트로 돌아가면 첫 방부터 다시 시작되던 문제"
     },
     {
       "title": "클리어한 방으로 복귀할 때 적이 다시 생성되는 문제",
@@ -192,11 +192,11 @@
   "deck": {
     "chapters": [
       {"key": "overview", "title": "프로젝트 개요", "sectionPath": ["1. 프로젝트 개요"]},
-      {"key": "combat", "title": "충돌 기반 전투와 패링", "sectionPath": ["2. 충돌 기반 전투와 패링"]},
-      {"key": "card", "title": "카드 순환과 모션 연계 스킬", "sectionPath": ["3. 카드 순환과 모션 연계 스킬"]},
-      {"key": "inventory", "title": "인벤토리·덱 편성과 카드 보상", "sectionPath": ["4. 인벤토리·덱 편성과 카드 보상"]},
-      {"key": "behavior", "title": "플레이어 이동과 적·보스의 행동", "sectionPath": ["5. 플레이어 이동과 적·보스의 행동"]},
-      {"key": "checkpoint", "title": "방 전환과 체크포인트 복원", "sectionPath": ["6. 방 전환과 체크포인트 복원"]},
+      {"key": "combat", "title": "패링이 카드로 이어지는 전투", "sectionPath": ["2. 패링이 카드로 이어지는 전투"]},
+      {"key": "card", "title": "덱에서 뽑아 모션에 맞춰 나가는 카드", "sectionPath": ["3. 덱에서 뽑아 모션에 맞춰 나가는 카드"]},
+      {"key": "inventory", "title": "보상으로 모아 직접 짜는 카드 덱", "sectionPath": ["4. 보상으로 모아 직접 짜는 카드 덱"]},
+      {"key": "behavior", "title": "플레이어의 움직임과 적·보스의 패턴", "sectionPath": ["5. 플레이어의 움직임과 적·보스의 패턴"]},
+      {"key": "checkpoint", "title": "죽어도 이어지는 방과 체크포인트", "sectionPath": ["6. 죽어도 이어지는 방과 체크포인트"]},
       {"key": "lifecycle", "title": "트러블슈팅", "sectionPath": ["7. 트러블슈팅"]}
     ],
     "slides": [
@@ -287,9 +287,9 @@
         "chapter": "combat",
         "layout": "visual",
         "tab": "흐름",
-        "title": {"text": "2.1 개요 — 기본 공격과 패링 판정", "verbatim": true},
+        "title": {"text": "2.1 개요 — 기본 공격과 패링으로 이어 가는 전투", "verbatim": true},
         "lead": {"text": "적의 공격이 닿기 직전에 패링 자세를 취하면, 판정 창이 열려 있는 동안 닿은 공격은 피해를 주지 않고 패링으로 처리됩니다.", "verbatim": true},
-        "sectionPath": ["2. 충돌 기반 전투와 패링", "2.1 개요 — 기본 공격과 패링 판정"],
+        "sectionPath": ["2. 패링이 카드로 이어지는 전투", "2.1 개요 — 기본 공격과 패링으로 이어 가는 전투"],
         "points": [
           {
             "label": "",
@@ -310,9 +310,9 @@
         "chapter": "combat",
         "layout": "code",
         "tab": "구현",
-        "title": {"text": "2.2 한 공격의 중복 타격 제어", "verbatim": true},
+        "title": {"text": "2.2 한 공격이 겹쳐 들어가지 않는 타격 기록", "verbatim": true},
         "lead": {"text": "여러 충돌체가 닿으면 같은 공격이 한 대상에게 여러 번 들어갈 수 있습니다.", "verbatim": true},
-        "sectionPath": ["2. 충돌 기반 전투와 패링", "2.2 한 공격의 중복 타격 제어"],
+        "sectionPath": ["2. 패링이 카드로 이어지는 전투", "2.2 한 공격이 겹쳐 들어가지 않는 타격 기록"],
         "points": [
           {"label": "", "text": "`HitTargetTracker.TryRegister()`는 허용 여부 판단과 기록을 한 번에 수행합니다.", "verbatim": true},
           {"label": "", "text": "단발 공격은 HashSet 추가 성공 여부를, 다단 공격은 마지막 타격 이후 시간을 사용합니다.", "verbatim": true},
@@ -326,9 +326,9 @@
         "chapter": "combat",
         "layout": "code",
         "tab": "구현",
-        "title": {"text": "2.3 패링 성공 시 피해 무효화", "verbatim": true},
+        "title": {"text": "2.3 피해를 막고 카드 게이지를 주는 패링", "verbatim": true},
         "lead": {"text": "처리 순서는 대상 검증 → TryRegister → Resolve → Applied일 때 타격 연출입니다.", "verbatim": false},
-        "sectionPath": ["2. 충돌 기반 전투와 패링", "2.3 패링 성공 시 피해 무효화"],
+        "sectionPath": ["2. 패링이 카드로 이어지는 전투", "2.3 피해를 막고 카드 게이지를 주는 패링"],
         "points": [
           {"label": "구현", "text": "패링은 피해 전달 전에 반환하지만 중복 기록 뒤에 발생합니다.", "verbatim": true},
           {
@@ -360,7 +360,7 @@
           "text": "패링이 성공하면 `PlayerController.SuccessParry()`가 패링 창을 닫고 카드 게이지 칸을 더한 뒤 `PlayParrySuccessEffects()`를 호출합니다.",
           "verbatim": true
         },
-        "sectionPath": ["2. 충돌 기반 전투와 패링", "2.4 체력바와 화면 연출", "패링 성공 연출 — 번쩍임·히트스톱·화면 흔들림"],
+        "sectionPath": ["2. 패링이 카드로 이어지는 전투", "2.4 체력과 타격감을 보여 주는 화면 연출", "패링 성공 연출 — 번쩍임·히트스톱·화면 흔들림"],
         "points": [{"label": "", "text": "히트스톱 중에도 조명 트윈과 카메라 흔들림 예약은 시간 배율을 무시하고 이어집니다.", "verbatim": true}],
         "visuals": [
           {
@@ -381,7 +381,7 @@
         "tab": "구현",
         "title": {"text": "죽음 선고 연출 — 화면 흑백 반전과 느려지는 시간", "verbatim": true},
         "lead": null,
-        "sectionPath": ["2. 충돌 기반 전투와 패링", "2.4 체력바와 화면 연출", "죽음 선고 연출 — 화면 흑백 반전과 느려지는 시간"],
+        "sectionPath": ["2. 패링이 카드로 이어지는 전투", "2.4 체력과 타격감을 보여 주는 화면 연출", "죽음 선고 연출 — 화면 흑백 반전과 느려지는 시간"],
         "points": [
           {
             "label": "",
@@ -417,7 +417,7 @@
         "tab": "선택",
         "title": {"text": "2.5 고민과 선택", "verbatim": true},
         "lead": {"text": "패링을 어떻게 판정할까 — 애니메이션 진행도에 맞춘 판정 창", "verbatim": true},
-        "sectionPath": ["2. 충돌 기반 전투와 패링", "2.5 고민과 선택"],
+        "sectionPath": ["2. 패링이 카드로 이어지는 전투", "2.5 고민과 선택"],
         "points": [
           {
             "label": "이유",
@@ -440,7 +440,7 @@
         "tab": "흐름",
         "title": {"text": "3.2 덱·손패·버림 더미를 도는 카드 순환", "verbatim": true},
         "lead": null,
-        "sectionPath": ["3. 카드 순환과 모션 연계 스킬", "3.2 덱·손패·버림 더미를 도는 카드 순환"],
+        "sectionPath": ["3. 덱에서 뽑아 모션에 맞춰 나가는 카드", "3.2 덱·손패·버림 더미를 도는 카드 순환"],
         "points": [
           {"label": "", "text": "게이지 충전 외에도 덱 초기화 여부, `CardHandUI.IsBusy`, 빈 슬롯 유무를 확인합니다.", "verbatim": true},
           {"label": "", "text": "드로우 시도 직전에 `BeginNextGaugeCycle()`을 호출해 다음 게이지 주기를 시작합니다.", "verbatim": true},
@@ -449,13 +449,40 @@
         "visuals": [{"kind": "mermaid", "n": 1, "fp": "flowchart TB"}]
       },
       {
+        "key": "gauge-overflow",
+        "chapter": "card",
+        "layout": "visual",
+        "tab": "구현",
+        "title": {"text": "3.2 덱·손패·버림 더미를 도는 카드 순환", "verbatim": true},
+        "lead": {"text": "패링 보상 `AddCells()`는 현재 게이지에 더한 칸이 최대치를 넘으면 `overflowCells`로 남깁니다.", "verbatim": true},
+        "sectionPath": ["3. 덱에서 뽑아 모션에 맞춰 나가는 카드", "3.2 덱·손패·버림 더미를 도는 카드 순환"],
+        "points": [
+          {"label": "", "text": "다음 드로우 주기의 `BeginNextGaugeCycle()`은 이 초과분을 가져와 게이지를 채운 상태로 재충전합니다.", "verbatim": true},
+          {
+            "label": "",
+            "text": "손패 상태 `CardHandState`(`CardHandOperation`의 Idle/Drawing/Using)는 드로우뿐 아니라 사용 연출 중에도 바쁨(`IsBusy`)으로 잡혀, 그동안 새로 뽑지 않습니다.",
+            "verbatim": true
+          }
+        ],
+        "visuals": [
+          {
+            "kind": "image",
+            "src": "images/card-draw.mp4",
+            "w": 1040,
+            "h": 780,
+            "caption": {"text": "패링 성공으로 카드 게이지가 차 Q 슬롯에 카드를 뽑는 장면", "verbatim": true}
+          }
+        ],
+        "edited": true
+      },
+      {
         "key": "card-exec",
         "chapter": "card",
         "layout": "visual",
         "tab": "구현",
-        "title": {"text": "3.3 사용 가능 확인과 모션에 맞춘 발동", "verbatim": true},
+        "title": {"text": "3.3 조건을 확인하고 모션에 맞춰 발동하는 카드", "verbatim": true},
         "lead": {"text": "효과를 입력 시점이 아니라 애니메이션 이벤트 시점에 실행하도록 나눈 이유는 연출입니다.", "verbatim": true},
-        "sectionPath": ["3. 카드 순환과 모션 연계 스킬", "3.3 사용 가능 확인과 모션에 맞춘 발동"],
+        "sectionPath": ["3. 덱에서 뽑아 모션에 맞춰 나가는 카드", "3.3 조건을 확인하고 모션에 맞춰 발동하는 카드"],
         "points": [
           {"label": "이유", "text": "시전 모션이 지나고 실제로 주문을 내뻗는 순간에 효과가 나가야 어색하지 않고 자연스럽다고 판단했습니다.", "verbatim": true},
           {"label": "구현", "text": "실행 시점에 타겟을 다시 찾기 때문에, 입력 시점과 애니메이션 발동 시점 사이에 적이 죽은 경우를 구분합니다.", "verbatim": true}
@@ -476,9 +503,9 @@
         "chapter": "card",
         "layout": "visual",
         "tab": "구현",
-        "title": {"text": "3.6 버프 중첩과 지속시간 갱신", "verbatim": true},
+        "title": {"text": "3.6 같으면 갱신하고 다르면 겹치는 버프", "verbatim": true},
         "lead": {"text": "단일 배율 필드 대신 `List<ActiveBuff>`로 활성 효과를 관리하도록 변경했습니다.", "verbatim": true},
-        "sectionPath": ["3. 카드 순환과 모션 연계 스킬", "3.6 버프 중첩과 지속시간 갱신"],
+        "sectionPath": ["3. 덱에서 뽑아 모션에 맞춰 나가는 카드", "3.6 같으면 갱신하고 다르면 겹치는 버프"],
         "points": [
           {"label": "", "text": "`BuffId + ActiveBuffType`이 같으면 새 항목을 쌓지 않고 값과 종료 시각을 Refresh합니다.", "verbatim": true},
           {"label": "", "text": "동일 버프 갱신은 남은 시간에 더하는 방식이 아니라 `현재 시각 + 새 지속시간`으로 종료 시점을 대체합니다.", "verbatim": true},
@@ -496,20 +523,14 @@
         "edited": true
       },
       {
-        "key": "gauge-overflow",
+        "key": "pool-reuse",
         "chapter": "card",
         "layout": "visual",
         "tab": "구현",
-        "title": {"text": "3.7 넘친 게이지와 투사체의 생성·반납", "verbatim": true},
-        "lead": {"text": "패링 보상 `AddCells()`는 현재 게이지에 더한 칸이 최대치를 넘으면 `overflowCells`로 남깁니다.", "verbatim": true},
-        "sectionPath": ["3. 카드 순환과 모션 연계 스킬", "3.7 넘친 게이지와 투사체의 생성·반납"],
+        "title": {"text": "3.7 다시 사용하는 투사체와 이펙트", "verbatim": true},
+        "lead": {"text": "투사체(보스 팔 투사체 제외)·효과·인벤토리 슬롯·버프 아이콘은 같은 `ComponentPool<T>`으로 비활성 객체를 다시 씁니다.", "verbatim": true},
+        "sectionPath": ["3. 덱에서 뽑아 모션에 맞춰 나가는 카드", "3.7 다시 사용하는 투사체와 이펙트"],
         "points": [
-          {"label": "", "text": "다음 드로우 주기의 `BeginNextGaugeCycle()`은 이 초과분을 가져와 게이지를 채운 상태로 재충전합니다.", "verbatim": true},
-          {
-            "label": "",
-            "text": "손패 상태 `CardHandState`(`CardHandOperation`의 Idle/Drawing/Using)는 드로우뿐 아니라 사용 연출 중에도 바쁨(`IsBusy`)으로 잡혀, 그동안 새로 뽑지 않습니다.",
-            "verbatim": true
-          },
           {
             "label": "",
             "text": "다시 켤 때 `OnEnable()`에서 상태를 초기화하고, 여유 객체가 없으면 새로 만듭니다(GC 개선량은 측정하지 않음).",
@@ -519,13 +540,12 @@
         "visuals": [
           {
             "kind": "image",
-            "src": "images/card-draw.mp4",
-            "w": 1040,
-            "h": 780,
-            "caption": {"text": "패링 성공으로 카드 게이지가 차 Q 슬롯에 카드를 뽑는 장면", "verbatim": true}
+            "src": "images/fireball-hit-crop.png",
+            "w": 900,
+            "h": 675,
+            "caption": {"text": "화염구 적중 이펙트", "verbatim": true}
           }
-        ],
-        "edited": true
+        ]
       },
       {
         "key": "card-data-choice",
@@ -534,7 +554,7 @@
         "tab": "선택",
         "title": {"text": "3.8 고민과 선택", "verbatim": true},
         "lead": null,
-        "sectionPath": ["3. 카드 순환과 모션 연계 스킬", "3.8 고민과 선택"],
+        "sectionPath": ["3. 덱에서 뽑아 모션에 맞춰 나가는 카드", "3.8 고민과 선택"],
         "points": [
           {"label": "이유", "text": "처음에는 카드마다 클래스를 하나씩 두는 방식을 생각했고, 데이터 형식은 1인 개발에 맞는 쪽을 골랐습니다.", "verbatim": true},
           {
@@ -551,9 +571,9 @@
         "chapter": "inventory",
         "layout": "code",
         "tab": "구현",
-        "title": {"text": "4.2 편성 규칙", "verbatim": true},
+        "title": {"text": "4.2 넣을 때와 닫을 때 확인하는 편성 규칙", "verbatim": true},
         "lead": null,
-        "sectionPath": ["4. 인벤토리·덱 편성과 카드 보상", "4.2 편성 규칙"],
+        "sectionPath": ["4. 보상으로 모아 직접 짜는 카드 덱", "4.2 넣을 때와 닫을 때 확인하는 편성 규칙"],
         "points": [
           {
             "label": "구현",
@@ -582,9 +602,9 @@
         "chapter": "inventory",
         "layout": "code",
         "tab": "구현",
-        "title": {"text": "4.3 보상 추첨", "verbatim": true},
+        "title": {"text": "4.3 카드마다 등급 가중치를 두는 보상 추첨", "verbatim": true},
         "lead": {"text": "보유 카드와 같은 보상 화면에서 이미 뽑힌 카드는 제외합니다.", "verbatim": true},
-        "sectionPath": ["4. 인벤토리·덱 편성과 카드 보상", "4.3 보상 추첨"],
+        "sectionPath": ["4. 보상으로 모아 직접 짜는 카드 덱", "4.3 카드마다 등급 가중치를 두는 보상 추첨"],
         "points": [
           {"label": "구현", "text": "추첨은 `RewardCardSelector`가 담당하고, 남은 카드 각각에 등급 가중치를 부여합니다.", "verbatim": true},
           {
@@ -615,12 +635,12 @@
         "chapter": "inventory",
         "layout": "visual",
         "tab": "구현",
-        "title": {"text": "4.4 전체 카드 목록과 더블 클릭·드래그 드롭 편성", "verbatim": true},
+        "title": {"text": "4.4 더블 클릭과 끌어 놓기 편성", "verbatim": true},
         "lead": {
           "text": "전체 카드 목록은 보유하되 덱에 없는 카드 → 덱에 있는 카드 → 미보유 카드 순으로 보여 주고, 더블 클릭과 끌어 놓기 모두 같은 추가·제거 함수로 편성합니다.",
           "verbatim": true
         },
-        "sectionPath": ["4. 인벤토리·덱 편성과 카드 보상", "4.4 전체 카드 목록과 더블 클릭·드래그 드롭 편성"],
+        "sectionPath": ["4. 보상으로 모아 직접 짜는 카드 덱", "4.4 더블 클릭과 끌어 놓기 편성"],
         "points": [
           {"label": "구현", "text": "슬롯과 드래그 아이콘은 재사용해 목록을 갱신할 때마다 전부 만들고 지우지 않습니다.", "verbatim": true},
           {"label": "", "text": "오벨리스크 밖에서 연 인벤토리는 열람 전용이라 편성 검사 없이 닫힙니다.", "verbatim": true},
@@ -646,9 +666,9 @@
         "chapter": "behavior",
         "layout": "visual",
         "tab": "흐름",
-        "title": {"text": "5.2 골렘 상태 전이", "verbatim": true},
+        "title": {"text": "5.2 거리에 따라 패턴을 고르는 골렘 보스", "verbatim": true},
         "lead": null,
-        "sectionPath": ["5. 플레이어 이동과 적·보스의 행동", "5.2 골렘 상태 전이"],
+        "sectionPath": ["5. 플레이어의 움직임과 적·보스의 패턴", "5.2 거리에 따라 패턴을 고르는 골렘 보스"],
         "points": [
           {
             "label": "구현",
@@ -679,9 +699,9 @@
         "chapter": "behavior",
         "layout": "screens",
         "tab": "구현",
-        "title": {"text": "5.3 모션에 맞춘 공격 판정", "verbatim": true},
+        "title": {"text": "5.3 골렘 보스의 공격 판정이 켜지고 꺼지는 시점", "verbatim": true},
         "lead": {"text": "`BossAnimationEventReceiver`는 근접 HitBox 활성/비활성과 팔 발사를 애니메이션 이벤트로 호출하는 진입점입니다.", "verbatim": true},
-        "sectionPath": ["5. 플레이어 이동과 적·보스의 행동", "5.3 모션에 맞춘 공격 판정"],
+        "sectionPath": ["5. 플레이어의 움직임과 적·보스의 패턴", "5.3 골렘 보스의 공격 판정이 켜지고 꺼지는 시점"],
         "points": [
           {
             "label": "",
@@ -714,7 +734,7 @@
         "tab": "구현",
         "title": {"text": "플레이어 이동과 벽·바닥 충돌", "verbatim": true},
         "lead": {"text": "방향·대시 쿨타임은 이동 런타임이, 달리기 자원은 SprintRuntime이 맡아 입력 차단·사망·리스폰에서 같은 초기화 진입점을 씁니다.", "verbatim": true},
-        "sectionPath": ["5. 플레이어 이동과 적·보스의 행동", "5.4 벽·바닥 충돌·콤보 입력 창·적 순찰", "플레이어 이동과 벽·바닥 충돌"],
+        "sectionPath": ["5. 플레이어의 움직임과 적·보스의 패턴", "5.4 그 밖의 이동·입력 창·일반 적 처리", "플레이어 이동과 벽·바닥 충돌"],
         "points": [
           {
             "label": "구현",
@@ -746,7 +766,7 @@
         "tab": "흐름",
         "title": {"text": "일반 적의 순찰·추적·공격", "verbatim": true},
         "lead": null,
-        "sectionPath": ["5. 플레이어 이동과 적·보스의 행동", "5.4 벽·바닥 충돌·콤보 입력 창·적 순찰", "일반 적의 순찰·추적·공격"],
+        "sectionPath": ["5. 플레이어의 움직임과 적·보스의 패턴", "5.4 그 밖의 이동·입력 창·일반 적 처리", "일반 적의 순찰·추적·공격"],
         "points": [
           {"label": "", "text": "Patrol은 출발 지점 A와 순찰 지점 B를 번갈아 목표로 사용하며, 목적지에 도착하면 잠시 Idle로 돌아갑니다.", "verbatim": true},
           {"label": "", "text": "추적과 공격이 한 상태(Attack) 안에 있어, 감지가 풀리기 전까지는 거리에 따라 쫓거나 공격하기를 반복합니다.", "verbatim": true}
@@ -761,7 +781,7 @@
         "tab": "선택",
         "title": {"text": "5.5 고민과 선택", "verbatim": true},
         "lead": {"text": "플레이어 이동을 어떻게 계산할까 — 물리 엔진 대신 직접 계산", "verbatim": true},
-        "sectionPath": ["5. 플레이어 이동과 적·보스의 행동", "5.5 고민과 선택"],
+        "sectionPath": ["5. 플레이어의 움직임과 적·보스의 패턴", "5.5 고민과 선택"],
         "points": [
           {
             "label": "이유",
@@ -789,7 +809,7 @@
         "tab": "흐름",
         "title": {"text": "6.1 개요 — 체크포인트 저장과 부활", "verbatim": true},
         "lead": {"text": "일반 방마다 체크포인트가 두 곳 있고(보스 방에는 없음), 플레이어가 체크포인트 영역에 들어서면 그 위치와 체력이 저장됩니다.", "verbatim": true},
-        "sectionPath": ["6. 방 전환과 체크포인트 복원", "6.1 개요 — 체크포인트 저장과 부활"],
+        "sectionPath": ["6. 죽어도 이어지는 방과 체크포인트", "6.1 개요 — 체크포인트 저장과 부활"],
         "points": [
           {"label": "기능", "text": "죽으면 화면이 어두워지고, 위 방향키를 누르면 마지막 체크포인트에서 저장된 체력으로 부활합니다.", "verbatim": true},
           {
@@ -806,12 +826,12 @@
         "chapter": "checkpoint",
         "layout": "visual",
         "tab": "흐름",
-        "title": {"text": "6.2 클리어한 방의 적 재생성 생략", "verbatim": true},
+        "title": {"text": "6.2 적 전멸과 보상 완료를 따로 기억하는 복귀", "verbatim": true},
         "lead": {
           "text": "적 전멸(Reward)과 보상 선택(Cleared)이 서로 다른 단계라서, 적을 모두 쓰러뜨린 뒤 돌아와도 보상 전이면 보상 단계부터 다시 시작합니다.",
           "verbatim": false
         },
-        "sectionPath": ["6. 방 전환과 체크포인트 복원", "6.2 클리어한 방의 적 재생성 생략"],
+        "sectionPath": ["6. 죽어도 이어지는 방과 체크포인트", "6.2 적 전멸과 보상 완료를 따로 기억하는 복귀"],
         "points": [
           {
             "label": "",
@@ -826,9 +846,9 @@
         "chapter": "checkpoint",
         "layout": "visual",
         "tab": "구현",
-        "title": {"text": "6.3 부활 시 체력·카드 초기화", "verbatim": true},
+        "title": {"text": "6.3 부활할 때 다시 맞추는 체력과 카드", "verbatim": true},
         "lead": {"text": "따라서 위치만 옮기는 복귀가 아니라 플레이어의 전투 상태도 함께 정리합니다.", "verbatim": true},
-        "sectionPath": ["6. 방 전환과 체크포인트 복원", "6.3 부활 시 체력·카드 초기화"],
+        "sectionPath": ["6. 죽어도 이어지는 방과 체크포인트", "6.3 부활할 때 다시 맞추는 체력과 카드"],
         "points": [
           {"label": "", "text": "사망·피격·스킬·패링 플래그를 초기화하고 이동 런타임의 복귀 초기화를 호출합니다.", "verbatim": true},
           {"label": "", "text": "Animator를 재바인딩하고 체력을 복원합니다.", "verbatim": true},
@@ -871,9 +891,9 @@
         "chapter": "lifecycle",
         "layout": "problem",
         "tab": "문제 해결",
-        "title": {"text": "7.2 이전 씬의 체크포인트로 돌아가면 첫 방부터 다시 시작", "verbatim": true},
+        "title": {"text": "7.2 이전 씬의 체크포인트로 돌아가면 첫 방부터 다시 시작되던 문제", "verbatim": true},
         "lead": null,
-        "sectionPath": ["7. 트러블슈팅", "7.2 이전 씬의 체크포인트로 돌아가면 첫 방부터 다시 시작"],
+        "sectionPath": ["7. 트러블슈팅", "7.2 이전 씬의 체크포인트로 돌아가면 첫 방부터 다시 시작되던 문제"],
         "points": [
           {
             "label": "증상",
@@ -1026,9 +1046,9 @@
         "chapter": "combat",
         "layout": "visual",
         "tab": "흐름",
-        "title": {"text": "2.1 개요 — 기본 공격과 패링 판정", "verbatim": true},
+        "title": {"text": "2.1 개요 — 기본 공격과 패링으로 이어 가는 전투", "verbatim": true},
         "lead": {"text": "적의 공격이 닿기 직전에 패링 자세를 취하면, 판정 창이 열려 있는 동안 닿은 공격은 피해를 주지 않고 패링으로 처리됩니다.", "verbatim": true},
-        "sectionPath": ["2. 충돌 기반 전투와 패링", "2.1 개요 — 기본 공격과 패링 판정"],
+        "sectionPath": ["2. 패링이 카드로 이어지는 전투", "2.1 개요 — 기본 공격과 패링으로 이어 가는 전투"],
         "points": [
           {
             "label": "",
@@ -1048,9 +1068,9 @@
         "chapter": "combat",
         "layout": "code",
         "tab": "구현",
-        "title": {"text": "2.2 한 공격의 중복 타격 제어", "verbatim": true},
+        "title": {"text": "2.2 한 공격이 겹쳐 들어가지 않는 타격 기록", "verbatim": true},
         "lead": {"text": "여러 충돌체가 닿으면 같은 공격이 한 대상에게 여러 번 들어갈 수 있습니다.", "verbatim": true},
-        "sectionPath": ["2. 충돌 기반 전투와 패링", "2.2 한 공격의 중복 타격 제어"],
+        "sectionPath": ["2. 패링이 카드로 이어지는 전투", "2.2 한 공격이 겹쳐 들어가지 않는 타격 기록"],
         "points": [
           {"label": "", "text": "`HitTargetTracker.TryRegister()`는 허용 여부 판단과 기록을 한 번에 수행합니다.", "verbatim": true},
           {"label": "", "text": "단발 공격은 HashSet 추가 성공 여부를, 다단 공격은 마지막 타격 이후 시간을 사용합니다.", "verbatim": true},
@@ -1063,9 +1083,9 @@
         "chapter": "combat",
         "layout": "code",
         "tab": "구현",
-        "title": {"text": "2.3 패링 성공 시 피해 무효화", "verbatim": true},
+        "title": {"text": "2.3 피해를 막고 카드 게이지를 주는 패링", "verbatim": true},
         "lead": {"text": "처리 순서는 대상 검증 → TryRegister → Resolve → Applied일 때 타격 연출입니다.", "verbatim": false},
-        "sectionPath": ["2. 충돌 기반 전투와 패링", "2.3 패링 성공 시 피해 무효화"],
+        "sectionPath": ["2. 패링이 카드로 이어지는 전투", "2.3 피해를 막고 카드 게이지를 주는 패링"],
         "points": [
           {"label": "구현", "text": "패링은 피해 전달 전에 반환하지만 중복 기록 뒤에 발생합니다.", "verbatim": true},
           {
@@ -1101,7 +1121,7 @@
           "text": "패링이 성공하면 `PlayerController.SuccessParry()`가 패링 창을 닫고 카드 게이지 칸을 더한 뒤 `PlayParrySuccessEffects()`를 호출합니다.",
           "verbatim": true
         },
-        "sectionPath": ["2. 충돌 기반 전투와 패링", "2.4 체력바와 화면 연출", "패링 성공 연출 — 번쩍임·히트스톱·화면 흔들림"],
+        "sectionPath": ["2. 패링이 카드로 이어지는 전투", "2.4 체력과 타격감을 보여 주는 화면 연출", "패링 성공 연출 — 번쩍임·히트스톱·화면 흔들림"],
         "points": [{"label": "", "text": "히트스톱 중에도 조명 트윈과 카메라 흔들림 예약은 시간 배율을 무시하고 이어집니다.", "verbatim": true}],
         "visuals": [
           {
@@ -1121,7 +1141,7 @@
         "tab": "구현",
         "title": {"text": "죽음 선고 연출 — 화면 흑백 반전과 느려지는 시간", "verbatim": true},
         "lead": null,
-        "sectionPath": ["2. 충돌 기반 전투와 패링", "2.4 체력바와 화면 연출", "죽음 선고 연출 — 화면 흑백 반전과 느려지는 시간"],
+        "sectionPath": ["2. 패링이 카드로 이어지는 전투", "2.4 체력과 타격감을 보여 주는 화면 연출", "죽음 선고 연출 — 화면 흑백 반전과 느려지는 시간"],
         "points": [
           {
             "label": "",
@@ -1156,7 +1176,7 @@
         "tab": "선택",
         "title": {"text": "2.5 고민과 선택", "verbatim": true},
         "lead": {"text": "패링을 어떻게 판정할까 — 애니메이션 진행도에 맞춘 판정 창", "verbatim": true},
-        "sectionPath": ["2. 충돌 기반 전투와 패링", "2.5 고민과 선택"],
+        "sectionPath": ["2. 패링이 카드로 이어지는 전투", "2.5 고민과 선택"],
         "points": [
           {
             "label": "이유",
@@ -1178,7 +1198,7 @@
         "tab": "흐름",
         "title": {"text": "3.2 덱·손패·버림 더미를 도는 카드 순환", "verbatim": true},
         "lead": null,
-        "sectionPath": ["3. 카드 순환과 모션 연계 스킬", "3.2 덱·손패·버림 더미를 도는 카드 순환"],
+        "sectionPath": ["3. 덱에서 뽑아 모션에 맞춰 나가는 카드", "3.2 덱·손패·버림 더미를 도는 카드 순환"],
         "points": [
           {"label": "", "text": "게이지 충전 외에도 덱 초기화 여부, `CardHandUI.IsBusy`, 빈 슬롯 유무를 확인합니다.", "verbatim": true},
           {"label": "", "text": "드로우 시도 직전에 `BeginNextGaugeCycle()`을 호출해 다음 게이지 주기를 시작합니다.", "verbatim": true},
@@ -1187,13 +1207,39 @@
         "visuals": [{"kind": "mermaid", "n": 1, "fp": "flowchart TB"}]
       },
       {
+        "key": "gauge-overflow",
+        "chapter": "card",
+        "layout": "visual",
+        "tab": "구현",
+        "title": {"text": "3.2 덱·손패·버림 더미를 도는 카드 순환", "verbatim": true},
+        "lead": {"text": "패링 보상 `AddCells()`는 현재 게이지에 더한 칸이 최대치를 넘으면 `overflowCells`로 남깁니다.", "verbatim": true},
+        "sectionPath": ["3. 덱에서 뽑아 모션에 맞춰 나가는 카드", "3.2 덱·손패·버림 더미를 도는 카드 순환"],
+        "points": [
+          {"label": "", "text": "다음 드로우 주기의 `BeginNextGaugeCycle()`은 이 초과분을 가져와 게이지를 채운 상태로 재충전합니다.", "verbatim": true},
+          {
+            "label": "",
+            "text": "손패 상태 `CardHandState`(`CardHandOperation`의 Idle/Drawing/Using)는 드로우뿐 아니라 사용 연출 중에도 바쁨(`IsBusy`)으로 잡혀, 그동안 새로 뽑지 않습니다.",
+            "verbatim": true
+          }
+        ],
+        "visuals": [
+          {
+            "kind": "image",
+            "src": "images/card-draw.mp4",
+            "w": 1040,
+            "h": 780,
+            "caption": {"text": "패링 성공으로 카드 게이지가 차 Q 슬롯에 카드를 뽑는 장면", "verbatim": true}
+          }
+        ]
+      },
+      {
         "key": "card-exec",
         "chapter": "card",
         "layout": "visual",
         "tab": "구현",
-        "title": {"text": "3.3 사용 가능 확인과 모션에 맞춘 발동", "verbatim": true},
+        "title": {"text": "3.3 조건을 확인하고 모션에 맞춰 발동하는 카드", "verbatim": true},
         "lead": {"text": "효과를 입력 시점이 아니라 애니메이션 이벤트 시점에 실행하도록 나눈 이유는 연출입니다.", "verbatim": true},
-        "sectionPath": ["3. 카드 순환과 모션 연계 스킬", "3.3 사용 가능 확인과 모션에 맞춘 발동"],
+        "sectionPath": ["3. 덱에서 뽑아 모션에 맞춰 나가는 카드", "3.3 조건을 확인하고 모션에 맞춰 발동하는 카드"],
         "points": [
           {"label": "이유", "text": "시전 모션이 지나고 실제로 주문을 내뻗는 순간에 효과가 나가야 어색하지 않고 자연스럽다고 판단했습니다.", "verbatim": true},
           {"label": "구현", "text": "실행 시점에 타겟을 다시 찾기 때문에, 입력 시점과 애니메이션 발동 시점 사이에 적이 죽은 경우를 구분합니다.", "verbatim": true}
@@ -1213,9 +1259,9 @@
         "chapter": "card",
         "layout": "visual",
         "tab": "구현",
-        "title": {"text": "3.6 버프 중첩과 지속시간 갱신", "verbatim": true},
+        "title": {"text": "3.6 같으면 갱신하고 다르면 겹치는 버프", "verbatim": true},
         "lead": {"text": "단일 배율 필드 대신 `List<ActiveBuff>`로 활성 효과를 관리하도록 변경했습니다.", "verbatim": true},
-        "sectionPath": ["3. 카드 순환과 모션 연계 스킬", "3.6 버프 중첩과 지속시간 갱신"],
+        "sectionPath": ["3. 덱에서 뽑아 모션에 맞춰 나가는 카드", "3.6 같으면 갱신하고 다르면 겹치는 버프"],
         "points": [
           {"label": "", "text": "`BuffId + ActiveBuffType`이 같으면 새 항목을 쌓지 않고 값과 종료 시각을 Refresh합니다.", "verbatim": true},
           {"label": "", "text": "동일 버프 갱신은 남은 시간에 더하는 방식이 아니라 `현재 시각 + 새 지속시간`으로 종료 시점을 대체합니다.", "verbatim": true},
@@ -1232,20 +1278,14 @@
         ]
       },
       {
-        "key": "gauge-overflow",
+        "key": "pool-reuse",
         "chapter": "card",
         "layout": "visual",
         "tab": "구현",
-        "title": {"text": "3.7 넘친 게이지와 투사체의 생성·반납", "verbatim": true},
-        "lead": {"text": "패링 보상 `AddCells()`는 현재 게이지에 더한 칸이 최대치를 넘으면 `overflowCells`로 남깁니다.", "verbatim": true},
-        "sectionPath": ["3. 카드 순환과 모션 연계 스킬", "3.7 넘친 게이지와 투사체의 생성·반납"],
+        "title": {"text": "3.7 다시 사용하는 투사체와 이펙트", "verbatim": true},
+        "lead": {"text": "투사체(보스 팔 투사체 제외)·효과·인벤토리 슬롯·버프 아이콘은 같은 `ComponentPool<T>`으로 비활성 객체를 다시 씁니다.", "verbatim": true},
+        "sectionPath": ["3. 덱에서 뽑아 모션에 맞춰 나가는 카드", "3.7 다시 사용하는 투사체와 이펙트"],
         "points": [
-          {"label": "", "text": "다음 드로우 주기의 `BeginNextGaugeCycle()`은 이 초과분을 가져와 게이지를 채운 상태로 재충전합니다.", "verbatim": true},
-          {
-            "label": "",
-            "text": "손패 상태 `CardHandState`(`CardHandOperation`의 Idle/Drawing/Using)는 드로우뿐 아니라 사용 연출 중에도 바쁨(`IsBusy`)으로 잡혀, 그동안 새로 뽑지 않습니다.",
-            "verbatim": true
-          },
           {
             "label": "",
             "text": "다시 켤 때 `OnEnable()`에서 상태를 초기화하고, 여유 객체가 없으면 새로 만듭니다(GC 개선량은 측정하지 않음).",
@@ -1255,10 +1295,10 @@
         "visuals": [
           {
             "kind": "image",
-            "src": "images/card-draw.mp4",
-            "w": 1040,
-            "h": 780,
-            "caption": {"text": "패링 성공으로 카드 게이지가 차 Q 슬롯에 카드를 뽑는 장면", "verbatim": true}
+            "src": "images/fireball-hit-crop.png",
+            "w": 900,
+            "h": 675,
+            "caption": {"text": "화염구 적중 이펙트", "verbatim": true}
           }
         ]
       },
@@ -1269,7 +1309,7 @@
         "tab": "선택",
         "title": {"text": "3.8 고민과 선택", "verbatim": true},
         "lead": null,
-        "sectionPath": ["3. 카드 순환과 모션 연계 스킬", "3.8 고민과 선택"],
+        "sectionPath": ["3. 덱에서 뽑아 모션에 맞춰 나가는 카드", "3.8 고민과 선택"],
         "points": [
           {"label": "이유", "text": "처음에는 카드마다 클래스를 하나씩 두는 방식을 생각했고, 데이터 형식은 1인 개발에 맞는 쪽을 골랐습니다.", "verbatim": true},
           {
@@ -1285,9 +1325,9 @@
         "chapter": "inventory",
         "layout": "code",
         "tab": "구현",
-        "title": {"text": "4.2 편성 규칙", "verbatim": true},
+        "title": {"text": "4.2 넣을 때와 닫을 때 확인하는 편성 규칙", "verbatim": true},
         "lead": null,
-        "sectionPath": ["4. 인벤토리·덱 편성과 카드 보상", "4.2 편성 규칙"],
+        "sectionPath": ["4. 보상으로 모아 직접 짜는 카드 덱", "4.2 넣을 때와 닫을 때 확인하는 편성 규칙"],
         "points": [
           {
             "label": "구현",
@@ -1316,9 +1356,9 @@
         "chapter": "inventory",
         "layout": "code",
         "tab": "구현",
-        "title": {"text": "4.3 보상 추첨", "verbatim": true},
+        "title": {"text": "4.3 카드마다 등급 가중치를 두는 보상 추첨", "verbatim": true},
         "lead": {"text": "보유 카드와 같은 보상 화면에서 이미 뽑힌 카드는 제외합니다.", "verbatim": true},
-        "sectionPath": ["4. 인벤토리·덱 편성과 카드 보상", "4.3 보상 추첨"],
+        "sectionPath": ["4. 보상으로 모아 직접 짜는 카드 덱", "4.3 카드마다 등급 가중치를 두는 보상 추첨"],
         "points": [
           {"label": "구현", "text": "추첨은 `RewardCardSelector`가 담당하고, 남은 카드 각각에 등급 가중치를 부여합니다.", "verbatim": true},
           {
@@ -1348,12 +1388,12 @@
         "chapter": "inventory",
         "layout": "visual",
         "tab": "구현",
-        "title": {"text": "4.4 전체 카드 목록과 더블 클릭·드래그 드롭 편성", "verbatim": true},
+        "title": {"text": "4.4 더블 클릭과 끌어 놓기 편성", "verbatim": true},
         "lead": {
           "text": "전체 카드 목록은 보유하되 덱에 없는 카드 → 덱에 있는 카드 → 미보유 카드 순으로 보여 주고, 더블 클릭과 끌어 놓기 모두 같은 추가·제거 함수로 편성합니다.",
           "verbatim": true
         },
-        "sectionPath": ["4. 인벤토리·덱 편성과 카드 보상", "4.4 전체 카드 목록과 더블 클릭·드래그 드롭 편성"],
+        "sectionPath": ["4. 보상으로 모아 직접 짜는 카드 덱", "4.4 더블 클릭과 끌어 놓기 편성"],
         "points": [
           {"label": "구현", "text": "슬롯과 드래그 아이콘은 재사용해 목록을 갱신할 때마다 전부 만들고 지우지 않습니다.", "verbatim": true},
           {"label": "", "text": "오벨리스크 밖에서 연 인벤토리는 열람 전용이라 편성 검사 없이 닫힙니다.", "verbatim": true},
@@ -1378,9 +1418,9 @@
         "chapter": "behavior",
         "layout": "visual",
         "tab": "흐름",
-        "title": {"text": "5.2 골렘 상태 전이", "verbatim": true},
+        "title": {"text": "5.2 거리에 따라 패턴을 고르는 골렘 보스", "verbatim": true},
         "lead": null,
-        "sectionPath": ["5. 플레이어 이동과 적·보스의 행동", "5.2 골렘 상태 전이"],
+        "sectionPath": ["5. 플레이어의 움직임과 적·보스의 패턴", "5.2 거리에 따라 패턴을 고르는 골렘 보스"],
         "points": [
           {
             "label": "구현",
@@ -1410,9 +1450,9 @@
         "chapter": "behavior",
         "layout": "screens",
         "tab": "구현",
-        "title": {"text": "5.3 모션에 맞춘 공격 판정", "verbatim": true},
+        "title": {"text": "5.3 골렘 보스의 공격 판정이 켜지고 꺼지는 시점", "verbatim": true},
         "lead": {"text": "`BossAnimationEventReceiver`는 근접 HitBox 활성/비활성과 팔 발사를 애니메이션 이벤트로 호출하는 진입점입니다.", "verbatim": true},
-        "sectionPath": ["5. 플레이어 이동과 적·보스의 행동", "5.3 모션에 맞춘 공격 판정"],
+        "sectionPath": ["5. 플레이어의 움직임과 적·보스의 패턴", "5.3 골렘 보스의 공격 판정이 켜지고 꺼지는 시점"],
         "points": [
           {
             "label": "",
@@ -1444,7 +1484,7 @@
         "tab": "구현",
         "title": {"text": "플레이어 이동과 벽·바닥 충돌", "verbatim": true},
         "lead": {"text": "방향·대시 쿨타임은 이동 런타임이, 달리기 자원은 SprintRuntime이 맡아 입력 차단·사망·리스폰에서 같은 초기화 진입점을 씁니다.", "verbatim": true},
-        "sectionPath": ["5. 플레이어 이동과 적·보스의 행동", "5.4 벽·바닥 충돌·콤보 입력 창·적 순찰", "플레이어 이동과 벽·바닥 충돌"],
+        "sectionPath": ["5. 플레이어의 움직임과 적·보스의 패턴", "5.4 그 밖의 이동·입력 창·일반 적 처리", "플레이어 이동과 벽·바닥 충돌"],
         "points": [
           {
             "label": "구현",
@@ -1476,7 +1516,7 @@
         "tab": "흐름",
         "title": {"text": "일반 적의 순찰·추적·공격", "verbatim": true},
         "lead": null,
-        "sectionPath": ["5. 플레이어 이동과 적·보스의 행동", "5.4 벽·바닥 충돌·콤보 입력 창·적 순찰", "일반 적의 순찰·추적·공격"],
+        "sectionPath": ["5. 플레이어의 움직임과 적·보스의 패턴", "5.4 그 밖의 이동·입력 창·일반 적 처리", "일반 적의 순찰·추적·공격"],
         "points": [
           {"label": "", "text": "Patrol은 출발 지점 A와 순찰 지점 B를 번갈아 목표로 사용하며, 목적지에 도착하면 잠시 Idle로 돌아갑니다.", "verbatim": true},
           {"label": "", "text": "추적과 공격이 한 상태(Attack) 안에 있어, 감지가 풀리기 전까지는 거리에 따라 쫓거나 공격하기를 반복합니다.", "verbatim": true}
@@ -1490,7 +1530,7 @@
         "tab": "선택",
         "title": {"text": "5.5 고민과 선택", "verbatim": true},
         "lead": {"text": "플레이어 이동을 어떻게 계산할까 — 물리 엔진 대신 직접 계산", "verbatim": true},
-        "sectionPath": ["5. 플레이어 이동과 적·보스의 행동", "5.5 고민과 선택"],
+        "sectionPath": ["5. 플레이어의 움직임과 적·보스의 패턴", "5.5 고민과 선택"],
         "points": [
           {
             "label": "이유",
@@ -1517,7 +1557,7 @@
         "tab": "흐름",
         "title": {"text": "6.1 개요 — 체크포인트 저장과 부활", "verbatim": true},
         "lead": {"text": "일반 방마다 체크포인트가 두 곳 있고(보스 방에는 없음), 플레이어가 체크포인트 영역에 들어서면 그 위치와 체력이 저장됩니다.", "verbatim": true},
-        "sectionPath": ["6. 방 전환과 체크포인트 복원", "6.1 개요 — 체크포인트 저장과 부활"],
+        "sectionPath": ["6. 죽어도 이어지는 방과 체크포인트", "6.1 개요 — 체크포인트 저장과 부활"],
         "points": [
           {"label": "기능", "text": "죽으면 화면이 어두워지고, 위 방향키를 누르면 마지막 체크포인트에서 저장된 체력으로 부활합니다.", "verbatim": true},
           {
@@ -1533,12 +1573,12 @@
         "chapter": "checkpoint",
         "layout": "visual",
         "tab": "흐름",
-        "title": {"text": "6.2 클리어한 방의 적 재생성 생략", "verbatim": true},
+        "title": {"text": "6.2 적 전멸과 보상 완료를 따로 기억하는 복귀", "verbatim": true},
         "lead": {
           "text": "적 전멸(Reward)과 보상 선택(Cleared)이 서로 다른 단계라서, 적을 모두 쓰러뜨린 뒤 돌아와도 보상 전이면 보상 단계부터 다시 시작합니다.",
           "verbatim": false
         },
-        "sectionPath": ["6. 방 전환과 체크포인트 복원", "6.2 클리어한 방의 적 재생성 생략"],
+        "sectionPath": ["6. 죽어도 이어지는 방과 체크포인트", "6.2 적 전멸과 보상 완료를 따로 기억하는 복귀"],
         "points": [
           {
             "label": "",
@@ -1553,9 +1593,9 @@
         "chapter": "checkpoint",
         "layout": "visual",
         "tab": "구현",
-        "title": {"text": "6.3 부활 시 체력·카드 초기화", "verbatim": true},
+        "title": {"text": "6.3 부활할 때 다시 맞추는 체력과 카드", "verbatim": true},
         "lead": {"text": "따라서 위치만 옮기는 복귀가 아니라 플레이어의 전투 상태도 함께 정리합니다.", "verbatim": true},
-        "sectionPath": ["6. 방 전환과 체크포인트 복원", "6.3 부활 시 체력·카드 초기화"],
+        "sectionPath": ["6. 죽어도 이어지는 방과 체크포인트", "6.3 부활할 때 다시 맞추는 체력과 카드"],
         "points": [
           {"label": "", "text": "사망·피격·스킬·패링 플래그를 초기화하고 이동 런타임의 복귀 초기화를 호출합니다.", "verbatim": true},
           {"label": "", "text": "Animator를 재바인딩하고 체력을 복원합니다.", "verbatim": true},
@@ -1596,9 +1636,9 @@
         "chapter": "lifecycle",
         "layout": "problem",
         "tab": "문제 해결",
-        "title": {"text": "7.2 이전 씬의 체크포인트로 돌아가면 첫 방부터 다시 시작", "verbatim": true},
+        "title": {"text": "7.2 이전 씬의 체크포인트로 돌아가면 첫 방부터 다시 시작되던 문제", "verbatim": true},
         "lead": null,
-        "sectionPath": ["7. 트러블슈팅", "7.2 이전 씬의 체크포인트로 돌아가면 첫 방부터 다시 시작"],
+        "sectionPath": ["7. 트러블슈팅", "7.2 이전 씬의 체크포인트로 돌아가면 첫 방부터 다시 시작되던 문제"],
         "points": [
           {
             "label": "증상",
@@ -1663,6 +1703,6 @@
         "visuals": []
       }
     ],
-    "applied": "e5c4ab62fa47347e"
+    "applied": "451f377a8abc943e"
   }
 }

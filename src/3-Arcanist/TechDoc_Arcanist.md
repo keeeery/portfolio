@@ -6,11 +6,11 @@
 
 | 구분 | 시스템 | 핵심 내용 | 절 |
 |---|---|---|---|
-| 핵심 A | 전투와 패링 | 충돌 판정, 중복 타격 방지, 피해 전달, 패링 보상 — HitBox/HurtBox, 중재자 | §2 · §7.1 |
-| 핵심 B | 카드 전투 | 덱 순환, 사용 가능 조건, 모션 후 효과 실행 — ScriptableObject, 실행 컨텍스트 | §3 |
-| 핵심 C | 인벤토리와 보상 | 보유 목록·편성 덱 구분, 편성 제약, 보상 추첨 — 변경 이벤트, 카드별 가중치 | §4 |
-| 보조 D | 이동과 AI | 이동 자원·연출, 일반 적 감지·상태·반응, 골렘 패턴 — 런타임 책임 분리, 상태 머신 | §5 |
-| 보조 E | 방과 체크포인트 | 방 로드, 사망 복구, 클리어 여부에 따른 적 재생성 — ID 기반 복원, 코루틴 | §6 · §7.2 · §7.3 |
+| 핵심 A | 패링이 카드로 이어지는 전투 | 충돌 판정, 중복 타격 방지, 피해 전달, 패링 보상 — HitBox/HurtBox, 중재자 | §2 · §7.1 |
+| 핵심 B | 덱에서 뽑아 모션에 맞춰 나가는 카드 | 덱 순환, 사용 가능 조건, 모션 후 효과 실행 — ScriptableObject, 실행 컨텍스트 | §3 |
+| 핵심 C | 보상으로 모아 직접 짜는 카드 덱 | 보유 목록·편성 덱 구분, 편성 제약, 보상 추첨 — 변경 이벤트, 카드별 가중치 | §4 |
+| 보조 D | 플레이어의 움직임과 적·보스의 패턴 | 이동 자원·연출, 일반 적 감지·상태·반응, 골렘 보스 패턴 — 런타임 책임 분리, 상태 머신 | §5 |
+| 보조 E | 죽어도 이어지는 방과 체크포인트 | 방 로드, 사망 복구, 클리어 여부에 따른 적 재생성 — ID 기반 복원, 코루틴 | §6 · §7.2 · §7.3 |
 
 ---
 
@@ -127,18 +127,18 @@ flowchart TB
 
 이 문서에서 깊게 다루는 것은 세 가지입니다.
 
-1. **전투와 패링(§2):** 충돌 판정과 중복 타격 방지, 피해 전달, 패링에 성공하면 피해를 막고 카드 게이지를 주는 연결을 다룹니다.
-2. **카드 순환과 스킬(§3):** 덱·손패·버림 더미의 순환과 사용 가능 조건, 모션에 맞춘 효과 발동을 다룹니다.
-3. **인벤토리·덱 편성과 카드 보상(§4):** 보유 목록과 편성 덱의 분리, 편성 규칙 검사, 카드별 등급 가중치로 뽑는 보상 추첨을 다룹니다.
+1. **패링이 카드로 이어지는 전투(§2):** 충돌 판정과 중복 타격 방지, 피해 전달, 패링에 성공하면 피해를 막고 카드 게이지를 주는 연결을 다룹니다.
+2. **덱에서 뽑아 모션에 맞춰 나가는 카드(§3):** 덱·손패·버림 더미의 순환과 사용 가능 조건, 모션에 맞춘 효과 발동을 다룹니다.
+3. **보상으로 모아 직접 짜는 카드 덱(§4):** 보유 목록과 편성 덱의 분리, 편성 규칙 검사, 카드별 등급 가중치로 뽑는 보상 추첨을 다룹니다.
 
 이동·적 행동(§5)과 방 전환·체크포인트 복원(§6)은 짧게 다룹니다.
 트러블슈팅(§7)에는 전투와 방 복원에서 겪은 문제를 모았습니다.
 
 ---
 
-## 2. 충돌 기반 전투와 패링
+## 2. 패링이 카드로 이어지는 전투
 
-### 2.1 개요 — 기본 공격과 패링 판정
+### 2.1 개요 — 기본 공격과 패링으로 이어 가는 전투
 
 플레이어는 D로 기본 공격을 하고, 공격 모션 중간에 D를 다시 누르면 다음 공격으로 이어집니다.
 적의 공격이 닿기 직전에 패링 자세를 취하면, 판정 창이 열려 있는 동안 닿은 공격은 피해를 주지 않고 패링으로 처리됩니다.
@@ -178,7 +178,7 @@ HitResolver는 넉백·스턴을, HitBox는 피격 FX와 타격 연출을 담당
 
 소스: [HitBox.cs](https://github.com/keeeery/Arcanist/blob/main/Assets/02.%20Scripts/03.%20CombatSystem/HitBox.cs), [HitResolver.cs](https://github.com/keeeery/Arcanist/blob/main/Assets/02.%20Scripts/03.%20CombatSystem/HitResolver.cs), [HitTargetTracker.cs](https://github.com/keeeery/Arcanist/blob/main/Assets/02.%20Scripts/03.%20CombatSystem/HitTargetTracker.cs).
 
-### 2.2 한 공격의 중복 타격 제어
+### 2.2 한 공격이 겹쳐 들어가지 않는 타격 기록
 
 여러 충돌체가 닿으면 같은 공격이 한 대상에게 여러 번 들어갈 수 있습니다. 아래 코드는 단발 공격은 대상마다 한 번만, 다단 공격은 정해진 간격마다 다시 맞도록 거르는 부분입니다.
 
@@ -199,7 +199,7 @@ return true;
 단발 공격은 HashSet 추가 성공 여부를, 다단 공격은 마지막 타격 이후 시간을 사용합니다.
 `HitBox.OnEnable/Initialize`에서 기록을 비워 풀 재사용 시 이전 공격의 기록이 남지 않게 합니다.
 
-### 2.3 패링 성공 시 피해 무효화
+### 2.3 피해를 막고 카드 게이지를 주는 패링
 
 ![패링 성공 순간의 이펙트](images/parry-combat-zoom.png)
 
@@ -229,7 +229,7 @@ if (playerController != null && playerController.IsParryWindowOpen)
 Applied가 아니면 일반 피격 FX·히트스톱·카메라 흔들림·적중 폭발 경로로 진행하지 않습니다.
 넉백·스턴은 수신자의 `CanReceiveKnockback/CanReceiveStun`을 확인하며, 스턴은 `IStunnable.ApplyStun()`으로 호출합니다.
 
-### 2.4 체력바와 화면 연출
+### 2.4 체력과 타격감을 보여 주는 화면 연출
 
 ![피격 직후의 체력 바 — 즉시 줄어든 원본 체력 바(흰색)와 뒤따라 줄어드는 지연 바(회색)](images/hp-bar-delay.png)
 
@@ -303,21 +303,23 @@ DOTween으로 코드 반복은 줄었지만, 트윈 대상의 상태 초기화�
 
 ---
 
-## 3. 카드 순환과 모션 연계 스킬
+## 3. 덱에서 뽑아 모션에 맞춰 나가는 카드
 
-### 3.1 개요 — Q/W/E 슬롯과 카드 게이지
+### 3.1 개요 — 게이지로 뽑아 Q/W/E로 사용하는 카드
 
 ![Q/W/E 카드 슬롯 — 게이지가 차면 빈 슬롯에 카드가 들어오고, 키를 누르면 카드가 사용되어 슬롯이 비워짐](images/card-slots.mp4)
 
 화면 아래의 Q/W/E 슬롯에 카드가 한 장씩 들어옵니다.
-카드 게이지는 시간이 지나면 차고 패링에 성공하면 더 빨리 차며(§2), 가득 차면 편성한 덱에서 카드 1장을 빈 슬롯으로 뽑습니다.
-슬롯의 키를 누르면 플레이어가 그 카드의 모션을 취하고, 모션 중 정해진 순간에 효과가 나갑니다.
+**카드 게이지는 시간이 지나면 1칸**씩 차고 **패링에 성공하면 3칸**이 차오르며(§2), **5칸이 가득 차면 편성한 덱에서 카드 1장**을 빈 슬롯으로 뽑습니다.
+
+슬롯의 키를 누르면 플레이어가 그 카드의 모션을 취하고, **모션 중 정해진 순간에** 효과가 나갑니다.
 공격 카드는 앞으로 날아가거나, 가장 우선순위가 높은 적의 위치나 시전한 자리에 생기고, 버프 카드는 일정 시간 능력치를 바꾸며 화면 왼쪽 위에 아이콘으로 표시됩니다.
+
 대상이 필요한 카드는 노릴 적이 없으면, 회복 카드는 회복할 수 없는 상태면 사용되지 않습니다.
 어떤 카드가 손에 들어오는지는 편성한 덱에 따라 달라지므로, 보상으로 얻은 카드로 덱을 바꾸면 전투 방식도 달라집니다(§4).
 
-카드 시스템은 보유 카드·편성 덱과 전투 중 카드 위치를 나누고, 사용 조건 검증과 실제 효과 발동을 분리합니다.
-카드 데이터는 ScriptableObject로 정의하고 실행 시 플레이어·생성 위치·방향·타겟을 전달합니다.
+**카드 시스템은 보유 카드·편성 덱과 전투 중 카드 위치를 나누고, 사용 조건 검증과 실제 효과 발동을 분리**합니다.
+**카드 데이터는 ScriptableObject로 정의**하고 **실행 시 플레이어·생성 위치·방향·타겟을 전달**합니다.
 
 `CardData`는 ID·이름·아이콘·분류·등급·모션 트리거·효과 참조를 보유합니다.
 `CardEffect`는 `Execute(CardEffectContext)` 계약을 제공하는 ScriptableObject이며, 투사체와 버프 효과가 이를 상속합니다.
@@ -336,22 +338,14 @@ DOTween으로 코드 반복은 줄었지만, 트윈 대상의 상태 초기화�
 
 ### 3.2 덱·손패·버림 더미를 도는 카드 순환
 
-카드는 아래 다섯 목록 사이를 옮겨 다닙니다. 보유 카드와 편성 덱은 전투 밖의 목록이고, 뽑을 카드·손패·사용한 카드가 전투 중에 도는 목록입니다.
-
-| 목록 | 의미 |
-|---|---|
-| `ownedCards` | 보유 카드의 런타임 복사 |
-| `playerDeck` | 현재 편성 덱 |
-| `drawPile` | 아직 뽑지 않은 카드 |
-| `hand` | 손패 |
-| `discardPile` | 사용한 카드 |
+카드는 보유 카드(`ownedCards`)와 편성 덱(`playerDeck`)에서 출발해, 전투 중에는 드로우 더미(`drawPile`), 손패(`hand`), 버림 더미(`discardPile`) 사이를 옮겨 다닙니다. 보유 카드와 편성 덱은 전투 밖의 목록이고, 나머지 셋이 전투 중에 도는 목록입니다.
 
 ```mermaid
 %%{init: {"flowchart": {"padding": 8}}}%%
 flowchart TB
-    Deck[편성 덱] --> Draw[drawPile]
-    Draw -->|게이지 충전 + 빈 슬롯| Hand[hand]
-    Hand -->|사용 승인| Discard[discardPile]
+    Deck[편성 덱] --> Draw[드로우 더미]
+    Draw -->|게이지 충전 + 빈 슬롯| Hand[손패]
+    Hand -->|사용 승인| Discard[버림 더미]
     Discard -->|드로우 더미 고갈 후 셔플| Draw
 %% 격자: Deck | Draw | Hand | Discard
 %% 화살표 Discard -> Draw: 나감=오른쪽 들어감=오른쪽 거리=84
@@ -363,7 +357,17 @@ flowchart TB
 드로우 시도 직전에 `BeginNextGaugeCycle()`을 호출해 다음 게이지 주기를 시작합니다.
 덱 동기화 시 기존 손패를 통째로 초기화하지 않고 드로우·버림 목록에서 빠진 카드를 제거합니다.
 
-### 3.3 사용 가능 확인과 모션에 맞춘 발동
+![패링 성공으로 카드 게이지가 차 Q 슬롯에 카드를 뽑는 장면](images/card-draw.mp4)
+
+패링 보상 `AddCells()`는 현재 게이지에 더한 칸이 최대치를 넘으면 `overflowCells`로 남깁니다.
+다음 드로우 주기의 `BeginNextGaugeCycle()`은 이 초과분을 가져와 게이지를 채운 상태로 재충전합니다.
+다만 이미 `isGaugeFull`이면 `AddCells()`가 바로 반환하므로, 가득 찬 뒤에 받은 보상은 쌓이지 않습니다.
+
+손패 상태 `CardHandState`(`CardHandOperation`의 Idle/Drawing/Using)는 드로우뿐 아니라 사용 연출 중에도 바쁨(`IsBusy`)으로 잡혀, 그동안 새로 뽑지 않습니다.
+
+소스: [CardGaugeController.cs](https://github.com/keeeery/Arcanist/blob/main/Assets/02.%20Scripts/04.%20CardSystem/CardGaugeController.cs), [CardHandState.cs](https://github.com/keeeery/Arcanist/blob/main/Assets/02.%20Scripts/04.%20CardSystem/CardHandState.cs).
+
+### 3.3 조건을 확인하고 모션에 맞춰 발동하는 카드
 
 ![화염구 카드를 사용해 적을 공격하는 장면](images/card-combat-zoom.png)
 
@@ -466,7 +470,7 @@ return new CardSkillExecutionResult(CardSkillExecutionStatus.Executed, card);
 
 소스: [ProjectileCardEffect.cs](https://github.com/keeeery/Arcanist/blob/main/Assets/02.%20Scripts/04.%20CardSystem/ProjectileCardEffect.cs).
 
-### 3.5 등급 우선, 같은 등급에서는 거리 우선
+### 3.5 카드가 노릴 적 고르기 — 등급 먼저, 그다음 거리
 
 `EnemyManager`는 일반 적과 보스를 하나의 `List<ICombatTarget>`으로 관리합니다.
 조회 중 파괴된 Unity 객체를 제거하고 `IsTargetable`과 `IsDead`를 확인합니다.
@@ -475,7 +479,7 @@ return new CardSkillExecutionResult(CardSkillExecutionStatus.Executed, card);
 - **일반 적과 보스를 나누는 분기가 필요 없습니다.** `CardTargetResolver`는 `TryFindBestTarget()` 결과의 TargetPoint만 사용하기 때문입니다.
 - **거리 비교에는 `sqrMagnitude`를 사용합니다.** 시야·벽·화면 범위 검사는 이 함수에 없습니다.
 
-### 3.6 버프 중첩과 지속시간 갱신
+### 3.6 같으면 갱신하고 다르면 겹치는 버프
 
 ![활성 버프 아이콘(좌상단)과 최근 사용 카드 목록(좌측)](images/buff-icons-crop.png)
 
@@ -502,21 +506,13 @@ return new CardSkillExecutionResult(CardSkillExecutionStatus.Executed, card);
 
 소스: [BuffController.cs](https://github.com/keeeery/Arcanist/blob/main/Assets/02.%20Scripts/04.%20CardSystem/BuffController.cs), [ActiveBuff.cs](https://github.com/keeeery/Arcanist/blob/main/Assets/02.%20Scripts/04.%20CardSystem/ActiveBuff.cs).
 
-### 3.7 넘친 게이지와 투사체의 생성·반납
-
-![패링 성공으로 카드 게이지가 차 Q 슬롯에 카드를 뽑는 장면](images/card-draw.mp4)
-
-패링 보상 `AddCells()`는 현재 게이지에 더한 칸이 최대치를 넘으면 `overflowCells`로 남깁니다.
-다음 드로우 주기의 `BeginNextGaugeCycle()`은 이 초과분을 가져와 게이지를 채운 상태로 재충전합니다.
-다만 이미 `isGaugeFull`이면 `AddCells()`가 바로 반환하므로, 가득 찬 뒤에 받은 보상은 쌓이지 않습니다.
-
-손패 상태 `CardHandState`(`CardHandOperation`의 Idle/Drawing/Using)는 드로우뿐 아니라 사용 연출 중에도 바쁨(`IsBusy`)으로 잡혀, 그동안 새로 뽑지 않습니다.
+### 3.7 다시 사용하는 투사체와 이펙트
 
 ![화염구 적중 이펙트](images/fireball-hit-crop.png)
 
 투사체(보스 팔 투사체 제외)·효과·인벤토리 슬롯·버프 아이콘은 같은 `ComponentPool<T>`으로 비활성 객체를 다시 씁니다. 다시 켤 때 `OnEnable()`에서 상태를 초기화하고, 여유 객체가 없으면 새로 만듭니다(GC 개선량은 측정하지 않음).
 
-소스: [CardGaugeController.cs](https://github.com/keeeery/Arcanist/blob/main/Assets/02.%20Scripts/04.%20CardSystem/CardGaugeController.cs), [CardHandState.cs](https://github.com/keeeery/Arcanist/blob/main/Assets/02.%20Scripts/04.%20CardSystem/CardHandState.cs), [ProjectileController.cs](https://github.com/keeeery/Arcanist/blob/main/Assets/02.%20Scripts/04.%20CardSystem/ProjectileController.cs).
+소스: [ProjectileController.cs](https://github.com/keeeery/Arcanist/blob/main/Assets/02.%20Scripts/04.%20CardSystem/ProjectileController.cs).
 
 ### 3.8 고민과 선택
 
@@ -532,9 +528,9 @@ return new CardSkillExecutionResult(CardSkillExecutionStatus.Executed, card);
 
 ---
 
-## 4. 인벤토리·덱 편성과 카드 보상
+## 4. 보상으로 모아 직접 짜는 카드 덱
 
-### 4.1 개요 — 보상 카드 3장 중 1장과 덱 편성 화면
+### 4.1 개요 — 보상 선택에서 덱 편성까지
 
 방의 적을 모두 쓰러뜨리면 출구의 오벨리스크가 열리고, 무작위로 뽑힌 보상 카드 3장 중 1장을 고릅니다.
 고른 카드는 보유 목록에만 들어가고, 덱에는 자동으로 들어가지 않습니다.
@@ -552,7 +548,7 @@ return new CardSkillExecutionResult(CardSkillExecutionStatus.Executed, card);
 
 소스: [PlayerInventory.cs](https://github.com/keeeery/Arcanist/blob/main/Assets/02.%20Scripts/06.%20Inventory/PlayerInventory.cs), [CardSystem.cs](https://github.com/keeeery/Arcanist/blob/main/Assets/02.%20Scripts/04.%20CardSystem/CardSystem.cs), [InventoryWindow.cs](https://github.com/keeeery/Arcanist/blob/main/Assets/02.%20Scripts/06.%20Inventory/InventoryWindow.cs), [RewardController.cs](https://github.com/keeeery/Arcanist/blob/main/Assets/02.%20Scripts/08.%20Reward/RewardController.cs).
 
-### 4.2 편성 규칙
+### 4.2 넣을 때와 닫을 때 확인하는 편성 규칙
 
 ![전체 카드와 플레이어 카드 덱 편성 화면(최소 카드 수·마력 조건 표시)](images/deck-inventory-crop.png)
 
@@ -580,7 +576,7 @@ return DeckEditFailure.None;
 조건을 맞추지 못했으면 `DeckConditionView`가 모자란 조건(최소 장수, 마력 용량 부족·초과)을 경고로 띄우고 창이 흔들리며 닫히지 않습니다.
 씬의 실제 값은 Inspector에 저장된 설정을 따릅니다.
 
-### 4.3 보상 추첨
+### 4.3 카드마다 등급 가중치를 두는 보상 추첨
 
 ![방 클리어 후 가중치에 의해 무작위로 추첨된 3장 중 하나를 고르는 보상 선택 화면](images/reward-selection-zoom.png)
 
@@ -610,7 +606,7 @@ foreach (CardData card in candidates)
 
 소스: [RewardCardSelector.cs](https://github.com/keeeery/Arcanist/blob/main/Assets/02.%20Scripts/08.%20Reward/RewardCardSelector.cs).
 
-### 4.4 전체 카드 목록과 더블 클릭·드래그 드롭 편성
+### 4.4 더블 클릭과 끌어 놓기 편성
 
 ![미획득 카드의 툴팁 — 카드 정보와 ‘미획득’ 표시](images/card-tooltip-locked-crop.png)
 
@@ -646,9 +642,9 @@ foreach (CardData card in candidates)
 
 ---
 
-## 5. 플레이어 이동과 적·보스의 행동
+## 5. 플레이어의 움직임과 적·보스의 패턴
 
-### 5.1 개요 — 플레이어 이동, 일반 적의 순찰과 골렘의 패턴
+### 5.1 개요 — 플레이어·적의 움직임
 
 플레이어는 좌우 이동·점프(더블 점프)·대시·달리기로 움직이고, 달리는 동안에는 스태미나를 씁니다.
 일반 적은 방마다 해골 병사 두 종과 투사체를 쏘는 원거리 골렘 중에서 무작위로 생성되며, 두 지점 사이를 순찰하다가 플레이어를 감지하면 쫓아오고, 공격 거리에 들어오면 멈춰 공격합니다.
@@ -661,7 +657,7 @@ foreach (CardData card in candidates)
 
 소스: [PlayerLocomotionRuntime.cs](https://github.com/keeeery/Arcanist/blob/main/Assets/02.%20Scripts/01.%20Player/PlayerLocomotionRuntime.cs), [EnemySensor.cs](https://github.com/keeeery/Arcanist/blob/main/Assets/02.%20Scripts/02.%20Enemy/EnemySensor.cs), [EnemyStateMachine.cs](https://github.com/keeeery/Arcanist/blob/main/Assets/02.%20Scripts/02.%20Enemy/EnemyStateMachine.cs).
 
-### 5.2 골렘 상태 전이
+### 5.2 거리에 따라 패턴을 고르는 골렘 보스
 
 ![고대 수호 골렘의 레이저 패턴](images/boss-combat-zoom.png)
 
@@ -688,13 +684,13 @@ stateDiagram-v2
     Death --> [*]
 ```
 
-이 다이어그램은 골렘의 상태 전이를 도식화한 것입니다. `BossController.Dead()`는 현재 상태와 관계없이 사망 진입을 처리합니다.
+이 다이어그램은 골렘 보스의 상태 전이를 도식화한 것입니다. `BossController.Dead()`는 현재 상태와 관계없이 사망 진입을 처리합니다.
 Idle 기본 대기시간은 1.2초, 근접 X축 거리 기준은 1입니다.
 근접 범위 밖에서는 레이저와 팔 발사를 `Random.Range(0, 2)`로 선택합니다.
 
 **모든 공격 패턴이 끝나면 Idle로 돌아오고, 다음 패턴은 Idle에서 플레이어와의 거리로 고릅니다.**
 
-### 5.3 모션에 맞춘 공격 판정
+### 5.3 골렘 보스의 공격 판정이 켜지고 꺼지는 시점
 
 ![고대 수호 골렘의 팔 발사 패턴](images/golem-arm-shoot-crop.png)
 
@@ -705,7 +701,7 @@ Idle 기본 대기시간은 1.2초, 근접 X축 거리 기준은 1입니다.
 근접 상태는 진입 때 판정을 끄고 애니메이션을 시작하며, 종료 때 코루틴 정지와 판정 비활성화를 수행합니다.
 정상 애니메이션 종료 외의 상태 이탈에서도 판정이 남는 문제를 줄이는 구조입니다.
 
-### 5.4 벽·바닥 충돌·콤보 입력 창·적 순찰
+### 5.4 그 밖의 이동·입력 창·일반 적 처리
 
 플레이어 이동의 벽·바닥 충돌, 콤보와 패링을 받는 입력 창, 일반 적의 순찰·추적·공격 처리입니다.
 
@@ -714,6 +710,8 @@ Idle 기본 대기시간은 1.2초, 근접 X축 거리 기준은 1입니다.
 ![플레이어 대시 이펙트](images/dash-fx-crop.png)
 
 ![플레이어 달리기 이펙트](images/sprint-fx-crop.png)
+
+일반 방 2개와 보스 방의 지형은 LDtk에서 그린 뒤 LDtkUnity로 불러와 방 프리팹(`Room01`·`Room02`·`BossRoom`)으로 만들었습니다. 지형은 바닥·벽을 나눈 IntGrid 레이어와 장식 타일 레이어로 구성했습니다.
 
 `CharacterController2D`는 Rigidbody2D를 Kinematic으로 두고 자체 중력·점프 횟수·대시 타이머를 관리하며, 수평·수직 이동량을 각각 BoxCast로 검사하고 `skinWidth`를 남겨 이동을 제한한 뒤 MovePosition을 호출합니다(선택 이유는 §5.5).
 방향·대시 쿨타임은 이동 런타임이, 달리기 자원은 SprintRuntime이 맡아 입력 차단·사망·리스폰에서 같은 초기화 진입점을 씁니다.
@@ -786,7 +784,7 @@ stateDiagram-v2
 
 ---
 
-## 6. 방 전환과 체크포인트 복원
+## 6. 죽어도 이어지는 방과 체크포인트
 
 ### 6.1 개요 — 체크포인트 저장과 부활
 
@@ -823,7 +821,7 @@ sequenceDiagram
 
 **방 로드와 플레이어 리스폰이 모두 화면이 어두워진 사이에 끝나고, 페이드 인과 함께 입력이 돌아옵니다.**
 
-### 6.2 클리어한 방의 적 재생성 생략
+### 6.2 적 전멸과 보상 완료를 따로 기억하는 복귀
 
 적을 모두 쓰러뜨린 뒤 플레이어만 되살리는 체크포인트로 돌아오면 적을 다시 만들지 않습니다(§6.1).
 `CheckPointManager`는 저장된 '플레이어만 복구' 여부와 '적 전멸'(`roomCleared`)이 모두 참일 때만 방을 불러오면서 적 생성을 건너뜁니다(저장 시점은 §7.3).
@@ -866,14 +864,14 @@ stateDiagram-v2
 
 **적 전멸(Reward)과 보상 선택(Cleared)이 서로 다른 단계라서, 적을 모두 쓰러뜨린 뒤 돌아와도 보상 전이면 보상 단계부터 다시 시작합니다.**
 
-### 6.3 부활 시 체력·카드 초기화
+### 6.3 부활할 때 다시 맞추는 체력과 카드
 
 ![사망 화면 — 화면이 어두워지고, 위 방향키로 체크포인트에서 부활](images/death-panel.png)
 
 `PlayerController.Respawn()`은 사망·피격·스킬·패링 플래그를 초기화하고 이동 런타임의 복귀 초기화를 호출합니다. Animator를 재바인딩하고 체력을 복원합니다. 카드 시스템은 대기 스킬과 손패·드로우·버림 목록을 지우고 편성 덱으로 재구성합니다.
 따라서 위치만 옮기는 복귀가 아니라 플레이어의 전투 상태도 함께 정리합니다.
 
-### 6.4 일시정지·인벤토리·보상 화면의 입력 차단과 UI 연출
+### 6.4 게임은 멈추고 연출은 이어지는 메뉴 창
 
 ![일시정지 메뉴](images/pause-menu.png)
 
@@ -942,7 +940,7 @@ protected virtual void OnDestroy()
 
 소스: [SingletonBase.cs](https://github.com/keeeery/Arcanist/blob/main/Assets/02.%20Scripts/99.%20Utilities/SingletonBase.cs).
 
-### 7.2 이전 씬의 체크포인트로 돌아가면 첫 방부터 다시 시작
+### 7.2 이전 씬의 체크포인트로 돌아가면 첫 방부터 다시 시작되던 문제
 
 - **증상:** 같은 씬 안의 복귀는 동작했지만, 보스 씬에서 죽어 이전 씬의 체크포인트로 돌아가면 그 씬이 첫 방부터 다시 시작되어 체크포인트 위치·체력이 이어지지 않았습니다.
 - **원인:** 1차 시연 시점에는 씬에 속한 `OverlayController`가 복귀 코루틴을 실행했고, 방을 ID로 불러오는 경로도 없었습니다.
@@ -1013,7 +1011,7 @@ Save(player);
 
 ### 8.1 구현 결과
 
-1차 시연 때 전투·패링, 카드 뽑기와 사용, 보상과 덱 편성, 일반 적과 골렘까지 동작했고, 이후 씬을 넘는 체크포인트 복귀 등을 보완했습니다(§8.2). 시연 영상은 §1.3에 있습니다.
+1차 시연 때 전투·패링, 카드 뽑기와 사용, 보상과 덱 편성, 일반 적과 골렘 보스까지 동작했고, 이후 씬을 넘는 체크포인트 복귀 등을 보완했습니다(§8.2). 시연 영상은 §1.3에 있습니다.
 
 | 항목 | 수치 |
 |---|---|
@@ -1032,14 +1030,14 @@ Save(player);
 ### 8.2 1차 시연 이후 추가 작업
 
 7월 7일 커밋까지의 상태로 1차 시연을 진행했습니다.
-시연 때는 전투·패링, 카드 뽑기와 사용, 보상과 덱 편성, 일반 적과 골렘, 같은 씬 안의 체크포인트 복귀까지 동작했습니다.
+시연 때는 전투·패링, 카드 뽑기와 사용, 보상과 덱 편성, 일반 적과 골렘 보스, 같은 씬 안의 체크포인트 복귀까지 동작했습니다.
 이후 작업에서 시연까지 마무리하지 못한 기능과 누락을 보완하고, 기능별 책임을 나누는 리팩터링을 이어 갔습니다.
 
 | 시연 시점의 문제 | 보완 | 본문 |
 |---|---|---|
 | 이전 씬의 체크포인트로 돌아가면 첫 방부터 다시 시작됨 | 복귀를 씬이 바뀌어도 유지되는 `CheckPointManager`로 옮기고, 방을 ID로 불러오며 클리어·보상 상태를 저장. 이어서 클리어한 방 복귀 때 오벨리스크가 켜지지 않는 문제도 수정 | §7.2, §7.3 |
 | 보스에 기절·넉백 면역이 빠져 있음 | 보스에 기절·넉백 면역 적용 | — |
-| 카드 게이지를 채우는 순간 최대치를 넘긴 칸이 사라짐 | 넘친 칸을 다음 게이지로 넘기고, 게이지 재충전을 카드 드로우 시작 시점으로 변경 | §3.7 |
+| 카드 게이지를 채우는 순간 최대치를 넘긴 칸이 사라짐 | 넘친 칸을 다음 게이지로 넘기고, 게이지 재충전을 카드 드로우 시작 시점으로 변경 | §3.2 |
 | 같은 버프를 다시 쓰거나 다른 카드로 겹쳐 쓸 때의 규칙이 없음 | 같은 카드는 지속시간 갱신, 다른 카드의 같은 계열은 중첩 | §3.6 |
 
 기능별 책임을 나눈 리팩터링은 다음과 같습니다.
