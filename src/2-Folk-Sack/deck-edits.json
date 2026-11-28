@@ -696,7 +696,7 @@
       "layout": "visual",
       "tab": "흐름",
       "title": {"text": "5.2 서버가 확정하는 아이템 요청", "verbatim": true},
-      "lead": {"text": "아이템을 줍고, 버리고, 팔고, 사고, 쓰는 모든 행동은 클라이언트(`RoomClient`)가 서버에 요청하고 서버가 검사해 확정합니다.", "verbatim": true},
+      "lead": {"text": "아이템을 줍고, 버리고, 팔고, 사고, 사용하는 모든 행동은 클라이언트(`RoomClient`)가 서버에 요청하고 서버가 검사해 확정합니다.", "verbatim": true},
       "sectionPath": ["5. 인벤토리·아이템·상점", "5.2 서버가 확정하는 아이템 요청"],
       "points": [
         {"label": "전체 상태로 교체", "text": "클라이언트는 바뀐 부분을 계산하지 않고 이 전체 상태로 교체합니다.", "verbatim": true},

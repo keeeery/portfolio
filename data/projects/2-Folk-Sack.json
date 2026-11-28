@@ -96,7 +96,7 @@
       "title": "다중 낙하의 청크별 독립 배치 확정",
       "what": "여러 청크가 동시에 정착해도 청크마다 배치 확정을 독립적으로 요청합니다.",
       "how": "`pendingCollapsePlacementIds`에 `RequestId → CollapseID`를 저장해 같은 청크의 중복 요청만 막고, 낙하 배치 요청은 시간 초과 대신 성공·오류·취소에 연결해 정리합니다.",
-      "why": "하나의 대기 플래그를 쓰면 먼저 보낸 요청 때문에 다음 청크의 배치 제안이 버려질 수 있습니다. CollapseID별 예약·소유권으로 다중 청크·동시 플레이어의 상태 간섭을 완화했습니다.",
+      "why": "하나의 대기 플래그를 사용하면 먼저 보낸 요청 때문에 다음 청크의 배치 제안이 버려질 수 있습니다. CollapseID별 예약·소유권으로 다중 청크·동시 플레이어의 상태 간섭을 완화했습니다.",
       "section": "3.4 여러 덩어리의 동시 낙하",
       "image": {
         "src": "images/falling-chunk.png",
@@ -752,7 +752,7 @@
         "layout": "visual",
         "tab": "흐름",
         "title": {"text": "5.2 서버가 확정하는 아이템 요청", "verbatim": true},
-        "lead": {"text": "아이템을 줍고, 버리고, 팔고, 사고, 쓰는 모든 행동은 클라이언트(`RoomClient`)가 서버에 요청하고 서버가 검사해 확정합니다.", "verbatim": true},
+        "lead": {"text": "아이템을 줍고, 버리고, 팔고, 사고, 사용하는 모든 행동은 클라이언트(`RoomClient`)가 서버에 요청하고 서버가 검사해 확정합니다.", "verbatim": true},
         "sectionPath": ["5. 인벤토리·아이템·상점", "5.2 서버가 확정하는 아이템 요청"],
         "points": [
           {"label": "전체 상태로 교체", "text": "클라이언트는 바뀐 부분을 계산하지 않고 이 전체 상태로 교체합니다.", "verbatim": true},
@@ -1046,7 +1046,11 @@
             "text": "채굴과 붕괴로 셀이 계속 바뀌는 게임이라 개발이 이어질수록 문제가 커질 것으로 판단해, 상대적으로 비용이 저렴한 Chunk Mesh와 EdgeCollider를 택했습니다.",
             "verbatim": false
           },
-          {"label": "", "text": "AI로 빠르게 만든 프로토타입으로 붕괴 동작을 먼저 확인하고, 실제 게임에 쓸 표현 방식은 비용을 따져 다시 골랐습니다.", "verbatim": true}
+          {
+            "label": "",
+            "text": "AI로 빠르게 만든 프로토타입으로 붕괴 동작을 먼저 확인하고, 실제 게임에 사용할 표현 방식은 비용을 따져 다시 골랐습니다.",
+            "verbatim": true
+          }
         ],
         "visuals": [{"kind": "table", "n": 1, "fp": "방법|장점|비용"}]
       },
@@ -1177,10 +1181,10 @@
         "layout": "code",
         "tab": "구현",
         "title": {"text": "5.3 아이템 사용 거절과 쿨타임", "verbatim": true},
-        "lead": {"text": "아이템을 쓰면 서버의 응답을 기다리지 않고 화면의 쿨타임을 먼저 시작합니다.", "verbatim": true},
+        "lead": {"text": "아이템을 사용하면 서버의 응답을 기다리지 않고 화면의 쿨타임을 먼저 시작합니다.", "verbatim": true},
         "sectionPath": ["5. 인벤토리·아이템·상점", "5.3 아이템 사용 거절과 쿨타임"],
         "points": [
-          {"label": "구현", "text": "`pendingCooldowns`는 요청 ID마다 어느 아이템을 언제 다시 쓸 수 있는지 기억합니다.", "verbatim": true},
+          {"label": "구현", "text": "`pendingCooldowns`는 요청 ID마다 어느 아이템을 언제 다시 사용할 수 있는지 기억합니다.", "verbatim": true},
           {
             "label": "구현",
             "text": "성공 응답이 오면 대기를 지우고 효과를 재생하고, `RequestFailed`가 오면 그 아이템의 예상 쿨타임을 지웁니다.",
@@ -1298,6 +1302,6 @@
         "visuals": []
       }
     ],
-    "applied": "ac2306e361cb5176"
+    "applied": "20c42fe7f29fa457"
   }
 }

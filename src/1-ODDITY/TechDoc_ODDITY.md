@@ -1008,7 +1008,7 @@ flowchart TB
 erDiagram
     MissionDTO["missions.tsv 한 줄 (MissionDTO)"] {
         int ID PK
-        string BossName "완료 임무 제거에 씀"
+        string BossName "완료 임무 제거에 사용"
         int Reward FK "BossReward.tsv의 RewardId"
         string NextStageName "이동할 보스 씬"
     }
