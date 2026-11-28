@@ -349,8 +349,16 @@
 [data-pf-project="2-Folk-Sack"] #d-map-contract .vbox[data-kind="code"] pre { padding-block: 32px !important; }   /* 2.4 — 코드가 꺾이지 않아 낮아진 만큼(2줄, 약 36px) 위아래 여백을 14px → 32px로, 이미지 크기 유지 */
 
 /* ── Arcanist 장면별(2026-11-26, theme/deck-rules.md 규칙) ── */
-[data-pf-project="3-Arcanist"] :is(#d-what, #d-card-exec, #d-restore-seq, #d-skip-spawn) { --pf-cards: plain; }   /* R8 번호 없음 — 1.1 소개·3.3 이유와 구현·6.1 기능과 기록 항목·6.2 서로 다른 두 이야기 */
-[data-pf-project="3-Arcanist"] :is(#d-card-exec, #d-buff-stack, #d-gauge-overflow, #d-pool-reuse) { --pf-layout: side; --pf-vis-scale: .912; }   /* R9 4:3 이미지 하나 + 카드 — 왼쪽 이미지 539×404·오른쪽 카드 462px */
+[data-pf-project="3-Arcanist"] :is(#d-what, #d-card-structure, #d-projectile-effect, #d-restore-seq, #d-skip-spawn) { --pf-cards: plain; }   /* R8 번호 없음 — 1.1 소개·3.3 이유와 구현·3.4 설정과 대상 조건·6.1 기능과 기록 항목·6.2 서로 다른 두 이야기 */
+[data-pf-project="3-Arcanist"] #d-card-structure { --pf-layout: side-split; --pf-split-vw: 1; }   /* 3.3 구조·발동(16·17장 합침) — 왼쪽 다이어그램 | 오른쪽 표·카드1·카드2, 아래 카드3 가로 전체 */
+[data-pf-project="3-Arcanist"] #d-card-structure .dk-split > .rcol > .cards { order: 2; }
+[data-pf-project="3-Arcanist"] #d-card-structure .dk-split > .rcol { row-gap: 12px; }
+[data-pf-project="3-Arcanist"] #d-card-structure .dk-split > :is(.vis, .rcol) { margin-top: 0 !important; }   /* 위 끝 맞춤 — 가운데 맞춤 여백이 아래 카드3 자리를 먹지 않게 */
+[data-pf-project="3-Arcanist"] #d-card-structure .dk.tight .ncard { padding: 14px 16px; }   /* 좁은 변형이어도 다른 번호 없는 카드와 같은 안쪽 여백·줄 간격 */
+[data-pf-project="3-Arcanist"] #d-card-structure .dk.tight .ncard p { line-height: 1.58; }
+[data-pf-project="3-Arcanist"] #d-card-structure .dk-split { position: relative; padding-bottom: 87px; }   /* 아래 카드3 자리 */
+[data-pf-project="3-Arcanist"] #d-card-structure .dk-split > .rcol > .cards > .ncard:nth-child(3) { position: absolute; left: 0; right: 0; bottom: 0; }
+[data-pf-project="3-Arcanist"] #d-projectile-effect .dk-stack > .cards.row { grid-template-columns: minmax(0, 1fr); }   /* 3.4 카드 두 장 위아래로 — 문장마다 한 줄(가로 전체 폭) */
 /* (Arcanist 4.3 reward-draw — R11 side-split은 이미지 181px, quad는 코드 칸 넘침이라 기본 배치: 이미지·코드 위, 카드 아래) */
 
 /* ── 사천성 장면별(2026-11-26) ── */
@@ -420,8 +428,14 @@
 [data-pf-project="3-Arcanist"] #d-combat-overview.pf-sizing .dk-stack > .cards { width: auto; min-width: 0; }
 /* 2.2 피해를 막고 카드 게이지를 주는 패링 — ODDITY 2.4 d-psy-follow처럼 왼쪽 이미지, 오른쪽 카드 위·코드 아래(R11. 2×2는 코드 칸이 잘려서 뺌) */
 [data-pf-project="3-Arcanist"] #d-parry { --pf-layout: side-split; }
+[data-pf-project="3-Arcanist"] #d-pool-reuse { --pf-layout: side-split; }   /* 3.7 풀 — 패링 장면처럼 왼쪽 이미지, 오른쪽 카드 위·코드 아래(2026-11-29) */
 /* 4.4 전체 카드 목록과 편성 — 1·2번은 번호 없는 카드(R8), 3번은 「AI 활용」 라벨 칸 카드(R4) */
 [data-pf-project="3-Arcanist"] #d-inventory-list { --pf-cards: plain; }
 /* 2.4 패링 성공 연출 — 영상(16:9)이 가장 크게 보이는 배치(2026-11-28 후보 비교, 1600×900: 2×2 711×397 · 위아래 690×387 · 옆 574×321 · 나눈 옆 1:1 596×334 · 나눈 옆 2.2 853×480 ← 채택, 2.8은 오히려 705×396). 왼쪽 영상, 오른쪽 표 위·카드 아래 */
 [data-pf-project="3-Arcanist"] #d-parry-effect { --pf-layout: side-split; --pf-split-vw: 2.2; }
 [data-pf-project="3-Arcanist"] #d-parry-effect .dk-split > .rcol > .cards { order: 2; }
+[data-pf-project="3-Arcanist"] #d-buff-stack { --pf-layout: side-split; --pf-split-vw: 1.4; }   /* 3.6 버프 — 11장(d-parry-effect)처럼 왼쪽 이미지, 오른쪽 표 위·카드 아래(2026-11-29) */
+[data-pf-project="3-Arcanist"] #d-buff-stack .dk-split > .rcol > .cards { order: 2; }
+[data-pf-project="3-Arcanist"] #d-buff-stack table :is(th, td):first-child { white-space: nowrap; }   /* 3.6 표 1열(계산 이름) 한 줄로 */
+[data-pf-project="3-Arcanist"] #d-buff-stack table code { white-space: nowrap; }   /* 3.6 표 — `(1 - Clamp01(Value))`를 안 끊어 「누적 곱」까지 두 줄(2026-11-29) */
+[data-pf-project="3-Arcanist"] #d-buff-stack table th:nth-child(2) { width: 184px; }   /* 3.6 표 — 규칙 열은 코드가 들어갈 만큼만, 예시 열은 두 줄로 */
