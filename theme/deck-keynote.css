@@ -121,7 +121,14 @@
 @media screen {
   html[data-view="deck"], html[data-view="deck"] body { background: var(--bg); }
   html[data-view="deck"] .pf-deck > .pf-scene { box-shadow: none; }
+  /* 넘김 페이드(2026-11-29): 장면 자체의 투명도를 바꾸면(deck-kit.css pf-deck-in) 넘길 때 장면 가장자리에 검은 선이 보여, 장면은 그대로 두고
+     장면 바탕색 가림막(.pf-deck::after)이 걷히게 함. 바깥 바탕과 장면 바탕이 같아 보이는 모습은 같음. 가림막은 화면보다 2px 크게(가장자리는 잘려 안 보임) */
+  html[data-view="deck"] .pf-deck > .pf-scene.pf-enter { animation: none; }
+  html[data-view="deck"] .pf-deck:has(> .pf-scene.pf-cur.pf-enter)::after { content: ""; position: absolute; inset: -2px; background: var(--bg);
+    opacity: 0; pointer-events: none; animation: pf-deck-veil .18s ease-out; }
+  @keyframes pf-deck-veil { from { opacity: .999; } to { opacity: 0; } }
 }
+@media screen and (prefers-reduced-motion: reduce) { html[data-view="deck"] .pf-deck:has(> .pf-scene.pf-cur.pf-enter)::after { animation: none; } }
 
 /* ⑯ 세로로 보기(어두운 화면) — 장면 사이·양옆 바탕을 장면(순검정)보다 한 단 밝은 짙은 회색으로, 장면이 판처럼 떠 보이게. 밝은 화면은 그대로 */
 @media screen {
